@@ -9,6 +9,7 @@ namespace Fusumity.Editor.Utilities
 	public static class EditorExtensions
 	{
 		private const char _pathSplitChar = '.';
+		private const char _arrayEnder = ']';
 
 		private static readonly Dictionary<Type, Type[]> _assignableFrom = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> _typesWithNull = new Dictionary<Type, Type[]>();
@@ -76,10 +77,11 @@ namespace Fusumity.Editor.Utilities
 			return null;
 		}
 
-		public static object GetObjectByLocalPath(SerializedObject serializedObject, string objectPath, bool lastObjectIsNotArray = false)
+		public static object GetObjectByLocalPath(SerializedObject serializedObject, string objectPath)
 		{
 			var target = (object)serializedObject.targetObject;
-			var lastNotArray = target;
+			if (string.IsNullOrEmpty(objectPath))
+				return target;
 
 			var pathComponents = objectPath.Split(_pathSplitChar);
 
@@ -96,15 +98,9 @@ namespace Fusumity.Editor.Utilities
 				}
 				else
 				{
-					lastNotArray = target;
 					var field = GetAnyField(target.GetType(), pathComponent);
 					target = field.GetValue(target);
 				}
-			}
-
-			if (lastObjectIsNotArray && target is Array)
-			{
-				target = lastNotArray;
 			}
 
 			return target;
@@ -147,14 +143,31 @@ namespace Fusumity.Editor.Utilities
 		public static string GetPropertyParentPath(this SerializedProperty property)
 		{
 			var propertyPath = property.propertyPath;
-			var removeIndex = propertyPath.LastIndexOf(_pathSplitChar);
-			if (removeIndex >= 0)
-				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+			var parentPath = propertyPath;
 
-			return propertyPath;
+			var removeIndex = parentPath.LastIndexOf(_pathSplitChar);
+			if (removeIndex >= 0)
+			{
+				parentPath = parentPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+
+				if (propertyPath[propertyPath.Length - 1] != _arrayEnder)
+					return parentPath;
+
+				// Remove "{field name}.Array"
+				removeIndex = parentPath.LastIndexOf(_pathSplitChar);
+				parentPath = parentPath.Remove(removeIndex, parentPath.Length - removeIndex);
+
+				removeIndex = parentPath.LastIndexOf(_pathSplitChar);
+				parentPath = removeIndex >= 0 ? parentPath.Remove(removeIndex, parentPath.Length - removeIndex) : "";
+			}
+			else
+			{
+				parentPath = "";
+			}
+			return parentPath;
 		}
 
-		public static SerializedProperty GetParent(this SerializedProperty property)
+		public static SerializedProperty GetParentProperty(this SerializedProperty property)
 		{
 			var parentPath = property.GetPropertyParentPath();
 			var parent = property.serializedObject.FindProperty(parentPath);
@@ -175,7 +188,7 @@ namespace Fusumity.Editor.Utilities
 				methodName = methodPath.Remove(0, removeIndex + 1);
 			}
 
-			var target = GetObjectByLocalPath(property.serializedObject, propertyPath, true);
+			var target = GetObjectByLocalPath(property.serializedObject, propertyPath);
 			var methodInfo = target.GetType().GetAnyMethod(methodName);
 
 			methodInfo.Invoke(target, null);
