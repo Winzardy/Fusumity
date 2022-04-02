@@ -8,21 +8,13 @@ namespace Fusumity.Editor.Utilities
 {
 	public static class EditorExtensions
 	{
-		private const BindingFlags _InternalFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
-
-		private static readonly Type _customPropertyDrawerType = typeof(CustomPropertyDrawer);
-		private const string _customPropertyDrawerField_Type = "m_Type";
-		private const string _customPropertyDrawerField_UseForChildren = "m_UseForChildren";
-
-		private static readonly Type _propertyDrawerType = typeof(PropertyDrawer);
-		private const string _propertyDrawerField_Attribute = "m_Attribute";
-		private const string _propertyDrawerField_FieldInfo = "m_FieldInfo";
+		private const char _pathSplitChar = '.';
 
 		private static readonly Dictionary<Type, Type[]> _assignableFrom = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> _typesWithNull = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> _typesWithoutNull = new Dictionary<Type, Type[]>();
 
-		public static Type[] GetInheritorTypesForSelection(this Type baseType, bool insertNull = false)
+		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
 		{
 			Type[] inheritorTypes;
 			if (insertNull)
@@ -84,101 +76,117 @@ namespace Fusumity.Editor.Utilities
 			return null;
 		}
 
-		public static Type GetPropertyType(this SerializedProperty property)
+		public static object GetObjectByLocalPath(SerializedObject serializedObject, string objectPath, bool lastObjectIsNotArray = false)
 		{
-			var currentType = property.serializedObject.targetObject.GetType();
-			var pathComponents = property.propertyPath.Split('.');
+			var target = (object)serializedObject.targetObject;
+			var lastNotArray = target;
 
-			for (int index = 0; index < pathComponents.Length; ++index)
+			var pathComponents = objectPath.Split(_pathSplitChar);
+
+			for (var p = 0; p < pathComponents.Length; p++)
 			{
-				var pathComponent = pathComponents[index];
-				if (pathComponent == "Array" && index < pathComponents.Length - 1 &&
-				    pathComponents[index + 1].StartsWith("data["))
+				var pathComponent = pathComponents[p];
+				if (target is Array array)
 				{
-					currentType = currentType.GetElementType();
-					Debug.Assert(currentType != null);
-					++index;
+					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith("data["))
+					{
+						var index = int.Parse(pathComponents[++p].Replace("data[", "").Replace("]", ""));
+						target = array.GetValue(index);
+					}
 				}
 				else
 				{
-					if (currentType.IsInterface || currentType.IsAbstract)
-					{
-						var path = "";
-						for (var i = 0; i < index - 1; i++)
-						{
-							path += pathComponents[i] + '.';
-						}
-
-						path += pathComponents[index - 1];
-						var currentProperty = property.serializedObject.FindProperty(path);
-						var typename = currentProperty.managedReferenceFullTypename;
-
-						var assemblyAndName = typename.Split(' ');
-						var assembly = assemblyAndName[0];
-						var name = assemblyAndName[1];
-
-						currentType = Type.GetType($"{name}, {assembly}");
-					}
-
-					var field = currentType.GetField(pathComponent,
-						BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-					while (field == null)
-					{
-						currentType = currentType.BaseType;
-						field = currentType.GetField(pathComponent, BindingFlags.Instance | BindingFlags.NonPublic);
-					}
-
-					currentType = field.FieldType;
+					lastNotArray = target;
+					var field = GetAnyField(target.GetType(), pathComponent);
+					target = field.GetValue(target);
 				}
 			}
 
-			return currentType;
+			if (lastObjectIsNotArray && target is Array)
+			{
+				target = lastNotArray;
+			}
+
+			return target;
 		}
 
-		public static string GetPropertyPath(this SerializedProperty property)
+		public static Type GetPropertyTypeByLocalPath(SerializedObject serializedObject, string propertyPath)
 		{
-			var propertyPath = property.propertyPath;
-			var fullPath = "";
-			var removeIndex = propertyPath.LastIndexOf('.');
-			if (removeIndex >= 0)
-				fullPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex) + '.';
-
-			return fullPath;
+			return GetObjectByLocalPath(serializedObject, propertyPath).GetType();
 		}
 
-		public static SerializedProperty GetPropertyByPropertyLocalPath(this SerializedProperty property, string path)
+		public static Type GetPropertyTypeByLocalPath(this SerializedProperty property)
+		{
+			return GetPropertyTypeByLocalPath(property.serializedObject, property.propertyPath);
+		}
+
+		public static FieldInfo GetAnyField(this Type type, string fieldName)
+		{
+			var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+			while (field == null)
+			{
+				type = type.BaseType;
+				field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+			}
+
+			return field;
+		}
+
+		public static MethodInfo GetAnyMethod(this Type type, string methodName)
+		{
+			var methodInfo = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+			while (methodInfo == null)
+			{
+				type = type.BaseType;
+				methodInfo = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+			}
+
+			return methodInfo;
+		}
+
+		public static string GetPropertyParentPath(this SerializedProperty property)
 		{
 			var propertyPath = property.propertyPath;
-			var fullPath = "";
-			var removeIndex = propertyPath.LastIndexOf('.');
+			var removeIndex = propertyPath.LastIndexOf(_pathSplitChar);
 			if (removeIndex >= 0)
-				fullPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex) + '.';
-			fullPath += path;
+				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+
+			return propertyPath;
+		}
+
+		public static SerializedProperty GetParent(this SerializedProperty property)
+		{
+			var parentPath = property.GetPropertyParentPath();
+			var parent = property.serializedObject.FindProperty(parentPath);
+
+			return parent;
+		}
+
+		public static void InvokeMethodByLocalPath(this SerializedProperty property, string methodPath)
+		{
+			var propertyPath = property.GetPropertyParentPath();
+
+			var removeIndex = methodPath.LastIndexOf(_pathSplitChar);
+			var methodName = methodPath;
+
+			if (removeIndex > 0)
+			{
+				propertyPath += methodPath.Remove(removeIndex, methodPath.Length - removeIndex);
+				methodName = methodPath.Remove(0, removeIndex + 1);
+			}
+
+			var target = GetObjectByLocalPath(property.serializedObject, propertyPath, true);
+			var methodInfo = target.GetType().GetAnyMethod(methodName);
+
+			methodInfo.Invoke(target, null);
+		}
+
+		public static SerializedProperty GetPropertyByLocalPath(this SerializedProperty property, string path)
+		{
+			var parentPath = property.GetPropertyParentPath();
+			var fullPath = parentPath + '.' + path;
 
 			return property.serializedObject.FindProperty(fullPath);
-		}
-
-		public static Type[] GetCustomPropertyDrawerTypes(this CustomPropertyDrawer attribute)
-		{
-			var typeField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_Type, _InternalFieldBindingFlags);
-			var useForChildrenField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_UseForChildren, _InternalFieldBindingFlags);
-
-			var type = (Type)typeField.GetValue(attribute);
-			var useForChildren = (bool)useForChildrenField.GetValue(attribute);
-
-			return useForChildren ? GetInheritorTypesForSelection(type) : new[] { type };
-		}
-
-		public static void SetAttribute(this PropertyDrawer drawer, PropertyAttribute attribute)
-		{
-			var attributeField = _propertyDrawerType.GetField(_propertyDrawerField_Attribute, _InternalFieldBindingFlags);
-			attributeField.SetValue(drawer, attribute);
-		}
-
-		public static void SetFieldInfo(this PropertyDrawer drawer, FieldInfo fieldInfo)
-		{
-			var fieldInfoField = _propertyDrawerType.GetField(_propertyDrawerField_FieldInfo, _InternalFieldBindingFlags);
-			fieldInfoField.SetValue(drawer, fieldInfo);
 		}
 
 		public static void DrawBody(this SerializedProperty property, Rect position)

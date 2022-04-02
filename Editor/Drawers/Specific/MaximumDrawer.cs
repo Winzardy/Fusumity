@@ -20,7 +20,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (!string.IsNullOrEmpty(maxAttribute.maxPath))
 			{
-				var maxProperty = property.GetPropertyByPropertyLocalPath(maxAttribute.maxPath);
+				var maxProperty = property.GetPropertyByLocalPath(maxAttribute.maxPath);
 
 				switch (maxProperty.propertyType)
 				{

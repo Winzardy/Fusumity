@@ -20,7 +20,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (!string.IsNullOrEmpty(minAttribute.minPath))
 			{
-				var minProperty = property.GetPropertyByPropertyLocalPath(minAttribute.minPath);
+				var minProperty = property.GetPropertyByLocalPath(minAttribute.minPath);
 
 				switch (minProperty.propertyType)
 				{

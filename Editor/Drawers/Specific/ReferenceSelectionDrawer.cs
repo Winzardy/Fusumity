@@ -43,7 +43,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			var currentType = property.GetManagedReferenceType();
 
 			_selectedType = currentType;
-			_currentTypes ??= targetType.GetInheritorTypesForSelection(attr.insertNull);
+			_currentTypes ??= targetType.GetInheritorTypes(attr.insertNull);
 
 			var typeName = currentType == null ? "None" : currentType.Name;
 			if (EditorGUI.DropdownButton(position, new GUIContent(typeName), default))

@@ -13,7 +13,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var property = propertyData.property;
 			var showIfAttribute = (ShowIfAttribute)attribute;
-			var boolProperty = property.GetPropertyByPropertyLocalPath(showIfAttribute.boolPath);
+			var boolProperty = property.GetPropertyByLocalPath(showIfAttribute.boolPath);
 
 			propertyData.drawProperty = boolProperty.boolValue;
 		}

@@ -13,7 +13,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var property = propertyData.property;
 			var hideIfAttribute = (HideIfAttribute)attribute;
-			var boolProperty = property.GetPropertyByPropertyLocalPath(hideIfAttribute.boolPath);
+			var boolProperty = property.GetPropertyByLocalPath(hideIfAttribute.boolPath);
 
 			propertyData.drawProperty = !boolProperty.boolValue;
 		}
