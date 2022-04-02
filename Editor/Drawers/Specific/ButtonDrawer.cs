@@ -16,9 +16,12 @@ namespace Fusumity.Editor.Drawers.Specific
 			propertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
 
 			var boolButtonAttribute = (ButtonAttribute)attribute;
-			if (boolButtonAttribute.hideProperty)
+			if (boolButtonAttribute.hidePropertyField)
 			{
-				propertyData.drawProperty = false;
+				propertyData.hasLabel = false;
+				propertyData.hasBody = false;
+				propertyData.hasSubBody = false;
+				propertyData.hasFoldout = false;
 			}
 		}
 
