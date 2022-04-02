@@ -6,9 +6,6 @@ public class InspectorTest : MonoBehaviour
 {
 	[ReferenceSelectionAttribute, SerializeReference]
 	public ITest test;
-	public Tst test1;
-	[HideLabel]
-	public Tst test2;
 }
 
 public interface ITest{}
@@ -26,9 +23,14 @@ public class Tst : ITest
 [Serializable]
 public class Tst1 : ITest
 {
-    [Minimum("min"), Maximum("max")]
+    [Minimum("min"), Maximum("max"), Button("IncrementMax")]
 	public int a;
 
 	public int min;
 	public int max;
+
+	public void IncrementMax()
+	{
+		max++;
+	}
 }
