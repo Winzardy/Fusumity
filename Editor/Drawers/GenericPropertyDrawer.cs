@@ -16,8 +16,6 @@ namespace Fusumity.Editor.Drawers
 		private static readonly Type _baseDrawerType = typeof(GenericPropertyDrawer);
 		private static readonly Type _attributeType = typeof(GenericDrawerAttribute);
 
-		private static readonly Color _disabledRectColor = new Color(0.1f, 0.1f, 0.1f, 0.2f);
-
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
 
 		private GenericDrawerAttribute[] _genericAttributes;
@@ -38,9 +36,6 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (!propertyData.drawProperty)
 				return;
-
-			if (!propertyData.isEnabled)
-				EditorGUI.DrawRect(position, _disabledRectColor);
 
 			GUI.enabled = propertyData.isEnabled;
 			var lastIndentLevel = EditorGUI.indentLevel;
