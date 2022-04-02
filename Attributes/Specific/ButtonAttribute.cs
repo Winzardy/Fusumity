@@ -4,20 +4,21 @@ namespace Fusumity.Attributes.Specific
 	{
 		public string buttonName;
 		public string methodPath;
-		public bool hideProperty;
+		// Hide label, body and subBody
+		public bool hidePropertyField;
 
-		public ButtonAttribute(string buttonName, string methodPath, bool hideProperty = false)
+		public ButtonAttribute(string buttonName, string methodPath, bool hidePropertyField = false)
 		{
 			this.buttonName = buttonName;
 			this.methodPath = methodPath;
-			this.hideProperty = hideProperty;
+			this.hidePropertyField = hidePropertyField;
 		}
 
-		public ButtonAttribute(string methodPath, bool hideProperty = false)
+		public ButtonAttribute(string methodPath, bool hidePropertyField = false)
 		{
 			this.buttonName = null;
 			this.methodPath = methodPath;
-			this.hideProperty = hideProperty;
+			this.hidePropertyField = hidePropertyField;
 		}
 	}
 }
