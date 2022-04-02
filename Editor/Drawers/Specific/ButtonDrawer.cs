@@ -14,6 +14,12 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			propertyData.hasBeforeExtension = true;
 			propertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
+
+			var boolButtonAttribute = (ButtonAttribute)attribute;
+			if (boolButtonAttribute.hideProperty)
+			{
+				propertyData.drawProperty = false;
+			}
 		}
 
 		public override void DrawBeforeExtension(ref Rect position)
