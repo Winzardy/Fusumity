@@ -412,21 +412,20 @@ namespace Fusumity.Editor.Drawers
 		public float GetTotalHeight()
 		{
 			var height = 0f;
+			if (!drawProperty)
+				return height;
 
 			if (hasBeforeExtension)
 			{
 				height += beforeExtensionHeight;
 			}
-			if (drawProperty)
+			if (hasLabel | hasSubBody | (!hasBody & hasFoldout))
 			{
-				if (hasLabel | hasSubBody | !hasBody)
-				{
-					height += labelHeight;
-				}
-				if (hasBody)
-				{
-					height += bodyHeight;
-				}
+				height += labelHeight;
+			}
+			if (hasBody)
+			{
+				height += bodyHeight;
 			}
 			if (hasAfterExtension)
 			{
