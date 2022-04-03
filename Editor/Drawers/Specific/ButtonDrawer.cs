@@ -12,10 +12,19 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
-			propertyData.hasBeforeExtension = true;
-			propertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
-
 			var boolButtonAttribute = (ButtonAttribute)attribute;
+
+			if (boolButtonAttribute.drawBefore)
+			{
+				propertyData.hasBeforeExtension = true;
+				propertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
+			}
+			else
+			{
+				propertyData.hasAfterExtension = true;
+				propertyData.afterExtensionHeight += EditorGUIUtility.singleLineHeight;
+			}
+
 			if (boolButtonAttribute.hidePropertyField)
 			{
 				propertyData.hasLabel = false;
@@ -30,7 +39,25 @@ namespace Fusumity.Editor.Drawers.Specific
 			base.DrawBeforeExtension(ref position);
 
 			var boolButtonAttribute = (ButtonAttribute)attribute;
+			if (!boolButtonAttribute.drawBefore)
+				return;
 
+			DrawButton(ref position, boolButtonAttribute);
+		}
+
+		public override void DrawAfterExtension(ref Rect position)
+		{
+			base.DrawAfterExtension(ref position);
+
+			var boolButtonAttribute = (ButtonAttribute)attribute;
+			if (boolButtonAttribute.drawBefore)
+				return;
+
+			DrawButton(ref position, boolButtonAttribute);
+		}
+
+		private void DrawButton(ref Rect position, ButtonAttribute boolButtonAttribute)
+		{
 			var drawPosition = position;
 			drawPosition.height = EditorGUIUtility.singleLineHeight;
 			position.yMin += EditorGUIUtility.singleLineHeight;
