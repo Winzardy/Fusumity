@@ -22,11 +22,6 @@ namespace Fusumity.Editor.Drawers.Specific
 			propertyData.hasBody = true;
 		}
 
-		public override bool OverrideSubBodyDrawing()
-		{
-			return true;
-		}
-
 		public override void DrawSubBody(Rect position)
 		{
 			var property = propertyData.property;

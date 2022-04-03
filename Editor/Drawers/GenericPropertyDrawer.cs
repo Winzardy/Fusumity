@@ -246,11 +246,11 @@ namespace Fusumity.Editor.Drawers
 
 		private void ExecuteDrawLabel(Rect position)
 		{
-			if (!OverrideLabelDrawing())
+			if (!this.IsDrawLabelOverriden())
 			{
 				foreach (var drawer in _genericDrawers)
 				{
-					if (drawer.OverrideLabelDrawing())
+					if (drawer.IsDrawLabelOverriden())
 					{
 						drawer.DrawLabel(position);
 						return;
@@ -263,11 +263,11 @@ namespace Fusumity.Editor.Drawers
 
 		private void ExecuteDrawSubBody(Rect position)
 		{
-			if (!OverrideSubBodyDrawing())
+			if (!this.IsDrawSubBodyOverriden())
 			{
 				foreach (var drawer in _genericDrawers)
 				{
-					if (drawer.OverrideSubBodyDrawing())
+					if (drawer.IsDrawSubBodyOverriden())
 					{
 						drawer.DrawSubBody(position);
 						return;
@@ -280,11 +280,11 @@ namespace Fusumity.Editor.Drawers
 
 		private void ExecuteDrawBody(Rect position)
 		{
-			if (!OverrideBodyDrawing())
+			if (!this.IsDrawBodyOverriden())
 			{
 				foreach (var drawer in _genericDrawers)
 				{
-					if (drawer.OverrideBodyDrawing())
+					if (drawer.IsDrawBodyOverriden())
 					{
 						drawer.DrawBody(position);
 						return;
@@ -322,8 +322,6 @@ namespace Fusumity.Editor.Drawers
 
 		public virtual void ValidateBeforeDrawing() {}
 
-		public virtual bool OverrideLabelDrawing() => false;
-
 		public virtual void DrawBeforeExtension(ref Rect position) {}
 
 		public virtual void DrawLabel(Rect position)
@@ -331,14 +329,10 @@ namespace Fusumity.Editor.Drawers
 			EditorGUI.LabelField(position, propertyData.label, propertyData.labelStyle);
 		}
 
-		public virtual bool OverrideSubBodyDrawing() => false;
-
 		public virtual void DrawSubBody(Rect position)
 		{
 			propertyData.property.DrawBody(position);
 		}
-
-		public virtual bool OverrideBodyDrawing() => false;
 
 		public virtual void DrawBody(Rect position)
 		{
