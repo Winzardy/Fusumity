@@ -173,6 +173,11 @@ namespace Fusumity.Editor.Utilities
 
 		public static string AppendPath(this string sourcePath, string additionalPath)
 		{
+			if (string.IsNullOrEmpty(sourcePath))
+				return additionalPath;
+			if (string.IsNullOrEmpty(additionalPath))
+				return sourcePath;
+
 			return sourcePath + pathSplitChar + additionalPath;
 		}
 	}
