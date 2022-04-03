@@ -5,11 +5,11 @@ namespace Fusumity.Attributes.Specific
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
 	public class ButtonAttribute : GenericDrawerAttribute
 	{
-		public string buttonName;
-		public string methodPath;
+		public string buttonName = "";
+		public string methodPath = "";
 		// Hide label, body and subBody
-		public bool hidePropertyField;
-		public bool drawBefore;
+		public bool hidePropertyField = false;
+		public bool drawBefore = true;
 
 		public ButtonAttribute(string buttonName, string methodPath, bool hidePropertyField = false, bool drawBefore = true)
 		{
