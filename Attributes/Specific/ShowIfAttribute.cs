@@ -3,7 +3,7 @@ using System;
 namespace Fusumity.Attributes.Specific
 {
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-	public class ShowIfAttribute : GenericDrawerAttribute
+	public class ShowIfAttribute : FusumityDrawerAttribute
 	{
 		public string boolPath;
 

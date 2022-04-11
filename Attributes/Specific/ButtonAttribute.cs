@@ -3,7 +3,7 @@ using System;
 namespace Fusumity.Attributes.Specific
 {
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-	public class ButtonAttribute : GenericDrawerAttribute
+	public class ButtonAttribute : FusumityDrawerAttribute
 	{
 		public string buttonName = "";
 		public string methodPath = "";

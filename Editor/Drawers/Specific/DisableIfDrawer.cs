@@ -5,7 +5,7 @@ using UnityEditor;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(DisableIfAttribute))]
-	public class DisableIfDrawer : GenericPropertyDrawer
+	public class DisableIfDrawer : FusumityPropertyDrawer
 	{
 		public override void ModifyPropertyData()
 		{

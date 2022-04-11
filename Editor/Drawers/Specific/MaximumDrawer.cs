@@ -6,7 +6,7 @@ using UnityEditor;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(MaximumAttribute))]
-	public class MaximumDrawer : GenericPropertyDrawer
+	public class MaximumDrawer : FusumityPropertyDrawer
 	{
 		public override void ValidateBeforeDrawing()
 		{

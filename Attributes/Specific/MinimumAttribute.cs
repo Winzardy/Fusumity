@@ -1,6 +1,6 @@
 namespace Fusumity.Attributes.Specific
 {
-	public class MinimumAttribute : GenericDrawerAttribute
+	public class MinimumAttribute : FusumityDrawerAttribute
 	{
 		public float minFloat;
 		public int minInt;

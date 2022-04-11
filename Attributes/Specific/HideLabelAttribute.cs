@@ -1,4 +1,4 @@
 namespace Fusumity.Attributes.Specific
 {
-	public class HideLabelAttribute : GenericDrawerAttribute {}
+	public class HideLabelAttribute : FusumityDrawerAttribute {}
 }

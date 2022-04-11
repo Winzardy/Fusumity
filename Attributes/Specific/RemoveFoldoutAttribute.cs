@@ -1,4 +1,4 @@
 namespace Fusumity.Attributes.Specific
 {
-	public class RemoveFoldoutAttribute : GenericDrawerAttribute {}
+	public class RemoveFoldoutAttribute : FusumityDrawerAttribute {}
 }

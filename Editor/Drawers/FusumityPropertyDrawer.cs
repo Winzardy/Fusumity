@@ -8,18 +8,20 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers
 {
-	[CustomPropertyDrawer(typeof(GenericDrawerAttribute))]
-	public class GenericPropertyDrawer : PropertyDrawer
+	[CustomPropertyDrawer(typeof(FusumityDrawerAttribute))]
+	[CustomPropertyDrawer(typeof(IFusumitySerializable), true)]
+	public class FusumityPropertyDrawer : PropertyDrawer
 	{
 		private const float indentWidth = 15f;
 
-		private static readonly Type _baseDrawerType = typeof(GenericPropertyDrawer);
-		private static readonly Type _attributeType = typeof(GenericDrawerAttribute);
+		private static readonly Type _baseDrawerType = typeof(FusumityPropertyDrawer);
+		private static readonly Type _attributeType = typeof(FusumityDrawerAttribute);
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
 
-		private GenericDrawerAttribute[] _genericAttributes;
-		private GenericPropertyDrawer[] _genericDrawers;
+
+		private FusumityDrawerAttribute[] _fusumityAttributes;
+		private FusumityPropertyDrawer[] _fusumityDrawers;
 
 		protected PropertyData propertyData;
 
@@ -34,7 +36,7 @@ namespace Fusumity.Editor.Drawers
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			if (!propertyData.drawProperty)
+			if (propertyData == null || !propertyData.drawProperty)
 				return;
 
 			GUI.enabled = propertyData.isEnabled;
@@ -136,12 +138,12 @@ namespace Fusumity.Editor.Drawers
 			if (_genericAttributes != null)
 				return;
 
-			var attributes = new List<GenericDrawerAttribute>();
+			var attributes = new List<FusumityDrawerAttribute>();
 			var customAttributes = fieldInfo.GetCustomAttributes();
 
 			foreach (var customAttribute in customAttributes)
 			{
-				if (!(customAttribute is GenericDrawerAttribute genericAttribute))
+				if (!(customAttribute is FusumityDrawerAttribute genericAttribute))
 					continue;
 				if (genericAttribute.Equals(attribute))
 					continue;
@@ -219,7 +221,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			ModifyPropertyData();
 
-			foreach (var drawer in _genericDrawers)
+			foreach (var drawer in _fusumityDrawers)
 			{
 				drawer.ModifyPropertyData();
 			}
@@ -229,7 +231,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			ValidateBeforeDrawing();
 
-			foreach (var drawer in _genericDrawers)
+			foreach (var drawer in _fusumityDrawers)
 			{
 				drawer.ValidateBeforeDrawing();
 			}
@@ -238,7 +240,7 @@ namespace Fusumity.Editor.Drawers
 		private void ExecuteDrawBeforeExtension(Rect position)
 		{
 			DrawBeforeExtension(ref position);
-			foreach (var drawer in _genericDrawers)
+			foreach (var drawer in _fusumityDrawers)
 			{
 				drawer.DrawBeforeExtension(ref position);
 			}
@@ -248,7 +250,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (!this.IsDrawLabelOverriden())
 			{
-				foreach (var drawer in _genericDrawers)
+				foreach (var drawer in _fusumityDrawers)
 				{
 					if (drawer.IsDrawLabelOverriden())
 					{
@@ -265,7 +267,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (!this.IsDrawSubBodyOverriden())
 			{
-				foreach (var drawer in _genericDrawers)
+				foreach (var drawer in _fusumityDrawers)
 				{
 					if (drawer.IsDrawSubBodyOverriden())
 					{
@@ -282,7 +284,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (!this.IsDrawBodyOverriden())
 			{
-				foreach (var drawer in _genericDrawers)
+				foreach (var drawer in _fusumityDrawers)
 				{
 					if (drawer.IsDrawBodyOverriden())
 					{
@@ -298,7 +300,7 @@ namespace Fusumity.Editor.Drawers
 		private void ExecuteDrawAfterExtension(Rect position)
 		{
 			DrawAfterExtension(ref position);
-			foreach (var drawer in _genericDrawers)
+			foreach (var drawer in _fusumityDrawers)
 			{
 				drawer.DrawAfterExtension(ref position);
 			}
@@ -308,7 +310,7 @@ namespace Fusumity.Editor.Drawers
 		{
 			OnPropertyChanged();
 
-			foreach (var drawer in _genericDrawers)
+			foreach (var drawer in _fusumityDrawers)
 			{
 				drawer.OnPropertyChanged();
 			}

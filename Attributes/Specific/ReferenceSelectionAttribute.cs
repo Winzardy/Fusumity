@@ -2,7 +2,7 @@ using System;
 
 namespace Fusumity.Attributes.Specific
 {
-	public class ReferenceSelectionAttribute : GenericDrawerAttribute
+	public class ReferenceSelectionAttribute : FusumityDrawerAttribute
 	{
 		public Type type;
 		public bool insertNull = true;

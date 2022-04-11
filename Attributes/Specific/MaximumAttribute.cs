@@ -1,6 +1,6 @@
 namespace Fusumity.Attributes.Specific
 {
-	public class MaximumAttribute : GenericDrawerAttribute
+	public class MaximumAttribute : FusumityDrawerAttribute
 	{
 		public float maxFloat;
 		public int maxInt;

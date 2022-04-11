@@ -6,7 +6,7 @@ using UnityEditor;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(MinimumAttribute))]
-	public class MinimumDrawer : GenericPropertyDrawer
+	public class MinimumDrawer : FusumityPropertyDrawer
 	{
 		public override void ValidateBeforeDrawing()
 		{

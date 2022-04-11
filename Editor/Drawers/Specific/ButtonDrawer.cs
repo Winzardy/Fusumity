@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(ButtonAttribute))]
-	public class ButtonDrawer : GenericPropertyDrawer
+	public class ButtonDrawer : FusumityPropertyDrawer
 	{
 		public override void ModifyPropertyData()
 		{

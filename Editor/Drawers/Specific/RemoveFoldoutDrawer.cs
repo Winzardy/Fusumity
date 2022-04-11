@@ -4,7 +4,7 @@ using UnityEditor;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(RemoveFoldoutAttribute))]
-	public class RemoveFoldoutDrawer : GenericPropertyDrawer
+	public class RemoveFoldoutDrawer : FusumityPropertyDrawer
 	{
 		public override void ModifyPropertyData()
 		{
