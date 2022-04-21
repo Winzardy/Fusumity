@@ -6,6 +6,16 @@ namespace Fusumity.Editor.Utilities
 {
 	public static class EditorExtensions
 	{
+		public static bool IsStandardType(this SerializedProperty property)
+		{
+			return property.propertyType != SerializedPropertyType.Generic & property.propertyType != SerializedPropertyType.ManagedReference;
+		}
+
+		public static string GetParentPropertyPath(this SerializedProperty property)
+		{
+			return ReflectionExtensions.GetParentPath(property.propertyPath);
+		}
+
 		public static Type GetManagedReferenceType(this SerializedProperty property)
 		{
 			var typeName = property.managedReferenceFullTypename;
@@ -21,52 +31,67 @@ namespace Fusumity.Editor.Utilities
 			return null;
 		}
 
-		public static object GetObjectByLocalPath(SerializedObject serializedObject, string objectPath)
+		public static object GetObjectByPath(SerializedObject serializedObject, string objectPath)
 		{
 			return ReflectionExtensions.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
 		}
 
-		public static Type GetPropertyTypeByLocalPath(SerializedObject serializedObject, string propertyPath)
+		public static Type GetPropertyTypeByPath(SerializedObject serializedObject, string propertyPath)
 		{
-			return GetObjectByLocalPath(serializedObject, propertyPath).GetType();
+			return GetObjectByPath(serializedObject, propertyPath)?.GetType();
 		}
 
-		public static Type GetPropertyTypeByLocalPath(this SerializedProperty property)
+		public static Type GetPropertyType(this SerializedProperty property)
 		{
-			return GetPropertyTypeByLocalPath(property.serializedObject, property.propertyPath);
+			return GetPropertyTypeByPath(property.serializedObject, property.propertyPath);
 		}
 
-		public static string GetPropertyParentPath(this SerializedProperty property)
+		public static Type GetPropertyTypeByLocalPath(this SerializedProperty property, string localPath)
 		{
-			return ReflectionExtensions.GetParentPath(property.propertyPath);
+			return GetPropertyTypeByPath(property.serializedObject, property.propertyPath.AppendPath(localPath));
+		}
+
+		public static void SetPropertyValueByLocalPath(SerializedObject serializedObject, string propertyPath, object value)
+		{
+			ReflectionExtensions.SetObjectByLocalPath(serializedObject.targetObject, propertyPath, value);
+		}
+
+		public static void SetPropertyValue(this SerializedProperty property, object value)
+		{
+			SetPropertyValueByLocalPath(property.serializedObject, property.propertyPath, value);
 		}
 
 		public static SerializedProperty GetParentProperty(this SerializedProperty property)
 		{
-			var parentPath = property.GetPropertyParentPath();
+			var parentPath = property.GetParentPropertyPath();
 			var parent = property.serializedObject.FindProperty(parentPath);
 
 			return parent;
 		}
 
-		public static void InvokeMethodByLocalPath(this SerializedProperty property, string methodPath)
-		{
-			var parentPath = property.GetPropertyParentPath();
-			var fullMethodPath = parentPath.AppendPath(methodPath);
-
-			ReflectionExtensions.InvokeMethodByLocalPath(property.serializedObject.targetObject, fullMethodPath);
-		}
-
 		public static SerializedProperty GetPropertyByLocalPath(this SerializedProperty property, string localPath)
 		{
-			var parentPath = property.GetPropertyParentPath();
+			var parentPath = property.GetParentPropertyPath();
 			var fullPath = parentPath.AppendPath(localPath);
 
 			return property.serializedObject.FindProperty(fullPath);
 		}
 
+		public static void InvokeMethodByLocalPath(this SerializedProperty property, string methodPath)
+		{
+			var parentPath = property.GetParentPropertyPath();
+			var fullMethodPath = parentPath.AppendPath(methodPath);
+
+			ReflectionExtensions.InvokeMethodByLocalPath(property.serializedObject.targetObject, fullMethodPath);
+		}
+
 		public static void DrawBody(this SerializedProperty property, Rect position)
 		{
+			if (property.IsStandardType())
+			{
+				EditorGUI.PropertyField(position, property, new GUIContent(" "), true);
+				return;
+			}
 			if (!property.hasVisibleChildren)
 			{
 				EditorGUI.PropertyField(position, property, new GUIContent(" "), false);
@@ -77,7 +102,7 @@ namespace Fusumity.Editor.Utilities
 			currentProperty.NextVisible(true);
 			do
 			{
-				if (currentProperty.propertyPath.StartsWith(property.propertyPath + ".") == false)
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExtensions.pathSplitChar))
 				{
 					break;
 				}
@@ -89,6 +114,34 @@ namespace Fusumity.Editor.Utilities
 			} while (currentProperty.NextVisible(false));
 
 			currentProperty.Dispose();
+		}
+
+		public static float GetBodyHeight(this SerializedProperty property)
+		{
+			if (property.propertyType != SerializedPropertyType.ManagedReference)
+				return EditorGUI.GetPropertyHeight(property, true);
+
+			var height = EditorGUI.GetPropertyHeight(property, false);
+			if (!property.hasVisibleChildren)
+			{
+				return height;
+			}
+			var currentProperty = property.serializedObject.FindProperty(property.propertyPath);
+
+			currentProperty.NextVisible(true);
+			do
+			{
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExtensions.pathSplitChar))
+				{
+					break;
+				}
+
+				height += currentProperty.GetBodyHeight();
+			}
+			while (currentProperty.NextVisible(false));
+			currentProperty.Dispose();
+
+			return height;
 		}
 	}
 }

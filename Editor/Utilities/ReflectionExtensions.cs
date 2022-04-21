@@ -8,7 +8,6 @@ namespace Fusumity.Editor.Utilities
 	{
 		public const BindingFlags fieldBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 		public const BindingFlags internalFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
-		public const BindingFlags privateFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
 		public const BindingFlags methodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 		public const BindingFlags overridenMethodBindingFlags = BindingFlags.Instance | BindingFlags.DeclaredOnly;
@@ -69,6 +68,45 @@ namespace Fusumity.Editor.Utilities
 			return inheritorTypes;
 		}
 
+		public static void SetObjectByLocalPath(object source, string objectPath, object value)
+		{
+			var target = source;
+			if (string.IsNullOrEmpty(objectPath))
+				return;
+
+			var pathComponents = objectPath.Split(pathSplitChar);
+
+			for (var p = 0; p < pathComponents.Length; p++)
+			{
+				var pathComponent = pathComponents[p];
+				if (target is Array array)
+				{
+					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(arrayDataBeginner))
+					{
+						var index = int.Parse(pathComponents[++p].Replace(arrayDataBeginner, "").Replace($"{arrayDataTerminator}", ""));
+
+						if (p + 1 == pathComponents.Length)
+						{
+							array.SetValue(value, index);
+							return;
+						}
+						target = array.GetValue(index);
+					}
+				}
+				else
+				{
+					var field = GetAnyField(target.GetType(), pathComponent);
+
+					if (p + 1 == pathComponents.Length)
+					{
+						field.SetValue(target, value);
+						return;
+					}
+					target = field.GetValue(target);
+				}
+			}
+		}
+
 		public static object GetObjectByLocalPath(object source, string objectPath)
 		{
 			var target = source;
@@ -105,28 +143,39 @@ namespace Fusumity.Editor.Utilities
 
 		public static string GetParentPath(string propertyPath)
 		{
-			var parentPath = propertyPath;
+			return GetParentPath(propertyPath, out _);
+		}
 
-			var removeIndex = parentPath.LastIndexOf(pathSplitChar);
+		public static string GetParentPath(string propertyPath, out string localPath)
+		{
+			var removeIndex = propertyPath.LastIndexOf(pathSplitChar);
 			if (removeIndex >= 0)
 			{
-				parentPath = parentPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+				localPath = propertyPath.Remove(0, removeIndex + 1);
+				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (propertyPath[propertyPath.Length - 1] != arrayDataTerminator)
-					return parentPath;
+				if (localPath[localPath.Length - 1] != arrayDataTerminator)
+					return propertyPath;
 
 				// Remove "{field name}.Array"
-				removeIndex = parentPath.LastIndexOf(pathSplitChar);
-				parentPath = parentPath.Remove(removeIndex, parentPath.Length - removeIndex);
+				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
+				localPath = propertyPath.Remove(0, removeIndex + 1) + localPath;
+				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				removeIndex = parentPath.LastIndexOf(pathSplitChar);
-				parentPath = removeIndex >= 0 ? parentPath.Remove(removeIndex, parentPath.Length - removeIndex) : "";
+				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
+				if (removeIndex < 0)
+					return "";
+
+				localPath = propertyPath.Remove(0, removeIndex + 1) + localPath;
+				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+
+				return propertyPath;
 			}
 			else
 			{
-				parentPath = "";
+				localPath = propertyPath;
+				return "";
 			}
-			return parentPath;
 		}
 
 		public static FieldInfo GetAnyField(this Type type, string fieldName)
@@ -135,7 +184,7 @@ namespace Fusumity.Editor.Utilities
 			while (field == null)
 			{
 				type = type.BaseType;
-				field = type.GetField(fieldName, privateFieldBindingFlags);
+				field = type.GetField(fieldName, internalFieldBindingFlags);
 			}
 
 			return field;

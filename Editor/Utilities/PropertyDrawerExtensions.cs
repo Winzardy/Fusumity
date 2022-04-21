@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using Fusumity.Attributes;
 using Fusumity.Editor.Drawers;
 using UnityEditor;
 using UnityEngine;
@@ -44,22 +43,22 @@ namespace Fusumity.Editor.Utilities
 			fieldInfoField.SetValue(drawer, fieldInfo);
 		}
 
-		public static bool IsDrawLabelOverriden(this GenericPropertyDrawer drawer)
+		public static bool IsDrawLabelOverriden(this FusumityPropertyDrawer drawer)
 		{
 			return drawer.IsDrawerMethodOverriden(_customPropertyDrawerMethod_DrawLabel);
 		}
 
-		public static bool IsDrawSubBodyOverriden(this GenericPropertyDrawer drawer)
+		public static bool IsDrawSubBodyOverriden(this FusumityPropertyDrawer drawer)
 		{
 			return drawer.IsDrawerMethodOverriden(_customPropertyDrawerMethod_DrawSubBody);
 		}
 
-		public static bool IsDrawBodyOverriden(this GenericPropertyDrawer drawer)
+		public static bool IsDrawBodyOverriden(this FusumityPropertyDrawer drawer)
 		{
 			return drawer.IsDrawerMethodOverriden(_customPropertyDrawerMethod_DrawBody);
 		}
 
-		private static bool IsDrawerMethodOverriden(this GenericPropertyDrawer drawer, string name)
+		private static bool IsDrawerMethodOverriden(this FusumityPropertyDrawer drawer, string name)
 		{
 			var drawerType = drawer.GetType();
 			var methodInfo = drawerType.GetMethod(name, ReflectionExtensions.overridenMethodBindingFlags, null, new [] {typeof(Rect)}, null);

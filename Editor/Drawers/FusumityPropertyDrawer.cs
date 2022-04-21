@@ -19,7 +19,6 @@ namespace Fusumity.Editor.Drawers
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
 
-
 		private FusumityDrawerAttribute[] _fusumityAttributes;
 		private FusumityPropertyDrawer[] _fusumityDrawers;
 
@@ -29,14 +28,17 @@ namespace Fusumity.Editor.Drawers
 		{
 			LazyInitializeAttributes();
 			LazyInitializeDrawers();
-			InitializePropertyData(property, label);
+			LazyInitializePropertyData();
+
+			propertyData.ResetData(property, label);
+			ExecuteModifyPropertyData();
 
 			return propertyData.GetTotalHeight();
 		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			if (propertyData == null || !propertyData.drawProperty)
+			if (!(propertyData is { drawProperty: true }))
 				return;
 
 			GUI.enabled = propertyData.isEnabled;
@@ -94,7 +96,7 @@ namespace Fusumity.Editor.Drawers
 				propertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, "");
 			}
 
-			if (propertyData.hasSubBody & (propertyData.property.isExpanded | !propertyData.hasFoldout | propertyData.drawSubBodyWhenRollUp))
+			if (propertyData.ShouldDrawSubBody())
 			{
 				if (!propertyData.hasLabel | !propertyData.labelIntersectSubBody)
 				{
@@ -106,7 +108,7 @@ namespace Fusumity.Editor.Drawers
 				EditorGUIUtility.labelWidth = lastLabelWidth;
 			}
 
-			if (propertyData.hasBody & (propertyData.property.isExpanded | !propertyData.hasFoldout))
+			if (propertyData.ShouldDrawBody())
 			{
 				if (propertyData.hasLabel)
 				{
@@ -135,7 +137,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeAttributes()
 		{
-			if (_genericAttributes != null)
+			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0)
 				return;
 
 			var attributes = new List<FusumityDrawerAttribute>();
@@ -143,19 +145,19 @@ namespace Fusumity.Editor.Drawers
 
 			foreach (var customAttribute in customAttributes)
 			{
-				if (!(customAttribute is FusumityDrawerAttribute genericAttribute))
+				if (!(customAttribute is FusumityDrawerAttribute fusumityDrawerAttribute))
 					continue;
-				if (genericAttribute.Equals(attribute))
+				if (fusumityDrawerAttribute.Equals(attribute))
 					continue;
-				attributes.Add(genericAttribute);
+				attributes.Add(fusumityDrawerAttribute);
 			}
 
-			_genericAttributes = attributes.ToArray();
+			_fusumityAttributes = attributes.ToArray();
 		}
 
 		private void LazyInitializeDrawers()
 		{
-			if (_genericDrawers != null)
+			if (_fusumityDrawers != null && _fusumityDrawers.Length > 0)
 				return;
 
 			if (_attributeTypeToDrawerType == null)
@@ -172,45 +174,49 @@ namespace Fusumity.Editor.Drawers
 						var customAttributeTypes = customAttribute.GetCustomPropertyDrawerTypes();
 						foreach (var customAttributeType in customAttributeTypes)
 						{
-							_attributeTypeToDrawerType.Add(customAttributeType, drawerType);
+							if (!_attributeTypeToDrawerType.ContainsKey(customAttributeType))
+							{
+								_attributeTypeToDrawerType.Add(customAttributeType, drawerType);
+							}
+							else
+							{
+								Debug.Log(customAttributeType.Name);
+								Debug.Log(drawerType.Name);
+							}
 						}
 					}
 				}
 			}
 
-			_genericDrawers = new GenericPropertyDrawer[_genericAttributes.Length];
+			_fusumityDrawers = new FusumityPropertyDrawer[_fusumityAttributes.Length];
 
-			for (var i = 0; i < _genericAttributes.Length; i++)
+			for (var i = 0; i < _fusumityAttributes.Length; i++)
 			{
-				var genericAttribute = _genericAttributes[i];
+				var genericAttribute = _fusumityAttributes[i];
 
 				if (!_attributeTypeToDrawerType.TryGetValue(genericAttribute.GetType(), out var drawerType))
 				{
 					drawerType = _baseDrawerType;
 				}
 
-				var drawer = (GenericPropertyDrawer)Activator.CreateInstance(drawerType);
+				var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
 				drawer.SetAttribute(genericAttribute);
 				drawer.SetFieldInfo(fieldInfo);
 
-				_genericDrawers[i] = drawer;
+				_fusumityDrawers[i] = drawer;
 			}
 		}
 
-		private void InitializePropertyData(SerializedProperty property, GUIContent label)
+		private void LazyInitializePropertyData()
 		{
-			if (propertyData == null)
+			if (propertyData != null)
+				return;
+
+			propertyData = new PropertyData();
+			foreach (var drawer in _fusumityDrawers)
 			{
-				propertyData = new PropertyData();
-
-				foreach (var drawer in _genericDrawers)
-				{
-					drawer.propertyData = propertyData;
-				}
+				drawer.propertyData = propertyData;
 			}
-
-			propertyData.ResetData(property, label);
-			ExecuteModifyPropertyData();
 		}
 
 		#endregion
@@ -410,11 +416,11 @@ namespace Fusumity.Editor.Drawers
 			{
 				height += beforeExtensionHeight;
 			}
-			if (hasLabel | hasSubBody | (!hasBody & hasFoldout))
+			if (hasLabel || ShouldDrawSubBody())
 			{
 				height += labelHeight;
 			}
-			if (hasBody)
+			if (ShouldDrawBody())
 			{
 				height += bodyHeight;
 			}
@@ -424,6 +430,16 @@ namespace Fusumity.Editor.Drawers
 			}
 
 			return height;
+		}
+
+		public bool ShouldDrawSubBody()
+		{
+			return hasSubBody & (property.isExpanded | !hasFoldout | drawSubBodyWhenRollUp);
+		}
+
+		public bool ShouldDrawBody()
+		{
+			return hasBody & (property.isExpanded | !hasFoldout);
 		}
 	}
 }

@@ -25,6 +25,7 @@ namespace Fusumity.Editor.Drawers.Specific
 		public override void DrawSubBody(Rect position)
 		{
 			var property = propertyData.property;
+
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
 			if (property.propertyType != SerializedPropertyType.ManagedReference)
@@ -37,8 +38,17 @@ namespace Fusumity.Editor.Drawers.Specific
 			var targetType = attr.type ?? fieldType;
 			var currentType = property.GetManagedReferenceType();
 
+			SelectType(position, currentType, targetType, attr.insertNull);
+		}
+
+		protected void SelectType(Rect position, Type currentType, Type targetType, bool insertNull)
+		{
+			var property = propertyData.property;
+
+			var propertyPath = property.propertyPath;
+
 			_selectedType = currentType;
-			_currentTypes ??= targetType.GetInheritorTypes(attr.insertNull);
+			_currentTypes ??= targetType.GetInheritorTypes(insertNull);
 
 			var typeName = currentType == null ? "None" : currentType.Name;
 			if (EditorGUI.DropdownButton(position, new GUIContent(typeName), default))
@@ -57,30 +67,36 @@ namespace Fusumity.Editor.Drawers.Specific
 					AutoHeight = false,
 				};
 				var i = 0;
-				if (attr.insertNull)
+				if (insertNull)
 				{
-					popup.Item("None", item => { Select(item.order); }, false, i++);
+					popup.Item("None", item => { Select(propertyPath ,item.order); }, false, i++);
 				}
 				for (; i < _currentTypes.Length; i++)
 				{
-					popup.Item(ToCamelCaseSpace(_currentTypes[i].Name), item => { Select(item.order); }, true, i);
+					popup.Item(ToCamelCaseSpace(_currentTypes[i].Name), item => { Select(propertyPath, item.order); }, true, i);
 				}
 				popup.Show();
 			}
 		}
 
-		private void Select(int newSelected)
+		private void Select(string propertyPath, int newSelected)
 		{
 			var newType = GetType(newSelected);
 
 			if (_selectedType == newType)
 				return;
 
-			var property = propertyData.property;
+			var newValue = newType == null ? null : Activator.CreateInstance(newType, true);
+			var property = propertyData.property.serializedObject.FindProperty(propertyPath);
 
-			property.managedReferenceValue = newType == null ? null : Activator.CreateInstance(newType, true);
+			SetValue(property, newValue);
+		}
+
+		protected virtual void SetValue(SerializedProperty property, object value)
+		{
+			property.managedReferenceValue = value;
+
 			property.serializedObject.ApplyModifiedProperties();
-
 			if (property.serializedObject.context != null)
 				EditorUtility.SetDirty(property.serializedObject.context);
 		}
