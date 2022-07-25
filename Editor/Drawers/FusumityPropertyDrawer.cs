@@ -86,11 +86,6 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawLabel(labelPosition);
 			}
 
-			if (propertyData.hasLabel)
-			{
-				ExecuteDrawLabel(labelPosition);
-			}
-
 			if (propertyData.hasFoldout)
 			{
 				propertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, "");
