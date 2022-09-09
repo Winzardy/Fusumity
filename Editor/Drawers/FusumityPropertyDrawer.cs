@@ -381,11 +381,13 @@ namespace Fusumity.Editor.Drawers
 			drawProperty = true;
 			isEnabled = true;
 
+			var hasChildren = property.hasChildren;
+
 			hasBeforeExtension = false;
-			hasFoldout = property.hasChildren;
+			hasFoldout = hasChildren;
 			hasLabel = true;
-			hasSubBody = !property.hasChildren;
-			hasBody = property.hasChildren & property.isExpanded;
+			hasSubBody = !hasChildren;
+			hasBody = hasChildren & property.isExpanded;
 			hasAfterExtension = false;
 
 			drawSubBodyWhenRollUp = true;
@@ -395,7 +397,7 @@ namespace Fusumity.Editor.Drawers
 			labelHeight = EditorGUIUtility.singleLineHeight;
 			bodyHeight = EditorGUI.GetPropertyHeight(property, true);
 			afterExtensionHeight = 0f;
-			if (property.hasChildren)
+			if (hasChildren)
 				bodyHeight -= labelHeight;
 
 			labelStyle = EditorStyles.label;
