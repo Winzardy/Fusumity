@@ -376,7 +376,7 @@ namespace Fusumity.Editor.Drawers
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
 			this.property = property;
-			this.label = label;
+			this.label = new GUIContent(label);
 
 			drawProperty = true;
 			isEnabled = true;
