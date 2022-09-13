@@ -11,6 +11,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			base.ModifyPropertyData();
 
 			propertyData.hasLabel = false;
+			propertyData.hasFoldout = false;
 		}
 	}
 }

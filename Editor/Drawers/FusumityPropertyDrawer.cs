@@ -18,6 +18,7 @@ namespace Fusumity.Editor.Drawers
 		private static readonly Type _attributeType = typeof(FusumityDrawerAttribute);
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
+		private static bool gettingPropertyHeight;
 
 		private FusumityDrawerAttribute[] _fusumityAttributes;
 		private FusumityPropertyDrawer[] _fusumityDrawers;
@@ -26,6 +27,11 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
+			if (gettingPropertyHeight)
+				return EditorGUI.GetPropertyHeight(property, true);
+
+			gettingPropertyHeight = true;
+
 			LazyInitializeAttributes();
 			LazyInitializeDrawers();
 			LazyInitializePropertyData();
@@ -33,6 +39,7 @@ namespace Fusumity.Editor.Drawers
 			propertyData.ResetData(property, label);
 			ExecuteModifyPropertyData();
 
+			gettingPropertyHeight = false;
 			return propertyData.GetTotalHeight();
 		}
 
@@ -60,7 +67,9 @@ namespace Fusumity.Editor.Drawers
 			var labelPosition = propertyData.hasLabel
 				? new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
-			var foldoutPosition = new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight);
+			var foldoutPosition = propertyData.hasFoldout
+				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight)
+				: Rect.zero;
 			var subBodyPosition = propertyData.hasLabel & !propertyData.labelIntersectSubBody
 				? new Rect(propertyPosition.x + EditorGUIUtility.labelWidth, propertyPosition.y,
 					propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)

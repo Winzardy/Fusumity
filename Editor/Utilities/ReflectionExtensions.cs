@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 namespace Fusumity.Editor.Utilities
@@ -13,6 +14,7 @@ namespace Fusumity.Editor.Utilities
 		public const BindingFlags overridenMethodBindingFlags = BindingFlags.Instance | BindingFlags.DeclaredOnly;
 		public const BindingFlags privateMethodBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
+		public const char pathParentChar = '/';
 		public const char pathSplitChar = '.';
 		public const char arrayDataTerminator = ']';
 		public const string arrayDataBeginner = "data[";
@@ -226,6 +228,12 @@ namespace Fusumity.Editor.Utilities
 				return additionalPath;
 			if (string.IsNullOrEmpty(additionalPath))
 				return sourcePath;
+
+			while (additionalPath[0] == pathParentChar)
+			{
+				additionalPath = additionalPath.Remove(0, 1);
+				sourcePath = GetParentPath(sourcePath);
+			}
 
 			return sourcePath + pathSplitChar + additionalPath;
 		}
