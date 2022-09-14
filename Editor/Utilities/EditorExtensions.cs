@@ -6,6 +6,10 @@ namespace Fusumity.Editor.Utilities
 {
 	public static class EditorExtensions
 	{
+		private static Rect positionCache;
+		private static GUIContent labelCache;
+		private static bool includeChildrenCache;
+
 		public static bool IsStandardType(this SerializedProperty property)
 		{
 			return property.propertyType != SerializedPropertyType.Generic & property.propertyType != SerializedPropertyType.ManagedReference;
@@ -89,12 +93,12 @@ namespace Fusumity.Editor.Utilities
 		{
 			if (property.IsStandardType())
 			{
-				EditorGUI.PropertyField(position, property, new GUIContent(" "), true);
+				property.PropertyField(position, new GUIContent(" "), true);
 				return;
 			}
 			if (!property.hasVisibleChildren)
 			{
-				EditorGUI.PropertyField(position, property, new GUIContent(" "), false);
+				property.PropertyField(position, new GUIContent(" "), false);
 				return;
 			}
 			var currentProperty = property.serializedObject.FindProperty(property.propertyPath);
@@ -107,9 +111,9 @@ namespace Fusumity.Editor.Utilities
 					break;
 				}
 
-				var height = EditorGUI.GetPropertyHeight(currentProperty, true);
+				var height = currentProperty.GetPropertyHeight(true);
 				position.height = height;
-				EditorGUI.PropertyField(position, currentProperty, true);
+				currentProperty.PropertyField(position, includeChildren: true);
 				position.y += height;
 			} while (currentProperty.NextVisible(false));
 
@@ -119,9 +123,9 @@ namespace Fusumity.Editor.Utilities
 		public static float GetBodyHeight(this SerializedProperty property)
 		{
 			if (property.propertyType != SerializedPropertyType.ManagedReference)
-				return EditorGUI.GetPropertyHeight(property, true);
+				return property.GetPropertyHeight(true);
 
-			var height = EditorGUI.GetPropertyHeight(property, false);
+			var height = property.GetPropertyHeight(false);
 			if (!property.hasVisibleChildren)
 			{
 				return height;
@@ -142,6 +146,32 @@ namespace Fusumity.Editor.Utilities
 			currentProperty.Dispose();
 
 			return height;
+		}
+
+		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)
+		{
+			positionCache = position;
+			labelCache = label;
+			includeChildrenCache = includeChildren;
+
+			property.PropertyField_Cached();
+		}
+
+		public static float GetPropertyHeight(this SerializedProperty property, bool includeChildren)
+		{
+			includeChildrenCache = includeChildren;
+
+			return property.GetPropertyHeight_Cached();
+		}
+
+		public static void PropertyField_Cached(this SerializedProperty property)
+		{
+			EditorGUI.PropertyField(positionCache, property, labelCache, includeChildrenCache);
+		}
+
+		public static float GetPropertyHeight_Cached(this SerializedProperty property)
+		{
+			return EditorGUI.GetPropertyHeight(property, includeChildrenCache);;
 		}
 	}
 }

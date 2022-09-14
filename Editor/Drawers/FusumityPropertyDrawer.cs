@@ -19,7 +19,7 @@ namespace Fusumity.Editor.Drawers
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
 
-		private static Stack<SerializedProperty> _gettingPropertyHeight = new Stack<SerializedProperty>();
+		private static HashSet<string> _currentPropertyPath = new HashSet<string>();
 
 		private FusumityDrawerAttribute[] _fusumityAttributes;
 		private FusumityPropertyDrawer[] _fusumityDrawers;
@@ -28,10 +28,13 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			if (_gettingPropertyHeight.Count > 0 && _gettingPropertyHeight.Peek().propertyPath == property.propertyPath)
-				return EditorGUI.GetPropertyHeight(property, true);
+			if (_currentPropertyPath.Contains(property.propertyPath))
+			{
 
-			_gettingPropertyHeight.Push(property);
+				return property.GetPropertyHeight_Cached();
+			}
+
+			_currentPropertyPath.Add(property.propertyPath);
 
 			LazyInitializeAttributes();
 			LazyInitializeDrawers();
@@ -40,16 +43,25 @@ namespace Fusumity.Editor.Drawers
 			propertyData.ResetData(property, label);
 			ExecuteModifyPropertyData();
 
-			_gettingPropertyHeight.Pop();
+			_currentPropertyPath.Remove(property.propertyPath);
 			return propertyData.GetTotalHeight();
 		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
+			if (_currentPropertyPath.Contains(property.propertyPath))
+			{
+				property.PropertyField_Cached();
+				return;
+			}
+
 			if (!(propertyData is { drawProperty: true }))
 				return;
 
-			GUI.enabled = propertyData.isEnabled;
+			_currentPropertyPath.Add(property.propertyPath);
+
+			var oldGuiEnabled = GUI.enabled;
+			GUI.enabled &= propertyData.isEnabled;
 			var lastIndentLevel = EditorGUI.indentLevel;
 			var lastLabelWidth = EditorGUIUtility.labelWidth;
 
@@ -135,7 +147,9 @@ namespace Fusumity.Editor.Drawers
 
 			EditorGUIUtility.labelWidth = lastLabelWidth;
 			EditorGUI.indentLevel = lastIndentLevel;
-			GUI.enabled = true;
+			GUI.enabled = oldGuiEnabled;
+
+			_currentPropertyPath.Remove(property.propertyPath);
 		}
 
 		#region Initialization
@@ -405,7 +419,7 @@ namespace Fusumity.Editor.Drawers
 
 			beforeExtensionHeight = 0f;
 			labelHeight = EditorGUIUtility.singleLineHeight;
-			bodyHeight = EditorGUI.GetPropertyHeight(property, true);
+			bodyHeight = property.GetPropertyHeight(true);
 			afterExtensionHeight = 0f;
 			if (hasChildren)
 				bodyHeight -= labelHeight;
