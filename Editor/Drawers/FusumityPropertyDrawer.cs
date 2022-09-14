@@ -18,7 +18,8 @@ namespace Fusumity.Editor.Drawers
 		private static readonly Type _attributeType = typeof(FusumityDrawerAttribute);
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
-		private static bool gettingPropertyHeight;
+
+		private static Stack<SerializedProperty> _gettingPropertyHeight = new Stack<SerializedProperty>();
 
 		private FusumityDrawerAttribute[] _fusumityAttributes;
 		private FusumityPropertyDrawer[] _fusumityDrawers;
@@ -27,10 +28,10 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			if (gettingPropertyHeight)
+			if (_gettingPropertyHeight.Count > 0 && _gettingPropertyHeight.Peek().propertyPath == property.propertyPath)
 				return EditorGUI.GetPropertyHeight(property, true);
 
-			gettingPropertyHeight = true;
+			_gettingPropertyHeight.Push(property);
 
 			LazyInitializeAttributes();
 			LazyInitializeDrawers();
@@ -39,7 +40,7 @@ namespace Fusumity.Editor.Drawers
 			propertyData.ResetData(property, label);
 			ExecuteModifyPropertyData();
 
-			gettingPropertyHeight = false;
+			_gettingPropertyHeight.Pop();
 			return propertyData.GetTotalHeight();
 		}
 
