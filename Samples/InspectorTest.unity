@@ -132,7 +132,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 60366481}
-  - component: {fileID: 60366480}
+  - component: {fileID: 60366482}
   m_Layer: 0
   m_Name: Test
   m_TagString: Untagged
@@ -140,7 +140,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &60366480
+--- !u!4 &60366481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60366479}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &60366482
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -153,29 +168,48 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   test:
-    id: 0
+    rid: 4326296144404545560
+  spell:
+    prefabViewKey: 
+    movementPattern:
+      rid: 4326296144404545561
+    timePattern:
+      periodicActions: []
+      timeActions:
+      - time: 0
+        action:
+          rid: 4326296144404545563
+      durationActions: []
+      infinityDuration: 0
+      duration: 0
+    hitForm:
+      rid: -2
   references:
-    version: 1
-    00000000:
-      type: {class: Tst1, ns: , asm: Fusumity}
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 4326296144404545560
+      type: {class: Tst1, ns: Fusumity.Test, asm: Fusumity}
       data:
-        a: 0
-        min: 0
-        max: 9
---- !u!4 &60366481
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 60366479}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+        a: 2
+        min: 1
+        max: 2
+    - rid: 4326296144404545561
+      type: {class: NoMovement, ns: Fusumity.Test, asm: Fusumity}
+      data:
+        periodicActions: []
+        distanceActions: []
+        location: 0
+    - rid: 4326296144404545563
+      type: {class: CastPattern, ns: Fusumity.Test, asm: Fusumity}
+      data:
+        cast:
+          rid: -2
+        castCount: 1
+        maxExtraCastCount: 51
+        castCooldown: 1.82
+        castDuration: 4.38
 --- !u!1 &1087079384
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,6 +289,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
