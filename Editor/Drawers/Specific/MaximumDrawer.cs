@@ -22,7 +22,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				var maxProperty = property.GetPropertyByLocalPath(maxAttribute.maxPath);
 
-				switch (maxProperty.propertyType)
+				switch (maxProperty?.propertyType)
 				{
 					case SerializedPropertyType.Integer:
 						intmax = Math.Max(maxProperty.intValue, intmax);

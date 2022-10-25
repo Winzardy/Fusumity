@@ -22,7 +22,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				var minProperty = property.GetPropertyByLocalPath(minAttribute.minPath);
 
-				switch (minProperty.propertyType)
+				switch (minProperty?.propertyType)
 				{
 					case SerializedPropertyType.Integer:
 						intMin = Math.Max(minProperty.intValue, intMin);
