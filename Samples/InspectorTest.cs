@@ -2,11 +2,11 @@ using System;
 using Fusumity.Attributes.Specific;
 using UnityEngine;
 
-namespace Fusumity.Test
+namespace Fusumity.Samples
 {
 	public class InspectorTest : MonoBehaviour
 	{
-		[ReferenceSelectionAttribute, SerializeReference]
+		[ReferenceSelection, SerializeReference]
 		public ITest test;
 
 		public Spell spell;

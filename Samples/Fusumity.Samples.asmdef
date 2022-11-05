@@ -1,0 +1,16 @@
+{
+    "name": "Fusumity.Samples",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
