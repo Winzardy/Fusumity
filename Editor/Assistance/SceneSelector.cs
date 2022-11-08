@@ -6,13 +6,14 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if UNITY_2019_1_OR_NEWER
 using UnityEngine.UIElements;
+#if UNITY_2019_1_OR_NEWER
+
 #else
 using UnityEngine.Experimental.UIElements;
 #endif
 
-namespace Fusumity.Editor.Utilities
+namespace Fusumity.Editor.Assistance
 {
 	[InitializeOnLoad]
 	public static class SceneSelector
@@ -86,7 +87,7 @@ namespace Fusumity.Editor.Utilities
 				{
 					xMin = EditorGUIUtility.currentViewWidth * 0.5f + 100.0f,
 					xMax = EditorGUIUtility.currentViewWidth - 350.0f,
-					y = 8.0f,
+					y = 6.0f,
 				};
 
 				using (new GUILayout.AreaScope(rect))

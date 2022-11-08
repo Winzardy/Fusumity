@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 
-namespace Fusumity.Editor.Utilities
+namespace Fusumity.Editor.Extensions
 {
-	public static class ReflectionExtensions
+	public static class ReflectionExt
 	{
 		public const BindingFlags fieldBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 		public const BindingFlags internalFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;

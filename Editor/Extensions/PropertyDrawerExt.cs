@@ -4,9 +4,9 @@ using Fusumity.Editor.Drawers;
 using UnityEditor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Utilities
+namespace Fusumity.Editor.Extensions
 {
-	public static class PropertyDrawerExtensions
+	public static class PropertyDrawerExt
 	{
 		private static readonly Type _customPropertyDrawerType = typeof(CustomPropertyDrawer);
 		private const string _customPropertyDrawerField_Type = "m_Type";
@@ -22,8 +22,8 @@ namespace Fusumity.Editor.Utilities
 
 		public static Type[] GetCustomPropertyDrawerTypes(this CustomPropertyDrawer drawer)
 		{
-			var typeField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_Type, ReflectionExtensions.internalFieldBindingFlags);
-			var useForChildrenField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_UseForChildren, ReflectionExtensions.internalFieldBindingFlags);
+			var typeField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_Type, ReflectionExt.internalFieldBindingFlags);
+			var useForChildrenField = _customPropertyDrawerType.GetField(_customPropertyDrawerField_UseForChildren, ReflectionExt.internalFieldBindingFlags);
 
 			var type = (Type)typeField.GetValue(drawer);
 			var useForChildren = (bool)useForChildrenField.GetValue(drawer);
@@ -33,13 +33,13 @@ namespace Fusumity.Editor.Utilities
 
 		public static void SetAttribute(this PropertyDrawer drawer, PropertyAttribute attribute)
 		{
-			var attributeField = _propertyDrawerType.GetField(_propertyDrawerField_Attribute, ReflectionExtensions.internalFieldBindingFlags);
+			var attributeField = _propertyDrawerType.GetField(_propertyDrawerField_Attribute, ReflectionExt.internalFieldBindingFlags);
 			attributeField.SetValue(drawer, attribute);
 		}
 
 		public static void SetFieldInfo(this PropertyDrawer drawer, FieldInfo fieldInfo)
 		{
-			var fieldInfoField = _propertyDrawerType.GetField(_propertyDrawerField_FieldInfo, ReflectionExtensions.internalFieldBindingFlags);
+			var fieldInfoField = _propertyDrawerType.GetField(_propertyDrawerField_FieldInfo, ReflectionExt.internalFieldBindingFlags);
 			fieldInfoField.SetValue(drawer, fieldInfo);
 		}
 
@@ -61,7 +61,7 @@ namespace Fusumity.Editor.Utilities
 		private static bool IsDrawerMethodOverriden(this FusumityPropertyDrawer drawer, string name)
 		{
 			var drawerType = drawer.GetType();
-			var methodInfo = drawerType.GetMethod(name, ReflectionExtensions.overridenMethodBindingFlags, null, new [] {typeof(Rect)}, null);
+			var methodInfo = drawerType.GetMethod(name, ReflectionExt.overridenMethodBindingFlags, null, new [] {typeof(Rect)}, null);
 
 			return methodInfo != null;
 		}

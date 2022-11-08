@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Utilities
+namespace Fusumity.Editor.Assistance
 {
 	// MIT License
 	//

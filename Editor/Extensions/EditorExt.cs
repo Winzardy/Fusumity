@@ -2,9 +2,9 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Utilities
+namespace Fusumity.Editor.Extensions
 {
-	public static class EditorExtensions
+	public static class EditorExt
 	{
 		private static Rect positionCache;
 		private static GUIContent labelCache;
@@ -17,7 +17,7 @@ namespace Fusumity.Editor.Utilities
 
 		public static string GetParentPropertyPath(this SerializedProperty property)
 		{
-			return ReflectionExtensions.GetParentPath(property.propertyPath);
+			return ReflectionExt.GetParentPath(property.propertyPath);
 		}
 
 		public static Type GetManagedReferenceType(this SerializedProperty property)
@@ -37,7 +37,7 @@ namespace Fusumity.Editor.Utilities
 
 		public static object GetObjectByPath(SerializedObject serializedObject, string objectPath)
 		{
-			return ReflectionExtensions.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
+			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
 		}
 
 		public static Type GetPropertyTypeByPath(SerializedObject serializedObject, string propertyPath)
@@ -57,7 +57,7 @@ namespace Fusumity.Editor.Utilities
 
 		public static void SetPropertyValueByLocalPath(SerializedObject serializedObject, string propertyPath, object value)
 		{
-			ReflectionExtensions.SetObjectByLocalPath(serializedObject.targetObject, propertyPath, value);
+			ReflectionExt.SetObjectByLocalPath(serializedObject.targetObject, propertyPath, value);
 		}
 
 		public static void SetPropertyValue(this SerializedProperty property, object value)
@@ -86,7 +86,7 @@ namespace Fusumity.Editor.Utilities
 			var parentPath = property.GetParentPropertyPath();
 			var fullMethodPath = parentPath.AppendPath(methodPath);
 
-			ReflectionExtensions.InvokeMethodByLocalPath(property.serializedObject.targetObject, fullMethodPath);
+			ReflectionExt.InvokeMethodByLocalPath(property.serializedObject.targetObject, fullMethodPath);
 		}
 
 		public static void DrawBody(this SerializedProperty property, Rect position)
@@ -106,7 +106,7 @@ namespace Fusumity.Editor.Utilities
 			currentProperty.NextVisible(true);
 			do
 			{
-				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExtensions.pathSplitChar))
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.pathSplitChar))
 				{
 					break;
 				}
@@ -135,7 +135,7 @@ namespace Fusumity.Editor.Utilities
 			currentProperty.NextVisible(true);
 			do
 			{
-				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExtensions.pathSplitChar))
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.pathSplitChar))
 				{
 					break;
 				}
