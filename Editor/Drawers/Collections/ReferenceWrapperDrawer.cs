@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Fusumity.Editor.Drawers.Specific.Collections
 {
 	[CustomPropertyDrawer(typeof(ReferenceWrapper<,>))]
-	public class ReferenceWrapperDrawerDrawer : SerializeReferenceSelectorAttributeDrawer
+	public class ReferenceWrapperDrawer : SerializeReferenceSelectorAttributeDrawer
 	{
 		private const string _valueName = "_value";
 
