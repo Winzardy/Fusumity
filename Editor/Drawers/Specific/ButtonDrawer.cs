@@ -1,5 +1,5 @@
-using Fusumity.Editor.Utilities;
 using Fusumity.Attributes.Specific;
+using Fusumity.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -75,6 +75,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (string.IsNullOrEmpty(boolButtonAttribute.methodPath))
 				return;
 
+			Undo.RecordObject(propertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
 			propertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
 		}
 	}
