@@ -29,6 +29,7 @@ namespace Fusumity.Editor.Drawers.Specific
 						floatMin = Math.Max((float)minProperty.intValue, floatMin);
 						break;
 					case SerializedPropertyType.Float:
+					case SerializedPropertyType.Vector2:
 						intMin = Math.Max((int)minProperty.floatValue, intMin);
 						floatMin = Math.Max(minProperty.floatValue, floatMin);
 						break;
@@ -47,6 +48,19 @@ namespace Fusumity.Editor.Drawers.Specific
 					if (propertyData.property.floatValue < floatMin)
 					{
 						propertyData.property.floatValue = floatMin;
+					}
+					break;
+				case SerializedPropertyType.Vector2:
+					var vector = propertyData.property.vector2Value;
+					if (vector.x < floatMin)
+					{
+						vector.x = floatMin;
+						propertyData.property.vector2Value = vector;
+					}
+					if (vector.y < floatMin)
+					{
+						vector.y = floatMin;
+						propertyData.property.vector2Value = vector;
 					}
 					break;
 			}
