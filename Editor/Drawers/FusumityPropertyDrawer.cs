@@ -409,7 +409,7 @@ namespace Fusumity.Editor.Drawers
 			drawProperty = true;
 			isEnabled = true;
 
-			var hasChildren = property.hasChildren;
+			var hasChildren = property.Copy().CountInProperty() > 1;
 
 			hasBeforeExtension = false;
 			hasFoldout = hasChildren;
