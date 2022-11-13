@@ -30,8 +30,12 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (_currentPropertyPath.Contains(property.propertyPath))
 			{
-
-				return property.GetPropertyHeight_Cached();
+				// When you open the unity Object selection field the _currentPropertyPath will not cleaned in that frame :(
+				if (_currentPropertyPath.Contains(property.GetParentPropertyPath()))
+				{
+					return property.GetPropertyHeight_Cached();
+				}
+				_currentPropertyPath.Clear();
 			}
 
 			_currentPropertyPath.Add(property.propertyPath);
