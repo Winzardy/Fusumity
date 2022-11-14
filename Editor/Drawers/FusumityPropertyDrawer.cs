@@ -64,10 +64,13 @@ namespace Fusumity.Editor.Drawers
 
 			_currentPropertyPath.Add(property.propertyPath);
 
+			var oldBackgroundColor = GUI.backgroundColor;
 			var oldGuiEnabled = GUI.enabled;
-			GUI.enabled &= propertyData.isEnabled;
 			var lastIndentLevel = EditorGUI.indentLevel;
 			var lastLabelWidth = EditorGUIUtility.labelWidth;
+
+			GUI.backgroundColor = propertyData.backgroundColor;
+			GUI.enabled &= propertyData.isEnabled;
 
 			EditorGUI.BeginChangeCheck();
 
@@ -152,6 +155,7 @@ namespace Fusumity.Editor.Drawers
 			EditorGUIUtility.labelWidth = lastLabelWidth;
 			EditorGUI.indentLevel = lastIndentLevel;
 			GUI.enabled = oldGuiEnabled;
+			GUI.backgroundColor = oldBackgroundColor;
 
 			_currentPropertyPath.Remove(property.propertyPath);
 		}
@@ -401,6 +405,8 @@ namespace Fusumity.Editor.Drawers
 		public float afterExtensionHeight;
 		public GUIStyle labelStyle;
 
+		public Color backgroundColor;
+
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
 			this.property = property;
@@ -409,7 +415,7 @@ namespace Fusumity.Editor.Drawers
 			drawProperty = true;
 			isEnabled = true;
 
-			var hasChildren = property.Copy().CountInProperty() > 1;
+			var hasChildren = property.HasChildren();
 
 			hasBeforeExtension = false;
 			hasFoldout = hasChildren;
@@ -429,6 +435,8 @@ namespace Fusumity.Editor.Drawers
 				bodyHeight -= labelHeight;
 
 			labelStyle = EditorStyles.label;
+
+			backgroundColor = GUI.backgroundColor;
 		}
 
 		public float GetTotalHeight()
