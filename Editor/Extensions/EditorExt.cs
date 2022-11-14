@@ -173,5 +173,15 @@ namespace Fusumity.Editor.Extensions
 		{
 			return EditorGUI.GetPropertyHeight(property, includeChildrenCache);;
 		}
+
+		public static bool HasChildren(this SerializedProperty property)
+		{
+			// property.hasChildren doesn't work properly
+			var copy = property.Copy();
+			if (!copy.NextVisible(true))
+				return false;
+
+			return copy.GetParentPropertyPath() == property.propertyPath;
+		}
 	}
 }
