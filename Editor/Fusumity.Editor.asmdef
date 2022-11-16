@@ -1,0 +1,19 @@
+{
+    "name": "Fusumity.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c",
+        "GUID:22fa9f8f08d22184a88cd5a634a8075f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
