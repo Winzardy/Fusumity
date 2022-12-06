@@ -6,14 +6,10 @@ namespace Fusumity.Samples
 {
 	public class InspectorTest : MonoBehaviour
 	{
-
-		[ReferenceSelection, SerializeReference]
-		public Cast[] casts;
-		/*
 		[ReferenceSelection, SerializeReference]
 		public ITest test;
 
-		public Spell spell;*/
+		public Spell spell;
 	}
 
 	public interface ITest
