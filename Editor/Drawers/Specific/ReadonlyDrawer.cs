@@ -10,7 +10,7 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
-			propertyData.isEnabled = false;
+			currentPropertyData.isEnabled = false;
 		}
 	}
 }

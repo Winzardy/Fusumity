@@ -142,12 +142,12 @@ namespace Fusumity.Editor.Extensions
 			return GetObjectByLocalPath(source, propertyPath).GetType();
 		}
 
-		public static string GetParentPath(string propertyPath)
+		public static string GetParentPath(string propertyPath, bool includeArray = false)
 		{
-			return GetParentPath(propertyPath, out _);
+			return GetParentPath(propertyPath, out _, includeArray);
 		}
 
-		public static string GetParentPath(string propertyPath, out string localPath)
+		public static string GetParentPath(string propertyPath, out string localPath, bool includeArray = false)
 		{
 			var removeIndex = propertyPath.LastIndexOf(pathSplitChar);
 			if (removeIndex >= 0)
@@ -155,13 +155,16 @@ namespace Fusumity.Editor.Extensions
 				localPath = propertyPath.Remove(0, removeIndex + 1);
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (localPath[localPath.Length - 1] != arrayDataTerminator)
+				if (localPath[^1] != arrayDataTerminator)
 					return propertyPath;
 
 				// Remove "{field name}.Array"
 				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
-				localPath = propertyPath.Remove(0, removeIndex + 1) + localPath;
+				localPath = propertyPath.Remove(0, removeIndex + 1) + pathSplitChar + localPath;
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+
+				if (includeArray)
+					return propertyPath;
 
 				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
 				if (removeIndex < 0)

@@ -15,9 +15,9 @@ namespace Fusumity.Editor.Extensions
 			return property.propertyType != SerializedPropertyType.Generic & property.propertyType != SerializedPropertyType.ManagedReference;
 		}
 
-		public static string GetParentPropertyPath(this SerializedProperty property)
+		public static string GetParentPropertyPath(this SerializedProperty property, bool includeArray = false)
 		{
-			return ReflectionExt.GetParentPath(property.propertyPath);
+			return ReflectionExt.GetParentPath(property.propertyPath, includeArray);
 		}
 
 		public static Type GetManagedReferenceType(this SerializedProperty property)
@@ -65,12 +65,23 @@ namespace Fusumity.Editor.Extensions
 			SetPropertyValueByLocalPath(property.serializedObject, property.propertyPath, value);
 		}
 
-		public static SerializedProperty GetParentProperty(this SerializedProperty property)
+		public static SerializedProperty GetParentProperty(this SerializedProperty property, bool includeArray = false)
 		{
-			var parentPath = property.GetParentPropertyPath();
+			var parentPath = property.GetParentPropertyPath(includeArray);
 			var parent = property.serializedObject.FindProperty(parentPath);
 
 			return parent;
+		}
+
+		public static int GetElementIndex(this SerializedProperty property)
+		{
+			var path = property.propertyPath;
+			if (path[^1] != ']')
+				return 0;
+			var beginIndex = path.LastIndexOf("[", StringComparison.Ordinal) + 1;
+			var indexString = path.Substring(beginIndex, path.Length - beginIndex - 1);
+
+			return int.Parse(indexString);
 		}
 
 		public static SerializedProperty GetPropertyByLocalPath(this SerializedProperty property, string localPath)

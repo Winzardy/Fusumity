@@ -12,7 +12,7 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ValidateBeforeDrawing();
 
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var minAttribute = (MinimumAttribute)attribute;
 
 			var intMin = minAttribute.minInt;
@@ -36,31 +36,31 @@ namespace Fusumity.Editor.Drawers.Specific
 				}
 			}
 
-			switch (propertyData.property.propertyType)
+			switch (currentPropertyData.property.propertyType)
 			{
 				case SerializedPropertyType.Integer:
-					if (propertyData.property.intValue < intMin)
+					if (currentPropertyData.property.intValue < intMin)
 					{
-						propertyData.property.intValue = intMin;
+						currentPropertyData.property.intValue = intMin;
 					}
 					break;
 				case SerializedPropertyType.Float:
-					if (propertyData.property.floatValue < floatMin)
+					if (currentPropertyData.property.floatValue < floatMin)
 					{
-						propertyData.property.floatValue = floatMin;
+						currentPropertyData.property.floatValue = floatMin;
 					}
 					break;
 				case SerializedPropertyType.Vector2:
-					var vector = propertyData.property.vector2Value;
+					var vector = currentPropertyData.property.vector2Value;
 					if (vector.x < floatMin)
 					{
 						vector.x = floatMin;
-						propertyData.property.vector2Value = vector;
+						currentPropertyData.property.vector2Value = vector;
 					}
 					if (vector.y < floatMin)
 					{
 						vector.y = floatMin;
-						propertyData.property.vector2Value = vector;
+						currentPropertyData.property.vector2Value = vector;
 					}
 					break;
 			}

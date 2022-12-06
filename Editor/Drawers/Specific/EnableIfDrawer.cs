@@ -11,11 +11,11 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var enableIfAttribute = (EnableIfAttribute)attribute;
 			var boolProperty = property.GetPropertyByLocalPath(enableIfAttribute.boolPath);
 
-			propertyData.isEnabled = boolProperty.boolValue;
+			currentPropertyData.isEnabled = boolProperty.boolValue;
 		}
 	}
 }

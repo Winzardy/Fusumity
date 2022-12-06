@@ -16,21 +16,21 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (boolButtonAttribute.drawBefore)
 			{
-				propertyData.hasBeforeExtension = true;
-				propertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
+				currentPropertyData.hasBeforeExtension = true;
+				currentPropertyData.beforeExtensionHeight += EditorGUIUtility.singleLineHeight;
 			}
 			else
 			{
-				propertyData.hasAfterExtension = true;
-				propertyData.afterExtensionHeight += EditorGUIUtility.singleLineHeight;
+				currentPropertyData.hasAfterExtension = true;
+				currentPropertyData.afterExtensionHeight += EditorGUIUtility.singleLineHeight;
 			}
 
 			if (boolButtonAttribute.hidePropertyField)
 			{
-				propertyData.hasLabel = false;
-				propertyData.hasBody = false;
-				propertyData.hasSubBody = false;
-				propertyData.hasFoldout = false;
+				currentPropertyData.hasLabel = false;
+				currentPropertyData.hasBody = false;
+				currentPropertyData.hasSubBody = false;
+				currentPropertyData.hasFoldout = false;
 			}
 		}
 
@@ -64,7 +64,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var label = string.IsNullOrEmpty(boolButtonAttribute.buttonName)
 				? (string.IsNullOrEmpty(boolButtonAttribute.methodPath)
-					? propertyData.label
+					? currentPropertyData.label
 					: new GUIContent(boolButtonAttribute.methodPath))
 				: new GUIContent(boolButtonAttribute.buttonName);
 
@@ -75,8 +75,8 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (string.IsNullOrEmpty(boolButtonAttribute.methodPath))
 				return;
 
-			Undo.RecordObject(propertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
-			propertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
+			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
+			currentPropertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
 		}
 	}
 }

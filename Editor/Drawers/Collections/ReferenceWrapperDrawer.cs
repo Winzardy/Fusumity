@@ -1,9 +1,10 @@
 using Fusumity.Collections;
+using Fusumity.Editor.Drawers.Specific;
 using Fusumity.Editor.Extensions;
 using UnityEditor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Drawers.Specific.Collections
+namespace Fusumity.Editor.Drawers.Collections
 {
 	[CustomPropertyDrawer(typeof(ReferenceWrapper<,>))]
 	public class ReferenceWrapperDrawer : SerializeReferenceSelectorAttributeDrawer
@@ -14,15 +15,15 @@ namespace Fusumity.Editor.Drawers.Specific.Collections
 		{
 			base.ModifyPropertyData();
 
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var valueProperty = property.FindPropertyRelative(_valueName);
 
-			propertyData.bodyHeight = valueProperty.GetBodyHeight() - EditorGUIUtility.singleLineHeight;
+			currentPropertyData.bodyHeight = valueProperty.GetBodyHeight() - EditorGUIUtility.singleLineHeight;
 		}
 
 		public override void DrawSubBody(Rect position)
 		{
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
 			var valueType = fieldType.GetGenericArguments()[1];
@@ -40,7 +41,7 @@ namespace Fusumity.Editor.Drawers.Specific.Collections
 
 		public override void DrawBody(Rect position)
 		{
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var valueProperty = property.FindPropertyRelative(_valueName);
 
 			valueProperty.DrawBody(position);

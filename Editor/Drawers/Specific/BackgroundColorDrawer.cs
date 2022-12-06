@@ -15,19 +15,19 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			if (!string.IsNullOrEmpty(backgroundColorAttribute.conditionPath))
 			{
-				var property = propertyData.property;
+				var property = currentPropertyData.property;
 				var condition = property.GetPropertyByLocalPath(backgroundColorAttribute.conditionPath).boolValue;
 				if (!condition)
 					return;
 			}
 			if (!string.IsNullOrEmpty(backgroundColorAttribute.invertConditionPath))
 			{
-				var property = propertyData.property;
+				var property = currentPropertyData.property;
 				var invertCondition = property.GetPropertyByLocalPath(backgroundColorAttribute.invertConditionPath).boolValue;
 				if (invertCondition)
 					return;
 			}
-			propertyData.backgroundColor = backgroundColorAttribute.color;
+			currentPropertyData.backgroundColor = backgroundColorAttribute.color;
 		}
 	}
 }

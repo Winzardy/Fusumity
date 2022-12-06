@@ -12,7 +12,7 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ValidateBeforeDrawing();
 
-			var property = propertyData.property;
+			var property = currentPropertyData.property;
 			var maxAttribute = (MaximumAttribute)attribute;
 
 			var intmax = maxAttribute.maxInt;
@@ -36,31 +36,31 @@ namespace Fusumity.Editor.Drawers.Specific
 				}
 			}
 
-			switch (propertyData.property.propertyType)
+			switch (currentPropertyData.property.propertyType)
 			{
 				case SerializedPropertyType.Integer:
-					if (propertyData.property.intValue >intmax)
+					if (currentPropertyData.property.intValue >intmax)
 					{
-						propertyData.property.intValue = intmax;
+						currentPropertyData.property.intValue = intmax;
 					}
 					break;
 				case SerializedPropertyType.Float:
-					if (propertyData.property.floatValue > floatmax)
+					if (currentPropertyData.property.floatValue > floatmax)
 					{
-						propertyData.property.floatValue = floatmax;
+						currentPropertyData.property.floatValue = floatmax;
 					}
 					break;
 				case SerializedPropertyType.Vector2:
-					var vector = propertyData.property.vector2Value;
+					var vector = currentPropertyData.property.vector2Value;
 					if (vector.x > floatmax)
 					{
 						vector.x = floatmax;
-						propertyData.property.vector2Value = vector;
+						currentPropertyData.property.vector2Value = vector;
 					}
 					if (vector.y > floatmax)
 					{
 						vector.y = floatmax;
-						propertyData.property.vector2Value = vector;
+						currentPropertyData.property.vector2Value = vector;
 					}
 					break;
 			}

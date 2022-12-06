@@ -10,8 +10,8 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
-			propertyData.property.isExpanded = true;
-			propertyData.hasFoldout = false;
+			currentPropertyData.property.isExpanded = true;
+			currentPropertyData.hasFoldout = false;
 		}
 	}
 }
