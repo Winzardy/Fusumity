@@ -92,6 +92,14 @@ namespace Fusumity.Editor.Extensions
 			return property.serializedObject.FindProperty(fullPath);
 		}
 
+		public static object GetPropertyObjectByLocalPath(this SerializedProperty property, string objectPath)
+		{
+			var parentPath = property.GetParentPropertyPath();
+			var fullObjectPath = parentPath.AppendPath(objectPath);
+
+			return ReflectionExt.GetObjectByLocalPath(property.serializedObject.targetObject, fullObjectPath);
+		}
+
 		public static void InvokeMethodByLocalPath(this SerializedProperty property, string methodPath)
 		{
 			var parentPath = property.GetParentPropertyPath();

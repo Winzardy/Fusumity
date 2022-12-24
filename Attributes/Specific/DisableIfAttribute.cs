@@ -5,11 +5,13 @@ namespace Fusumity.Attributes.Specific
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
 	public class DisableIfAttribute : FusumityDrawerAttribute
 	{
-		public string boolPath;
+		public string checkPath;
+		public object[] equalsAny;
 
-		public DisableIfAttribute(string boolPath)
+		public DisableIfAttribute(string checkPath, params object[] equalsAny)
 		{
-			this.boolPath = boolPath;
+			this.checkPath = checkPath;
+			this.equalsAny = equalsAny;
 		}
 	}
 }

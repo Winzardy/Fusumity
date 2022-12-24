@@ -13,9 +13,24 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var property = currentPropertyData.property;
 			var disableIfAttribute = (DisableIfAttribute)attribute;
-			var boolProperty = property.GetPropertyByLocalPath(disableIfAttribute.boolPath);
 
-			currentPropertyData.isEnabled = !boolProperty.boolValue;
+			if (disableIfAttribute.equalsAny.Length == 0)
+			{
+				var boolProperty = property.GetPropertyByLocalPath(disableIfAttribute.checkPath);
+				currentPropertyData.isEnabled = !boolProperty.boolValue;
+				return;
+			}
+
+			var checkObject = property.GetPropertyObjectByLocalPath(disableIfAttribute.checkPath);
+			foreach (var equalsObject in disableIfAttribute.equalsAny)
+			{
+				if (checkObject.Equals(equalsObject))
+				{
+					currentPropertyData.isEnabled = false;
+					return;
+				}
+			}
+			currentPropertyData.isEnabled = true;
 		}
 	}
 }
