@@ -24,7 +24,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			var checkObject = property.GetPropertyObjectByLocalPath(disableIfAttribute.checkPath);
 			foreach (var equalsObject in disableIfAttribute.equalsAny)
 			{
-				if (checkObject.Equals(equalsObject))
+				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
 					currentPropertyData.isEnabled = false;
 					return;
