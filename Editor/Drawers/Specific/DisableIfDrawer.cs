@@ -14,7 +14,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			var property = currentPropertyData.property;
 			var disableIfAttribute = (DisableIfAttribute)attribute;
 
-			if (disableIfAttribute.equalsAny.Length == 0)
+			if (disableIfAttribute.equalsAny == null || disableIfAttribute.equalsAny.Length == 0)
 			{
 				var boolProperty = property.GetPropertyByLocalPath(disableIfAttribute.checkPath);
 				currentPropertyData.isEnabled = !boolProperty.boolValue;
