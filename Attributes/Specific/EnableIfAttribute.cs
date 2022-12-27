@@ -10,6 +10,8 @@ namespace Fusumity.Attributes.Specific
 
 		public EnableIfAttribute(string checkPath, params object[] equalsAny)
 		{
+			equalsAny ??= new object[] { null };
+
 			this.checkPath = checkPath;
 			this.equalsAny = equalsAny;
 		}
