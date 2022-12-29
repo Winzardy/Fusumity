@@ -13,7 +13,6 @@ namespace Fusumity.Editor.Drawers
 	[CustomPropertyDrawer(typeof(IFusumitySerializable), true)]
 	public class FusumityPropertyDrawer : PropertyDrawer
 	{
-
 		private const float INDENT_WIDTH = 15f;
 
 		private static readonly Type _baseDrawerType = typeof(FusumityPropertyDrawer);

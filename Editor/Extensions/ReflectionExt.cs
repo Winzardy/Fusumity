@@ -10,7 +10,7 @@ namespace Fusumity.Editor.Extensions
 		public const BindingFlags internalFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
 		public const BindingFlags methodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-		public const BindingFlags overridenMethodBindingFlags = BindingFlags.Instance | BindingFlags.DeclaredOnly;
+		public const BindingFlags overridenMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 		public const BindingFlags privateMethodBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
 		public const char pathParentChar = '/';
