@@ -6,9 +6,9 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class EditorExt
 	{
-		private static Rect positionCache;
-		private static GUIContent labelCache;
-		private static bool includeChildrenCache;
+		private static Rect _positionCache;
+		private static GUIContent _labelCache;
+		private static bool _includeChildrenCache;
 
 		public static bool IsStandardType(this SerializedProperty property)
 		{
@@ -125,7 +125,7 @@ namespace Fusumity.Editor.Extensions
 			currentProperty.NextVisible(true);
 			do
 			{
-				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.pathSplitChar))
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.PATH_SPLIT_CHAR))
 				{
 					break;
 				}
@@ -154,7 +154,7 @@ namespace Fusumity.Editor.Extensions
 			currentProperty.NextVisible(true);
 			do
 			{
-				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.pathSplitChar))
+				if (!currentProperty.propertyPath.StartsWith(property.propertyPath + ReflectionExt.PATH_SPLIT_CHAR))
 				{
 					break;
 				}
@@ -169,28 +169,28 @@ namespace Fusumity.Editor.Extensions
 
 		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)
 		{
-			positionCache = position;
-			labelCache = label;
-			includeChildrenCache = includeChildren;
+			_positionCache = position;
+			_labelCache = label;
+			_includeChildrenCache = includeChildren;
 
 			property.PropertyField_Cached();
 		}
 
 		public static float GetPropertyHeight(this SerializedProperty property, bool includeChildren)
 		{
-			includeChildrenCache = includeChildren;
+			_includeChildrenCache = includeChildren;
 
 			return property.GetPropertyHeight_Cached();
 		}
 
 		public static void PropertyField_Cached(this SerializedProperty property)
 		{
-			EditorGUI.PropertyField(positionCache, property, labelCache, includeChildrenCache);
+			EditorGUI.PropertyField(_positionCache, property, _labelCache, _includeChildrenCache);
 		}
 
 		public static float GetPropertyHeight_Cached(this SerializedProperty property)
 		{
-			return EditorGUI.GetPropertyHeight(property, includeChildrenCache);;
+			return EditorGUI.GetPropertyHeight(property, _includeChildrenCache);;
 		}
 
 		public static bool HasChildren(this SerializedProperty property)

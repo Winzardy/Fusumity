@@ -6,34 +6,34 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class ReflectionExt
 	{
-		public const BindingFlags fieldBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
-		public const BindingFlags internalFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
+		public const BindingFlags FIELD_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
+		public const BindingFlags INTERNAL_FIELD_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
-		public const BindingFlags methodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-		public const BindingFlags overridenMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-		public const BindingFlags privateMethodBindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
+		public const BindingFlags METHOD_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+		public const BindingFlags OVERRIDEN_METHOD_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+		public const BindingFlags PRIVATE_METHOD_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Instance;
 
-		public const char pathParentChar = '/';
-		public const char pathSplitChar = '.';
-		public const char arrayDataTerminator = ']';
-		public const string arrayDataBeginner = "data[";
+		public const char PATH_PARENT_CHAR = '/';
+		public const char PATH_SPLIT_CHAR = '.';
+		public const char ARRAY_DATA_TERMINATOR = ']';
+		public const string ARRAY_DATA_BEGINNER = "data[";
 
-		private static readonly Dictionary<Type, Type[]> _assignableFrom = new Dictionary<Type, Type[]>();
-		private static readonly Dictionary<Type, Type[]> _typesWithNull = new Dictionary<Type, Type[]>();
-		private static readonly Dictionary<Type, Type[]> _typesWithoutNull = new Dictionary<Type, Type[]>();
+		private static readonly Dictionary<Type, Type[]> ASSIGNABLE_FROM = new Dictionary<Type, Type[]>();
+		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new Dictionary<Type, Type[]>();
+		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new Dictionary<Type, Type[]>();
 
 		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
 		{
 			Type[] inheritorTypes;
 			if (insertNull)
 			{
-				if (_typesWithNull.TryGetValue(baseType, out inheritorTypes))
+				if (TYPES_WITH_NULL.TryGetValue(baseType, out inheritorTypes))
 					return inheritorTypes;
 			}
-			else if (_typesWithoutNull.TryGetValue(baseType, out inheritorTypes))
+			else if (TYPES_WITHOUT_NULL.TryGetValue(baseType, out inheritorTypes))
 				return inheritorTypes;
 
-			if (!_assignableFrom.TryGetValue(baseType, out var typeArray))
+			if (!ASSIGNABLE_FROM.TryGetValue(baseType, out var typeArray))
 			{
 				var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 				var typeList = new List<Type>();
@@ -51,7 +51,7 @@ namespace Fusumity.Editor.Extensions
 				}
 
 				typeArray = typeList.ToArray();
-				_assignableFrom.Add(baseType, typeArray);
+				ASSIGNABLE_FROM.Add(baseType, typeArray);
 			}
 
 			if (insertNull)
@@ -64,7 +64,7 @@ namespace Fusumity.Editor.Extensions
 				inheritorTypes = typeArray;
 			}
 
-			(insertNull ? _typesWithNull : _typesWithoutNull).Add(baseType, inheritorTypes);
+			(insertNull ? TYPES_WITH_NULL : TYPES_WITHOUT_NULL).Add(baseType, inheritorTypes);
 
 			return inheritorTypes;
 		}
@@ -75,16 +75,16 @@ namespace Fusumity.Editor.Extensions
 			if (string.IsNullOrEmpty(objectPath))
 				return;
 
-			var pathComponents = objectPath.Split(pathSplitChar);
+			var pathComponents = objectPath.Split(PATH_SPLIT_CHAR);
 
 			for (var p = 0; p < pathComponents.Length; p++)
 			{
 				var pathComponent = pathComponents[p];
 				if (target is Array array)
 				{
-					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(arrayDataBeginner))
+					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
-						var index = int.Parse(pathComponents[++p].Replace(arrayDataBeginner, "").Replace($"{arrayDataTerminator}", ""));
+						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 
 						if (p + 1 == pathComponents.Length)
 						{
@@ -114,16 +114,16 @@ namespace Fusumity.Editor.Extensions
 			if (string.IsNullOrEmpty(objectPath))
 				return target;
 
-			var pathComponents = objectPath.Split(pathSplitChar);
+			var pathComponents = objectPath.Split(PATH_SPLIT_CHAR);
 
 			for (var p = 0; p < pathComponents.Length; p++)
 			{
 				var pathComponent = pathComponents[p];
 				if (target is Array array)
 				{
-					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(arrayDataBeginner))
+					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
-						var index = int.Parse(pathComponents[++p].Replace(arrayDataBeginner, "").Replace($"{arrayDataTerminator}", ""));
+						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 						target = array.GetValue(index);
 					}
 				}
@@ -149,24 +149,24 @@ namespace Fusumity.Editor.Extensions
 
 		public static string GetParentPath(string propertyPath, out string localPath, bool includeArray = false)
 		{
-			var removeIndex = propertyPath.LastIndexOf(pathSplitChar);
+			var removeIndex = propertyPath.LastIndexOf(PATH_SPLIT_CHAR);
 			if (removeIndex >= 0)
 			{
 				localPath = propertyPath.Remove(0, removeIndex + 1);
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (localPath[^1] != arrayDataTerminator)
+				if (localPath[^1] != ARRAY_DATA_TERMINATOR)
 					return propertyPath;
 
 				// Remove "{field name}.Array"
-				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
-				localPath = propertyPath.Remove(0, removeIndex + 1) + pathSplitChar + localPath;
+				removeIndex = propertyPath.LastIndexOf(PATH_SPLIT_CHAR);
+				localPath = propertyPath.Remove(0, removeIndex + 1) + PATH_SPLIT_CHAR + localPath;
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
 				if (includeArray)
 					return propertyPath;
 
-				removeIndex = propertyPath.LastIndexOf(pathSplitChar);
+				removeIndex = propertyPath.LastIndexOf(PATH_SPLIT_CHAR);
 				if (removeIndex < 0)
 					return "";
 
@@ -184,11 +184,11 @@ namespace Fusumity.Editor.Extensions
 
 		public static FieldInfo GetAnyField(this Type type, string fieldName)
 		{
-			var field = type.GetField(fieldName, fieldBindingFlags);
+			var field = type.GetField(fieldName, FIELD_BINDING_FLAGS);
 			while (field == null)
 			{
 				type = type.BaseType;
-				field = type.GetField(fieldName, internalFieldBindingFlags);
+				field = type.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
 			return field;
@@ -196,11 +196,11 @@ namespace Fusumity.Editor.Extensions
 
 		public static MethodInfo GetAnyMethod_WithoutArguments(this Type type, string methodName)
 		{
-			var methodInfo = type.GetMethod(methodName, methodBindingFlags, null, new Type[]{}, null);
+			var methodInfo = type.GetMethod(methodName, METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			while (methodInfo == null)
 			{
 				type = type.BaseType;
-				methodInfo = type.GetMethod(methodName, privateMethodBindingFlags, null, new Type[]{}, null);
+				methodInfo = type.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			}
 
 			return methodInfo;
@@ -211,7 +211,7 @@ namespace Fusumity.Editor.Extensions
 			var targetPath = "";
 			var methodName = methodPath;
 
-			var removeIndex = methodPath.LastIndexOf(pathSplitChar);
+			var removeIndex = methodPath.LastIndexOf(PATH_SPLIT_CHAR);
 			if (removeIndex >= 0)
 			{
 				targetPath = methodPath.Remove(removeIndex, methodPath.Length - removeIndex);
@@ -231,13 +231,13 @@ namespace Fusumity.Editor.Extensions
 			if (string.IsNullOrEmpty(additionalPath))
 				return sourcePath;
 
-			while (additionalPath[0] == pathParentChar)
+			while (additionalPath[0] == PATH_PARENT_CHAR)
 			{
 				additionalPath = additionalPath.Remove(0, 1);
 				sourcePath = GetParentPath(sourcePath);
 			}
 
-			return sourcePath + pathSplitChar + additionalPath;
+			return sourcePath + PATH_SPLIT_CHAR + additionalPath;
 		}
 	}
 }

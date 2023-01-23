@@ -30,9 +30,9 @@ namespace Fusumity.Editor.Assistance
 
 	public class PopupWindowAnim : EditorWindow
 	{
-		private const float DefaultWidth = 150f;
-		private const float DefaultHeight = 250f;
-		private const float ElementHeight = 20f;
+		private const float DEFAULT_WIDTH = 150f;
+		private const float DEFAULT_HEIGHT = 250f;
+		private const float ELEMENT_HEIGHT = 20f;
 
 		private static Styles _styles;
 
@@ -97,12 +97,12 @@ namespace Fusumity.Editor.Assistance
 
 		public static PopupWindowAnim Create(float width, bool useSearch = true)
 		{
-			return Create(width, DefaultHeight, useSearch);
+			return Create(width, DEFAULT_HEIGHT, useSearch);
 		}
 
 		public static PopupWindowAnim Create(bool useSearch = true)
 		{
-			return Create(DefaultWidth, DefaultHeight, useSearch);
+			return Create(DEFAULT_WIDTH, DEFAULT_HEIGHT, useSearch);
 		}
 
 		public new void Show()
@@ -115,7 +115,7 @@ namespace Fusumity.Editor.Assistance
 
 		private void SetHeightByElementCount(int elementCount)
 		{
-			screenRect.height = elementCount * ElementHeight + (useSearch ? 30f : 0f) + 26f;
+			screenRect.height = elementCount * ELEMENT_HEIGHT + (useSearch ? 30f : 0f) + 26f;
 		}
 
 		private void SetHeightByElementCount()
@@ -467,7 +467,7 @@ namespace Fusumity.Editor.Assistance
 			{
 				var element = children[i];
 				var options = new[] { GUILayout.ExpandWidth(true) };
-				var rectElement = GUILayoutUtility.GetRect(16f, ElementHeight, options);
+				var rectElement = GUILayoutUtility.GetRect(16f, ELEMENT_HEIGHT, options);
 				if ((Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown)
 				    && parent.selectedIndex != i && rectElement.Contains(Event.current.mousePosition))
 				{

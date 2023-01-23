@@ -15,8 +15,8 @@ namespace Fusumity.Editor.Drawers
 	{
 		private const float INDENT_WIDTH = 15f;
 
-		private static readonly Type _baseDrawerType = typeof(FusumityPropertyDrawer);
-		private static readonly Type _attributeType = typeof(FusumityDrawerAttribute);
+		private static readonly Type BASE_DRAWER_TYPE = typeof(FusumityPropertyDrawer);
+		private static readonly Type ATTRIBUTE_TYPE = typeof(FusumityDrawerAttribute);
 
 		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
 		private static HashSet<string> _currentPropertyPath = new HashSet<string>();
@@ -194,7 +194,7 @@ namespace Fusumity.Editor.Drawers
 
 			if (_attributeTypeToDrawerType == null)
 			{
-				var drawersTypes = _baseDrawerType.GetInheritorTypes();
+				var drawersTypes = BASE_DRAWER_TYPE.GetInheritorTypes();
 				_attributeTypeToDrawerType = new Dictionary<Type, Type>(drawersTypes.Length * 3);
 
 				foreach (var drawerType in drawersTypes)
@@ -228,7 +228,7 @@ namespace Fusumity.Editor.Drawers
 
 				if (!_attributeTypeToDrawerType.TryGetValue(genericAttribute.GetType(), out var drawerType))
 				{
-					drawerType = _baseDrawerType;
+					drawerType = BASE_DRAWER_TYPE;
 				}
 
 				var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);

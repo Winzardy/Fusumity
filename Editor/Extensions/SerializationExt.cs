@@ -13,13 +13,13 @@ namespace Fusumity.Editor.Extensions
 
 			var type = source.GetType();
 
-			var fields = type.GetFields(ReflectionExt.fieldBindingFlags);
+			var fields = type.GetFields(ReflectionExt.FIELD_BINDING_FLAGS);
 			var height = GetFieldsHeight(source, fields);
 
 			var baseType = type.BaseType;
 			while (baseType != null)
 			{
-				fields = baseType.GetFields(ReflectionExt.internalFieldBindingFlags);
+				fields = baseType.GetFields(ReflectionExt.INTERNAL_FIELD_BINDING_FLAGS);
 				height += GetFieldsHeight(source, fields);
 				baseType = baseType.BaseType;
 			}
