@@ -54,6 +54,9 @@ namespace Fusumity.Editor.Assistance
 				}
 			}
 
+			var isGuiEnabled = GUI.enabled;
+			GUI.enabled = !Application.isPlaying;
+
 			var newSceneIndex = EditorGUILayout.Popup(sceneIndex, _sceneNames, GUILayout.Width(200.0f));
 			if (newSceneIndex != sceneIndex)
 			{
@@ -79,6 +82,8 @@ namespace Fusumity.Editor.Assistance
 
 				EditorSceneManager.OpenScene(_scenePaths[newSceneIndex], OpenSceneMode.Single);
 			}
+
+			GUI.enabled = isGuiEnabled;
 		}
 	}
 }
