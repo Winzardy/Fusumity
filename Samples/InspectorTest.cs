@@ -11,8 +11,11 @@ namespace Fusumity.Samples
 
 		public Spell spell;
 
-		[DisableIf("T")]
+		[DisableIf("a"), EnableIf("b"), EnableIf("c")]
 		public bool t;
+		public bool a;
+		public bool b;
+		public bool c;
 
 		public bool T()
 		{
