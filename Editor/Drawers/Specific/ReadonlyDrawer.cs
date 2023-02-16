@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace Fusumity.Editor.Drawers.Specific
 {
-	[CustomPropertyDrawer(typeof(ReadonlyAttribute))]
-	public class ReadonlyDrawer : FusumityPropertyDrawer
+	[CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
+	public class ReadOnlyDrawer : FusumityPropertyDrawer
 	{
 		public override void ModifyPropertyData()
 		{
