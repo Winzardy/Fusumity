@@ -28,7 +28,11 @@ namespace Fusumity.Editor.Drawers.Specific
 					isHide = boolProperty.boolValue;
 				}
 
-				if (isHide || !currentPropertyData.drawPropertyChanged)
+				if (currentPropertyData.drawPropertyChanged)
+				{
+					currentPropertyData.drawProperty &= !isHide;
+				}
+				else
 				{
 					currentPropertyData.drawProperty = !isHide;
 					currentPropertyData.drawPropertyChanged = true;
@@ -47,9 +51,10 @@ namespace Fusumity.Editor.Drawers.Specific
 				}
 			}
 
-			if (!currentPropertyData.drawPropertyChanged)
+			if (currentPropertyData.drawPropertyChanged)
 			{
 				currentPropertyData.drawProperty = true;
+				currentPropertyData.drawPropertyChanged = true;
 			}
 		}
 	}

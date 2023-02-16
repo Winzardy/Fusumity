@@ -14,6 +14,8 @@ namespace Fusumity.Editor.Drawers.Specific
 			var property = currentPropertyData.property;
 			var enableIfAttribute = (ShowIfAttribute)attribute;
 
+			var and = currentPropertyData.drawPropertyChanged & currentPropertyData.drawProperty;
+
 			if (enableIfAttribute.equalsAny == null || enableIfAttribute.equalsAny.Length == 0)
 			{
 				var boolProperty = property.GetPropertyByLocalPath(enableIfAttribute.checkPath);
@@ -28,7 +30,11 @@ namespace Fusumity.Editor.Drawers.Specific
 					isShow = boolProperty.boolValue;
 				}
 
-				if (isShow || !currentPropertyData.drawPropertyChanged)
+				if (currentPropertyData.drawPropertyChanged)
+				{
+					currentPropertyData.drawProperty &= isShow;
+				}
+				else
 				{
 					currentPropertyData.drawProperty = isShow;
 					currentPropertyData.drawPropertyChanged = true;
@@ -41,16 +47,17 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
-					currentPropertyData.drawProperty = true;
+					if (!currentPropertyData.drawPropertyChanged)
+					{
+						currentPropertyData.drawProperty = true;
+					}
 					currentPropertyData.drawPropertyChanged = true;
 					return;
 				}
 			}
 
-			if (!currentPropertyData.drawPropertyChanged)
-			{
-				currentPropertyData.drawProperty = false;
-			}
+			currentPropertyData.drawProperty = false;
+			currentPropertyData.drawPropertyChanged = true;
 		}
 	}
 }
