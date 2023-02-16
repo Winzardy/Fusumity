@@ -6,6 +6,8 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class EditorExt
 	{
+		private const float LINE_SPACING = 2f;
+
 		private static Rect _positionCache;
 		private static GUIContent _labelCache;
 		private static bool _includeChildrenCache;
@@ -141,7 +143,7 @@ namespace Fusumity.Editor.Extensions
 				var height = currentProperty.GetPropertyHeight(true);
 				position.height = height;
 				currentProperty.PropertyField(position, includeChildren: true);
-				position.y += height;
+				position.y += height + LINE_SPACING;
 			} while (currentProperty.NextVisible(false));
 
 			currentProperty.Dispose();
