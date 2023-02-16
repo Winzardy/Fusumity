@@ -10,6 +10,14 @@ namespace Fusumity.Samples
 		public ITest test;
 
 		public Spell spell;
+
+		[DisableIf("T")]
+		public bool t;
+
+		public bool T()
+		{
+			return true;
+		}
 	}
 
 	public interface ITest
