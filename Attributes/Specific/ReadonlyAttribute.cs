@@ -1,4 +1,4 @@
 namespace Fusumity.Attributes.Specific
 {
-	public class ReadOnlyAttribute : FusumityDrawerAttribute {}
+	public class ReadonlyAttribute : FusumityDrawerAttribute {}
 }
