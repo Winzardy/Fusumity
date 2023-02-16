@@ -12,10 +12,36 @@ namespace Fusumity.Editor.Drawers.Specific
 			base.ModifyPropertyData();
 
 			var property = currentPropertyData.property;
-			var showIfAttribute = (ShowIfAttribute)attribute;
-			var boolProperty = property.GetPropertyByLocalPath(showIfAttribute.boolPath);
+			var enableIfAttribute = (ShowIfAttribute)attribute;
 
-			currentPropertyData.drawProperty = boolProperty.boolValue;
+			if (enableIfAttribute.equalsAny == null || enableIfAttribute.equalsAny.Length == 0)
+			{
+				var boolProperty = property.GetPropertyByLocalPath(enableIfAttribute.checkPath);
+
+				bool isShow;
+				if (boolProperty == null)
+				{
+					isShow = (bool)property.InvokeFuncByLocalPath(enableIfAttribute.checkPath);
+				}
+				else
+				{
+					isShow = boolProperty.boolValue;
+				}
+
+				currentPropertyData.drawProperty = isShow;
+				return;
+			}
+
+			var checkObject = property.GetPropertyObjectByLocalPath(enableIfAttribute.checkPath);
+			foreach (var equalsObject in enableIfAttribute.equalsAny)
+			{
+				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
+				{
+					currentPropertyData.isEnabled = true;
+					return;
+				}
+			}
+			currentPropertyData.drawProperty = false;
 		}
 	}
 }
