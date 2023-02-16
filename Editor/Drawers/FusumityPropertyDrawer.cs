@@ -403,7 +403,9 @@ namespace Fusumity.Editor.Drawers
 		public SerializedProperty property;
 		public GUIContent label;
 
+		public bool drawPropertyChanged;
 		public bool drawProperty;
+		public bool isEnabledChanged;
 		public bool isEnabled;
 
 		public bool hasBeforeExtension;
@@ -429,7 +431,9 @@ namespace Fusumity.Editor.Drawers
 			this.property = property;
 			this.label = new GUIContent(label);
 
+			drawPropertyChanged = false;
 			drawProperty = true;
+			isEnabledChanged = false;
 			isEnabled = true;
 
 			var hasChildren = property.HasChildren();

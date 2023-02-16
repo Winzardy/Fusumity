@@ -28,7 +28,11 @@ namespace Fusumity.Editor.Drawers.Specific
 					isShow = boolProperty.boolValue;
 				}
 
-				currentPropertyData.drawProperty = isShow;
+				if (isShow || !currentPropertyData.drawPropertyChanged)
+				{
+					currentPropertyData.drawProperty = isShow;
+					currentPropertyData.drawPropertyChanged = true;
+				}
 				return;
 			}
 
@@ -38,10 +42,16 @@ namespace Fusumity.Editor.Drawers.Specific
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
 					currentPropertyData.drawProperty = true;
+					currentPropertyData.drawPropertyChanged = true;
 					return;
 				}
 			}
-			currentPropertyData.drawProperty = false;
+
+			if (!currentPropertyData.drawPropertyChanged)
+			{
+				currentPropertyData.drawProperty = false;
+				currentPropertyData.drawPropertyChanged = true;
+			}
 		}
 	}
 }
