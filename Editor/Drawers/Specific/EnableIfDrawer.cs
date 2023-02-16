@@ -28,7 +28,11 @@ namespace Fusumity.Editor.Drawers.Specific
 					isEnabled = boolProperty.boolValue;
 				}
 
-				if (isEnabled || !currentPropertyData.isEnabledChanged)
+				if (currentPropertyData.isEnabledChanged)
+				{
+					currentPropertyData.isEnabled &= isEnabled;
+				}
+				else
 				{
 					currentPropertyData.isEnabled = isEnabled;
 					currentPropertyData.isEnabledChanged = true;
@@ -41,16 +45,17 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
-					currentPropertyData.isEnabled = true;
+					if (!currentPropertyData.drawPropertyChanged)
+					{
+						currentPropertyData.drawProperty = true;
+					}
 					currentPropertyData.isEnabledChanged = true;
 					return;
 				}
 			}
 
-			if (!currentPropertyData.isEnabledChanged)
-			{
-				currentPropertyData.isEnabled = false;
-			}
+			currentPropertyData.isEnabled = false;
+			currentPropertyData.isEnabledChanged = true;
 		}
 	}
 }
