@@ -108,6 +108,14 @@ namespace Fusumity.Editor.Extensions
 			ReflectionExt.InvokeMethodByLocalPath(property.serializedObject.targetObject, fullMethodPath);
 		}
 
+		public static object InvokeFuncByLocalPath(this SerializedProperty property, string methodPath)
+		{
+			var parentPath = property.GetParentPropertyPath();
+			var fullMethodPath = parentPath.AppendPath(methodPath);
+
+			return ReflectionExt.InvokeFuncByLocalPath(property.serializedObject.targetObject, fullMethodPath);
+		}
+
 		public static void DrawBody(this SerializedProperty property, Rect position)
 		{
 			if (property.IsStandardType())
