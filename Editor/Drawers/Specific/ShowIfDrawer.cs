@@ -37,7 +37,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
-					currentPropertyData.isEnabled = true;
+					currentPropertyData.drawProperty = true;
 					return;
 				}
 			}
