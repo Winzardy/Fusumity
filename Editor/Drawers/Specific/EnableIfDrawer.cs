@@ -50,7 +50,6 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (!currentPropertyData.isEnabledChanged)
 			{
 				currentPropertyData.isEnabled = false;
-				currentPropertyData.isEnabledChanged = true;
 			}
 		}
 	}
