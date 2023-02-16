@@ -206,6 +206,24 @@ namespace Fusumity.Editor.Extensions
 			return methodInfo;
 		}
 
+		public static object InvokeFuncByLocalPath(object source, string methodPath)
+		{
+			var targetPath = "";
+			var methodName = methodPath;
+
+			var removeIndex = methodPath.LastIndexOf(PATH_SPLIT_CHAR);
+			if (removeIndex >= 0)
+			{
+				targetPath = methodPath.Remove(removeIndex, methodPath.Length - removeIndex);
+				methodName = methodPath.Remove(0, removeIndex + 1);
+			}
+
+			var target = GetObjectByLocalPath(source, targetPath);
+			var methodInfo = target.GetType().GetAnyMethod_WithoutArguments(methodName);
+
+			return methodInfo.Invoke(target, null);
+		}
+
 		public static void InvokeMethodByLocalPath(object source, string methodPath)
 		{
 			var targetPath = "";
