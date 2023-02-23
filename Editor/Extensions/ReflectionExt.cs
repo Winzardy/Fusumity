@@ -22,6 +22,16 @@ namespace Fusumity.Editor.Extensions
 		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new Dictionary<Type, Type[]>();
 
+		public static bool HasAttribute<T>(this MemberInfo memberInfo) where T: Attribute
+		{
+			return memberInfo.GetCustomAttribute<T>() != null;
+		}
+
+		public static FieldInfo[] GetInstanceFields(this Type type)
+		{
+			return type.GetFields(FIELD_BINDING_FLAGS);
+		}
+
 		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
 		{
 			Type[] inheritorTypes;

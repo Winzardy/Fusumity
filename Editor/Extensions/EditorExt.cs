@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,6 +13,47 @@ namespace Fusumity.Editor.Extensions
 		private static Rect _positionCache;
 		private static GUIContent _labelCache;
 		private static bool _includeChildrenCache;
+
+		public static void DrawProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
+		{
+			var count = serializedObject.GetFieldsToDraw(out var fieldsToDraw, inheritRestrictType);
+
+			serializedObject.Update();
+			for (var i = 0; i < count; i++)
+			{
+				var property = serializedObject.FindProperty(fieldsToDraw[i].Name);
+				EditorGUILayout.PropertyField(property);
+			}
+			serializedObject.ApplyModifiedProperties();
+		}
+
+		public static int GetFieldsToDraw(this SerializedObject serializedObject, out FieldInfo[] fields, Type inheritRestrictType = null)
+		{
+			var restrictFields = inheritRestrictType?.GetInstanceFields();
+			var restrictSet = restrictFields == null ? null : new HashSet<FieldInfo>(restrictFields);
+
+			var target = serializedObject.targetObject;
+			var targetType = target.GetType();
+			fields = targetType.GetInstanceFields();
+
+			var lenght = fields.Length;
+			for (var i = 0; i < lenght; )
+			{
+				var field = fields[i];
+				if ((restrictSet == null || !restrictSet.Contains(field)) &&
+				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
+				    !field.HasAttribute<HideInInspector>())
+				{
+					i++;
+					continue;
+				}
+
+				lenght--;
+				fields[i] = fields[lenght - 1];
+			}
+
+			return lenght;
+		}
 
 		public static bool IsStandardType(this SerializedProperty property)
 		{
