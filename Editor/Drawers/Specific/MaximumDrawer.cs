@@ -15,8 +15,8 @@ namespace Fusumity.Editor.Drawers.Specific
 			var property = currentPropertyData.property;
 			var maxAttribute = (MaximumAttribute)attribute;
 
-			var intmax = maxAttribute.maxInt;
-			var floatmax = maxAttribute.maxFloat;
+			var maxInt = maxAttribute.maxInt;
+			var maxFloat = maxAttribute.maxFloat;
 
 			if (!string.IsNullOrEmpty(maxAttribute.maxPath))
 			{
@@ -25,13 +25,13 @@ namespace Fusumity.Editor.Drawers.Specific
 				switch (maxProperty?.propertyType)
 				{
 					case SerializedPropertyType.Integer:
-						intmax = Math.Max(maxProperty.intValue, intmax);
-						floatmax = Math.Max((float)maxProperty.intValue, floatmax);
+						maxInt = Math.Max(maxProperty.intValue, maxInt);
+						maxFloat = Math.Max((float)maxProperty.intValue, maxFloat);
 						break;
 					case SerializedPropertyType.Float:
 					case SerializedPropertyType.Vector2:
-						intmax = Math.Max((int)maxProperty.floatValue, intmax);
-						floatmax = Math.Max(maxProperty.floatValue, floatmax);
+						maxInt = Math.Max((int)maxProperty.floatValue, maxInt);
+						maxFloat = Math.Max(maxProperty.floatValue, maxFloat);
 						break;
 				}
 			}
@@ -39,27 +39,27 @@ namespace Fusumity.Editor.Drawers.Specific
 			switch (currentPropertyData.property.propertyType)
 			{
 				case SerializedPropertyType.Integer:
-					if (currentPropertyData.property.intValue >intmax)
+					if (currentPropertyData.property.intValue >maxInt)
 					{
-						currentPropertyData.property.intValue = intmax;
+						currentPropertyData.property.intValue = maxInt;
 					}
 					break;
 				case SerializedPropertyType.Float:
-					if (currentPropertyData.property.floatValue > floatmax)
+					if (currentPropertyData.property.floatValue > maxFloat)
 					{
-						currentPropertyData.property.floatValue = floatmax;
+						currentPropertyData.property.floatValue = maxFloat;
 					}
 					break;
 				case SerializedPropertyType.Vector2:
 					var vector = currentPropertyData.property.vector2Value;
-					if (vector.x > floatmax)
+					if (vector.x > maxFloat)
 					{
-						vector.x = floatmax;
+						vector.x = maxFloat;
 						currentPropertyData.property.vector2Value = vector;
 					}
-					if (vector.y > floatmax)
+					if (vector.y > maxFloat)
 					{
-						vector.y = floatmax;
+						vector.y = maxFloat;
 						currentPropertyData.property.vector2Value = vector;
 					}
 					break;
