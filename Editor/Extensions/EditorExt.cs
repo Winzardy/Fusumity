@@ -49,7 +49,7 @@ namespace Fusumity.Editor.Extensions
 				}
 
 				lenght--;
-				fields[i] = fields[lenght - 1];
+				fields[i] = fields[lenght];
 			}
 
 			return lenght;
