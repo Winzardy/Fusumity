@@ -16,15 +16,31 @@ namespace Fusumity.Editor.Extensions
 
 		public static void DrawProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
 		{
-			var count = serializedObject.GetFieldsToDraw(out var fieldsToDraw, inheritRestrictType);
+			var properties = serializedObject.GetProperties(inheritRestrictType);
+			serializedObject.DrawProperties(properties);
+		}
 
+		public static void DrawProperties(this SerializedObject serializedObject, SerializedProperty[] properties)
+		{
 			serializedObject.Update();
-			for (var i = 0; i < count; i++)
+			for (var i = 0; i < properties.Length; i++)
 			{
-				var property = serializedObject.FindProperty(fieldsToDraw[i].Name);
-				EditorGUILayout.PropertyField(property);
+				EditorGUILayout.PropertyField(properties[i]);
 			}
 			serializedObject.ApplyModifiedProperties();
+		}
+
+		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
+		{
+			var count = serializedObject.GetFieldsToDraw(out var fieldsToDraw, inheritRestrictType);
+			var result = new SerializedProperty[count];
+
+			for (var i = 0; i < count; i++)
+			{
+				result[i] = serializedObject.FindProperty(fieldsToDraw[i].Name);
+			}
+
+			return result;
 		}
 
 		public static int GetFieldsToDraw(this SerializedObject serializedObject, out FieldInfo[] fields, Type inheritRestrictType = null)
