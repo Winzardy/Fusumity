@@ -427,6 +427,10 @@ namespace Fusumity.Editor.Drawers
 
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
+			// GetPropertyHeight will singleLineHeight if no expanded
+			var isExpanded = property.isExpanded;
+			property.isExpanded = true;
+
 			this.property = property;
 			this.label = new GUIContent(label);
 
@@ -440,7 +444,7 @@ namespace Fusumity.Editor.Drawers
 			bodyHeight = property.GetPropertyHeight(true);
 			afterExtensionHeight = 0f;
 
-			var hasChildren = property.HasChildren() && bodyHeight > labelHeight;
+			var hasChildren = bodyHeight > labelHeight && property.HasChildren();
 
 			hasBeforeExtension = false;
 			hasFoldout = hasChildren;
@@ -457,6 +461,8 @@ namespace Fusumity.Editor.Drawers
 			labelStyle = EditorStyles.label;
 
 			backgroundColor = GUI.backgroundColor;
+
+			property.isExpanded = isExpanded;
 		}
 
 		public float GetTotalHeight()
