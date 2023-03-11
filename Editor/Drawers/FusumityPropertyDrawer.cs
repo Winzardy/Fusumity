@@ -29,14 +29,19 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
+			var parentPropertyPath = property.GetParentPropertyPath();
 			if (_currentPropertyPath.Contains(property.propertyPath))
 			{
 				// When you open the unity Object selection field the _currentPropertyPath will not cleaned in that frame :(
-				if (_currentPropertyPath.Contains(property.GetParentPropertyPath()))
+				if (_currentPropertyPath.Contains(parentPropertyPath))
 				{
 					return property.GetPropertyHeight_Cached();
 				}
 				_currentPropertyPath.Clear();
+			}
+			else if (!_currentPropertyPath.Contains(parentPropertyPath))
+			{
+				_currentPropertyPath.Add(parentPropertyPath);
 			}
 
 			_currentPropertyPath.Add(property.propertyPath);
