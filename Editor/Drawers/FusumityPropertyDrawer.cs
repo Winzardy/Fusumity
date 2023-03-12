@@ -55,6 +55,8 @@ namespace Fusumity.Editor.Drawers
 			ExecuteModifyPropertyData();
 
 			_currentPropertyPath.Remove(property.propertyPath);
+			_currentPropertyPath.Remove(parentPropertyPath);
+
 			return currentPropertyData.GetTotalHeight();
 		}
 
