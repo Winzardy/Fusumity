@@ -29,5 +29,12 @@ namespace Fusumity.Editor.Extensions
 
 			return assets;
 		}
+
+		public static void Rename(this ScriptableObject scriptableObject, string newName)
+		{
+			var assetPath =  AssetDatabase.GetAssetPath(scriptableObject.GetInstanceID());
+			AssetDatabase.RenameAsset(assetPath, newName);
+			AssetDatabase.SaveAssets();
+		}
 	}
 }
