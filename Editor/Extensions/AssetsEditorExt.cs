@@ -36,5 +36,11 @@ namespace Fusumity.Editor.Extensions
 			AssetDatabase.RenameAsset(assetPath, newName);
 			AssetDatabase.SaveAssets();
 		}
+
+		public static void SaveChanges(this Object unityObject)
+		{
+			EditorUtility.SetDirty(unityObject);
+			AssetDatabase.SaveAssets();
+		}
 	}
 }
