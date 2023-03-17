@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Fusumity.Editor.Drawers.Specific
 {
 	[CustomPropertyDrawer(typeof(ReferenceSelectionAttribute))]
-	public class SerializeReferenceSelectorAttributeDrawer : FusumityPropertyDrawer
+	public class ReferenceSelectionAttributeDrawer : FusumityPropertyDrawer
 	{
 		private Type[] _currentTypes;
 		private Type _selectedType;
