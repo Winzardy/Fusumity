@@ -77,6 +77,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
 			currentPropertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
+			currentPropertyData.property.serializedObject.targetObject.SaveChanges();
 		}
 	}
 }
