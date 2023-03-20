@@ -13,9 +13,14 @@ namespace Fusumity.Editor.Drawers.Specific
 		private Type[] _currentTypes;
 		private Type _selectedType;
 
+		public override bool OverrideMethods => (currentPropertyData.property.propertyType == SerializedPropertyType.ManagedReference);
+
 		public override void ModifyPropertyData()
 		{
 			base.ModifyPropertyData();
+
+			if (!OverrideMethods)
+				return;
 
 			currentPropertyData.labelIntersectSubBody = false;
 			currentPropertyData.hasFoldout = _selectedType != null;
@@ -26,14 +31,13 @@ namespace Fusumity.Editor.Drawers.Specific
 		public override void DrawSubBody(Rect position)
 		{
 			var property = currentPropertyData.property;
-
-			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
-
 			if (property.propertyType != SerializedPropertyType.ManagedReference)
 			{
-				Debug.LogError($"The Property Type {fieldType.Name} is not Managed Reference.");
+				base.DrawSubBody(position);
 				return;
 			}
+
+			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
 			var attr = (ReferenceSelectionAttribute)attribute;
 			var targetType = attr.type ?? fieldType;

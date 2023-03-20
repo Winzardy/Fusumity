@@ -27,6 +27,8 @@ namespace Fusumity.Editor.Drawers
 
 		protected PropertyData currentPropertyData;
 
+		public virtual bool OverrideMethods => true;
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			var parentPropertyPath = property.GetParentPropertyPath();

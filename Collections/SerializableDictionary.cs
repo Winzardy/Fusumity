@@ -48,6 +48,7 @@ namespace Fusumity.Collections
 		public struct KeyValue
 		{
 			public TKey key;
+			[SerializeReference, ReferenceSelection]
 			public TValue value;
 
 			public static implicit operator KeyValue(KeyValuePair<TKey, TValue> keyValue)
