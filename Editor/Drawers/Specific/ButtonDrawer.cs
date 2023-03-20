@@ -58,7 +58,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 		private void DrawButton(ref Rect position, ButtonAttribute boolButtonAttribute)
 		{
-			var drawPosition = position;
+			var drawPosition = EditorGUI.IndentedRect(position);
 			drawPosition.height = EditorGUIUtility.singleLineHeight;
 			position.yMin += EditorGUIUtility.singleLineHeight;
 

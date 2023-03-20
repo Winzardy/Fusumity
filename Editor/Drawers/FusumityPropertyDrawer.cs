@@ -92,7 +92,7 @@ namespace Fusumity.Editor.Drawers
 				propertyPosition.yMax -= currentPropertyData.afterExtensionHeight;
 
 			var beforeExtensionPosition = currentPropertyData.hasBeforeExtension
-				? new Rect(position.x, position.y, position.width, currentPropertyData.beforeExtensionHeight)
+				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, currentPropertyData.beforeExtensionHeight)
 				: Rect.zero;
 
 			var labelPosition = currentPropertyData.hasLabel
@@ -111,7 +111,7 @@ namespace Fusumity.Editor.Drawers
 				: propertyPosition;
 
 			var afterExtensionPosition = currentPropertyData.hasAfterExtension
-				? new Rect(position.x, propertyPosition.yMax, position.width, currentPropertyData.afterExtensionHeight)
+				? new Rect(propertyPosition.x, propertyPosition.yMax, propertyPosition.width, currentPropertyData.afterExtensionHeight)
 				: Rect.zero;
 
 			ExecuteValidateBeforeDrawing();
