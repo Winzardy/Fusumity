@@ -25,7 +25,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			currentPropertyData.labelIntersectSubBody = false;
 			currentPropertyData.hasFoldout = _selectedType != null;
 			currentPropertyData.hasSubBody = true;
-			currentPropertyData.hasBody = true;
+			currentPropertyData.hasBody = currentPropertyData.property.GetManagedReferenceType() != null;
 		}
 
 		public override void DrawSubBody(Rect position)
@@ -49,7 +49,6 @@ namespace Fusumity.Editor.Drawers.Specific
 		protected void SelectType(Rect position, Type currentType, Type targetType, bool insertNull)
 		{
 			var property = currentPropertyData.property;
-
 			var propertyPath = property.propertyPath;
 
 			_selectedType = currentType;
