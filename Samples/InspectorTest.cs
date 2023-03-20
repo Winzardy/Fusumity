@@ -1,11 +1,14 @@
 using System;
 using Fusumity.Attributes.Specific;
+using Fusumity.Collections;
 using UnityEngine;
 
 namespace Fusumity.Samples
 {
 	public class InspectorTest : MonoBehaviour
 	{
+		public SerializableDictionary<int, string> wtf;
+
 		[ReferenceSelection, SerializeReference]
 		public ITest test;
 
