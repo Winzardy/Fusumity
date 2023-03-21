@@ -15,6 +15,15 @@ namespace Fusumity.Collections
 		[SerializeField, HideLabel]
 		private List<KeyValue> _elements;
 
+		public SerializableDictionary() : base() { }
+		public SerializableDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
+		public SerializableDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary, comparer) { }
+		public SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection) : base(collection) { }
+		public SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection, IEqualityComparer<TKey> comparer) : base(collection, comparer) { }
+		public SerializableDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }
+		public SerializableDictionary(int capacity) : base(capacity) { }
+		public SerializableDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
+
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
 			if (_elements == null)
