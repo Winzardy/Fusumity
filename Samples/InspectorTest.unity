@@ -167,6 +167,65 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9878042febb20042b7ba2624c63e8dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enumEnumArray:
+    values:
+    - enumValueName: A
+      enumValue: 0
+    - enumValueName: C
+      enumValue: 2
+    - enumValueName: F
+      enumValue: 4
+    - enumValueName: G
+      enumValue: 5
+    - enumValueName: B
+      enumValue: 1
+    - enumValueName: D
+      enumValue: 3
+  reorderableEnumArray:
+    values:
+    - enumValueName: A
+      enumValue: 0
+      value: 0
+    - enumValueName: C
+      enumValue: 2
+      value: 0
+    - enumValueName: F
+      enumValue: 4
+      value: 153
+    - enumValueName: G
+      enumValue: 5
+      value: 0
+    - enumValueName: B
+      enumValue: 1
+      value: 0
+    - enumValueName: D
+      enumValue: 3
+      value: 0
+  enumArray:
+    values:
+    - enumValueName: A
+      enumValue: 0
+      value: 0
+    - enumValueName: B
+      enumValue: 1
+      value: 0
+    - enumValueName: C
+      enumValue: 2
+      value: 0
+    - enumValueName: D
+      enumValue: 3
+      value: 0
+    - enumValueName: F
+      enumValue: 4
+      value: 0
+    - enumValueName: G
+      enumValue: 5
+      value: 0
+  wtf:
+    _newElement:
+      key: 0
+      value: 
+    _elements: []
   test:
     rid: -2
   spell:
@@ -185,6 +244,10 @@ MonoBehaviour:
       duration: 0
     hitForm:
       rid: -2
+  t: 0
+  a: 0
+  b: 0
+  c: 0
   references:
     version: 2
     RefIds:

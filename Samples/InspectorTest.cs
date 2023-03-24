@@ -5,8 +5,22 @@ using UnityEngine;
 
 namespace Fusumity.Samples
 {
+	public enum EnumType
+	{
+		A,
+		B,
+		C,
+		D,
+		F,
+		G,
+	}
+
 	public class InspectorTest : MonoBehaviour
 	{
+		public ReorderableEnumArray<EnumType> enumEnumArray;
+		public ReorderableEnumArray<EnumType, int> reorderableEnumArray;
+		public EnumArray<EnumType, int> enumArray;
+
 		public SerializableDictionary<int, string> wtf;
 
 		[ReferenceSelection, SerializeReference]
