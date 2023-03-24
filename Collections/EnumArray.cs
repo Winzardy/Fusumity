@@ -85,17 +85,29 @@ namespace Fusumity.Collections
 
 			if (values.Length == ENUM_VALUES.Length)
 			{
+#if UNITY_EDITOR
+				for (var i = 0; i < values.Length; i++)
+				{
+					var enumName = values[i].EnumValueName;
+					if (!Enum.TryParse<TEnum>(enumName, out var enumValue) || !values[i].EnumValue.Equals(enumValue))
+						goto update;
+				}
+#endif
 				if (!IsReorderable)
 					Array.Sort(values);
 				return;
 			}
+			update:
 
 			var valuesNew = new List<TEnumValue>(ENUM_VALUES.Length);
 			var hashSet = new HashSet<TEnum>(values.Length);
 
+#if UNITY_EDITOR
+			Span<bool> isValid = stackalloc bool[values.Length];
+			isValid.Fill(false);
+
 			for (var i = 0; i < values.Length; i++)
 			{
-#if UNITY_EDITOR
 				var enumName = values[i].EnumValueName;
 				if (Enum.TryParse<TEnum>(enumName, out var enumValue))
 				{
@@ -103,16 +115,31 @@ namespace Fusumity.Collections
 						continue;
 
 					values[i].EnumValue = enumValue;
+					isValid[i] = true;
+					hashSet.Add(values[i].EnumValue);
+				}
+			}
+			for (var i = 0; i < values.Length; i++)
+			{
+				if (isValid[i])
+				{
+					valuesNew.Add(values[i]);
 				}
 				else if (Enum.IsDefined(typeof(TEnum), values[i].EnumValue) && !hashSet.Contains(values[i].EnumValue))
 				{
 					values[i].EnumValueName = Enum.GetName(typeof(TEnum), values[i].EnumValue);
+
+					valuesNew.Add(values[i]);
+					hashSet.Add(values[i].EnumValue);
 				}
-				else continue;
-#endif
+			}
+#else
+			for (var i = 0; i < values.Length; i++)
+			{
 				valuesNew.Add(values[i]);
 				hashSet.Add(values[i].EnumValue);
 			}
+#endif
 
 			foreach (TEnum enumValue in ENUM_VALUES)
 			{
