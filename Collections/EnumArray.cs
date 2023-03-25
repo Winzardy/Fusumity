@@ -31,7 +31,13 @@ namespace Fusumity.Collections
 		public unsafe ref TEnumValue this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref values[_indexes[*(int*)(&enumValue)]];
+			get => ref values[GetIndexOf(enumValue)];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe int GetIndexOf(TEnum enumValue)
+		{
+			return _indexes[*(int*)(&enumValue)];
 		}
 
 		protected override void LazyInitialize()
@@ -80,7 +86,13 @@ namespace Fusumity.Collections
 		public unsafe ref TEnumValue this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref values[*(int*)(&enumValue)];
+			get => ref values[GetIndexOf(enumValue)];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe int GetIndexOf(TEnum enumValue)
+		{
+			return *(int*)(&enumValue);
 		}
 	}
 
