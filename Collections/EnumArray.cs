@@ -231,6 +231,8 @@ namespace Fusumity.Collections
 		}
 	}
 
+	public interface IEnumArray {}
+
 	[Serializable]
 	public struct EnumValue<TEnum, TValue> : IComparable<EnumValue<TEnum, TValue>>, IEnumValue<TEnum>
 		where TEnum: unmanaged, Enum
@@ -299,8 +301,6 @@ namespace Fusumity.Collections
 			return enumValue.CompareTo(other.enumValue);
 		}
 	}
-
-	public interface IEnumArray {}
 
 	public interface IEnumValue<TEnum>
 	{
