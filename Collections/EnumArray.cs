@@ -10,35 +10,74 @@ namespace Fusumity.Collections
 	public class ReorderableEnumArray<TEnum> : ReorderableEnumArray<TEnum, EmptyStruct> where TEnum : unmanaged, Enum {}
 
 	[Serializable]
-	public class ReorderableEnumArray<TEnum, TValue> : ReorderableEnumReferenceArray<TEnum, TValue, EnumValue<TEnum, TValue>>
+	public class ReorderableEnumArray<TEnum, TValue> : ReorderableEnumArray<TEnum, TValue, EnumValue<TEnum, TValue>>
 		where TEnum : unmanaged, Enum {}
 
 	[Serializable]
-	public class ReorderableEnumReferenceArray<TEnum, TValue> : ReorderableEnumReferenceArray<TEnum, TValue, EnumReferenceValue<TEnum, TValue>>
+	public class ReorderableEnumReferenceArray<TEnum, TValue> : ReorderableEnumArray<TEnum, TValue, EnumReferenceValue<TEnum, TValue>>
 		where TValue : class
 		where TEnum : unmanaged, Enum {}
 
-	public class ReorderableEnumReferenceArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
+	[Serializable]
+	public class ReorderableEnumArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
 		where TEnum : unmanaged, Enum
 		where TEnumValue : IEnumValue<TEnum>, new()
 	{
 		protected override bool IsReorderable => true;
+
+		[SerializeField, HideInInspector]
+		private int[] _indexes;
+
+		public unsafe ref TEnumValue this[TEnum enumValue]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ref values[_indexes[*(int*)(&enumValue)]];
+		}
+
+		protected override void LazyInitialize()
+		{
+			base.LazyInitialize();
+			if (_indexes != null)
+				return;
+
+			_indexes = new int[values.Length];
+		}
+
+		protected override void OnValuesUpdated()
+		{
+			if (_indexes.Length != values.Length)
+				_indexes = new int[values.Length];
+
+			FillIndexes();
+		}
+
+		private unsafe void FillIndexes()
+		{
+			for (var i = 0; i < values.Length; i++)
+			{
+				var enumValue = values[i].EnumValue;
+				_indexes[*(int*)(&enumValue)] = i;
+			}
+		}
 	}
 
 	[Serializable]
 	public class EnumArray<TEnum> : EnumArray<TEnum, EmptyStruct> where TEnum : unmanaged, Enum {}
 
 	[Serializable]
-	public class EnumArray<TEnum, TValue> : EnumArray<TEnum, TValue, EnumValue<TEnum, TValue>>
-		where TValue : struct
+	public class EnumArray<TEnum, TValue> : OrderedEnumArray<TEnum, TValue, EnumValue<TEnum, TValue>>
 		where TEnum : unmanaged, Enum {}
 
 	[Serializable]
-	public class EnumReferenceArray<TEnum, TValue> : EnumArray<TEnum, TValue, EnumReferenceValue<TEnum, TValue>>
+	public class EnumReferenceArray<TEnum, TValue> : OrderedEnumArray<TEnum, TValue, EnumReferenceValue<TEnum, TValue>>
 		where TValue : class
+		where TEnum : unmanaged, Enum {}
+
+	public class OrderedEnumArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
 		where TEnum : unmanaged, Enum
+		where TEnumValue : IEnumValue<TEnum>, new()
 	{
-		public unsafe ref EnumReferenceValue<TEnum, TValue> this[TEnum enumValue]
+		public unsafe ref TEnumValue this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref values[*(int*)(&enumValue)];
@@ -160,7 +199,9 @@ namespace Fusumity.Collections
 				Array.Sort(values);
 		}
 
-		private void LazyInitialize()
+		protected virtual void OnValuesUpdated() {}
+
+		protected virtual void LazyInitialize()
 		{
 			if (values != null)
 				return;
