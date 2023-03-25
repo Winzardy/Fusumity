@@ -155,19 +155,20 @@ namespace Fusumity.Collections
 
 #if UNITY_EDITOR
 			Span<bool> isValid = stackalloc bool[values.Length];
-			isValid.Fill(false);
 
 			for (var i = 0; i < values.Length; i++)
 			{
 				var enumName = values[i].EnumValueName;
-				if (Enum.TryParse<TEnum>(enumName, out var enumValue))
+				if (Enum.TryParse<TEnum>(enumName, out var enumValue) && !hashSet.Contains(enumValue))
 				{
-					if (hashSet.Contains(enumValue))
-						continue;
-
 					values[i].EnumValue = enumValue;
-					isValid[i] = true;
 					hashSet.Add(values[i].EnumValue);
+
+					isValid[i] = true;
+				}
+				else
+				{
+					isValid[i] = false;
 				}
 			}
 			for (var i = 0; i < values.Length; i++)
