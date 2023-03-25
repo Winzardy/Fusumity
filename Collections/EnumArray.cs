@@ -244,7 +244,7 @@ namespace Fusumity.Collections
 
 		[Readonly, HideLabel, DrawOffset(xOffset = -15f)]
 		public TEnum enumValue;
-		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -15f)]
+		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -14f)]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
