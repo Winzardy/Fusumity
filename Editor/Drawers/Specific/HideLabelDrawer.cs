@@ -10,8 +10,10 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
+			var labelAttribute = (HideLabelAttribute)attribute;
+
 			currentPropertyData.hasLabel = false;
-			currentPropertyData.hasFoldout = false;
+			currentPropertyData.hasFoldout = labelAttribute.hasFoldout;
 		}
 	}
 }

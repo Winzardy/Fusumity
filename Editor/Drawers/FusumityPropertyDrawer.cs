@@ -87,6 +87,11 @@ namespace Fusumity.Editor.Drawers
 
 			EditorGUI.BeginChangeCheck();
 
+			EditorGUI.indentLevel += currentPropertyData.indent;
+
+			position.yMin += currentPropertyData.drawOffsetY;
+			position.xMin += currentPropertyData.drawOffsetX;
+
 			var propertyPosition = position;
 			if (currentPropertyData.hasBeforeExtension)
 				propertyPosition.yMin += currentPropertyData.beforeExtensionHeight;
@@ -130,7 +135,9 @@ namespace Fusumity.Editor.Drawers
 
 			if (currentPropertyData.hasFoldout)
 			{
+				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
 				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, "");
+				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
 			}
 
 			if (currentPropertyData.ShouldDrawSubBody())
@@ -430,6 +437,12 @@ namespace Fusumity.Editor.Drawers
 		public float labelHeight;
 		public float bodyHeight;
 		public float afterExtensionHeight;
+
+		public float drawOffsetY;
+		public float drawOffsetX;
+		public int indent;
+		public int foldoutIndent;
+
 		public GUIStyle labelStyle;
 
 		public Color backgroundColor;
@@ -452,6 +465,11 @@ namespace Fusumity.Editor.Drawers
 			labelHeight = EditorGUIUtility.singleLineHeight;
 			bodyHeight = property.GetPropertyHeight(true);
 			afterExtensionHeight = 0f;
+
+			drawOffsetY = 0f;
+			drawOffsetX = 0f;
+			indent = 0;
+			foldoutIndent = 0;
 
 			var hasChildren = bodyHeight > labelHeight && property.HasChildren();
 
@@ -480,6 +498,7 @@ namespace Fusumity.Editor.Drawers
 			if (!drawProperty)
 				return height;
 
+			height += drawOffsetY;
 			if (hasBeforeExtension)
 			{
 				height += beforeExtensionHeight;

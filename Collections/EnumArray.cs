@@ -242,9 +242,9 @@ namespace Fusumity.Collections
 		private string enumValueName;
 #endif
 
-		[Readonly, HideLabel]
+		[Readonly, HideLabel, DrawOffset(xOffset = -15f)]
 		public TEnum enumValue;
-		[HideLabel]
+		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -15f)]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
@@ -277,9 +277,10 @@ namespace Fusumity.Collections
 		private string enumValueName;
 #endif
 
-		[Readonly, HideLabel]
+		[Readonly, HideLabel, DrawOffset(xOffset = -16f)]
 		public TEnum enumValue;
-		[SerializeReference, ReferenceSelection, HideLabel]
+		[HideLabel]
+		[SerializeReference, ReferenceSelection]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
