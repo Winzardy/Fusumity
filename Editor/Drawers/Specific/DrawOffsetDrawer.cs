@@ -12,6 +12,9 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var drawOffsetAttribute = (DrawOffsetAttribute)attribute;
 
+			if (drawOffsetAttribute.disableIfHasSubBody & currentPropertyData.hasSubBody)
+				return;
+
 			currentPropertyData.drawOffsetY += drawOffsetAttribute.yOffset;
 			currentPropertyData.drawOffsetY += drawOffsetAttribute.offsetLines * EditorGUIUtility.singleLineHeight;
 

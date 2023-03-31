@@ -2,6 +2,8 @@ namespace Fusumity.Attributes.Specific
 {
 	public class DrawOffsetAttribute : FusumityDrawerAttribute
 	{
+		public bool disableIfHasSubBody;
+
 		public float yOffset;
 		public int offsetLines;
 

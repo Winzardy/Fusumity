@@ -15,8 +15,8 @@ namespace Fusumity.Collections
 
 	[Serializable]
 	public class ReorderableEnumReferenceArray<TEnum, TValue> : ReorderableEnumArray<TEnum, TValue, EnumReferenceValue<TEnum, TValue>>
-		where TValue : class
-		where TEnum : unmanaged, Enum {}
+		where TEnum : unmanaged, Enum
+		where TValue : class {}
 
 	[Serializable]
 	public class ReorderableEnumArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
@@ -40,6 +40,7 @@ namespace Fusumity.Collections
 			return _indexes[*(int*)(&enumValue)];
 		}
 
+#if UNITY_EDITOR
 		protected override void LazyInitialize()
 		{
 			base.LazyInitialize();
@@ -65,6 +66,7 @@ namespace Fusumity.Collections
 				_indexes[*(int*)(&enumValue)] = i;
 			}
 		}
+#endif
 	}
 
 	[Serializable]
@@ -95,14 +97,27 @@ namespace Fusumity.Collections
 			return *(int*)(&enumValue);
 		}
 	}
+	[Serializable]
+	public class MyClassContainer<TEnum, TValue> where TEnum : unmanaged, Enum
+	{
+		public EnumValue<TEnum, TValue>[] _values;
+	}
 
 	[Serializable]
-	public class EnumArray<TEnum, TValue, TEnumValue> : ISerializationCallbackReceiver, IEnumArray
+	public class EnumArray<TEnum, TValue, TEnumValue> :
+#if UNITY_EDITOR
+		ISerializationCallbackReceiver,
+#endif
+		IEnumArray
 		where TEnum : unmanaged, Enum
-		where TEnumValue : IEnumValue<TEnum>, new()
+		where TEnumValue : IEnumValue<TEnum>
+#if UNITY_EDITOR
+		, new()
+#endif
 	{
+#if UNITY_EDITOR
 		private static readonly Array ENUM_VALUES = Enum.GetValues(typeof(TEnum));
-
+#endif
 		[SerializeField, HideLabel]
 		protected TEnumValue[] values;
 
@@ -120,6 +135,7 @@ namespace Fusumity.Collections
 
 		protected virtual bool IsReorderable => false;
 
+#if UNITY_EDITOR
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
 			UpdateValues();
@@ -133,17 +149,14 @@ namespace Fusumity.Collections
 		public void UpdateValues()
 		{
 			LazyInitialize();
-
 			if (values.Length == ENUM_VALUES.Length)
 			{
-#if UNITY_EDITOR
 				for (var i = 0; i < values.Length; i++)
 				{
 					var enumName = values[i].EnumValueName;
 					if (!Enum.TryParse<TEnum>(enumName, out var enumValue) || !values[i].EnumValue.Equals(enumValue))
 						goto update;
 				}
-#endif
 				if (!IsReorderable)
 					Array.Sort(values);
 				return;
@@ -153,7 +166,6 @@ namespace Fusumity.Collections
 			var valuesNew = new List<TEnumValue>(ENUM_VALUES.Length);
 			var hashSet = new HashSet<TEnum>(values.Length);
 
-#if UNITY_EDITOR
 			Span<bool> isValid = stackalloc bool[values.Length];
 
 			for (var i = 0; i < values.Length; i++)
@@ -185,13 +197,6 @@ namespace Fusumity.Collections
 					hashSet.Add(values[i].EnumValue);
 				}
 			}
-#else
-			for (var i = 0; i < values.Length; i++)
-			{
-				valuesNew.Add(values[i]);
-				hashSet.Add(values[i].EnumValue);
-			}
-#endif
 
 			foreach (TEnum enumValue in ENUM_VALUES)
 			{
@@ -200,9 +205,7 @@ namespace Fusumity.Collections
 				valuesNew.Add(new TEnumValue
 				{
 					EnumValue = enumValue,
-#if UNITY_EDITOR
 					EnumValueName = Enum.GetName(typeof(TEnum), enumValue),
-#endif
 				});
 			}
 
@@ -210,6 +213,8 @@ namespace Fusumity.Collections
 
 			if (!IsReorderable)
 				Array.Sort(values);
+
+			OnValuesUpdated();
 		}
 
 		protected virtual void OnValuesUpdated() {}
@@ -228,7 +233,10 @@ namespace Fusumity.Collections
 					EnumValue = (TEnum)ENUM_VALUES.GetValue(i),
 				};
 			}
+
+			OnValuesUpdated();
 		}
+#endif
 	}
 
 	public interface IEnumArray {}
@@ -237,14 +245,12 @@ namespace Fusumity.Collections
 	public struct EnumValue<TEnum, TValue> : IComparable<EnumValue<TEnum, TValue>>, IEnumValue<TEnum>
 		where TEnum: unmanaged, Enum
 	{
-#if UNITY_EDITOR
 		[SerializeField, HideInInspector]
 		private string enumValueName;
-#endif
 
 		[Readonly, HideLabel, DrawOffset(xOffset = -15f)]
 		public TEnum enumValue;
-		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -14f)]
+		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -14f, disableIfHasSubBody = true)]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
@@ -253,13 +259,11 @@ namespace Fusumity.Collections
 			set => enumValue = value;
 		}
 
-#if UNITY_EDITOR
 		string IEnumValue<TEnum>.EnumValueName
 		{
 			get => enumValueName;
 			set => enumValueName = value;
 		}
-#endif
 
 		public int CompareTo(EnumValue<TEnum, TValue> other)
 		{
@@ -272,10 +276,8 @@ namespace Fusumity.Collections
 		where TEnum: unmanaged, Enum
 		where TValue : class
 	{
-#if UNITY_EDITOR
 		[SerializeField, HideInInspector]
 		private string enumValueName;
-#endif
 
 		[Readonly, HideLabel, DrawOffset(xOffset = -16f)]
 		public TEnum enumValue;
@@ -289,13 +291,11 @@ namespace Fusumity.Collections
 			set => enumValue = value;
 		}
 
-#if UNITY_EDITOR
 		string IEnumValue<TEnum>.EnumValueName
 		{
 			get => enumValueName;
 			set => enumValueName = value;
 		}
-#endif
 
 		public int CompareTo(EnumReferenceValue<TEnum, TValue> other)
 		{
@@ -306,9 +306,7 @@ namespace Fusumity.Collections
 	public interface IEnumValue<TEnum>
 	{
 		public TEnum EnumValue { get; set; }
-#if UNITY_EDITOR
 		public string EnumValueName { get; set; }
-#endif
 	}
 
 	public struct EmptyStruct{}

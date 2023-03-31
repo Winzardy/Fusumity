@@ -19,7 +19,7 @@ namespace Fusumity.Editor.Drawers.Collections
 
 		public override void DrawBody(Rect position)
 		{
-			var valuesProperty = currentPropertyData.property.FindPropertyRelative("values");
+			var valuesProperty = currentPropertyData.property.FindPropertyRelative("_values");
 			valuesProperty.PropertyField(position, currentPropertyData.label, true);
 		}
 	}
