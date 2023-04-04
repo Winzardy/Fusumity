@@ -139,11 +139,13 @@ namespace Fusumity.Collections
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
 			UpdateValues();
+			OnValuesUpdated();
 		}
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 			UpdateValues();
+			OnValuesUpdated();
 		}
 
 		public void UpdateValues()
@@ -213,8 +215,6 @@ namespace Fusumity.Collections
 
 			if (!IsReorderable)
 				Array.Sort(values);
-
-			OnValuesUpdated();
 		}
 
 		protected virtual void OnValuesUpdated() {}
@@ -233,8 +233,6 @@ namespace Fusumity.Collections
 					EnumValue = (TEnum)ENUM_VALUES.GetValue(i),
 				};
 			}
-
-			OnValuesUpdated();
 		}
 #endif
 	}
