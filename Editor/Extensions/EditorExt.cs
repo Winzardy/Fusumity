@@ -32,10 +32,10 @@ namespace Fusumity.Editor.Extensions
 
 		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
 		{
-			var count = serializedObject.GetFieldsToDraw(out var fieldsToDraw, inheritRestrictType);
-			var result = new SerializedProperty[count];
+			var fieldsToDraw = serializedObject.GetFieldsToDraw(inheritRestrictType);
+			var result = new SerializedProperty[fieldsToDraw.Count];
 
-			for (var i = 0; i < count; i++)
+			for (var i = 0; i < fieldsToDraw.Count; i++)
 			{
 				result[i] = serializedObject.FindProperty(fieldsToDraw[i].Name);
 			}
@@ -43,32 +43,28 @@ namespace Fusumity.Editor.Extensions
 			return result;
 		}
 
-		public static int GetFieldsToDraw(this SerializedObject serializedObject, out FieldInfo[] fields, Type inheritRestrictType = null)
+		public static List<FieldInfo> GetFieldsToDraw(this SerializedObject serializedObject, Type inheritRestrictType = null)
 		{
 			var restrictFields = inheritRestrictType?.GetInstanceFields();
 			var restrictSet = restrictFields == null ? null : new HashSet<FieldInfo>(restrictFields);
 
 			var target = serializedObject.targetObject;
 			var targetType = target.GetType();
-			fields = targetType.GetInstanceFields();
+			var fields = targetType.GetInstanceFields();
+			var result = new List<FieldInfo>(fields.Length);
 
-			var lenght = fields.Length;
-			for (var i = 0; i < lenght; )
+			for (var i = 0; i < fields.Length; i++)
 			{
 				var field = fields[i];
 				if ((restrictSet == null || !restrictSet.Contains(field)) &&
 				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
 				    !field.HasAttribute<HideInInspector>())
 				{
-					i++;
-					continue;
+					result.Add(fields[i]);
 				}
-
-				lenght--;
-				fields[i] = fields[lenght];
 			}
 
-			return lenght;
+			return result;
 		}
 
 		public static bool IsStandardType(this SerializedProperty property)
