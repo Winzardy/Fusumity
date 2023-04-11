@@ -26,7 +26,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			var value = property.objectReferenceValue;
 			if (typeof(Component).IsAssignableFrom(targetType))
 			{
-				var component = (Component)value;
+				var component = value as Component;
 				var gameObject = component == null ? null : component.gameObject;
 
 				var result = EditorGUI.ObjectField(position, new GUIContent(" "), gameObject, typeof(GameObject), false) as GameObject;
