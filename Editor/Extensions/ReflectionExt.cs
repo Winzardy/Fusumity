@@ -27,9 +27,24 @@ namespace Fusumity.Editor.Extensions
 			return memberInfo.GetCustomAttribute<T>() != null;
 		}
 
-		public static FieldInfo[] GetInstanceFields(this Type type)
+		public static List<FieldInfo> GetInstanceFields(this Type type, Type privateRestriction = null)
 		{
-			return type.GetFields(FIELD_BINDING_FLAGS);
+			var fields = type.GetFields(FIELD_BINDING_FLAGS);
+			var result = new List<FieldInfo>(fields);
+
+			if (type != privateRestriction)
+			{
+				while (true)
+				{
+					type = type.BaseType;
+					if (type == null || type == privateRestriction)
+						break;
+					fields = type.GetFields(INTERNAL_FIELD_BINDING_FLAGS);
+					result.AddRange(fields);
+				}
+			}
+
+			return result;
 		}
 
 		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
@@ -197,8 +212,8 @@ namespace Fusumity.Editor.Extensions
 			var field = type.GetField(fieldName, FIELD_BINDING_FLAGS);
 			while (field == null)
 			{
-				type = type.BaseType;
-				field = type.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
+				type = type?.BaseType;
+				field = type?.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
 			return field;
@@ -209,8 +224,8 @@ namespace Fusumity.Editor.Extensions
 			var methodInfo = type.GetMethod(methodName, METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			while (methodInfo == null)
 			{
-				type = type.BaseType;
-				methodInfo = type.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
+				type = type?.BaseType;
+				methodInfo = type?.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			}
 
 			return methodInfo;

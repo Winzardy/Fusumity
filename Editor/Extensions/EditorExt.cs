@@ -45,22 +45,22 @@ namespace Fusumity.Editor.Extensions
 
 		public static List<FieldInfo> GetFieldsToDraw(this SerializedObject serializedObject, Type inheritRestrictType = null)
 		{
-			var restrictFields = inheritRestrictType?.GetInstanceFields();
+			var restrictFields = inheritRestrictType?.GetInstanceFields(inheritRestrictType);
 			var restrictSet = restrictFields == null ? null : new HashSet<FieldInfo>(restrictFields);
 
 			var target = serializedObject.targetObject;
 			var targetType = target.GetType();
-			var fields = targetType.GetInstanceFields();
-			var result = new List<FieldInfo>(fields.Length);
+			var fields = targetType.GetInstanceFields(inheritRestrictType);
+			var result = new List<FieldInfo>(fields.Count);
 
-			for (var i = 0; i < fields.Length; i++)
+			for (var i = 0; i < fields.Count; i++)
 			{
 				var field = fields[i];
 				if ((restrictSet == null || !restrictSet.Contains(field)) &&
 				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
 				    !field.HasAttribute<HideInInspector>())
 				{
-					result.Add(fields[i]);
+					result.Add(field);
 				}
 			}
 
