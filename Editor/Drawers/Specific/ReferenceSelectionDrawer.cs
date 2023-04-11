@@ -19,13 +19,14 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.ModifyPropertyData();
 
-			if (!OverrideMethods)
+			var property = currentPropertyData.property;
+			if (!OverrideMethods || property.propertyType != SerializedPropertyType.ManagedReference)
 				return;
 
 			currentPropertyData.labelIntersectSubBody = false;
 			currentPropertyData.hasFoldout = _selectedType != null;
 			currentPropertyData.hasSubBody = true;
-			currentPropertyData.hasBody = currentPropertyData.property.GetManagedReferenceType() != null;
+			currentPropertyData.hasBody = property.GetManagedReferenceType() != null;
 		}
 
 		public override void DrawSubBody(Rect position)
