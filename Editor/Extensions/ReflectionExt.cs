@@ -224,8 +224,10 @@ namespace Fusumity.Editor.Extensions
 			var methodInfo = type.GetMethod(methodName, METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			while (methodInfo == null)
 			{
-				type = type?.BaseType;
-				methodInfo = type?.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
+				type = type.BaseType;
+				if (type == null)
+					return null;
+				methodInfo = type.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[]{}, null);
 			}
 
 			return methodInfo;

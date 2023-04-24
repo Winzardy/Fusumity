@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Fusumity.Attributes.Specific;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -38,10 +39,10 @@ namespace Fusumity.Collections
 		where TKeyValue : struct, IKeyValue<TKey, TValue>
 	{
 #if UNITY_EDITOR
-		[SerializeField, Button("AddElement", drawBefore = false), RemoveFoldout]
+		[SerializeField, Button("AddElement", drawBefore = false), RemoveFoldout, JsonIgnore]
 		private TKeyValue _newElement;
 #endif
-		[SerializeField, HideLabel]
+		[SerializeField, HideLabel, JsonIgnore]
 		private List<TKeyValue> _elements;
 
 		protected SerializableDictionary() : base() { }
