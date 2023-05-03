@@ -14,7 +14,7 @@ namespace Fusumity.Editor.Extensions
 			return folderPath;
 		}
 
-		public static List<T> GetAssetsOfType<T>() where T: Object
+		public static List<T> GetAssetsOfType<T>(HashSet<T> exclude = null) where T: Object
 		{
 			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}");
 			var assets = new List<T>(guids.Length);
@@ -23,6 +23,8 @@ namespace Fusumity.Editor.Extensions
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guid);
 				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				if (exclude != null && exclude.Contains(asset))
+					continue;
 
 				assets.Add(asset);
 			}
