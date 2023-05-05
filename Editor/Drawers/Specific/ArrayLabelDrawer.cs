@@ -1,4 +1,3 @@
-using System;
 using Fusumity.Attributes.Specific;
 using UnityEditor;
 
@@ -20,8 +19,7 @@ namespace Fusumity.Editor.Drawers.Specific
 				elementIndex = (int.Parse(elementIndex) + labelAttribute.indexOffset).ToString();
 			currentPropertyData.labelPrefix = elementIndex;
 
-			var charCount = Math.Max(currentPropertyData.labelPrefix.Length + 1, 3);
-			currentPropertyData.labelPrefixWidth = charCount * 7f;
+			currentPropertyData.labelPrefixWidth = currentPropertyData.labelPrefix.Length * 7f + 15f;
 
 			currentPropertyData.hasLabel = false;
 			currentPropertyData.hasFoldout = labelAttribute.hasFoldout;

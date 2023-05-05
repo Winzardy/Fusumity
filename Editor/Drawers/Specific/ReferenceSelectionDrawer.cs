@@ -10,6 +10,8 @@ namespace Fusumity.Editor.Drawers.Specific
 	[CustomPropertyDrawer(typeof(ReferenceSelectionAttribute))]
 	public class ReferenceSelectionAttributeDrawer : FusumityPropertyDrawer
 	{
+		private const float COPY_PASTE_BUTTONS_WIDTH = 50f;
+
 		private Type[] _currentTypes;
 		private Type _selectedType;
 
@@ -56,7 +58,11 @@ namespace Fusumity.Editor.Drawers.Specific
 			_currentTypes ??= targetType.GetInheritorTypes(insertNull);
 
 			var typeName = currentType == null ? "None" : currentType.Name;
-			if (EditorGUI.DropdownButton(position, new GUIContent(typeName), default))
+
+			var dropdownPosition = position;
+			dropdownPosition.xMax -= COPY_PASTE_BUTTONS_WIDTH;
+
+			if (EditorGUI.DropdownButton(dropdownPosition, new GUIContent(typeName), default))
 			{
 				position = new Rect(position.x, position.y + position.height, position.width, 200f);
 				var v = GUIUtility.GUIToScreenPoint(new Vector2(position.x, position.y));
@@ -81,6 +87,21 @@ namespace Fusumity.Editor.Drawers.Specific
 					popup.Item(ToCamelCaseSpace(_currentTypes[i].Name), item => { Select(propertyPath, item.order); }, true, i);
 				}
 				popup.Show();
+			}
+
+			var copyPosition = position;
+			copyPosition.xMin = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH;
+			copyPosition.xMax = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH / 2;
+			if (GUI.Button(copyPosition, "C"))
+			{
+				property.CopyManagedReferenceValue();
+			}
+
+			var pastPosition = position;
+			pastPosition.xMin = copyPosition.xMax;
+			if (GUI.Button(pastPosition, "P"))
+			{
+				property.PasteManagedReferenceValue();
 			}
 		}
 

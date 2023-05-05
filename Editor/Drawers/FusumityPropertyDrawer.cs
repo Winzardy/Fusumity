@@ -88,6 +88,7 @@ namespace Fusumity.Editor.Drawers
 			GUI.enabled &= currentPropertyData.isEnabled;
 
 			EditorGUI.BeginChangeCheck();
+			EditorGUI.BeginProperty(position, label, property);
 
 			EditorGUI.indentLevel += currentPropertyData.indent;
 
@@ -184,6 +185,7 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
 
+			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
 			{
 				ExecuteOnPropertyChanged();
