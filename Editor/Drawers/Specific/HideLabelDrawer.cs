@@ -14,8 +14,6 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			currentPropertyData.hasLabel = false;
 			currentPropertyData.hasFoldout = labelAttribute.hasFoldout;
-			if (!currentPropertyData.hasFoldout)
-				currentPropertyData.drawOffsetX -= 25f;
 		}
 	}
 }
