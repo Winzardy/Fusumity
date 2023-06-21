@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Fusumity.Attributes.Specific;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -38,9 +37,15 @@ namespace Fusumity.Collections
 	public abstract class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 		where TKeyValue : struct, IKeyValue<TKey, TValue>
 	{
-		[SerializeField, Button("AddElement", drawBefore = false), RemoveFoldout, JsonIgnore]
+#if NEWTONSOFT
+		[Newtonsoft.Json.JsonIgnore]
+#endif
+		[SerializeField, Button("AddElement", drawBefore = false), RemoveFoldout]
 		private TKeyValue _newElement;
-		[SerializeField, HideLabel, JsonIgnore]
+#if NEWTONSOFT
+		[Newtonsoft.Json.JsonIgnore]
+#endif
+		[SerializeField, HideLabel]
 		private List<TKeyValue> _elements;
 
 		protected SerializableDictionary() : base() { }
