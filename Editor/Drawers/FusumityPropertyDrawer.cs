@@ -203,7 +203,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeAttributes()
 		{
-			if (_fusumityAttributes is { Length: > 0 })
+			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0 )
 				return;
 
 			var attributes = new List<FusumityDrawerAttribute>();
