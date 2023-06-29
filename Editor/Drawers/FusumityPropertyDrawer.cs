@@ -74,7 +74,7 @@ namespace Fusumity.Editor.Drawers
 
 			SetupPropertyData(property.propertyPath);
 
-			if (!(currentPropertyData is { drawProperty: true }))
+			if (currentPropertyData == null || !currentPropertyData.drawProperty)
 				return;
 
 			_currentPropertyPath.Add(property.propertyPath);
@@ -203,7 +203,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeAttributes()
 		{
-			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0 )
+			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0)
 				return;
 
 			var attributes = new List<FusumityDrawerAttribute>();
@@ -223,7 +223,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeDrawers()
 		{
-			if (_fusumityDrawers is { Length: > 0 })
+			if (_fusumityDrawers != null && _fusumityDrawers.Length > 0)
 				return;
 
 			if (_attributeTypeToDrawerType == null)
@@ -272,7 +272,6 @@ namespace Fusumity.Editor.Drawers
 				_fusumityDrawers[i] = drawer;
 			}
 		}
-
 
 		private void LazyInitializePropertyData(string propertyPath)
 		{
