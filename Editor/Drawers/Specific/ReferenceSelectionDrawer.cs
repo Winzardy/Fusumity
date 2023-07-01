@@ -40,7 +40,8 @@ namespace Fusumity.Editor.Drawers.Specific
 				return;
 			}
 
-			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
+			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() :
+				(fieldInfo.FieldType.IsList() ? fieldInfo.FieldType.GetGenericArguments()[0] : fieldInfo.FieldType);
 
 			var attr = (ReferenceSelectionAttribute)attribute;
 			var targetType = attr.type ?? fieldType;

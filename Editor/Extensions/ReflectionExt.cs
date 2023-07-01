@@ -22,6 +22,15 @@ namespace Fusumity.Editor.Extensions
 		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new Dictionary<Type, Type[]>();
 		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new Dictionary<Type, Type[]>();
 
+		public static bool IsList(this Type type)
+		{
+			if (!type.IsGenericType)
+				return false;
+
+			var genericTypeDefinition = type.GetGenericTypeDefinition();
+			return genericTypeDefinition == typeof(List<>);
+		}
+
 		public static bool HasAttribute<T>(this MemberInfo memberInfo) where T: Attribute
 		{
 			return memberInfo.GetCustomAttribute<T>() != null;
