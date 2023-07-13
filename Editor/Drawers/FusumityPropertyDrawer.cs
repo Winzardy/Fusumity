@@ -527,7 +527,6 @@ namespace Fusumity.Editor.Drawers
 			if (!drawProperty)
 				return height;
 
-			height += drawOffsetY;
 			if (hasBeforeExtension)
 			{
 				height += beforeExtensionHeight;
@@ -547,6 +546,8 @@ namespace Fusumity.Editor.Drawers
 
 			if (hasFoldout && height == 0f)
 				height = EditorGUIUtility.singleLineHeight;
+
+			height += drawOffsetY;
 			return height;
 		}
 
