@@ -164,6 +164,8 @@ namespace Fusumity.Editor.Extensions
 				else
 				{
 					var field = GetAnyField(target.GetType(), pathComponent);
+					if (field == null)
+						return null;
 					target = field.GetValue(target);
 				}
 			}
@@ -221,7 +223,9 @@ namespace Fusumity.Editor.Extensions
 			var field = type.GetField(fieldName, FIELD_BINDING_FLAGS);
 			while (field == null)
 			{
-				type = type?.BaseType;
+				type = type.BaseType;
+				if (type == null)
+					return null;
 				field = type?.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
@@ -242,6 +246,20 @@ namespace Fusumity.Editor.Extensions
 			return methodInfo;
 		}
 
+		public static PropertyInfo GetAnyProperty(this Type type, string propertyName)
+		{
+			var propertyInfo = type.GetProperty(propertyName, METHOD_BINDING_FLAGS);
+			while (propertyInfo == null)
+			{
+				type = type.BaseType;
+				if (type == null)
+					return null;
+				propertyInfo = type.GetProperty(propertyName, METHOD_BINDING_FLAGS);
+			}
+
+			return propertyInfo;
+		}
+
 		public static object InvokeFuncByLocalPath(object source, string methodPath)
 		{
 			var targetPath = "";
@@ -257,7 +275,25 @@ namespace Fusumity.Editor.Extensions
 			var target = GetObjectByLocalPath(source, targetPath);
 			var methodInfo = target.GetType().GetAnyMethod_WithoutArguments(methodName);
 
-			return methodInfo.Invoke(target, null);
+			return methodInfo?.Invoke(target, null);
+		}
+
+		public static object InvokePropertyByLocalPath(object source, string propertyPath)
+		{
+			var targetPath = "";
+			var propertyName = propertyPath;
+
+			var removeIndex = propertyPath.LastIndexOf(PATH_SPLIT_CHAR);
+			if (removeIndex >= 0)
+			{
+				targetPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
+				propertyName = propertyPath.Remove(0, removeIndex + 1);
+			}
+
+			var target = GetObjectByLocalPath(source, targetPath);
+			var propertyInfo = target.GetType().GetAnyProperty(propertyName);
+
+			return propertyInfo?.GetValue(target, null);
 		}
 
 		public static void InvokeMethodByLocalPath(object source, string methodPath)
