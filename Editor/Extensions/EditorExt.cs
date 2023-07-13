@@ -92,12 +92,12 @@ namespace Fusumity.Editor.Extensions
 			return null;
 		}
 
-		public static object GetObjectByPath(SerializedObject serializedObject, string objectPath)
+		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)
 		{
 			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
 		}
 
-		public static Type GetPropertyTypeByPath(SerializedObject serializedObject, string propertyPath)
+		public static Type GetPropertyTypeByPath(this SerializedObject serializedObject, string propertyPath)
 		{
 			return GetObjectByPath(serializedObject, propertyPath)?.GetType();
 		}
@@ -141,6 +141,31 @@ namespace Fusumity.Editor.Extensions
 			return int.Parse(indexString);
 		}
 
+		public static object GetResultByLocalPath(this SerializedProperty property, string localPath)
+		{
+			var result = property.GetPropertyObjectByLocalPath(localPath);
+			if (result != null)
+				return result;
+			result = property.InvokeFuncByLocalPath(localPath);
+			if (result != null)
+				return result;
+			result = property.InvokePropertyByLocalPath(localPath);
+
+			return result;
+		}
+
+		public static T GetResultByLocalPath<T>(this SerializedProperty property, string localPath)
+		{
+			if (property.GetPropertyObjectByLocalPath(localPath) is T value)
+				return value;
+			if (property.InvokeFuncByLocalPath(localPath) is T funcValue)
+				return funcValue;
+			if (property.InvokePropertyByLocalPath(localPath) is T propertyValue)
+				return propertyValue;
+
+			return default;
+		}
+
 		public static SerializedProperty GetPropertyByLocalPath(this SerializedProperty property, string localPath)
 		{
 			var parentPath = property.GetParentPropertyPath();
@@ -171,6 +196,14 @@ namespace Fusumity.Editor.Extensions
 			var fullMethodPath = parentPath.AppendPath(methodPath);
 
 			return ReflectionExt.InvokeFuncByLocalPath(property.serializedObject.targetObject, fullMethodPath);
+		}
+
+		public static object InvokePropertyByLocalPath(this SerializedProperty property, string propertyPath)
+		{
+			var parentPath = property.GetParentPropertyPath();
+			var fullPropertyPath = parentPath.AppendPath(propertyPath);
+
+			return ReflectionExt.InvokePropertyByLocalPath(property.serializedObject.targetObject, fullPropertyPath);
 		}
 
 		public static void DrawBody(this SerializedProperty property, Rect position)
