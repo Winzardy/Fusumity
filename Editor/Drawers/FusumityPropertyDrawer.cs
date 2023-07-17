@@ -115,9 +115,15 @@ namespace Fusumity.Editor.Drawers
 			var labelPosition = currentPropertyData.hasLabel
 				? new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
+#if UNITY_2022_3_OR_NEWER
+			var foldoutPosition = currentPropertyData.hasFoldout
+				? new Rect(propertyPosition.x - INDENT_WIDTH, propertyPosition.y, propertyPosition.width + INDENT_WIDTH, EditorGUIUtility.singleLineHeight)
+				: Rect.zero;
+#else
 			var foldoutPosition = currentPropertyData.hasFoldout
 				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
+#endif
 			var subBodyPosition = currentPropertyData.hasLabel & !currentPropertyData.labelIntersectSubBody
 				? new Rect(propertyPosition.x + EditorGUIUtility.labelWidth, propertyPosition.y,
 					propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
