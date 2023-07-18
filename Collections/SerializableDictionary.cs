@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Fusumity.Attributes.Specific;
@@ -7,9 +6,6 @@ using UnityEngine;
 
 namespace Fusumity.Collections
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonConverter(typeof(SerializableDictionaryConverter))]
-#endif
 	[Serializable]
 	public class SerializableReferenceDictionary<TKey, TValue> : SerializableDictionary<TKey, TValue, KeyReferenceValue<TKey, TValue>>
 		where TValue : class
@@ -24,9 +20,6 @@ namespace Fusumity.Collections
 		public SerializableReferenceDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
 	}
 
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonConverter(typeof(SerializableDictionaryConverter))]
-#endif
 	[Serializable]
 	public class SerializableDictionary<TKey, TValue> : SerializableDictionary<TKey, TValue, KeyValue<TKey, TValue>>
 	{
@@ -149,36 +142,4 @@ namespace Fusumity.Collections
 		public TKey Key { get; set; }
 		public TValue Value { get; set; }
 	}
-
-#if NEWTONSOFT
-	public class SerializableDictionaryConverter : Newtonsoft.Json.JsonConverter
-	{
-		public override bool CanConvert(Type objectType)
-		{
-			return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(SerializableDictionary<,,>);
-		}
-
-		public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
-		{
-			var dictionary = (IDictionary) value;
-			serializer.Serialize(writer, dictionary);
-		}
-
-		public override object ReadJson(Newtonsoft.Json.JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
-		{
-			var dictionaryType = typeof(Dictionary<,>).MakeGenericType(objectType.GenericTypeArguments[0], objectType.GenericTypeArguments[1]);
-			var dictionary = Activator.CreateInstance(dictionaryType);
-
-			serializer.Populate(reader, dictionary);
-
-			var result = Activator.CreateInstance(objectType);
-			foreach (DictionaryEntry entry in (IDictionary)dictionary)
-			{
-				((IDictionary)result).Add(entry.Key, entry.Value);
-			}
-
-			return result;
-		}
-	}
-#endif
 }
