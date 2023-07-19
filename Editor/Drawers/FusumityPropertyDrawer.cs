@@ -115,15 +115,9 @@ namespace Fusumity.Editor.Drawers
 			var labelPosition = currentPropertyData.hasLabel
 				? new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
-#if UNITY_2022_3_OR_NEWER
-			var foldoutPosition = currentPropertyData.hasFoldout
-				? new Rect(propertyPosition.x - INDENT_WIDTH, propertyPosition.y, propertyPosition.width + INDENT_WIDTH, EditorGUIUtility.singleLineHeight)
-				: Rect.zero;
-#else
 			var foldoutPosition = currentPropertyData.hasFoldout
 				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
-#endif
 			var subBodyPosition = currentPropertyData.hasLabel & !currentPropertyData.labelIntersectSubBody
 				? new Rect(propertyPosition.x + EditorGUIUtility.labelWidth, propertyPosition.y,
 					propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
@@ -148,7 +142,9 @@ namespace Fusumity.Editor.Drawers
 			{
 				var isEnabled = GUI.enabled;
 				GUI.enabled = false;
+
 				DrawLabelPrefix(labelPrefixPosition);
+
 				GUI.enabled = isEnabled;
 			}
 
@@ -160,8 +156,23 @@ namespace Fusumity.Editor.Drawers
 			if (currentPropertyData.hasFoldout)
 			{
 				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
-				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, "");
+#if UNITY_2022_3_OR_NEWER
+				EditorGUI.indentLevel--;
+#endif
+				var isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
+#if UNITY_2022_3_OR_NEWER
+				EditorGUI.indentLevel++;
+				if (isExpanded == currentPropertyData.property.isExpanded)
+				{
+					var color = GUI.color;
+					GUI.color = Color.clear;
+					isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
+					GUI.color = color;
+				}
+#endif
 				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
+
+				currentPropertyData.property.isExpanded = isExpanded;
 			}
 
 			if (currentPropertyData.ShouldDrawSubBody())
@@ -512,7 +523,7 @@ namespace Fusumity.Editor.Drawers
 			hasFoldout = hasChildren;
 			hasLabel = true;
 			hasSubBody = !hasChildren;
-			hasBody = hasChildren & property.isExpanded;
+			hasBody = hasChildren;
 			hasAfterExtension = false;
 
 			drawSubBodyWhenRollUp = true;
