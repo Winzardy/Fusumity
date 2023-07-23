@@ -191,7 +191,7 @@ namespace Fusumity.Editor.Extensions
 				localPath = propertyPath.Remove(0, removeIndex + 1);
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (localPath[^1] != ARRAY_DATA_TERMINATOR)
+				if (localPath[localPath.Length - 1] != ARRAY_DATA_TERMINATOR)
 					return propertyPath;
 
 				// Remove "{field name}.Array"

@@ -148,7 +148,7 @@ namespace Fusumity.Collections
 			OnValuesUpdated();
 		}
 
-		public void UpdateValues()
+		public unsafe void UpdateValues()
 		{
 			LazyInitialize();
 			if (values.Length == ENUM_VALUES.Length)
@@ -168,7 +168,7 @@ namespace Fusumity.Collections
 			var valuesNew = new List<TEnumValue>(ENUM_VALUES.Length);
 			var hashSet = new HashSet<TEnum>();
 
-			Span<bool> isValid = stackalloc bool[values.Length];
+			var isValid = stackalloc bool[values.Length];
 
 			for (var i = 0; i < values.Length; i++)
 			{

@@ -13,8 +13,10 @@ namespace Fusumity.Collections
 		public SerializableReferenceDictionary() : base() { }
 		public SerializableReferenceDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
 		public SerializableReferenceDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary, comparer) { }
+#if UNITY_2022_3_OR_NEWER
 		public SerializableReferenceDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection) : base(collection) { }
 		public SerializableReferenceDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection, IEqualityComparer<TKey> comparer) : base(collection, comparer) { }
+#endif
 		public SerializableReferenceDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }
 		public SerializableReferenceDictionary(int capacity) : base(capacity) { }
 		public SerializableReferenceDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
@@ -26,8 +28,10 @@ namespace Fusumity.Collections
 		public SerializableDictionary() : base() { }
 		public SerializableDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
 		public SerializableDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary, comparer) { }
+#if UNITY_2022_3_OR_NEWER
 		public SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection) : base(collection) { }
 		public SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection, IEqualityComparer<TKey> comparer) : base(collection, comparer) { }
+#endif
 		public SerializableDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }
 		public SerializableDictionary(int capacity) : base(capacity) { }
 		public SerializableDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
@@ -51,7 +55,6 @@ namespace Fusumity.Collections
 		protected SerializableDictionary() : base() { }
 		protected SerializableDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
 		protected SerializableDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary, comparer) { }
-
 #if UNITY_2022_3_OR_NEWER
 		protected SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection) : base(collection) { }
 		protected SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection, IEqualityComparer<TKey> comparer) : base(collection, comparer) { }

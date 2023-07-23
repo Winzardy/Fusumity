@@ -134,7 +134,7 @@ namespace Fusumity.Editor.Extensions
 		public static int GetElementIndex(this SerializedProperty property)
 		{
 			var path = property.propertyPath;
-			if (path[^1] != ']')
+			if (path[path.Length - 1] != ']')
 				return 0;
 			var beginIndex = path.LastIndexOf("[", StringComparison.Ordinal) + 1;
 			var indexString = path.Substring(beginIndex, path.Length - beginIndex - 1);
