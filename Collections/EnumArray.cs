@@ -166,7 +166,7 @@ namespace Fusumity.Collections
 			update:
 
 			var valuesNew = new List<TEnumValue>(ENUM_VALUES.Length);
-			var hashSet = new HashSet<TEnum>(values.Length);
+			var hashSet = new HashSet<TEnum>();
 
 			Span<bool> isValid = stackalloc bool[values.Length];
 

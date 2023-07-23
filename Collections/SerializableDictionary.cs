@@ -51,8 +51,11 @@ namespace Fusumity.Collections
 		protected SerializableDictionary() : base() { }
 		protected SerializableDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
 		protected SerializableDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> comparer) : base(dictionary, comparer) { }
+
+#if UNITY_2022_3_OR_NEWER
 		protected SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection) : base(collection) { }
 		protected SerializableDictionary(IEnumerable<KeyValuePair<TKey, TValue>> collection, IEqualityComparer<TKey> comparer) : base(collection, comparer) { }
+#endif
 		protected SerializableDictionary(IEqualityComparer<TKey> comparer) : base(comparer) { }
 		protected SerializableDictionary(int capacity) : base(capacity) { }
 		protected SerializableDictionary(int capacity, IEqualityComparer<TKey> comparer) : base(capacity, comparer) { }
@@ -79,14 +82,24 @@ namespace Fusumity.Collections
 
 			for (var i = 0; i < _elements.Count; i++)
 			{
+#if UNITY_2022_3_OR_NEWER
 				TryAdd(_elements[i].Key, _elements[i].Value);
+#else
+			if (ContainsKey(_newElement.Key))
+				Add(_elements[i].Key, _elements[i].Value);
+#endif
 			}
 		}
 
 #if UNITY_EDITOR
 		private void AddElement()
 		{
+#if UNITY_2022_3_OR_NEWER
 			TryAdd(_newElement.Key, _newElement.Value);
+#else
+			if (ContainsKey(_newElement.Key))
+				Add(_newElement.Key, _newElement.Value);
+#endif
 		}
 #endif
 	}
