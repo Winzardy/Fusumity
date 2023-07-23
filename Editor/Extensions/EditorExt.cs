@@ -8,7 +8,8 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class EditorExt
 	{
-		private const float LINE_SPACING = 2f;
+		public const float INDENT_WIDTH = 15f;
+		public const float LINE_SPACING = 2f;
 
 		private static Rect _positionCache;
 		private static GUIContent _labelCache;

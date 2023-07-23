@@ -12,8 +12,6 @@ namespace Fusumity.Editor.Drawers
 	[CustomPropertyDrawer(typeof(IFusumitySerializable), true)]
 	public class FusumityPropertyDrawer : PropertyDrawer
 	{
-		private const float INDENT_WIDTH = 15f;
-
 		private static readonly Type BASE_DRAWER_TYPE = typeof(FusumityPropertyDrawer);
 		private static readonly Type ATTRIBUTE_TYPE = typeof(FusumityDrawerAttribute);
 
@@ -133,6 +131,20 @@ namespace Fusumity.Editor.Drawers
 
 			ExecuteValidateBeforeDrawing();
 
+			if (currentPropertyData.hasFoldout)
+			{
+#if UNITY_2022_3_OR_NEWER
+				if (EditorGUI.indentLevel > 0)
+					EditorGUI.indentLevel--;
+#endif
+				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
+				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
+				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
+#if UNITY_2022_3_OR_NEWER
+				EditorGUI.indentLevel++;
+#endif
+			}
+
 			if (currentPropertyData.hasBeforeExtension)
 			{
 				ExecuteDrawBeforeExtension(beforeExtensionPosition);
@@ -153,33 +165,11 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawLabel(labelPosition);
 			}
 
-			if (currentPropertyData.hasFoldout)
-			{
-				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
-#if UNITY_2022_3_OR_NEWER
-				EditorGUI.indentLevel--;
-#endif
-				var isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
-#if UNITY_2022_3_OR_NEWER
-				EditorGUI.indentLevel++;
-				if (isExpanded == currentPropertyData.property.isExpanded)
-				{
-					var color = GUI.color;
-					GUI.color = Color.clear;
-					isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
-					GUI.color = color;
-				}
-#endif
-				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
-
-				currentPropertyData.property.isExpanded = isExpanded;
-			}
-
 			if (currentPropertyData.ShouldDrawSubBody())
 			{
 				if (!currentPropertyData.hasLabel | !currentPropertyData.labelIntersectSubBody)
 				{
-					EditorGUIUtility.labelWidth = INDENT_WIDTH;
+					EditorGUIUtility.labelWidth = EditorExt.INDENT_WIDTH;
 				}
 
 				ExecuteDrawSubBody(subBodyPosition);
@@ -201,6 +191,10 @@ namespace Fusumity.Editor.Drawers
 			{
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
+#if UNITY_2022_3_OR_NEWER
+			if (currentPropertyData.hasFoldout && EditorGUI.indentLevel <= 1)
+				EditorGUI.indentLevel--;
+#endif
 
 			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
