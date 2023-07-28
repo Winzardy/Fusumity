@@ -163,7 +163,7 @@ namespace Fusumity.Editor.Extensions
 				}
 				else
 				{
-					var field = GetAnyField(target.GetType(), pathComponent);
+					var field = GetAnyField(target?.GetType(), pathComponent);
 					if (field == null)
 						return null;
 					target = field.GetValue(target);
@@ -220,13 +220,16 @@ namespace Fusumity.Editor.Extensions
 
 		public static FieldInfo GetAnyField(this Type type, string fieldName)
 		{
+			if (type == null)
+				return null;
+
 			var field = type.GetField(fieldName, FIELD_BINDING_FLAGS);
 			while (field == null)
 			{
 				type = type.BaseType;
 				if (type == null)
 					return null;
-				field = type?.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
+				field = type.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
 			return field;
@@ -273,7 +276,7 @@ namespace Fusumity.Editor.Extensions
 			}
 
 			var target = GetObjectByLocalPath(source, targetPath);
-			var methodInfo = target.GetType().GetAnyMethod_WithoutArguments(methodName);
+			var methodInfo = target?.GetType().GetAnyMethod_WithoutArguments(methodName);
 
 			return methodInfo?.Invoke(target, null);
 		}
@@ -291,7 +294,7 @@ namespace Fusumity.Editor.Extensions
 			}
 
 			var target = GetObjectByLocalPath(source, targetPath);
-			var propertyInfo = target.GetType().GetAnyProperty(propertyName);
+			var propertyInfo = target?.GetType().GetAnyProperty(propertyName);
 
 			return propertyInfo?.GetValue(target, null);
 		}
@@ -309,9 +312,9 @@ namespace Fusumity.Editor.Extensions
 			}
 
 			var target = GetObjectByLocalPath(source, targetPath);
-			var methodInfo = target.GetType().GetAnyMethod_WithoutArguments(methodName);
+			var methodInfo = target?.GetType().GetAnyMethod_WithoutArguments(methodName);
 
-			methodInfo.Invoke(target, null);
+			methodInfo?.Invoke(target, null);
 		}
 
 		public static string AppendPath(this string sourcePath, string additionalPath)
