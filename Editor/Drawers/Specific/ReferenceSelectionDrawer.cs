@@ -61,7 +61,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			var typeName = currentType == null ? "None" : currentType.Name;
 
 			var dropdownPosition = position;
-			dropdownPosition.xMin += EditorGUI.indentLevel * EditorExt.INDENT_WIDTH;
+			dropdownPosition.xMin += (EditorGUI.indentLevel - 1) * EditorExt.INDENT_WIDTH;
 			dropdownPosition.xMax -= COPY_PASTE_BUTTONS_WIDTH;
 
 			if (EditorGUI.DropdownButton(dropdownPosition, new GUIContent(typeName), default))
