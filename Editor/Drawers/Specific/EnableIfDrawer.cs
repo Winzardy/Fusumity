@@ -18,14 +18,9 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				var isEnabled = property.GetResultByLocalPath<bool>(enableIfAttribute.checkPath);
 
-				if (currentPropertyData.isEnabledChanged)
+				if (!isEnabled && currentPropertyData.enableState == EnableState.Enable)
 				{
-					currentPropertyData.isEnabled &= isEnabled;
-				}
-				else
-				{
-					currentPropertyData.isEnabled = isEnabled;
-					currentPropertyData.isEnabledChanged = true;
+					currentPropertyData.enableState = EnableState.Disable;
 				}
 				return;
 			}
@@ -39,13 +34,13 @@ namespace Fusumity.Editor.Drawers.Specific
 					{
 						currentPropertyData.drawProperty = true;
 					}
-					currentPropertyData.isEnabledChanged = true;
 					return;
 				}
 			}
-
-			currentPropertyData.isEnabled = false;
-			currentPropertyData.isEnabledChanged = true;
+			if (currentPropertyData.enableState == EnableState.Enable)
+			{
+				currentPropertyData.enableState = EnableState.Disable;
+			}
 		}
 	}
 }

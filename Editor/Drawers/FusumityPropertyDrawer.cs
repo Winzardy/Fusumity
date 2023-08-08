@@ -83,7 +83,17 @@ namespace Fusumity.Editor.Drawers
 			var lastLabelWidth = EditorGUIUtility.labelWidth;
 
 			GUI.backgroundColor = currentPropertyData.backgroundColor;
-			GUI.enabled &= currentPropertyData.isEnabled;
+			switch (currentPropertyData.enableState)
+			{
+				case EnableState.ForceDisable:
+				case EnableState.Disable:
+					GUI.enabled = false;
+					break;
+				case EnableState.ForceEnable:
+					GUI.enabled = true;
+					break;
+			}
+
 
 			EditorGUI.BeginChangeCheck();
 			EditorGUI.BeginProperty(position, label, property);
@@ -447,6 +457,14 @@ namespace Fusumity.Editor.Drawers
 		#endregion
 	}
 
+	public enum EnableState
+	{
+		Enable,
+		Disable,
+		ForceEnable,
+		ForceDisable
+	}
+
 	public class PropertyData
 	{
 		public SerializedProperty property;
@@ -457,8 +475,7 @@ namespace Fusumity.Editor.Drawers
 
 		public bool drawPropertyChanged;
 		public bool drawProperty;
-		public bool isEnabledChanged;
-		public bool isEnabled;
+		public EnableState enableState;
 
 		public bool hasBeforeExtension;
 		public bool hasFoldout;
@@ -498,8 +515,7 @@ namespace Fusumity.Editor.Drawers
 
 			drawPropertyChanged = false;
 			drawProperty = true;
-			isEnabledChanged = false;
-			isEnabled = true;
+			enableState = EnableState.Enable;
 
 			beforeExtensionHeight = 0f;
 			labelHeight = EditorGUIUtility.singleLineHeight;

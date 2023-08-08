@@ -2,11 +2,10 @@ using System;
 
 namespace Fusumity.Attributes.Specific
 {
-	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
 	public class ButtonAttribute : FusumityDrawerAttribute
 	{
-		public string buttonName = "";
-		public string methodPath = "";
+		public readonly string buttonName = "";
+		public readonly string methodPath = "";
 		// Hide label, body and subBody
 		public bool hidePropertyField = false;
 		public bool drawBefore = true;

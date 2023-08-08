@@ -1,4 +1,5 @@
 using Fusumity.Attributes.Specific;
+using Fusumity.Editor.Extensions;
 using UnityEditor;
 
 namespace Fusumity.Editor.Drawers.Specific
@@ -14,10 +15,11 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			currentPropertyData.drawOffsetX = -10;
 
-			var elementIndex = currentPropertyData.label.text.Replace("Element ", string.Empty);
+
+			var elementIndex = currentPropertyData.property.GetElementIndex();
 			if (labelAttribute.indexOffset != 0)
-				elementIndex = (int.Parse(elementIndex) + labelAttribute.indexOffset).ToString();
-			currentPropertyData.labelPrefix = elementIndex;
+				elementIndex += labelAttribute.indexOffset;
+			currentPropertyData.labelPrefix = elementIndex.ToString();
 
 			currentPropertyData.labelPrefixWidth = currentPropertyData.labelPrefix.Length * 7f + 15f;
 

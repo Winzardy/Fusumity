@@ -16,7 +16,7 @@ namespace Fusumity.Editor.Drawers.Specific
 				return;
 			if (readonlyAttribute.ifApplicationIsNotPlaying && Application.isPlaying)
 				return;
-			currentPropertyData.isEnabled = false;
+			currentPropertyData.enableState = readonlyAttribute.isReadonly ? EnableState.ForceDisable : EnableState.ForceEnable;
 		}
 	}
 }

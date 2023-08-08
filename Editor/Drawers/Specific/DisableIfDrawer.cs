@@ -18,14 +18,9 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				var isDisabled = property.GetResultByLocalPath<bool>(disableIfAttribute.checkPath);
 
-				if (currentPropertyData.isEnabledChanged)
+				if (isDisabled && currentPropertyData.enableState == EnableState.Enable)
 				{
-					currentPropertyData.isEnabled &= !isDisabled;
-				}
-				else
-				{
-					currentPropertyData.isEnabled = !isDisabled;
-					currentPropertyData.isEnabledChanged = true;
+					currentPropertyData.enableState = EnableState.Disable;
 				}
 				return;
 			}
@@ -35,16 +30,14 @@ namespace Fusumity.Editor.Drawers.Specific
 			{
 				if ((checkObject == null && equalsObject == null) || (checkObject != null && checkObject.Equals(equalsObject)))
 				{
-					currentPropertyData.isEnabled = false;
-					currentPropertyData.isEnabledChanged = true;
+					currentPropertyData.enableState = EnableState.Disable;
 					return;
 				}
 			}
 
-			if (currentPropertyData.isEnabledChanged)
+			if (currentPropertyData.enableState == EnableState.Disable)
 			{
-				currentPropertyData.isEnabled = true;
-				currentPropertyData.isEnabledChanged = true;
+				currentPropertyData.enableState = EnableState.Enable;
 			}
 		}
 	}
