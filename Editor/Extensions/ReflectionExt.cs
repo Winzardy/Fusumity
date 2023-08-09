@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -114,7 +115,7 @@ namespace Fusumity.Editor.Extensions
 			for (var p = 0; p < pathComponents.Length; p++)
 			{
 				var pathComponent = pathComponents[p];
-				if (target is Array array)
+				if (target is IList list)
 				{
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
@@ -122,10 +123,10 @@ namespace Fusumity.Editor.Extensions
 
 						if (p + 1 == pathComponents.Length)
 						{
-							array.SetValue(value, index);
+							list[index] = value;
 							return;
 						}
-						target = array.GetValue(index);
+						target = list[index];
 					}
 				}
 				else
@@ -153,12 +154,12 @@ namespace Fusumity.Editor.Extensions
 			for (var p = 0; p < pathComponents.Length; p++)
 			{
 				var pathComponent = pathComponents[p];
-				if (target is Array array)
+				if (target is IList list)
 				{
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
-						target = array.GetValue(index);
+						target = list[index];
 					}
 				}
 				else
