@@ -122,6 +122,8 @@ namespace Fusumity.Editor.Extensions
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+						if (list.Count <= index)
+							return;
 
 						if (p + 1 == pathComponents.Length)
 						{
@@ -161,6 +163,8 @@ namespace Fusumity.Editor.Extensions
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+						if (list.Count <= index)
+							return null;
 						target = list[index];
 					}
 				}
