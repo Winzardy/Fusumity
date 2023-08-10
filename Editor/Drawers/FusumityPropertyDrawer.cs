@@ -94,8 +94,8 @@ namespace Fusumity.Editor.Drawers
 					break;
 			}
 
-			EditorGUI.BeginProperty(position, label, property);
 			EditorGUI.BeginChangeCheck();
+			EditorGUI.BeginProperty(position, label, property);
 
 			EditorGUI.indentLevel += currentPropertyData.indent;
 
@@ -205,11 +205,12 @@ namespace Fusumity.Editor.Drawers
 				EditorGUI.indentLevel--;
 #endif
 
+			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
 			{
+				property.serializedObject.ApplyModifiedProperties();
 				ExecuteOnPropertyChanged();
 			}
-			EditorGUI.EndProperty();
 
 			EditorGUIUtility.labelWidth = lastLabelWidth;
 			EditorGUI.indentLevel = lastIndentLevel;

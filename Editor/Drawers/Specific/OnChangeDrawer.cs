@@ -15,9 +15,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (string.IsNullOrEmpty(onValidateAttribute.methodPath))
 				return;
 
-			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, onValidateAttribute.methodPath);
 			currentPropertyData.property.InvokeMethodByLocalPath(onValidateAttribute.methodPath);
-			currentPropertyData.property.serializedObject.targetObject.SaveChanges();
 		}
 	}
 }

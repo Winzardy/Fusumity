@@ -1,5 +1,3 @@
-using System;
-
 namespace Fusumity.Attributes.Specific
 {
 	public class ButtonAttribute : FusumityDrawerAttribute

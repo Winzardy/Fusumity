@@ -19,9 +19,11 @@ namespace Fusumity.Editor.Extensions
 		public const char ARRAY_DATA_TERMINATOR = ']';
 		public const string ARRAY_DATA_BEGINNER = "data[";
 
-		private static readonly Dictionary<Type, Type[]> ASSIGNABLE_FROM = new Dictionary<Type, Type[]>();
-		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new Dictionary<Type, Type[]>();
-		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new Dictionary<Type, Type[]>();
+		private static readonly Dictionary<Type, Type[]> ASSIGNABLE_FROM = new ();
+		private static readonly Dictionary<Type, Type[]> TYPES_WITH_NULL = new ();
+		private static readonly Dictionary<Type, Type[]> TYPES_WITHOUT_NULL = new ();
+
+		private static readonly Dictionary<(object source, string methodPath), Action> COMPILED_ACTIONS = new ();
 
 		public static bool IsList(this Type type)
 		{

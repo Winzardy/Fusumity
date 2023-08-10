@@ -15,11 +15,15 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			currentPropertyData.drawOffsetX = -10;
 
-
 			var elementIndex = currentPropertyData.property.GetElementIndex();
 			if (labelAttribute.indexOffset != 0)
 				elementIndex += labelAttribute.indexOffset;
-			currentPropertyData.labelPrefix = elementIndex.ToString();
+			if (labelAttribute.hasName)
+			{
+				currentPropertyData.labelPrefix = $"{elementIndex} {currentPropertyData.label.text}";
+			}
+			else
+				currentPropertyData.labelPrefix = elementIndex.ToString();
 
 			currentPropertyData.labelPrefixWidth = currentPropertyData.labelPrefix.Length * 7f + 15f;
 
