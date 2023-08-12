@@ -277,7 +277,8 @@ namespace Fusumity.Editor.Drawers
 
 			_fusumityDrawers = new List<FusumityPropertyDrawer>(_fusumityAttributes.Count);
 			{
-				if (_typeToDrawerType.TryGetValue(property.GetPropertyType(), out var drawerType))
+				var propertyType = property.GetPropertyType();
+				if (propertyType != null && _typeToDrawerType.TryGetValue(propertyType, out var drawerType))
 				{
 					var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
 					drawer.SetFieldInfo(fieldInfo);
