@@ -15,11 +15,11 @@ namespace Fusumity.Editor.Drawers
 		private static readonly Type BASE_DRAWER_TYPE = typeof(FusumityPropertyDrawer);
 		private static readonly Type ATTRIBUTE_TYPE = typeof(FusumityDrawerAttribute);
 
-		private static Dictionary<Type, Type> _attributeTypeToDrawerType;
+		private static Dictionary<Type, Type> _typeToDrawerType;
 		private static HashSet<string> _currentPropertyPath = new HashSet<string>();
 
-		private FusumityDrawerAttribute[] _fusumityAttributes;
-		private FusumityPropertyDrawer[] _fusumityDrawers;
+		private List<FusumityDrawerAttribute> _fusumityAttributes;
+		private List<FusumityPropertyDrawer> _fusumityDrawers;
 		// If not use this arrays will suck (very long story).
 		private Dictionary<string, PropertyData> _pathToPropertyData;
 
@@ -49,7 +49,7 @@ namespace Fusumity.Editor.Drawers
 			_currentPropertyPath.Add(property.propertyPath);
 
 			LazyInitializeAttributes();
-			LazyInitializeDrawers();
+			LazyInitializeDrawers(property);
 			LazyInitializePropertyData(property.propertyPath);
 			SetupPropertyData(property.propertyPath);
 
@@ -224,7 +224,7 @@ namespace Fusumity.Editor.Drawers
 
 		private void LazyInitializeAttributes()
 		{
-			if (_fusumityAttributes != null && _fusumityAttributes.Length > 0)
+			if (_fusumityAttributes != null && _fusumityAttributes.Count > 0)
 				return;
 
 			var attributes = new List<FusumityDrawerAttribute>();
@@ -239,18 +239,18 @@ namespace Fusumity.Editor.Drawers
 				attributes.Add(fusumityDrawerAttribute);
 			}
 
-			_fusumityAttributes = attributes.ToArray();
+			_fusumityAttributes = attributes;
 		}
 
-		private void LazyInitializeDrawers()
+		private void LazyInitializeDrawers(SerializedProperty property)
 		{
-			if (_fusumityDrawers != null && _fusumityDrawers.Length > 0)
+			if (_fusumityDrawers != null && _fusumityDrawers.Count > 0)
 				return;
 
-			if (_attributeTypeToDrawerType == null)
+			if (_typeToDrawerType == null)
 			{
 				var drawersTypes = BASE_DRAWER_TYPE.GetInheritorTypes();
-				_attributeTypeToDrawerType = new Dictionary<Type, Type>(drawersTypes.Length * 3);
+				_typeToDrawerType = new Dictionary<Type, Type>(drawersTypes.Length * 3);
 
 				foreach (var drawerType in drawersTypes)
 				{
@@ -261,9 +261,9 @@ namespace Fusumity.Editor.Drawers
 						var customAttributeTypes = customAttribute.GetCustomPropertyDrawerTypes();
 						foreach (var customAttributeType in customAttributeTypes)
 						{
-							if (!_attributeTypeToDrawerType.ContainsKey(customAttributeType))
+							if (!_typeToDrawerType.ContainsKey(customAttributeType))
 							{
-								_attributeTypeToDrawerType.Add(customAttributeType, drawerType);
+								_typeToDrawerType.Add(customAttributeType, drawerType);
 							}
 							else
 							{
@@ -275,13 +275,22 @@ namespace Fusumity.Editor.Drawers
 				}
 			}
 
-			_fusumityDrawers = new FusumityPropertyDrawer[_fusumityAttributes.Length];
+			_fusumityDrawers = new List<FusumityPropertyDrawer>(_fusumityAttributes.Count);
+			{
+				if (_typeToDrawerType.TryGetValue(property.GetPropertyType(), out var drawerType))
+				{
+					var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
+					drawer.SetFieldInfo(fieldInfo);
 
-			for (var i = 0; i < _fusumityAttributes.Length; i++)
+					_fusumityDrawers.Add(drawer);
+				}
+			}
+
+			for (var i = 0; i < _fusumityAttributes.Count; i++)
 			{
 				var genericAttribute = _fusumityAttributes[i];
 
-				if (!_attributeTypeToDrawerType.TryGetValue(genericAttribute.GetType(), out var drawerType))
+				if (!_typeToDrawerType.TryGetValue(genericAttribute.GetType(), out var drawerType))
 				{
 					drawerType = BASE_DRAWER_TYPE;
 				}
@@ -290,7 +299,7 @@ namespace Fusumity.Editor.Drawers
 				drawer.SetAttribute(genericAttribute);
 				drawer.SetFieldInfo(fieldInfo);
 
-				_fusumityDrawers[i] = drawer;
+				_fusumityDrawers.Add(drawer);
 			}
 		}
 
