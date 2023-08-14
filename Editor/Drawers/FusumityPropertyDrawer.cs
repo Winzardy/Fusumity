@@ -106,7 +106,11 @@ namespace Fusumity.Editor.Drawers
 			if (currentPropertyData.ShouldDrawLabelPrefix())
 			{
 				labelPrefixPosition = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-				position.xMin += currentPropertyData.labelPrefixWidth;
+
+				var offset = currentPropertyData.labelPrefixWidth;
+				if (offset > EditorGUIUtility.labelWidth)
+					offset = EditorGUIUtility.labelWidth;
+				position.xMin += offset;
 			}
 
 			var propertyPosition = position;

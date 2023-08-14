@@ -12,13 +12,12 @@ namespace Fusumity.Editor.Drawers.Specific
 			base.ModifyPropertyData();
 
 			var labelAttribute = (ArrayLabelAttribute)attribute;
-
 			currentPropertyData.drawOffsetX = -10;
 
 			var elementIndex = currentPropertyData.property.GetElementIndex();
 			if (labelAttribute.indexOffset != 0)
 				elementIndex += labelAttribute.indexOffset;
-			if (labelAttribute.hasName)
+			if (labelAttribute.hasName && (!labelAttribute.hideNameIfExpanded || !currentPropertyData.property.isExpanded))
 			{
 				currentPropertyData.labelPrefix = $"{elementIndex} {currentPropertyData.label.text}";
 			}
