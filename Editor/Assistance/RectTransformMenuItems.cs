@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Assistance
 {
-	public class RectTransformMenuItems : MonoBehaviour
+	public static class RectTransformMenuItems
 	{
 		[MenuItem("CONTEXT/RectTransform/Rect To Anchors")]
 		static void RectToAnchors(MenuCommand command)
