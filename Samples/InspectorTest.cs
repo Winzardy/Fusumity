@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Fusumity.Samples
 {
-	public enum EnumType
+	internal enum EnumType
 	{
 		A,
 		B,
@@ -15,53 +15,53 @@ namespace Fusumity.Samples
 		G,
 	}
 
-	public class InspectorTest : MonoBehaviour
+	internal class InspectorTest : MonoBehaviour
 	{
-		public ReorderableEnumArray<EnumType> enumEnumArray;
-		public ReorderableEnumArray<EnumType, int> reorderableEnumArray;
-		public EnumArray<EnumType, int> enumArray;
+		internal ReorderableEnumArray<EnumType> enumEnumArray;
+		internal ReorderableEnumArray<EnumType, int> reorderableEnumArray;
+		internal EnumArray<EnumType, int> enumArray;
 
-		public SerializableDictionary<int, string> wtf;
+		internal SerializableDictionary<int, string> wtf;
 
 		[ReferenceSelection, SerializeReference]
-		public ITest test;
+		internal ITest test;
 
-		public Spell spell;
+		internal Spell spell;
 
 		[DisableIf("a"), EnableIf("b"), EnableIf("c")]
-		public bool t;
-		public bool a;
-		public bool b;
-		public bool c;
+		internal bool t;
+		internal bool a;
+		internal bool b;
+		internal bool c;
 
-		public bool T()
+		internal bool T()
 		{
 			return true;
 		}
 	}
 
-	public interface ITest
+	internal interface ITest
 	{
 	}
 
 	[Serializable]
-	public class Tst : ITest
+	internal class Tst : ITest
 	{
-		[DisableIf("c")] public int a;
-		[EnableIf("c")] public float b;
-		public bool c;
+		[DisableIf("c")] internal int a;
+		[EnableIf("c")] internal float b;
+		internal bool c;
 	}
 
 	[Serializable]
-	public class Tst1 : ITest
+	internal class Tst1 : ITest
 	{
 		[Minimum("min"), Maximum("max"), Button("IncrementMax")]
-		public int a;
+		internal int a;
 
-		public int min;
-		public int max;
+		internal int min;
+		internal int max;
 
-		public void IncrementMax()
+		internal void IncrementMax()
 		{
 			max++;
 		}
@@ -70,37 +70,37 @@ namespace Fusumity.Samples
 #region OOP_Exemple
 
 	[Serializable]
-	public class Spell
+	internal class Spell
 	{
-		public string prefabViewKey;
+		internal string prefabViewKey;
 
 		[ReferenceSelection, SerializeReference]
-		public MovementPattern movementPattern;
+		internal MovementPattern movementPattern;
 
-		public TimePattern timePattern;
+		internal TimePattern timePattern;
 
 		[ReferenceSelection, SerializeReference]
-		public HitForm hitForm;
+		internal HitForm hitForm;
 	}
 
-	public abstract class HitForm
+	internal abstract class HitForm
 	{
 	}
 
-	public class CircleHitForm
+	internal class CircleHitForm
 	{
-		[Minimum(0)] public float radius;
+		[Minimum(0)] internal float radius;
 	}
 
 	[Serializable]
-	public abstract class MovementPattern
+	internal abstract class MovementPattern
 	{
-		public PeriodicAction[] periodicActions;
-		public DistanceAction[] distanceActions;
+		internal PeriodicAction[] periodicActions;
+		internal DistanceAction[] distanceActions;
 
-		public Location location;
+		internal Location location;
 
-		public enum Location
+		internal enum Location
 		{
 			World,
 			Owner,
@@ -108,61 +108,61 @@ namespace Fusumity.Samples
 		}
 
 		[Serializable]
-		public class PeriodicAction
+		internal class PeriodicAction
 		{
-			[Minimum(0)] public float offset;
-			[Minimum(0)] public float period;
+			[Minimum(0)] internal float offset;
+			[Minimum(0)] internal float period;
 
 			[ReferenceSelection, SerializeReference]
-			public SpellAction action;
+			internal SpellAction action;
 		}
 
 		[Serializable]
-		public class DistanceAction
+		internal class DistanceAction
 		{
-			[Minimum(0)] public float distance;
+			[Minimum(0)] internal float distance;
 
 			[ReferenceSelection, SerializeReference]
-			public SpellAction action;
+			internal SpellAction action;
 		}
 	}
 
 	[Serializable]
-	public class NoMovement : MovementPattern
+	internal class NoMovement : MovementPattern
 	{
 	}
 
 	[Serializable]
-	public class ForwardMovement : MovementPattern
+	internal class ForwardMovement : MovementPattern
 	{
-		[Minimum(0)] public float movementSpeed;
+		[Minimum(0)] internal float movementSpeed;
 
 		[ReferenceSelection, SerializeReference]
-		public SteeringPattern steeringPattern;
+		internal SteeringPattern steeringPattern;
 	}
 
 	[Serializable]
-	public abstract class SteeringPattern
+	internal abstract class SteeringPattern
 	{
 	}
 
 	[Serializable]
-	public class NoSteering : SteeringPattern
+	internal class NoSteering : SteeringPattern
 	{
 	}
 
 	[Serializable]
-	public class AngleSteering : SteeringPattern
+	internal class AngleSteering : SteeringPattern
 	{
-		[AngleToRad] public float radPerSecond;
+		[AngleToRad] internal float radPerSecond;
 	}
 
 	[Serializable]
-	public class TargetAngleSteering : AngleSteering
+	internal class TargetAngleSteering : AngleSteering
 	{
-		public TargetBhv targetBhv;
+		internal TargetBhv targetBhv;
 
-		public enum TargetBhv
+		internal enum TargetBhv
 		{
 			NearestTarget,
 			RandomTarget,
@@ -170,83 +170,83 @@ namespace Fusumity.Samples
 	}
 
 	[Serializable]
-	public class TimePattern
+	internal class TimePattern
 	{
-		public PeriodicAction[] periodicActions;
-		public TimeAction[] timeActions;
-		[DisableIf("infinityDuration")] public DurationAction[] durationActions;
+		internal PeriodicAction[] periodicActions;
+		internal TimeAction[] timeActions;
+		[DisableIf("infinityDuration")] internal DurationAction[] durationActions;
 
-		public bool infinityDuration;
+		internal bool infinityDuration;
 
 		[DisableIf("infinityDuration"), Minimum(0)]
-		public float duration;
+		internal float duration;
 
 		[Serializable]
-		public class PeriodicAction
+		internal class PeriodicAction
 		{
-			[Minimum(0)] public float delay;
-			[Minimum(0)] public float period;
+			[Minimum(0)] internal float delay;
+			[Minimum(0)] internal float period;
 
 			[ReferenceSelection, SerializeReference]
-			public SpellAction action;
+			internal SpellAction action;
 		}
 
 		[Serializable]
-		public class TimeAction
+		internal class TimeAction
 		{
-			[Minimum(0)] public float time;
+			[Minimum(0)] internal float time;
 
 			[ReferenceSelection, SerializeReference]
-			public SpellAction action;
+			internal SpellAction action;
 		}
 
 		[Serializable]
-		public class DurationAction
+		internal class DurationAction
 		{
-			[Range(0, 1)] public float durationPercent;
+			[Range(0, 1)] internal float durationPercent;
 
 			[ReferenceSelection, SerializeReference]
-			public SpellAction action;
+			internal SpellAction action;
 		}
 	}
 
 	[Serializable]
-	public abstract class SpellAction
+	internal abstract class SpellAction
 	{
 	}
 
 	[Serializable]
-	public class DestroySpell : SpellAction
+	internal class DestroySpell : SpellAction
 	{
 	}
 
 	[Serializable]
-	public class CastPattern : SpellAction
+	internal class CastPattern : SpellAction
 	{
 		[ReferenceSelection, SerializeReference]
-		public Cast cast;
+		internal Cast cast;
 
-		[Minimum(1)] public int castCount;
-		[Minimum(0)] public int maxExtraCastCount;
+		[Minimum(1)] internal int castCount;
+		[Minimum(0)] internal int maxExtraCastCount;
 
-		[Minimum(0)] public float castCooldown;
-		[Minimum(0)] public float castDuration;
+		[Minimum(0)] internal float castCooldown;
+		[Minimum(0)] internal float castDuration;
 	}
 
 	[Serializable]
-	public abstract class Cast
+	internal abstract class Cast
 	{
 	}
 
 	[Serializable]
-	public class ComplexCast : Cast
+	internal class ComplexCast : Cast
 	{
 		[ReferenceSelection, SerializeReference]
-		public Cast[] casts;
+		internal Cast[] casts;
 
-		public CastBhv bhv;
+		internal CastBhv bhv;
 
-		public enum CastBhv
+		internal enum CastBhv
 		{
 			All,
 			Random,
@@ -256,49 +256,49 @@ namespace Fusumity.Samples
 	}
 
 	[Serializable]
-	public abstract class DamageZone : Cast
+	internal abstract class DamageZone : Cast
 	{
 		[ReferenceSelection, SerializeReference]
-		public DisplacementPattern displacementPattern;
+		internal DisplacementPattern displacementPattern;
 	}
 
 	[Serializable]
-	public class CircleDamageZone : DamageZone
+	internal class CircleDamageZone : DamageZone
 	{
-		[Minimum(0)] public float radius;
+		[Minimum(0)] internal float radius;
 	}
 
 	[Serializable]
-	public class SegmentDamageZone : DamageZone
+	internal class SegmentDamageZone : DamageZone
 	{
-		[Minimum(0)] public float radius;
+		[Minimum(0)] internal float radius;
 
 		[AngleToRad, Minimum(0), Maximum(Mathf.PI * 2)]
-		public float segmentRad;
+		internal float segmentRad;
 	}
 
 	[Serializable]
-	public class LineDamageZone : DamageZone
+	internal class LineDamageZone : DamageZone
 	{
-		[Minimum(0)] public float length;
-		[Minimum(0)] public float width;
+		[Minimum(0)] internal float length;
+		[Minimum(0)] internal float width;
 	}
 
 	[Serializable]
-	public class SpawnSpell : Cast
+	internal class SpawnSpell : Cast
 	{
 		[ReferenceSelection, SerializeReference]
-		public DisplacementPattern displacementPattern;
+		internal DisplacementPattern displacementPattern;
 
-		public Spell spellToSpawn;
+		internal Spell spellToSpawn;
 	}
 
 	[Serializable]
-	public abstract class DisplacementPattern
+	internal abstract class DisplacementPattern
 	{
-		public Location location;
+		internal Location location;
 
-		public enum Location
+		internal enum Location
 		{
 			Source,
 			Owner,
@@ -306,30 +306,30 @@ namespace Fusumity.Samples
 	}
 
 	[Serializable]
-	public class TargetPositionPattern : DisplacementPattern
+	internal class TargetPositionPattern : DisplacementPattern
 	{
-		[Minimum(0)] public float distance;
-		public FindTargetPattern findTargetPattern;
+		[Minimum(0)] internal float distance;
+		internal FindTargetPattern findTargetPattern;
 	}
 
 	[Serializable]
-	public abstract class RadialPattern : DisplacementPattern
+	internal abstract class RadialPattern : DisplacementPattern
 	{
-		[Minimum(0)] public float distance;
-		[Minimum(0)] public float distanceToSpawnDistance;
+		[Minimum(0)] internal float distance;
+		[Minimum(0)] internal float distanceToSpawnDistance;
 
 		[AngleToRad, Minimum(0), Maximum(Mathf.PI * 2)]
-		public float minRad;
+		internal float minRad;
 
 		[AngleToRad, Minimum("minRad"), Maximum(Mathf.PI * 2)]
-		public float maxRad;
+		internal float maxRad;
 
 		[AngleToRad, Minimum(0), Maximum(Mathf.PI * 2)]
-		public float spreadRad;
+		internal float spreadRad;
 
-		public SpreadBhv spreadBhv;
+		internal SpreadBhv spreadBhv;
 
-		public enum SpreadBhv
+		internal enum SpreadBhv
 		{
 			Random,
 			OrderedSegments,
@@ -339,11 +339,11 @@ namespace Fusumity.Samples
 	}
 
 	[Serializable]
-	public class DirectionPattern : RadialPattern
+	internal class DirectionPattern : RadialPattern
 	{
-		public DirectionBhv directionBhv;
+		internal DirectionBhv directionBhv;
 
-		public enum DirectionBhv
+		internal enum DirectionBhv
 		{
 			RandomDirection,
 			ForwardDirection,
@@ -351,24 +351,24 @@ namespace Fusumity.Samples
 	}
 
 	[Serializable]
-	public class TargetDirectionPattern : RadialPattern
+	internal class TargetDirectionPattern : RadialPattern
 	{
-		public FindTargetPattern findTargetPattern;
+		internal FindTargetPattern findTargetPattern;
 	}
 
 	[Serializable]
-	public class FindTargetPattern
+	internal class FindTargetPattern
 	{
-		public TargetBhv targetBhv;
-		public TargetExceptionBhv targetExceptionBhv;
+		internal TargetBhv targetBhv;
+		internal TargetExceptionBhv targetExceptionBhv;
 
-		public enum TargetBhv
+		internal enum TargetBhv
 		{
 			NearestTarget,
 			RandomTarget,
 		}
 
-		public enum TargetExceptionBhv
+		internal enum TargetExceptionBhv
 		{
 			AllowSameTarget,
 			DisallowSameTarget,
