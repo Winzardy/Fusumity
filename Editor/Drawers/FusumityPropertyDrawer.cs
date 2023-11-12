@@ -144,11 +144,21 @@ namespace Fusumity.Editor.Drawers
 
 			ExecuteValidateBeforeDrawing();
 
+			var indentDebt = 0;
+
 			if (currentPropertyData.hasFoldout)
 			{
 #if UNITY_2022_3_OR_NEWER
 				if (EditorGUI.indentLevel > 0)
+				{
 					EditorGUI.indentLevel--;
+					indentDebt++;
+				}
+				if (currentPropertyData.isArrayElement)
+				{
+					EditorGUI.indentLevel--;
+					indentDebt++;
+				}
 #endif
 				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
 				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "");
@@ -204,10 +214,8 @@ namespace Fusumity.Editor.Drawers
 			{
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
-#if UNITY_2022_3_OR_NEWER
-			if (currentPropertyData.hasFoldout && EditorGUI.indentLevel <= 1)
-				EditorGUI.indentLevel--;
-#endif
+
+			EditorGUI.indentLevel += indentDebt;
 
 			EditorGUI.EndProperty();
 			if (EditorGUI.EndChangeCheck())
@@ -498,6 +506,8 @@ namespace Fusumity.Editor.Drawers
 		public bool hasBody;
 		public bool hasAfterExtension;
 
+		public bool isArrayElement;
+
 		public bool drawSubBodyWhenRollUp;
 		public bool labelIntersectSubBody;
 
@@ -540,6 +550,8 @@ namespace Fusumity.Editor.Drawers
 			drawOffsetX = 0f;
 			indent = 0;
 			foldoutIndent = 0;
+
+			isArrayElement = property.IsArrayElement();
 
 			var hasChildren = bodyHeight > labelHeight && property.HasChildren();
 

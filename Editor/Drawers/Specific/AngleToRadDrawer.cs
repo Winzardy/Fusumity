@@ -9,7 +9,7 @@ namespace Fusumity.Editor.Drawers.Specific
 	{
 		public override void ModifyPropertyData()
 		{
-			currentPropertyData.label.text = currentPropertyData.label.text.Replace("Rad", "Angle");
+			currentPropertyData.label.text = currentPropertyData.label.text.Replace("Rad", "Angle") + "°";
 			base.ModifyPropertyData();
 		}
 

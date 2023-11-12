@@ -131,6 +131,12 @@ namespace Fusumity.Editor.Extensions
 			return parent;
 		}
 
+		public static bool IsArrayElement(this SerializedProperty property)
+		{
+			var path = property.propertyPath;
+			return path[path.Length - 1] == ']';
+		}
+
 		public static int GetElementIndex(this SerializedProperty property)
 		{
 			var path = property.propertyPath;
