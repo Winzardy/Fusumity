@@ -17,7 +17,11 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			var rad = currentPropertyData.property.floatValue;
 			EditorGUI.BeginChangeCheck();
-			rad = EditorGUI.FloatField(position, " ", rad * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+			var angle = EditorGUI.FloatField(position, " ", rad * Mathf.Rad2Deg);
+			if (angle == 360f)
+				rad = Mathf.PI * 2;
+			else
+				rad = angle * Mathf.Deg2Rad;
 			if (EditorGUI.EndChangeCheck())
 				currentPropertyData.property.floatValue = rad;
 		}
