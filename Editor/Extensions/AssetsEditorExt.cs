@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Fusumity.Editor.Extensions
 {
@@ -44,6 +46,25 @@ namespace Fusumity.Editor.Extensions
 					continue;
 
 				assets.Add(asset);
+			}
+
+			return assets;
+		}
+
+		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type, Func<Object, bool> validate = null)
+		{
+			var guids = AssetDatabase.FindAssets($"t: {type.Name}");
+			var assets = new List<(Object asset, string path)>(guids.Length);
+
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var asset = AssetDatabase.LoadAssetAtPath(path, type);
+
+				if (validate != null && !validate.Invoke(asset))
+					continue;
+
+				assets.Add((asset, path));
 			}
 
 			return assets;
