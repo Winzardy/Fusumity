@@ -12,6 +12,8 @@ namespace Fusumity.Editor.Drawers
 	[CustomPropertyDrawer(typeof(IFusumitySerializable), true)]
 	public class FusumityPropertyDrawer : PropertyDrawer
 	{
+		public static readonly GUIContent SUB_BODY_GUI_CONTENT = new (" ");
+
 		private static readonly Type BASE_DRAWER_TYPE = typeof(FusumityPropertyDrawer);
 		private static readonly Type ATTRIBUTE_TYPE = typeof(FusumityDrawerAttribute);
 
@@ -23,7 +25,7 @@ namespace Fusumity.Editor.Drawers
 		// If not use this arrays will suck (very long story).
 		private Dictionary<string, PropertyData> _pathToPropertyData;
 
-		protected PropertyData currentPropertyData;
+		public PropertyData currentPropertyData;
 
 		public virtual bool OverrideMethods => true;
 
@@ -606,12 +608,12 @@ namespace Fusumity.Editor.Drawers
 
 		public bool ShouldDrawSubBody()
 		{
-			return hasSubBody & (property.isExpanded | !hasFoldout | drawSubBodyWhenRollUp);
+			return hasSubBody && (property.isExpanded || !hasFoldout || drawSubBodyWhenRollUp);
 		}
 
 		public bool ShouldDrawBody()
 		{
-			return hasBody & (property.isExpanded | !hasFoldout);
+			return hasBody && (property.isExpanded || !hasFoldout);
 		}
 
 		public bool ShouldDrawLabelPrefix()
