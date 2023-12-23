@@ -53,6 +53,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			return true;
 		}
+
 		public override void DrawSubBody(Rect position)
 		{
 			var property = currentPropertyData.property;
@@ -184,12 +185,12 @@ namespace Fusumity.Editor.Drawers.Specific
 		}
 
 		private string _currentName = string.Empty;
-		private AssetReferenceDrawer _drawer;
+		private AssetSelectorDrawer _drawer;
 		private string _guid;
 
 		private SearchField _searchField;
 
-		public void Initialize(AssetReferenceDrawer drawer, string guid, Vector2 mouseLocation)
+		public void Initialize(AssetSelectorDrawer drawer, string guid, Vector2 mouseLocation)
 		{
 			_drawer = drawer;
 			_guid = guid;
@@ -280,13 +281,13 @@ namespace Fusumity.Editor.Drawers.Specific
 
 		private class AssetTreeView : TreeView
 		{
-			private readonly AssetReferenceDrawer _drawer;
+			private readonly AssetSelectorDrawer _drawer;
 			private readonly AssetPopup _popup;
 			private readonly string _guid;
 
 			internal bool IsEnterKeyPressed { get; set; }
 
-			public AssetTreeView(TreeViewState state, AssetReferenceDrawer drawer, AssetPopup popup, string guid) : base(state)
+			public AssetTreeView(TreeViewState state, AssetSelectorDrawer drawer, AssetPopup popup, string guid) : base(state)
 			{
 				_drawer = drawer;
 				_popup = popup;
