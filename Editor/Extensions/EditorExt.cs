@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Editor.Assistance;
 using UnityEditor;
 using UnityEngine;
 
@@ -270,6 +271,11 @@ namespace Fusumity.Editor.Extensions
 			currentProperty.Dispose();
 
 			return height;
+		}
+
+		public static void DrawAssetSelector(this UnityEngine.Object target, Rect position, GUIContent label, Type type, Action<UnityEngine.Object> onSelected)
+		{
+			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
 		}
 
 		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)
