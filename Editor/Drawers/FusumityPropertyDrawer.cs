@@ -66,18 +66,19 @@ namespace Fusumity.Editor.Drawers
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			if (_currentPropertyPath.Contains(property.propertyPath))
+			var propertyPath = property.propertyPath;
+			if (_currentPropertyPath.Contains(propertyPath))
 			{
 				property.PropertyField_Cached();
 				return;
 			}
 
-			SetupPropertyData(property.propertyPath);
+			SetupPropertyData(propertyPath);
 
-			if (currentPropertyData == null || !currentPropertyData.drawProperty)
+			if (currentPropertyData == null || !currentPropertyData.drawProperty || currentPropertyData.forceBreak)
 				return;
 
-			_currentPropertyPath.Add(property.propertyPath);
+			_currentPropertyPath.Add(propertyPath);
 
 			var oldBackgroundColor = GUI.backgroundColor;
 			var oldGuiEnabled = GUI.enabled;
@@ -212,7 +213,7 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawBody(bodyPosition);
 			}
 
-			if (currentPropertyData.hasAfterExtension)
+			if (!currentPropertyData.forceBreak && currentPropertyData.hasAfterExtension)
 			{
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
@@ -220,7 +221,7 @@ namespace Fusumity.Editor.Drawers
 			EditorGUI.indentLevel += indentDebt;
 
 			EditorGUI.EndProperty();
-			if (EditorGUI.EndChangeCheck())
+			if (!currentPropertyData.forceBreak && EditorGUI.EndChangeCheck())
 			{
 				property.serializedObject.ApplyModifiedProperties();
 				ExecuteOnPropertyChanged();
@@ -231,7 +232,7 @@ namespace Fusumity.Editor.Drawers
 			GUI.enabled = oldGuiEnabled;
 			GUI.backgroundColor = oldBackgroundColor;
 
-			_currentPropertyPath.Remove(property.propertyPath);
+			_currentPropertyPath.Remove(propertyPath);
 		}
 
 		#region Initialization
@@ -491,6 +492,8 @@ namespace Fusumity.Editor.Drawers
 
 	public class PropertyData
 	{
+		public bool forceBreak;
+
 		public SerializedProperty property;
 		public GUIContent label;
 
@@ -529,6 +532,8 @@ namespace Fusumity.Editor.Drawers
 
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
+			forceBreak = false;
+
 			// GetPropertyHeight will singleLineHeight if no expanded
 			var isExpanded = property.isExpanded;
 			property.isExpanded = true;
@@ -608,12 +613,12 @@ namespace Fusumity.Editor.Drawers
 
 		public bool ShouldDrawSubBody()
 		{
-			return hasSubBody && (property.isExpanded || !hasFoldout || drawSubBodyWhenRollUp);
+			return hasSubBody && !forceBreak && (property.isExpanded || !hasFoldout || drawSubBodyWhenRollUp);
 		}
 
 		public bool ShouldDrawBody()
 		{
-			return hasBody && (property.isExpanded || !hasFoldout);
+			return hasBody && !forceBreak && (property.isExpanded || !hasFoldout);
 		}
 
 		public bool ShouldDrawLabelPrefix()
