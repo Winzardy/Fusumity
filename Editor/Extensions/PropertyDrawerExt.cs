@@ -16,6 +16,7 @@ namespace Fusumity.Editor.Extensions
 		private const string PROPERTY_DRAWER_FIELD_ATTRIBUTE = "m_Attribute";
 		private const string PROPERTY_DRAWER_FIELD_FIELD_INFO = "m_FieldInfo";
 
+		private const string CUSTOM_PROPERTY_DRAWER_METHOD_REPLACE_SERIALIZED_PROPERTY = "ReplaceSerializedProperty";
 		private const string CUSTOM_PROPERTY_DRAWER_METHOD_DRAW_LABEL = "DrawLabel";
 		private const string CUSTOM_PROPERTY_DRAWER_METHOD_DRAW_SUB_BODY = "DrawSubBody";
 		private const string CUSTOM_PROPERTY_DRAWER_METHOD_DRAW_BODY = "DrawBody";
@@ -41,6 +42,11 @@ namespace Fusumity.Editor.Extensions
 		{
 			var fieldInfoField = PROPERTY_DRAWER_TYPE.GetField(PROPERTY_DRAWER_FIELD_FIELD_INFO, ReflectionExt.INTERNAL_FIELD_BINDING_FLAGS);
 			fieldInfoField.SetValue(drawer, fieldInfo);
+		}
+
+		public static bool IsReplaceSerializedPropertyOverriden(this FusumityPropertyDrawer drawer)
+		{
+			return drawer.IsDrawerMethodOverriden(CUSTOM_PROPERTY_DRAWER_METHOD_REPLACE_SERIALIZED_PROPERTY);
 		}
 
 		public static bool IsDrawLabelOverriden(this FusumityPropertyDrawer drawer)

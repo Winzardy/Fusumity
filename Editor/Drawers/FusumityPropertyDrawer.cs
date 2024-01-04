@@ -55,7 +55,9 @@ namespace Fusumity.Editor.Drawers
 			LazyInitializePropertyData(property.propertyPath);
 			SetupPropertyData(property.propertyPath);
 
-			currentPropertyData.ResetData(property, label);
+			var originalProperty = property;
+			property = ExecuteModifySerializedProperty(originalProperty);
+			currentPropertyData.ResetData(property, originalProperty, label);
 			ExecuteModifyPropertyData();
 
 			_currentPropertyPath.Remove(property.propertyPath);
@@ -346,6 +348,21 @@ namespace Fusumity.Editor.Drawers
 
 		#region Custom Executers
 
+		private SerializedProperty ExecuteModifySerializedProperty(SerializedProperty originalProperty)
+		{
+			if (!this.IsReplaceSerializedPropertyOverriden())
+			{
+				foreach (var drawer in _fusumityDrawers)
+				{
+					if (drawer.IsReplaceSerializedPropertyOverriden())
+					{
+						return drawer.ReplaceSerializedProperty(originalProperty);
+					}
+				}
+			}
+			return ReplaceSerializedProperty(originalProperty);
+		}
+
 		private void ExecuteModifyPropertyData()
 		{
 			ModifyPropertyData();
@@ -449,6 +466,8 @@ namespace Fusumity.Editor.Drawers
 
 		#region Custom
 
+		public virtual SerializedProperty ReplaceSerializedProperty(SerializedProperty originalProperty) => originalProperty;
+
 		public virtual void ModifyPropertyData() {}
 
 		public virtual void ValidateBeforeDrawing() {}
@@ -495,6 +514,7 @@ namespace Fusumity.Editor.Drawers
 		public bool forceBreak;
 
 		public SerializedProperty property;
+		public SerializedProperty originalProperty;
 		public GUIContent label;
 
 		public string labelPrefix;
@@ -530,7 +550,7 @@ namespace Fusumity.Editor.Drawers
 
 		public Color backgroundColor;
 
-		public void ResetData(SerializedProperty property, GUIContent label)
+		public void ResetData(SerializedProperty property, SerializedProperty originalProperty, GUIContent label)
 		{
 			forceBreak = false;
 
@@ -539,6 +559,7 @@ namespace Fusumity.Editor.Drawers
 			property.isExpanded = true;
 
 			this.property = property;
+			this.originalProperty = originalProperty;
 			this.label = new GUIContent(label);
 
 			labelPrefix = string.Empty;
