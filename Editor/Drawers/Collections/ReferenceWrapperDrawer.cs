@@ -26,17 +26,13 @@ namespace Fusumity.Editor.Drawers.Collections
 			var property = currentPropertyData.property;
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
-			var valueType = fieldType.GetGenericArguments()[1];
+			var valueType = fieldType!.GetGenericArguments()[1];
 
 			var targetType = valueType;
 			var currentType = property.GetPropertyTypeByLocalPath(VALUE_NAME);
 
-			SelectType(position, currentType, targetType, true);
-		}
-
-		protected override void SetValue(SerializedProperty property, object value)
-		{
-			base.SetValue(property.FindPropertyRelative(VALUE_NAME), value);
+			var targetProperty = property.FindPropertyRelative(VALUE_NAME);
+			targetProperty.DrawTypeSelector(position, targetType, currentType, SUB_BODY_GUI_CONTENT, true);
 		}
 
 		public override void DrawBody(Rect position)

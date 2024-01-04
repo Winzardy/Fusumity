@@ -8,7 +8,7 @@ namespace Fusumity.Editor.Drawers.Specific
 	[CustomPropertyDrawer(typeof(AssetSelectorAttribute), true)]
 	public class AssetSelectorDrawer : FusumityPropertyDrawer
 	{
-		public override bool OverrideMethods => (currentPropertyData.property.propertyType == SerializedPropertyType.ObjectReference);
+		public override bool OverrideMethods => (currentPropertyData.property == null || currentPropertyData.property.propertyType == SerializedPropertyType.ObjectReference);
 
 		public override void DrawSubBody(Rect position)
 		{

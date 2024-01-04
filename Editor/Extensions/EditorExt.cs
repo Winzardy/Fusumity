@@ -273,6 +273,16 @@ namespace Fusumity.Editor.Extensions
 			return height;
 		}
 
+		public static void DrawTypeSelector(this SerializedProperty property, Rect position, Type targetType, Type currentType, GUIContent label, bool insertNull = true)
+		{
+			new TypeSelectorDrawData(property, label, targetType, currentType, insertNull).Draw(position);
+		}
+
+		public static void DrawTypeSelector(this SerializedProperty property, Rect position, Type targetType, Type currentType, GUIContent label, Action<object> onSelected, bool insertNull = true)
+		{
+			new TypeSelectorDrawData(property, label, targetType, currentType, onSelected, insertNull).Draw(position);
+		}
+
 		public static void DrawAssetSelector(this UnityEngine.Object target, Rect position, GUIContent label, Type type, Action<UnityEngine.Object> onSelected)
 		{
 			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
