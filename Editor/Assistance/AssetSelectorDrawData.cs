@@ -10,13 +10,13 @@ namespace Fusumity.Editor.Assistance
 {
 	public struct AssetSelectorDrawData
 	{
-		private const string K_FIELD_CONTROL_PREFIX = "AssetField";
+		private const string FIELD_CONTROL_PREFIX = "AssetField";
 		public string NoAssetString => $"None ({targetType.Name})";
 
 		private readonly Action<Object> _onSelected;
 
 		public Object target;
-		public string assetName;
+		public string AssetName => target == null ? NoAssetString : target.name;
 		public string newGuid;
 		public readonly Type targetType;
 
@@ -24,7 +24,6 @@ namespace Fusumity.Editor.Assistance
 
 		private readonly GUIContent _label;
 		private Rect _assetDropDownRect;
-		private readonly bool _referencesSame;
 
 		private Texture _caretTexture;
 
@@ -34,11 +33,9 @@ namespace Fusumity.Editor.Assistance
 			this.target = target;
 			this.targetType = targetType;
 			isComponent = typeof(Component).IsAssignableFrom(targetType);
-			assetName = target == null ? "None" : target.name;
 			_label = label;
 
 			newGuid = default;
-			_referencesSame = true;
 			_caretTexture = default;
 			_assetDropDownRect = default;
 		}
@@ -59,12 +56,11 @@ namespace Fusumity.Editor.Assistance
 
 			_assetDropDownRect = EditorGUI.PrefixLabel(position, _label);
 
-			DrawControl(assetName, guid);
+			DrawControl(AssetName, guid);
 		}
 
-		internal void ApplySelectionChanges(ref string guid)
+		internal void ApplySelectionChanges(string guid)
 		{
-			assetName = NoAssetString;
 			if (!string.IsNullOrEmpty(newGuid))
 			{
 				if (newGuid == NoAssetString)
@@ -77,7 +73,6 @@ namespace Fusumity.Editor.Assistance
 					var path = AssetDatabase.GUIDToAssetPath(newGuid);
 					target = AssetDatabase.LoadAssetAtPath<Object>(path);
 					newGuid = string.Empty;
-					assetName = path;
 				}
 
 				_onSelected?.Invoke(target);
@@ -90,11 +85,10 @@ namespace Fusumity.Editor.Assistance
 			var pickerRect = _assetDropDownRect;
 			pickerRect.width = pickerWidth;
 			pickerRect.x = _assetDropDownRect.xMax - pickerWidth * 1.33f;
-			//var controlName = GetControlName(K_FIELD_CONTROL_PREFIX, target.name);
 
 			var isPickerPressed = Event.current.type == EventType.MouseDown && Event.current.button == 0 && pickerRect.Contains(Event.current.mousePosition);
 
-			if (target != null && _referencesSame)
+			if (target != null)
 			{
 				var iconHeight = EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing * 3;
 				var iconSize = EditorGUIUtility.GetIconSize();
@@ -102,12 +96,12 @@ namespace Fusumity.Editor.Assistance
 				var assetPath = AssetDatabase.GUIDToAssetPath(guid);
 				var assetIcon = AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
 
-				GUI.SetNextControlName(K_FIELD_CONTROL_PREFIX);
+				GUI.SetNextControlName(FIELD_CONTROL_PREFIX);
 				if (EditorGUI.DropdownButton(_assetDropDownRect, new GUIContent(nameToUse, assetIcon), FocusType.Keyboard, EditorStyles.objectField))
 				{
 					if (Event.current.clickCount == 1)
 					{
-						GUI.FocusControl(K_FIELD_CONTROL_PREFIX);
+						GUI.FocusControl(FIELD_CONTROL_PREFIX);
 						EditorGUIUtility.PingObject(target);
 					}
 
@@ -122,9 +116,9 @@ namespace Fusumity.Editor.Assistance
 			}
 			else
 			{
-				GUI.SetNextControlName(K_FIELD_CONTROL_PREFIX);
+				GUI.SetNextControlName(FIELD_CONTROL_PREFIX);
 				if (EditorGUI.DropdownButton(_assetDropDownRect, new GUIContent(nameToUse), FocusType.Keyboard, EditorStyles.objectField))
-					GUI.FocusControl(K_FIELD_CONTROL_PREFIX);
+					GUI.FocusControl(FIELD_CONTROL_PREFIX);
 			}
 
 			DrawCaret(pickerRect);
@@ -182,7 +176,7 @@ namespace Fusumity.Editor.Assistance
 			_searchField.downOrUpArrowKeyPressed += () => { _tree.SetFocus(); };
 
 			if (_tree != null)
-				_tree.SetInitialSelection(_drawer.assetName);
+				_tree.SetInitialSelection(_drawer.AssetName);
 		}
 
 		private void OnLostFocus()
@@ -210,7 +204,7 @@ namespace Fusumity.Editor.Assistance
 					_treeState = new TreeViewState();
 				_tree = new AssetTreeView(_treeState, _drawer, this, _guid);
 				_tree.Reload();
-				_tree.SetInitialSelection(_drawer.assetName);
+				_tree.SetInitialSelection(_drawer.AssetName);
 			}
 
 			var isKeyPressed = Event.current.type == EventType.KeyDown && Event.current.isKey;
@@ -323,7 +317,7 @@ namespace Fusumity.Editor.Assistance
 					}
 
 					SetFocus();
-					_drawer.ApplySelectionChanges(ref oldGuid);
+					_drawer.ApplySelectionChanges(oldGuid);
 				}
 			}
 
