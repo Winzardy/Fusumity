@@ -4,6 +4,7 @@ using System.Reflection;
 using Fusumity.Editor.Assistance;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Fusumity.Editor.Extensions
 {
@@ -30,6 +31,17 @@ namespace Fusumity.Editor.Extensions
 				EditorGUILayout.PropertyField(properties[i]);
 			}
 			serializedObject.ApplyModifiedProperties();
+		}
+
+		public static ulong GetComponentLocalId(this Component component)
+		{
+			var serializedObject = new SerializedObject(component);
+
+			var inspectorModeInfo = typeof(SerializedObject).GetProperty("inspectorMode", BindingFlags.NonPublic | BindingFlags.Instance);
+			inspectorModeInfo!.SetValue(serializedObject, InspectorMode.Debug, null);
+
+			var localIdProp = serializedObject.FindProperty("m_LocalIdentfierInFile"); //note the misspelling!
+			return localIdProp.ulongValue;
 		}
 
 		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
