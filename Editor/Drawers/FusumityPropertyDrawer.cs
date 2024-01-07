@@ -31,13 +31,15 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			var parentPropertyPath = property.GetParentPropertyPath();
-			if (_currentPropertyPath.Contains(property.propertyPath))
+			var originalProperty = property;
+
+			var parentPropertyPath = originalProperty.GetParentPropertyPath();
+			if (_currentPropertyPath.Contains(originalProperty.propertyPath))
 			{
 				// When you open the unity Object selection field the _currentPropertyPath will not cleaned in that frame :(
 				if (_currentPropertyPath.Contains(parentPropertyPath))
 				{
-					var height = property.GetPropertyHeight_Cached();
+					var height = originalProperty.GetPropertyHeight_Cached();
 					_currentPropertyPath.Clear();
 					return height;
 				}
@@ -48,19 +50,17 @@ namespace Fusumity.Editor.Drawers
 				_currentPropertyPath.Add(parentPropertyPath);
 			}
 
-			_currentPropertyPath.Add(property.propertyPath);
+			_currentPropertyPath.Add(originalProperty.propertyPath);
 
 			LazyInitializeAttributes();
-			LazyInitializeDrawers(property);
-			LazyInitializePropertyData(property.propertyPath);
-			SetupPropertyData(property.propertyPath);
+			LazyInitializeDrawers(originalProperty);
+			LazyInitializePropertyData(originalProperty.propertyPath);
+			SetupPropertyData(originalProperty.propertyPath);
 
-			var originalProperty = property;
-			property = ExecuteModifySerializedProperty(originalProperty);
 			currentPropertyData.ResetData(property, originalProperty, label);
 			ExecuteModifyPropertyData();
 
-			_currentPropertyPath.Remove(property.propertyPath);
+			_currentPropertyPath.Remove(originalProperty.propertyPath);
 			_currentPropertyPath.Remove(parentPropertyPath);
 
 			return currentPropertyData.GetTotalHeight();
@@ -100,7 +100,7 @@ namespace Fusumity.Editor.Drawers
 			}
 
 			EditorGUI.BeginChangeCheck();
-			EditorGUI.BeginProperty(position, label, property);
+			EditorGUI.BeginProperty(position, label, currentPropertyData.property);
 
 			EditorGUI.indentLevel += currentPropertyData.indent;
 
@@ -348,21 +348,6 @@ namespace Fusumity.Editor.Drawers
 
 		#region Custom Executers
 
-		private SerializedProperty ExecuteModifySerializedProperty(SerializedProperty originalProperty)
-		{
-			if (!this.IsReplaceSerializedPropertyOverriden())
-			{
-				foreach (var drawer in _fusumityDrawers)
-				{
-					if (drawer.IsReplaceSerializedPropertyOverriden())
-					{
-						return drawer.ReplaceSerializedProperty(originalProperty);
-					}
-				}
-			}
-			return ReplaceSerializedProperty(originalProperty);
-		}
-
 		private void ExecuteModifyPropertyData()
 		{
 			ModifyPropertyData();
@@ -514,7 +499,6 @@ namespace Fusumity.Editor.Drawers
 		public bool forceBreak;
 
 		public SerializedProperty property;
-		public SerializedProperty originalProperty;
 		public GUIContent label;
 
 		public string labelPrefix;
@@ -559,7 +543,6 @@ namespace Fusumity.Editor.Drawers
 			property.isExpanded = true;
 
 			this.property = property;
-			this.originalProperty = originalProperty;
 			this.label = new GUIContent(label);
 
 			labelPrefix = string.Empty;

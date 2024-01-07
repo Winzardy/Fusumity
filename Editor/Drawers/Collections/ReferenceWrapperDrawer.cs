@@ -26,9 +26,7 @@ namespace Fusumity.Editor.Drawers.Collections
 			var property = currentPropertyData.property;
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
-			var valueType = fieldType!.GetGenericArguments()[1];
-
-			var targetType = valueType;
+			var targetType = fieldType!.GetGenericArguments()[1];
 			var currentType = property.GetPropertyTypeByLocalPath(VALUE_NAME);
 
 			var targetProperty = property.FindPropertyRelative(VALUE_NAME);

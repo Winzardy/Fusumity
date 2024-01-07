@@ -75,6 +75,7 @@ namespace Fusumity.Editor.Assistance
 			var copyPosition = position;
 			copyPosition.xMin = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH;
 			copyPosition.xMax = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH / 2;
+			copyPosition.height = EditorGUIUtility.singleLineHeight;
 			if (GUI.Button(copyPosition, "C"))
 			{
 				property.CopyManagedReferenceValue();
@@ -82,6 +83,7 @@ namespace Fusumity.Editor.Assistance
 
 			var pastPosition = position;
 			pastPosition.xMin = copyPosition.xMax;
+			pastPosition.height = EditorGUIUtility.singleLineHeight;
 			if (GUI.Button(pastPosition, "P"))
 			{
 				property.PasteManagedReferenceValue();
