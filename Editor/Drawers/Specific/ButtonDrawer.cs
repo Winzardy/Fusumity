@@ -38,48 +38,55 @@ namespace Fusumity.Editor.Drawers.Specific
 		{
 			base.DrawBeforeExtension(ref position);
 
-			var boolButtonAttribute = (ButtonAttribute)attribute;
-			if (!boolButtonAttribute.drawBefore)
+			var buttonAttribute = (ButtonAttribute)attribute;
+			if (!buttonAttribute.drawBefore)
 				return;
 
-			DrawButton(ref position, boolButtonAttribute);
+			DrawButton(ref position, buttonAttribute);
 		}
 
 		public override void DrawAfterExtension(ref Rect position)
 		{
 			base.DrawAfterExtension(ref position);
 
-			var boolButtonAttribute = (ButtonAttribute)attribute;
-			if (boolButtonAttribute.drawBefore)
+			var buttonAttribute = (ButtonAttribute)attribute;
+			if (buttonAttribute.drawBefore)
 				return;
 
-			DrawButton(ref position, boolButtonAttribute);
+			DrawButton(ref position, buttonAttribute);
 		}
 
-		private void DrawButton(ref Rect position, ButtonAttribute boolButtonAttribute)
+		private void DrawButton(ref Rect position, ButtonAttribute buttonAttribute)
 		{
+			var isEnabled = GUI.enabled;
+			if (buttonAttribute.forceEnable)
+				GUI.enabled = true;
+
 			var drawPosition = EditorGUI.IndentedRect(position);
 			drawPosition.height = EditorGUIUtility.singleLineHeight;
 			position.yMin += EditorGUIUtility.singleLineHeight;
 
-			var label = string.IsNullOrEmpty(boolButtonAttribute.buttonName)
-				? (string.IsNullOrEmpty(boolButtonAttribute.methodPath)
+			var label = string.IsNullOrEmpty(buttonAttribute.buttonName)
+				? (string.IsNullOrEmpty(buttonAttribute.methodPath)
 					? currentPropertyData.label
-					: new GUIContent(boolButtonAttribute.methodPath))
-				: new GUIContent(boolButtonAttribute.buttonName);
+					: new GUIContent(buttonAttribute.methodPath))
+				: new GUIContent(buttonAttribute.buttonName);
 
 			var isPressed = GUI.Button(drawPosition, label);
 			if (!isPressed)
 				return;
 
-			if (string.IsNullOrEmpty(boolButtonAttribute.methodPath))
+			if (string.IsNullOrEmpty(buttonAttribute.methodPath))
 				return;
 
-			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, boolButtonAttribute.buttonName);
-			currentPropertyData.property.InvokeMethodByLocalPath(boolButtonAttribute.methodPath);
+			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, buttonAttribute.buttonName);
+			currentPropertyData.property.InvokeMethodByLocalPath(buttonAttribute.methodPath);
 			currentPropertyData.property.serializedObject.targetObject.SaveChanges();
 
 			currentPropertyData.forceBreak = true;
+
+			if (buttonAttribute.forceEnable)
+				GUI.enabled = isEnabled;
 		}
 	}
 }

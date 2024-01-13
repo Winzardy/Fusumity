@@ -5,8 +5,9 @@ namespace Fusumity.Attributes.Specific
 		public readonly string buttonName = "";
 		public readonly string methodPath = "";
 		// Hide label, body and subBody
-		public bool hidePropertyField = false;
-		public bool drawBefore = true;
+		public bool hidePropertyField;
+		public bool drawBefore;
+		public bool forceEnable;
 
 		public ButtonAttribute(string buttonName, string methodPath, bool hidePropertyField = false, bool drawBefore = true)
 		{
