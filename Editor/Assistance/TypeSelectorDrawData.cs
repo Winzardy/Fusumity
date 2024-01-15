@@ -58,7 +58,7 @@ namespace Fusumity.Editor.Assistance
 
 		private void BaseOnSelected(object target)
 		{
-			property.managedReferenceValue = target;
+			property.boxedValue = target;
 
 			property.serializedObject.ApplyModifiedProperties();
 			if (property.serializedObject.context != null)
@@ -78,7 +78,7 @@ namespace Fusumity.Editor.Assistance
 			copyPosition.height = EditorGUIUtility.singleLineHeight;
 			if (GUI.Button(copyPosition, "C"))
 			{
-				property.CopyManagedReferenceValue();
+				property.CopyValue();
 			}
 
 			var pastPosition = position;
@@ -86,7 +86,7 @@ namespace Fusumity.Editor.Assistance
 			pastPosition.height = EditorGUIUtility.singleLineHeight;
 			if (GUI.Button(pastPosition, "P"))
 			{
-				property.PasteManagedReferenceValue();
+				property.PasteValue();
 			}
 
 			DrawControl(currentType);
@@ -286,15 +286,24 @@ namespace Fusumity.Editor.Assistance
 				if (_drawer.insertNull)
 					root.AddChild(new TypeTreeViewItem(_drawer.NoTypeString.GetHashCode(), 0, _drawer.NoTypeString, null));
 
-				var types = _drawer.targetType.GetInheritorTypes(false);
+				if (_drawer.targetType.IsGenericType)
+					AddChild(_drawer.targetType);
 
+				var types = _drawer.targetType.GetInheritorTypes(false);
 				foreach (var type in types)
 				{
-					var child = new TypeTreeViewItem(type.GetHashCode(), 0, type.Name, type);
-					root.AddChild(child);
+					AddChild(type);
 				}
 
 				return root;
+
+				void AddChild(Type type)
+				{
+					if (type.IsAbstract || type.IsInterface)
+						return;
+					var child = new TypeTreeViewItem(type.GetHashCode(), 0, type.Name, type);
+					root.AddChild(child);
+				}
 			}
 
 			public void SetInitialSelection(string typeName)

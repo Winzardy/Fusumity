@@ -24,14 +24,14 @@ namespace Fusumity.Editor.Drawers.Specific
 			copyPosition.xMax = copyPosition.xMax - COPY_PASTE_BUTTONS_WIDTH / 2;
 			if (GUI.Button(copyPosition, "C"))
 			{
-				property.CopyManagedReferenceValue();
+				property.CopyValue();
 			}
 
 			var pastPosition = position;
 			pastPosition.xMin = copyPosition.xMax;
 			if (GUI.Button(pastPosition, "P"))
 			{
-				property.PasteManagedReferenceValue();
+				property.PasteValue();
 			}
 		}
 	}

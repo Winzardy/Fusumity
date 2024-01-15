@@ -79,9 +79,10 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (string.IsNullOrEmpty(buttonAttribute.methodPath))
 				return;
 
-			Undo.RecordObject(currentPropertyData.property.serializedObject.targetObject, buttonAttribute.buttonName);
+			var targetObject = currentPropertyData.property.serializedObject.targetObject;
+			Undo.RecordObject(targetObject, buttonAttribute.buttonName);
 			currentPropertyData.property.InvokeMethodByLocalPath(buttonAttribute.methodPath);
-			currentPropertyData.property.serializedObject.targetObject.SaveChanges();
+			targetObject.SaveChanges();
 
 			currentPropertyData.forceBreak = true;
 

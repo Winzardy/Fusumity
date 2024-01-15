@@ -91,21 +91,6 @@ namespace Fusumity.Editor.Extensions
 			return ReflectionExt.GetParentPath(property.propertyPath, includeArray);
 		}
 
-		public static Type GetManagedReferenceType(this SerializedProperty property)
-		{
-			var typeName = property.managedReferenceFullTypename;
-
-			var parts = typeName.Split(' ');
-			if (parts.Length == 2)
-			{
-				var assemblyPart = parts[0];
-				var nsClassnamePart = parts[1];
-				return Type.GetType($"{nsClassnamePart}, {assemblyPart}");
-			}
-
-			return null;
-		}
-
 		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)
 		{
 			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);

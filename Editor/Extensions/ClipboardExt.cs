@@ -8,12 +8,12 @@ namespace Fusumity.Editor.Extensions
 	{
 		private static object _source;
 
-		public static void CopyManagedReferenceValue(this SerializedProperty target)
+		public static void CopyValue(this SerializedProperty target)
 		{
-			target.CopyManagedReferenceValue(out _source);
+			target.CopyValue(out _source);
 		}
 
-		public static void CopyManagedReferenceValue(this SerializedProperty target, out object source)
+		public static void CopyValue(this SerializedProperty target, out object source)
 		{
 #if UNITY_2022_3_OR_NEWER
 			if (target.managedReferenceValue == null)
@@ -21,8 +21,9 @@ namespace Fusumity.Editor.Extensions
 				source = null;
 				return;
 			}
-			source = Activator.CreateInstance(target.managedReferenceValue.GetType());
-			EditorUtility.CopySerializedManagedFieldsOnly(target.managedReferenceValue, source);
+
+			source = Activator.CreateInstance(target.boxedValue.GetType());
+			EditorUtility.CopySerializedManagedFieldsOnly(target.boxedValue, source);
 #else
 			var type = target.GetManagedReferenceType();
 			_source = Activator.CreateInstance(type);
@@ -31,23 +32,23 @@ namespace Fusumity.Editor.Extensions
 #endif
 		}
 
-		public static void PasteManagedReferenceValue(this SerializedProperty target)
+		public static void PasteValue(this SerializedProperty target)
 		{
-			target.PasteManagedReferenceValue(_source);
+			target.PasteValue(_source);
 		}
 
-		public static void PasteManagedReferenceValue(this SerializedProperty target, object source)
+		public static void PasteValue(this SerializedProperty target, object source)
 		{
 			if (source == null)
 			{
-				target.managedReferenceValue = null;
+				target.boxedValue = null;
 				return;
 			}
 			var value = Activator.CreateInstance(source.GetType());
 			EditorUtility.CopySerializedManagedFieldsOnly(source, value);
 			try
 			{
-				target.managedReferenceValue = value;
+				target.boxedValue = value;
 			}
 			catch
 			{
