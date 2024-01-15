@@ -24,12 +24,13 @@ namespace Fusumity.Editor.Drawers.Collections
 		public override void DrawSubBody(Rect position)
 		{
 			var property = currentPropertyData.property;
+			var targetProperty = property.FindPropertyRelative(VALUE_NAME);
+
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
 			var targetType = fieldType!.GetGenericArguments()[1];
-			var currentType = property.GetPropertyTypeByLocalPath(VALUE_NAME);
+			var currentType = targetProperty.boxedValue?.GetType();
 
-			var targetProperty = property.FindPropertyRelative(VALUE_NAME);
 			targetProperty.DrawTypeSelector(position, targetType, currentType, SUB_BODY_GUI_CONTENT, true);
 		}
 

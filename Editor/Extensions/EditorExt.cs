@@ -91,36 +91,6 @@ namespace Fusumity.Editor.Extensions
 			return ReflectionExt.GetParentPath(property.propertyPath, includeArray);
 		}
 
-		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)
-		{
-			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
-		}
-
-		public static Type GetPropertyTypeByPath(this SerializedObject serializedObject, string propertyPath)
-		{
-			return GetObjectByPath(serializedObject, propertyPath)?.GetType();
-		}
-
-		public static Type GetPropertyType(this SerializedProperty property)
-		{
-			return GetPropertyTypeByPath(property.serializedObject, property.propertyPath);
-		}
-
-		public static Type GetPropertyTypeByLocalPath(this SerializedProperty property, string localPath)
-		{
-			return GetPropertyTypeByPath(property.serializedObject, property.propertyPath.AppendPath(localPath));
-		}
-
-		public static void SetPropertyValueByLocalPath(SerializedObject serializedObject, string propertyPath, object value)
-		{
-			ReflectionExt.SetObjectByLocalPath(serializedObject.targetObject, propertyPath, value);
-		}
-
-		public static void SetPropertyValue(this SerializedProperty property, object value)
-		{
-			SetPropertyValueByLocalPath(property.serializedObject, property.propertyPath, value);
-		}
-
 		public static SerializedProperty GetParentProperty(this SerializedProperty property, bool includeArray = false)
 		{
 			var parentPath = property.GetParentPropertyPath(includeArray);

@@ -31,15 +31,15 @@ namespace Fusumity.Editor.Drawers
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			var originalProperty = property;
+			var propertyPath = property.propertyPath;
+			var parentPropertyPath = property.GetParentPropertyPath();
 
-			var parentPropertyPath = originalProperty.GetParentPropertyPath();
-			if (_currentPropertyPath.Contains(originalProperty.propertyPath))
+			if (_currentPropertyPath.Contains(propertyPath))
 			{
 				// When you open the unity Object selection field the _currentPropertyPath will not cleaned in that frame :(
 				if (_currentPropertyPath.Contains(parentPropertyPath))
 				{
-					var height = originalProperty.GetPropertyHeight_Cached();
+					var height = property.GetPropertyHeight_Cached();
 					_currentPropertyPath.Clear();
 					return height;
 				}
@@ -50,17 +50,17 @@ namespace Fusumity.Editor.Drawers
 				_currentPropertyPath.Add(parentPropertyPath);
 			}
 
-			_currentPropertyPath.Add(originalProperty.propertyPath);
+			_currentPropertyPath.Add(propertyPath);
 
 			LazyInitializeAttributes();
-			LazyInitializeDrawers(originalProperty);
-			LazyInitializePropertyData(originalProperty.propertyPath);
-			SetupPropertyData(originalProperty.propertyPath);
+			LazyInitializeDrawers(property);
+			LazyInitializePropertyData(propertyPath);
+			SetupPropertyData(propertyPath);
 
-			currentPropertyData.ResetData(property, originalProperty, label);
+			currentPropertyData.ResetData(property, label);
 			ExecuteModifyPropertyData();
 
-			_currentPropertyPath.Remove(originalProperty.propertyPath);
+			_currentPropertyPath.Remove(propertyPath);
 			_currentPropertyPath.Remove(parentPropertyPath);
 
 			return currentPropertyData.GetTotalHeight();
@@ -294,7 +294,7 @@ namespace Fusumity.Editor.Drawers
 
 			_fusumityDrawers = new List<FusumityPropertyDrawer>(_fusumityAttributes.Count);
 			{
-				var propertyType = property.GetPropertyType();
+				var propertyType = property.boxedValue?.GetType();
 				if (propertyType != null && _typeToDrawerType.TryGetValue(propertyType, out var drawerType))
 				{
 					var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
@@ -534,7 +534,7 @@ namespace Fusumity.Editor.Drawers
 
 		public Color backgroundColor;
 
-		public void ResetData(SerializedProperty property, SerializedProperty originalProperty, GUIContent label)
+		public void ResetData(SerializedProperty property, GUIContent label)
 		{
 			forceBreak = false;
 
