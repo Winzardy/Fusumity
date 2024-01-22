@@ -46,6 +46,36 @@ namespace Fusumity.Editor.Extensions
 			return GlobalObjectId.GetGlobalObjectIdSlow(component).targetObjectId;
 		}
 
+		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)
+		{
+			return ReflectionExt.GetObjectByLocalPath(serializedObject.targetObject, objectPath);
+		}
+
+		public static Type GetPropertyTypeByPath(this SerializedObject serializedObject, string propertyPath)
+		{
+			return GetObjectByPath(serializedObject, propertyPath)?.GetType();
+		}
+
+		public static Type GetPropertyType(this SerializedProperty property)
+		{
+			return GetPropertyTypeByPath(property.serializedObject, property.propertyPath);
+		}
+
+		public static Type GetManagedReferenceType(this SerializedProperty property)
+		{
+			var typeName = property.managedReferenceFullTypename;
+
+			var parts = typeName.Split(' ');
+			if (parts.Length == 2)
+			{
+				var assemblyPart = parts[0];
+				var nsClassnamePart = parts[1];
+				return Type.GetType($"{nsClassnamePart}, {assemblyPart}");
+			}
+
+			return null;
+		}
+
 		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
 		{
 			var fieldsToDraw = serializedObject.GetFieldsToDraw(inheritRestrictType);
