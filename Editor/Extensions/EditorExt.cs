@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Editor.Assistance;
 using UnityEditor;
+using UnityEditor.Build.Content;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Fusumity.Editor.Extensions
 {
@@ -35,13 +35,15 @@ namespace Fusumity.Editor.Extensions
 
 		public static ulong GetComponentLocalId(this Component component)
 		{
-			var serializedObject = new SerializedObject(component);
+			ObjectIdentifier.TryGetObjectIdentifier(component, out var objectIdentifier);
+			if (objectIdentifier.localIdentifierInFile != 0)
+				return (ulong)objectIdentifier.localIdentifierInFile;
 
-			var inspectorModeInfo = typeof(SerializedObject).GetProperty("inspectorMode", BindingFlags.NonPublic | BindingFlags.Instance);
-			inspectorModeInfo!.SetValue(serializedObject, InspectorMode.Debug, null);
-
-			var localIdProp = serializedObject.FindProperty("m_LocalIdentfierInFile"); //note the misspelling!
-			return localIdProp.ulongValue;
+			// Scene Objects has no `localIdentifierInFile` until the scene was saved
+			// (And even after the saving the `localIdentifierInFile` often doesn't exist)
+			// `GlobalObjectId.GetGlobalObjectIdSlow` method forces to set the ObjectIdentifier to the scene Object
+			// And the `targetObjectId` is equal to the `localIdentifierInFile`
+			return GlobalObjectId.GetGlobalObjectIdSlow(component).targetObjectId;
 		}
 
 		public static SerializedProperty[] GetProperties(this SerializedObject serializedObject, Type inheritRestrictType = null)
