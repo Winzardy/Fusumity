@@ -451,8 +451,6 @@ namespace Fusumity.Editor.Drawers
 
 		#region Custom
 
-		public virtual SerializedProperty ReplaceSerializedProperty(SerializedProperty originalProperty) => originalProperty;
-
 		public virtual void ModifyPropertyData() {}
 
 		public virtual void ValidateBeforeDrawing() {}

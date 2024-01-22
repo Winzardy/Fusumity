@@ -14,12 +14,14 @@ namespace Fusumity.Editor.Assistance
 		public ulong componentLocalId;
 		public string propertyPath;
 
-		public static FieldPath Create(SerializedProperty property)
+		public static FieldPath Create(SerializedProperty property, out bool isValid)
 		{
 			var targetObject = property.serializedObject.targetObject;
 
 			var componentLocalId = default(ulong);
 			var assetPath = default(string);
+
+			isValid = true;
 
 			if (targetObject is Component component)
 			{
@@ -31,7 +33,10 @@ namespace Fusumity.Editor.Assistance
 					assetPath = AssetDatabase.GetAssetPath(targetObject);
 				}
 				else
+				{
 					assetPath = component.gameObject.scene.path;
+					isValid = !Application.isPlaying && !PrefabUtility.IsPartOfPrefabInstance(targetObject);
+				}
 
 				componentLocalId = component.GetComponentLocalId();
 			}
