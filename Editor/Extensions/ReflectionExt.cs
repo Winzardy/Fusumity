@@ -59,7 +59,7 @@ namespace Fusumity.Editor.Extensions
 			return result;
 		}
 
-		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false)
+		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false, bool useGeneric = false)
 		{
 			Type[] inheritorTypes;
 			if (insertNull)
@@ -79,8 +79,7 @@ namespace Fusumity.Editor.Extensions
 					var types = assemblies[a].GetTypes();
 					for (int t = 0; t < types.Length; t++)
 					{
-						if (baseType.IsAssignableFrom(types[t]) && !types[t].IsInterface && !types[t].IsAbstract &&
-						    !types[t].IsGenericType)
+						if (baseType.IsAssignableFrom(types[t]) && !types[t].IsInterface && !types[t].IsAbstract && (useGeneric || !types[t].IsGenericType))
 						{
 							typeList.Add(types[t]);
 						}

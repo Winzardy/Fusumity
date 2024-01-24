@@ -29,7 +29,7 @@ namespace Fusumity.Editor.Extensions
 			var type = (Type)typeField.GetValue(drawer);
 			var useForChildren = (bool)useForChildrenField.GetValue(drawer);
 
-			return useForChildren ? type.GetInheritorTypes() : new[] { type };
+			return useForChildren ? type.GetInheritorTypes(useGeneric: true) : new[] { type };
 		}
 
 		public static void SetAttribute(this PropertyDrawer drawer, PropertyAttribute attribute)

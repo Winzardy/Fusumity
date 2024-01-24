@@ -278,15 +278,7 @@ namespace Fusumity.Editor.Drawers
 						var customAttributeTypes = customAttribute.GetCustomPropertyDrawerTypes();
 						foreach (var customAttributeType in customAttributeTypes)
 						{
-							if (!_typeToDrawerType.ContainsKey(customAttributeType))
-							{
-								_typeToDrawerType.Add(customAttributeType, drawerType);
-							}
-							else
-							{
-								Debug.Log(customAttributeType.Name);
-								Debug.Log(drawerType.Name);
-							}
+							_typeToDrawerType.TryAdd(customAttributeType, drawerType);
 						}
 					}
 				}
@@ -295,7 +287,9 @@ namespace Fusumity.Editor.Drawers
 			_fusumityDrawers = new List<FusumityPropertyDrawer>(_fusumityAttributes.Count);
 			{
 				var propertyType = property.GetPropertyType();
-				if (propertyType != null && _typeToDrawerType.TryGetValue(propertyType, out var drawerType))
+				if (propertyType.IsGenericType)
+					propertyType = propertyType.GetGenericTypeDefinition();
+				if (propertyType != null && _typeToDrawerType.TryGetValue(propertyType, out var drawerType) && GetType() != drawerType)
 				{
 					var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
 					drawer.SetFieldInfo(fieldInfo);
