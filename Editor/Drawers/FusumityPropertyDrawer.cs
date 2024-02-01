@@ -29,6 +29,16 @@ namespace Fusumity.Editor.Drawers
 
 		public virtual bool OverrideMethods => true;
 
+		public T GetPersistentData<T>()
+		{
+			return currentPropertyData.GetPersistentData<T>(this);
+		}
+
+		public void SetPersistentData<T>(T value)
+		{
+			currentPropertyData.SetPersistentData(this, value);
+		}
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
 			var propertyPath = property.propertyPath;
@@ -107,37 +117,40 @@ namespace Fusumity.Editor.Drawers
 			position.yMin += currentPropertyData.drawOffsetY;
 			position.xMin += currentPropertyData.drawOffsetX;
 
-			var labelPrefixPosition = Rect.zero;
-			if (currentPropertyData.ShouldDrawLabelPrefix())
-			{
-				labelPrefixPosition = new Rect(position.x, position.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-
-				var offset = currentPropertyData.labelPrefixWidth;
-				if (offset > EditorGUIUtility.labelWidth)
-					offset = EditorGUIUtility.labelWidth;
-				position.xMin += offset;
-			}
-
 			var propertyPosition = position;
 			if (currentPropertyData.hasBeforeExtension)
 				propertyPosition.yMin += currentPropertyData.beforeExtensionHeight;
 			if (currentPropertyData.hasAfterExtension)
 				propertyPosition.yMax -= currentPropertyData.afterExtensionHeight;
+			if (currentPropertyData.isArrayElement && currentPropertyData.hasFoldout)
+				propertyPosition.xMin += EditorExt.FOLDOUT_WIDTH;
 
 			var beforeExtensionPosition = currentPropertyData.hasBeforeExtension
 				? new Rect(position.x, position.y, position.width, currentPropertyData.beforeExtensionHeight)
 				: Rect.zero;
 
-			var labelPosition = currentPropertyData.hasLabel
-				? new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
-				: Rect.zero;
 			var foldoutPosition = currentPropertyData.hasFoldout
 				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight)
 				: Rect.zero;
+
+			var labelPrefixPosition = Rect.zero;
+			var labelOffset = 0f;
+			if (currentPropertyData.ShouldDrawLabelPrefix())
+			{
+				labelPrefixPosition = new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
+
+				labelOffset = currentPropertyData.labelPrefixWidth;
+				if (labelOffset > EditorGUIUtility.labelWidth)
+					labelOffset = EditorGUIUtility.labelWidth;
+			}
+
+			var labelPosition = currentPropertyData.hasLabel
+				? new Rect(propertyPosition.x + labelOffset, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
+				: Rect.zero;
+
 			var subBodyPosition = currentPropertyData.hasLabel & !currentPropertyData.labelIntersectSubBody
-				? new Rect(propertyPosition.x + EditorGUIUtility.labelWidth, propertyPosition.y,
-					propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
-				: new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight);
+				? new Rect(propertyPosition.x + EditorGUIUtility.labelWidth, propertyPosition.y, propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
+				: new Rect(propertyPosition.x + labelOffset, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight);
 			var bodyPosition = (currentPropertyData.hasLabel | currentPropertyData.hasSubBody)
 				? new Rect(propertyPosition.x, propertyPosition.y + EditorGUIUtility.singleLineHeight, propertyPosition.width,
 					propertyPosition.height - EditorGUIUtility.singleLineHeight)
@@ -526,6 +539,8 @@ namespace Fusumity.Editor.Drawers
 
 		public Color backgroundColor;
 
+		private Dictionary<(object, Type), object> _persistentData = new();
+
 		public void ResetData(SerializedProperty property, GUIContent label)
 		{
 			forceBreak = false;
@@ -620,6 +635,18 @@ namespace Fusumity.Editor.Drawers
 		public bool ShouldDrawLabelPrefix()
 		{
 			return labelPrefix != null && labelPrefixWidth > 0;
+		}
+
+		public T GetPersistentData<T>(FusumityPropertyDrawer key)
+		{
+			if (_persistentData.TryGetValue((key, typeof(T)), out var result))
+				return (T)result;
+			return default;
+		}
+
+		public void SetPersistentData<T>(FusumityPropertyDrawer key, T value)
+		{
+			_persistentData[(key, typeof(T))] = value;
 		}
 	}
 }
