@@ -16,6 +16,7 @@ namespace Fusumity.Editor.Extensions
 
 		public const char PATH_PARENT_CHAR = '/';
 		public const char PATH_SPLIT_CHAR = '.';
+		public const char ARRAY_INDEX_BEGINNER = '[';
 		public const char ARRAY_DATA_TERMINATOR = ']';
 		public const string ARRAY_DATA_BEGINNER = "data[";
 
@@ -118,7 +119,7 @@ namespace Fusumity.Editor.Extensions
 				var pathComponent = pathComponents[p];
 				if (target is IList list)
 				{
-					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
+					if (p < pathComponents.Length - 2 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "").Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 						if (list.Count <= index)
@@ -197,7 +198,7 @@ namespace Fusumity.Editor.Extensions
 				localPath = propertyPath.Remove(0, removeIndex + 1);
 				propertyPath = propertyPath.Remove(removeIndex, propertyPath.Length - removeIndex);
 
-				if (localPath[localPath.Length - 1] != ARRAY_DATA_TERMINATOR)
+				if (localPath[^1] != ARRAY_DATA_TERMINATOR)
 					return propertyPath;
 
 				// Remove "{field name}.Array"
@@ -337,6 +338,69 @@ namespace Fusumity.Editor.Extensions
 			}
 
 			return sourcePath + PATH_SPLIT_CHAR + additionalPath;
+		}
+
+		public static string DequeuePathElement(this string sourcePath)
+		{
+			return sourcePath.DequeuePathElement(out _);
+		}
+
+		public static string DequeuePathElement(this string sourcePath, out string removedPath)
+		{
+			if (string.IsNullOrEmpty(sourcePath))
+			{
+				removedPath = string.Empty;
+				return sourcePath;
+			}
+
+			var path = sourcePath.Split(PATH_SPLIT_CHAR, 4);
+
+			if (path.Length == 1)
+			{
+				removedPath = sourcePath;
+				return string.Empty;
+			}
+
+			// Check array: "{field name}.Array.data["
+			if (path.Length >= 3 && path[2].StartsWith(ARRAY_DATA_BEGINNER))
+			{
+				removedPath = $"{path[0]}{PATH_SPLIT_CHAR}{path[1]}{PATH_SPLIT_CHAR}{path[2]}";
+				return path.Length == 4 ? path[3] : string.Empty;
+			}
+
+			removedPath = path[0];
+
+			var result = path[1];
+			for (var i = 2; i < path.Length; i++)
+				result = $"{result}{PATH_SPLIT_CHAR}{path[i]}";
+			return result;
+		}
+
+		public static int GetArrayIndex(this string sourcePath)
+		{
+			if (string.IsNullOrEmpty(sourcePath) || sourcePath[^1] != ARRAY_DATA_TERMINATOR)
+				return -1;
+
+			var index = sourcePath.LastIndexOf(ARRAY_INDEX_BEGINNER);
+			if (index < 0)
+				return -1;
+			index++;
+			var value = sourcePath.Substring(index, sourcePath.Length - 1 - index);
+
+			return int.TryParse(value, out var result) ? result : -1;
+		}
+
+		public static string SetArrayIndex(this string sourcePath, int newIndex)
+		{
+			if (string.IsNullOrEmpty(sourcePath) || sourcePath[^1] != ARRAY_DATA_TERMINATOR)
+				return sourcePath;
+
+			var index = sourcePath.LastIndexOf(ARRAY_INDEX_BEGINNER);
+			if (index < 0)
+				return sourcePath;
+			var start = sourcePath.Substring(0, index + 1);
+
+			return $"{start}{newIndex}{ARRAY_DATA_TERMINATOR}";
 		}
 	}
 }
