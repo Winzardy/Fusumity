@@ -16,7 +16,7 @@ namespace Fusumity.Editor.Extensions
 		public static void CopyValue(this SerializedProperty target, out object source)
 		{
 #if UNITY_2022_3_OR_NEWER
-			if (target.managedReferenceValue == null)
+			if (target.boxedValue == null)
 			{
 				source = null;
 				return;

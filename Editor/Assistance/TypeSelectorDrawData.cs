@@ -310,7 +310,7 @@ namespace Fusumity.Editor.Assistance
 			{
 				foreach (var child in rootItem.children)
 				{
-					if (child.displayName.IndexOf(typeName, StringComparison.OrdinalIgnoreCase) >= 0)
+					if (child.displayName == typeName)
 					{
 						SetSelection(new List<int> { child.id });
 						return;

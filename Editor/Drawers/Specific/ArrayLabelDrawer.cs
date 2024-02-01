@@ -26,7 +26,7 @@ namespace Fusumity.Editor.Drawers.Specific
 			else
 				prefix = elementIndex.ToString();
 
-			currentPropertyData.labelPrefixWidth += prefix.Length * 7f + 15f;
+			currentPropertyData.labelPrefixWidth += prefix.Length * 7f;
 			currentPropertyData.labelPrefix = string.IsNullOrEmpty(currentPropertyData.labelPrefix) ? prefix : $"{prefix}|{currentPropertyData.labelPrefix}";
 
 			currentPropertyData.hasLabel = false;

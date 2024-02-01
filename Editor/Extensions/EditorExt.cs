@@ -10,6 +10,7 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class EditorExt
 	{
+		public const float FOLDOUT_WIDTH = 15f;
 		public const float INDENT_WIDTH = 15f;
 		public const float LINE_SPACING = 2f;
 
