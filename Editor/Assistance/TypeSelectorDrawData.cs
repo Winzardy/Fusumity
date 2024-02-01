@@ -140,6 +140,9 @@ namespace Fusumity.Editor.Assistance
 
 			var rect = position;
 			mouseLocation = GUIUtility.GUIToScreenPoint(mouseLocation);
+			if (mouseLocation.x < 0 && mouseLocation.x > -rect.width)
+				mouseLocation.x = -rect.width;
+
 			rect.position = mouseLocation;
 			position = rect;
 
