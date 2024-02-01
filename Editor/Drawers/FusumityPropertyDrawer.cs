@@ -300,14 +300,17 @@ namespace Fusumity.Editor.Drawers
 			_fusumityDrawers = new List<FusumityPropertyDrawer>(_fusumityAttributes.Count);
 			{
 				var propertyType = property.GetPropertyType();
-				if (propertyType.IsGenericType)
-					propertyType = propertyType.GetGenericTypeDefinition();
-				if (propertyType != null && _typeToDrawerType.TryGetValue(propertyType, out var drawerType) && GetType() != drawerType)
+				if (propertyType != null)
 				{
-					var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
-					drawer.SetFieldInfo(fieldInfo);
+					if (propertyType.IsGenericType)
+						propertyType = propertyType.GetGenericTypeDefinition();
+					if (_typeToDrawerType.TryGetValue(propertyType, out var drawerType) && GetType() != drawerType)
+					{
+						var drawer = (FusumityPropertyDrawer)Activator.CreateInstance(drawerType);
+						drawer.SetFieldInfo(fieldInfo);
 
-					_fusumityDrawers.Add(drawer);
+						_fusumityDrawers.Add(drawer);
+					}
 				}
 			}
 
