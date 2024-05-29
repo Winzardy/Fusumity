@@ -51,7 +51,28 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
-		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type, Func<Object, bool> validate = null)
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type)
+		{
+			var gameObjectType = typeof(GameObject);
+
+			var guids = AssetDatabase.FindAssets($"t: {gameObjectType.Name}");
+			var assets = new List<(Object asset, string path)>(guids.Length);
+
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var asset = AssetDatabase.LoadAssetAtPath(path, gameObjectType);
+
+				if ((asset as GameObject)?.GetComponent(type) == null)
+					continue;
+
+				assets.Add((asset, path));
+			}
+
+			return assets;
+		}
+
+		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type)
 		{
 			var guids = AssetDatabase.FindAssets($"t: {type.Name}");
 			var assets = new List<(Object asset, string path)>(guids.Length);
@@ -60,9 +81,6 @@ namespace Fusumity.Editor.Extensions
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guid);
 				var asset = AssetDatabase.LoadAssetAtPath(path, type);
-
-				if (validate != null && !validate.Invoke(asset))
-					continue;
 
 				assets.Add((asset, path));
 			}

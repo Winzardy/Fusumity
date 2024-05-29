@@ -17,13 +17,14 @@ namespace Fusumity.Editor.Assistance
 
 		public Object target;
 		public string AssetName => target == null ? NoAssetString : target.name;
-		public string newGuid;
+		public int AssetId => target == null ? 0 : target.GetInstanceID();
+		public string oldGuid;
 		public readonly Type targetType;
 
 		public readonly bool isComponent;
 
 		private readonly GUIContent _label;
-		private Rect _assetDropDownRect;
+		private Rect _position;
 
 		private Texture _caretTexture;
 
@@ -35,16 +36,16 @@ namespace Fusumity.Editor.Assistance
 			isComponent = typeof(Component).IsAssignableFrom(targetType);
 			_label = label;
 
-			newGuid = default;
+			oldGuid = default;
 			_caretTexture = default;
-			_assetDropDownRect = default;
+			_position = default;
 		}
 
-		public bool IsValidObject(Object target)
+		public bool IsValidObject(Object objectToCheck)
 		{
 			if (isComponent)
 			{
-				return (target as GameObject)!.GetComponent(targetType) != null;
+				return (objectToCheck as GameObject)!.GetComponent(targetType) != null;
 			}
 
 			return true;
@@ -54,78 +55,58 @@ namespace Fusumity.Editor.Assistance
 		{
 			var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(target));
 
-			_assetDropDownRect = EditorGUI.PrefixLabel(position, _label);
+			_position = position;
 
-			DrawControl(AssetName, guid);
+			DrawControl(guid);
 		}
 
-		internal void ApplySelectionChanges(string guid)
+		internal void ApplySelectionChanges(string newGuid)
 		{
 			if (!string.IsNullOrEmpty(newGuid))
 			{
 				if (newGuid == NoAssetString)
 				{
 					target = null;
-					newGuid = string.Empty;
+					oldGuid = string.Empty;
 				}
-				else if (guid != newGuid)
+				else if (newGuid != oldGuid)
 				{
 					var path = AssetDatabase.GUIDToAssetPath(newGuid);
 					target = AssetDatabase.LoadAssetAtPath<Object>(path);
-					newGuid = string.Empty;
+					oldGuid = string.Empty;
+				}
+				else
+				{
+					oldGuid = newGuid;
 				}
 
 				_onSelected?.Invoke(target);
 			}
 		}
 
-		private void DrawControl(string nameToUse, string guid)
+		private void DrawControl(string guid)
 		{
-			const float pickerWidth = 12f;
-			var pickerRect = _assetDropDownRect;
+			const float pickerWidth = 15f;
+			var pickerRect = _position;
+			pickerRect.x = pickerRect.xMax - pickerWidth * 1.33f;
 			pickerRect.width = pickerWidth;
-			pickerRect.x = _assetDropDownRect.xMax - pickerWidth * 1.33f;
 
 			var isPickerPressed = Event.current.type == EventType.MouseDown && Event.current.button == 0 && pickerRect.Contains(Event.current.mousePosition);
-
-			if (target != null)
-			{
-				var iconHeight = EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing * 3;
-				var iconSize = EditorGUIUtility.GetIconSize();
-				EditorGUIUtility.SetIconSize(new Vector2(iconHeight, iconHeight));
-				var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-				var assetIcon = AssetDatabase.GetCachedIcon(assetPath) as Texture2D;
-
-				GUI.SetNextControlName(FIELD_CONTROL_PREFIX);
-				if (EditorGUI.DropdownButton(_assetDropDownRect, new GUIContent(nameToUse, assetIcon), FocusType.Keyboard, EditorStyles.objectField))
-				{
-					if (Event.current.clickCount == 1)
-					{
-						GUI.FocusControl(FIELD_CONTROL_PREFIX);
-						EditorGUIUtility.PingObject(target);
-					}
-
-					if (Event.current.clickCount == 2)
-					{
-						AssetDatabase.OpenAsset(target);
-						GUIUtility.ExitGUI();
-					}
-				}
-
-				EditorGUIUtility.SetIconSize(iconSize);
-			}
-			else
-			{
-				GUI.SetNextControlName(FIELD_CONTROL_PREFIX);
-				if (EditorGUI.DropdownButton(_assetDropDownRect, new GUIContent(nameToUse), FocusType.Keyboard, EditorStyles.objectField))
-					GUI.FocusControl(FIELD_CONTROL_PREFIX);
-			}
 
 			DrawCaret(pickerRect);
 
 			if (isPickerPressed)
 			{
 				EditorWindow.GetWindow<AssetPopup>(true, "Select Asset").Initialize(this, guid, Event.current.mousePosition);
+			}
+			else
+			{
+				var newTarget = EditorGUI.ObjectField(_position, _label, target, targetType, true);
+				if (newTarget != target)
+				{
+					var newGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(newTarget));
+					ApplySelectionChanges(newGuid);
+				}
 			}
 		}
 
@@ -179,7 +160,7 @@ namespace Fusumity.Editor.Assistance
 			_searchField.downOrUpArrowKeyPressed += () => { _tree.SetFocus(); };
 
 			if (_tree != null)
-				_tree.SetInitialSelection(_drawer.AssetName);
+				_tree.SetInitialSelection(_drawer.AssetId);
 		}
 
 		private void OnLostFocus()
@@ -207,7 +188,7 @@ namespace Fusumity.Editor.Assistance
 					_treeState = new TreeViewState();
 				_tree = new AssetTreeView(_treeState, _drawer, this, _guid);
 				_tree.Reload();
-				_tree.SetInitialSelection(_drawer.AssetName);
+				_tree.SetInitialSelection(_drawer.AssetId);
 			}
 
 			var isKeyPressed = Event.current.type == EventType.KeyDown && Event.current.isKey;
@@ -290,13 +271,13 @@ namespace Fusumity.Editor.Assistance
 					_popup.ForceClose();
 				else if (assetRefItem != null && !string.IsNullOrEmpty(assetRefItem.assetPath))
 				{
-					_drawer.newGuid = assetRefItem.Guid;
-					if (string.IsNullOrEmpty(_drawer.newGuid))
-						_drawer.newGuid = assetRefItem.assetPath;
+					_drawer.oldGuid = assetRefItem.Guid;
+					if (string.IsNullOrEmpty(_drawer.oldGuid))
+						_drawer.oldGuid = assetRefItem.assetPath;
 				}
 				else
 				{
-					_drawer.newGuid = _drawer.NoAssetString;
+					_drawer.oldGuid = _drawer.NoAssetString;
 				}
 
 				_popup.ForceClose();
@@ -306,21 +287,21 @@ namespace Fusumity.Editor.Assistance
 			{
 				if (selectedIds != null && selectedIds.Count == 1)
 				{
-					var oldGuid = _drawer.newGuid;
+					string newGuid;
 					var assetRefItem = FindItem(selectedIds[0], rootItem) as AssetTreeViewItem;
 					if (assetRefItem != null && !string.IsNullOrEmpty(assetRefItem.assetPath))
 					{
-						_drawer.newGuid = assetRefItem.Guid;
-						if (string.IsNullOrEmpty(_drawer.newGuid))
-							_drawer.newGuid = assetRefItem.assetPath;
+						newGuid = assetRefItem.Guid;
+						if (string.IsNullOrEmpty(newGuid))
+							newGuid = assetRefItem.assetPath;
 					}
 					else
 					{
-						_drawer.newGuid = _drawer.NoAssetString;
+						newGuid = _drawer.NoAssetString;
 					}
 
 					SetFocus();
-					_drawer.ApplySelectionChanges(oldGuid);
+					_drawer.ApplySelectionChanges(newGuid);
 				}
 			}
 
@@ -346,24 +327,25 @@ namespace Fusumity.Editor.Assistance
 			{
 				var root = new TreeViewItem(-1, -1);
 
-				root.AddChild(new AssetTreeViewItem(_drawer.NoAssetString.GetHashCode(), 0, _drawer.NoAssetString, string.Empty));
-				var targetType = _drawer.isComponent ? typeof(GameObject) : _drawer.targetType;
-				var allAssets = AssetsEditorExt.GetAssetsOfTypeWithPath(targetType, _drawer.IsValidObject);
+				root.AddChild(new AssetTreeViewItem(0, 0, _drawer.NoAssetString, string.Empty));
+				var allAssets = _drawer.isComponent ?
+					AssetsEditorExt.GetAssetsOfComponentTypeWithPath(_drawer.targetType) :
+					AssetsEditorExt.GetAssetsOfTypeWithPath(_drawer.targetType);
 
 				foreach (var (entry, path) in allAssets)
 				{
-					var child = new AssetTreeViewItem(entry.GetHashCode(), 0, entry.name, path);
+					var child = new AssetTreeViewItem(entry.GetInstanceID(), 0, entry.name, path);
 					root.AddChild(child);
 				}
 
 				return root;
 			}
 
-			public void SetInitialSelection(string assetString)
+			public void SetInitialSelection(int assetId)
 			{
 				foreach (var child in rootItem.children)
 				{
-					if (child.displayName.IndexOf(assetString, StringComparison.OrdinalIgnoreCase) >= 0)
+					if (child.id == assetId)
 					{
 						SetSelection(new List<int> { child.id });
 						return;
