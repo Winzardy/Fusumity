@@ -18,18 +18,19 @@ namespace Fusumity.Editor.Drawers.Specific
 			if (labelAttribute.indexOffset != 0)
 				elementIndex += labelAttribute.indexOffset;
 
-			string prefix;
-			if (labelAttribute.hasName && (!labelAttribute.hideNameIfExpanded || !currentPropertyData.property.isExpanded))
+			var hasLabel = labelAttribute.hasName && (!labelAttribute.hideNameIfExpanded || !currentPropertyData.property.isExpanded);
+			if (hasLabel)
 			{
-				prefix = $"{elementIndex} {currentPropertyData.label.text}";
+				currentPropertyData.label.text = currentPropertyData.label.text;
 			}
+
+			if (!string.IsNullOrEmpty(currentPropertyData.labelPrefix))
+				currentPropertyData.labelPrefix += $"-{elementIndex}";
 			else
-				prefix = elementIndex.ToString();
+				currentPropertyData.labelPrefix = $"{elementIndex}";
 
-			currentPropertyData.labelPrefixWidth += prefix.Length * 7f;
-			currentPropertyData.labelPrefix = string.IsNullOrEmpty(currentPropertyData.labelPrefix) ? prefix : $"{prefix}|{currentPropertyData.labelPrefix}";
-
-			currentPropertyData.hasLabel = false;
+			currentPropertyData.labelPrefixWidth = currentPropertyData.labelPrefix.Length * 7 + 7;
+			currentPropertyData.hasLabel = hasLabel;
 			currentPropertyData.hasFoldout = labelAttribute.hasFoldout;
 		}
 	}
