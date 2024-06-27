@@ -12,6 +12,7 @@ namespace Fusumity.Editor.Extensions
 	{
 		public const float FOLDOUT_WIDTH = 15f;
 		public const float INDENT_WIDTH = 15f;
+		public const float ARRAY_BLIND_WIDTH = 8f;
 		public const float LINE_SPACING = 2f;
 
 		private static Rect _positionCache;

@@ -122,39 +122,46 @@ namespace Fusumity.Editor.Drawers
 				propertyPosition.yMin += currentPropertyData.beforeExtensionHeight;
 			if (currentPropertyData.hasAfterExtension)
 				propertyPosition.yMax -= currentPropertyData.afterExtensionHeight;
-			if (currentPropertyData.isArrayElement && currentPropertyData.hasFoldout)
-				propertyPosition.xMin += EditorExt.FOLDOUT_WIDTH;
 
 			var beforeExtensionPosition = currentPropertyData.hasBeforeExtension
 				? new Rect(position.x, position.y, position.width, currentPropertyData.beforeExtensionHeight)
 				: Rect.zero;
 
-			var foldoutPosition = currentPropertyData.hasFoldout
-				? new Rect(propertyPosition.x, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight)
-				: Rect.zero;
-
-			var labelPrefixPosition = Rect.zero;
-			var prefixOffset = 0f;
-			if (currentPropertyData.ShouldDrawLabelPrefix())
+			var foldoutPosition = Rect.zero;
+			var labelMaxPosition = propertyPosition.x;
+			if (currentPropertyData.hasFoldout)
 			{
-				labelPrefixPosition = new Rect(propertyPosition.x, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight);
-
-				prefixOffset = currentPropertyData.labelPrefixWidth;
-				if (prefixOffset > EditorGUIUtility.labelWidth)
-					prefixOffset = EditorGUIUtility.labelWidth;
+				if (currentPropertyData.isArrayElement)
+					propertyPosition.xMin += EditorExt.ARRAY_BLIND_WIDTH;
+				foldoutPosition = new Rect(propertyPosition.x, propertyPosition.y, EditorExt.FOLDOUT_WIDTH, EditorGUIUtility.singleLineHeight);
+				labelMaxPosition = foldoutPosition.xMax;
 			}
 
-			var labelPosition = currentPropertyData.hasLabel
-				? new Rect(propertyPosition.x + prefixOffset, propertyPosition.y, EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
-				: Rect.zero;
+			var labelPrefixPosition = Rect.zero;
+			var prefixWidth = 0f;
+			if (currentPropertyData.ShouldDrawLabelPrefix())
+			{
+				prefixWidth = currentPropertyData.labelPrefixWidth;
+				if (prefixWidth > EditorGUIUtility.labelWidth)
+					prefixWidth = EditorGUIUtility.labelWidth;
+
+				labelPrefixPosition = new Rect(labelMaxPosition, propertyPosition.y, prefixWidth, EditorGUIUtility.singleLineHeight);
+				labelMaxPosition = labelPrefixPosition.xMax;
+			}
+
+			var labelPosition = Rect.zero;
+			if (currentPropertyData.hasLabel)
+			{
+				labelPosition = new Rect(labelMaxPosition, propertyPosition.y, EditorGUIUtility.labelWidth - prefixWidth, EditorGUIUtility.singleLineHeight);
+				labelMaxPosition = labelPosition.xMax;
+			}
 
 			var subBodyPosition = currentPropertyData.hasLabel & !currentPropertyData.labelIntersectSubBody
-				? new Rect(labelPosition.xMax, propertyPosition.y, propertyPosition.width - EditorGUIUtility.labelWidth, EditorGUIUtility.singleLineHeight)
-				: new Rect(propertyPosition.x + prefixOffset, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight);
+				? new Rect(labelMaxPosition, propertyPosition.y, propertyPosition.width - prefixWidth, EditorGUIUtility.singleLineHeight)
+				: new Rect(labelMaxPosition, propertyPosition.y, propertyPosition.width, EditorGUIUtility.singleLineHeight);
 			var bodyPosition = (currentPropertyData.hasLabel | currentPropertyData.hasSubBody)
-				? new Rect(propertyPosition.x + prefixOffset, propertyPosition.y + EditorGUIUtility.singleLineHeight, propertyPosition.width,
-					propertyPosition.height - EditorGUIUtility.singleLineHeight)
-				: new Rect(propertyPosition.x + prefixOffset, propertyPosition.y, propertyPosition.width, propertyPosition.height);
+				? new Rect(propertyPosition.x, propertyPosition.y + EditorGUIUtility.singleLineHeight, propertyPosition.width, propertyPosition.height - EditorGUIUtility.singleLineHeight)
+				: new Rect(labelMaxPosition, propertyPosition.y, propertyPosition.width, propertyPosition.height);
 
 			var afterExtensionPosition = currentPropertyData.hasAfterExtension
 				? new Rect(position.x, propertyPosition.yMax, position.width, currentPropertyData.afterExtensionHeight)
@@ -184,28 +191,12 @@ namespace Fusumity.Editor.Drawers
 				ExecuteDrawLabel(labelPosition);
 			}
 
-			var indentDebt = 0;
-
 			if (currentPropertyData.hasFoldout)
 			{
-#if UNITY_2022_3_OR_NEWER
-				if (EditorGUI.indentLevel > 0)
-				{
-					EditorGUI.indentLevel--;
-					indentDebt++;
-				}
-				if (currentPropertyData.isArrayElement)
-				{
-					EditorGUI.indentLevel--;
-					indentDebt++;
-				}
-#endif
+				foldoutPosition.xMax = labelMaxPosition;
 				EditorGUI.indentLevel += currentPropertyData.foldoutIndent;
-				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, " ", toggleOnLabelClick: true);
+				currentPropertyData.property.isExpanded = EditorGUI.Foldout(foldoutPosition, currentPropertyData.property.isExpanded, "", toggleOnLabelClick: true);
 				EditorGUI.indentLevel -= currentPropertyData.foldoutIndent;
-#if UNITY_2022_3_OR_NEWER
-				EditorGUI.indentLevel++;
-#endif
 			}
 
 			if (currentPropertyData.ShouldDrawSubBody())
@@ -234,8 +225,6 @@ namespace Fusumity.Editor.Drawers
 			{
 				ExecuteDrawAfterExtension(afterExtensionPosition);
 			}
-
-			EditorGUI.indentLevel += indentDebt;
 
 			EditorGUI.EndProperty();
 			if (!currentPropertyData.forceBreak && EditorGUI.EndChangeCheck())
