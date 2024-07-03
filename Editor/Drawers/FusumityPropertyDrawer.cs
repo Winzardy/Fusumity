@@ -128,8 +128,8 @@ namespace Fusumity.Editor.Drawers
 			var foldoutPosition = new Rect(propertyPosition.x, propertyPosition.y, 0f, EditorGUIUtility.singleLineHeight);
 			if (currentPropertyData.hasFoldout)
 			{
-				if (currentPropertyData.isArrayElement)
-					propertyPosition.xMin += EditorExt.ARRAY_BLIND_WIDTH;
+				//if (currentPropertyData.isArrayElement)
+					//propertyPosition.xMin += EditorExt.ARRAY_BLIND_WIDTH;
 				foldoutPosition.x = propertyPosition.x;
 				foldoutPosition.width = EditorExt.FOLDOUT_WIDTH;
 			}
@@ -203,7 +203,7 @@ namespace Fusumity.Editor.Drawers
 
 			if (currentPropertyData.ShouldDrawSubBody())
 			{
-				EditorGUIUtility.labelWidth = labelPosition.width;
+				EditorGUIUtility.labelWidth = labelPosition.width == 0 ? 0.1f : labelPosition.width;
 				ExecuteDrawSubBody(subBodyPosition);
 				EditorGUIUtility.labelWidth = lastLabelWidth;
 			}
