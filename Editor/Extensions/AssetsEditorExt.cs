@@ -90,7 +90,7 @@ namespace Fusumity.Editor.Extensions
 
 		public static void Rename(this ScriptableObject scriptableObject, string newName)
 		{
-			var assetPath =  AssetDatabase.GetAssetPath(scriptableObject.GetInstanceID());
+			var assetPath = AssetDatabase.GetAssetPath(scriptableObject.GetInstanceID());
 			AssetDatabase.RenameAsset(assetPath, newName);
 			AssetDatabase.SaveAssets();
 		}
@@ -98,7 +98,7 @@ namespace Fusumity.Editor.Extensions
 		public static void SaveChanges(this Object unityObject)
 		{
 			EditorUtility.SetDirty(unityObject);
-			AssetDatabase.SaveAssets();
+			AssetDatabase.SaveAssetIfDirty(unityObject);
 		}
 	}
 }
