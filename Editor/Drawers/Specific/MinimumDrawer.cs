@@ -1,87 +1,49 @@
 using System;
-using Fusumity.Attributes.Specific;
-using Fusumity.Editor.Extensions;
-using UnityEditor;
+using Fusumity.Attributes.Odin;
+using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector.Editor.ValueResolvers;
+using Sirenix.Utilities.Editor;
+using UnityEngine;
 
 namespace Fusumity.Editor.Drawers.Specific
 {
-	[CustomPropertyDrawer(typeof(MinimumAttribute))]
-	public class MinimumDrawer : FusumityPropertyDrawer
+	[DrawerPriority(0, 9000, 0)]
+	public class MinimumDrawer<T> : OdinAttributeDrawer<MinimumAttribute, T>
+		where T : struct
 	{
-		public override void ValidateBeforeDrawing()
+		private static readonly bool IsNumber = GenericNumberUtility.IsNumber(typeof(T));
+		private static readonly bool IsVector = GenericNumberUtility.IsVector(typeof(T));
+
+		private ValueResolver<double> minValueGetter;
+
+		public override bool CanDrawTypeFilter(Type type)
 		{
-			base.ValidateBeforeDrawing();
+			return IsNumber || IsVector;
+		}
 
-			var property = currentPropertyData.property;
-			var minAttribute = (MinimumAttribute)attribute;
+		protected override void Initialize()
+		{
+			this.minValueGetter = ValueResolver.Get<double>(this.Property, this.Attribute.Expression, this.Attribute.MinValue);
+		}
 
-			var intMin = minAttribute.minInt;
-			var floatMin = minAttribute.minFloat;
-
-			if (!string.IsNullOrEmpty(minAttribute.minPath))
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			if (this.minValueGetter.HasError)
 			{
-				var minField = property.GetPropertyByLocalPath(minAttribute.minPath);
-
-				if (minField != null)
-				{
-					switch (minField?.propertyType)
-					{
-						case SerializedPropertyType.Integer:
-							intMin = Math.Max(minField.intValue, intMin);
-							floatMin = Math.Max((float)minField.intValue, floatMin);
-							break;
-						case SerializedPropertyType.Float:
-						case SerializedPropertyType.Vector2:
-							intMin = Math.Max((int)minField.floatValue, intMin);
-							floatMin = Math.Max(minField.floatValue, floatMin);
-							break;
-					}
-				}
-				else
-				{
-					var maxValue = property.InvokePropertyByLocalPath(minAttribute.minPath);
-
-					switch (maxValue)
-					{
-						case int intValue:
-							intMin = Math.Max(intValue, intMin);
-							floatMin = Math.Max((float)intValue, floatMin);
-							break;
-						case float floatValue:
-							intMin = Math.Max((int)floatValue, intMin);
-							floatMin = Math.Max(floatValue, floatMin);
-							break;
-					}
-				}
+				SirenixEditorGUI.ErrorMessageBox(this.minValueGetter.ErrorMessage);
+				this.CallNextDrawer(label);
 			}
-
-			switch (currentPropertyData.property.propertyType)
+			else
 			{
-				case SerializedPropertyType.Integer:
-					if (currentPropertyData.property.intValue < intMin)
-					{
-						currentPropertyData.property.intValue = intMin;
-					}
-					break;
-				case SerializedPropertyType.Float:
-					if (currentPropertyData.property.floatValue < floatMin)
-					{
-						currentPropertyData.property.floatValue = floatMin;
-					}
-					break;
-				case SerializedPropertyType.Vector2:
-					var vector = currentPropertyData.property.vector2Value;
-					if (vector.x < floatMin)
-					{
-						vector.x = floatMin;
-						currentPropertyData.property.vector2Value = vector;
-					}
-					if (vector.y < floatMin)
-					{
-						vector.y = floatMin;
-						currentPropertyData.property.vector2Value = vector;
-					}
-					break;
+				this.CallNextDrawer(label);
+
+				T value = this.ValueEntry.SmartValue;
+				var min = this.minValueGetter.GetValue();
+
+				if (!GenericNumberUtility.NumberIsInRange(value, min, double.MaxValue))
+				{
+					this.ValueEntry.SmartValue = GenericNumberUtility.Clamp(value, min, double.MaxValue);
+				}
 			}
 		}
 	}

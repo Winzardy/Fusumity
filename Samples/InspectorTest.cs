@@ -1,4 +1,5 @@
 using System;
+using Fusumity.Attributes.Odin;
 using Fusumity.Attributes.Specific;
 using Fusumity.Collections;
 using UnityEngine;
@@ -153,7 +154,8 @@ namespace Fusumity.Samples
 	[Serializable]
 	public class AngleSteering : SteeringPattern
 	{
-		[AngleToRad] public float radPerSecond;
+		[AngleToRad]
+		public float radPerSecond;
 	}
 
 	[Serializable]

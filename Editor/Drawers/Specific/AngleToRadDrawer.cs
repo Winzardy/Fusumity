@@ -1,29 +1,29 @@
-using Fusumity.Attributes.Specific;
-using UnityEditor;
+using Fusumity.Attributes.Odin;
+using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
 using UnityEngine;
 
 namespace Fusumity.Editor.Drawers.Specific
 {
-	[CustomPropertyDrawer(typeof(AngleToRadAttribute))]
-	public class AngleToRadDrawer : FusumityPropertyDrawer
+	public class AngleToRadDrawer : OdinAttributeDrawer<AngleToRadAttribute, float>
 	{
-		public override void ModifyPropertyData()
+		protected override void Initialize()
 		{
-			currentPropertyData.label.text = currentPropertyData.label.text.Replace("Rad", "Angle") + "°";
-			base.ModifyPropertyData();
+			base.Initialize();
+			ValueEntry.Property.Label.text = ValueEntry.Property.Label.text.Replace("Rad", "Angle") + "°";
 		}
 
-		public override void DrawSubBody(Rect position)
+		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var rad = currentPropertyData.property.floatValue;
-			EditorGUI.BeginChangeCheck();
-			var angle = EditorGUI.FloatField(position, " ", rad * Mathf.Rad2Deg);
+			var rad = ValueEntry.SmartValue;
+
+			var angle = SirenixEditorFields.FloatField(label, rad * Mathf.Rad2Deg);
 			if (angle == 360f)
 				rad = Mathf.PI * 2;
 			else
 				rad = angle * Mathf.Deg2Rad;
-			if (EditorGUI.EndChangeCheck())
-				currentPropertyData.property.floatValue = rad;
+
+			ValueEntry.SmartValue = rad;
 		}
 	}
 }

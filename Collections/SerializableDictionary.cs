@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Fusumity.Attributes.Specific;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -44,7 +44,7 @@ namespace Fusumity.Collections
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
-		[SerializeField, Button("AddElement", drawBefore = false), RemoveFoldout]
+		[SerializeField]
 		private TKeyValue _newElement;
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
@@ -95,6 +95,7 @@ namespace Fusumity.Collections
 		}
 
 #if UNITY_EDITOR
+		[Button]
 		private void AddElement()
 		{
 #if UNITY_2022_3_OR_NEWER
@@ -134,7 +135,7 @@ namespace Fusumity.Collections
 		where TValue : class
 	{
 		public TKey key;
-		[SerializeReference, ReferenceSelection]
+		[SerializeReference]
 		public TValue value;
 
 		public TKey Key

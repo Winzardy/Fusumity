@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Fusumity.Attributes.Specific;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -246,9 +246,9 @@ namespace Fusumity.Collections
 		[SerializeField, HideInInspector]
 		private string enumValueName;
 
-		[Readonly, HideLabel, DrawOffset(xOffset = 14f)]
+		[HideLabel, ReadOnly]
 		public TEnum enumValue;
-		[Label(""), DrawOffset(offsetLines = -1, foldoutIndent = 1, xOffset = -14f, disableIfHasSubBody = true)]
+		[HideLabel]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
@@ -277,10 +277,10 @@ namespace Fusumity.Collections
 		[SerializeField, HideInInspector]
 		private string enumValueName;
 
-		[Readonly, HideLabel]
+		[ReadOnly, HideLabel]
 		public TEnum enumValue;
 		[HideLabel]
-		[SerializeReference, ReferenceSelection]
+		[SerializeReference]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue

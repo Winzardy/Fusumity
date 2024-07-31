@@ -1,69 +1,49 @@
 using System;
-using Fusumity.Attributes.Specific;
-using Fusumity.Editor.Extensions;
-using UnityEditor;
+using Fusumity.Attributes.Odin;
+using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector.Editor.ValueResolvers;
+using Sirenix.Utilities.Editor;
+using UnityEngine;
 
 namespace Fusumity.Editor.Drawers.Specific
 {
-	[CustomPropertyDrawer(typeof(MaximumAttribute))]
-	public class MaximumDrawer : FusumityPropertyDrawer
+	[DrawerPriority(0, 9000, 0)]
+	public sealed class MaximumDrawer<T> : OdinAttributeDrawer<MaximumAttribute, T>
+		where T : struct
 	{
-		public override void ValidateBeforeDrawing()
+		private static readonly bool IsNumber = GenericNumberUtility.IsNumber(typeof(T));
+		private static readonly bool IsVector = GenericNumberUtility.IsVector(typeof(T));
+
+		private ValueResolver<double> maxValueGetter;
+
+		public override bool CanDrawTypeFilter(Type type)
 		{
-			base.ValidateBeforeDrawing();
+			return IsNumber || IsVector;
+		}
 
-			var property = currentPropertyData.property;
-			var maxAttribute = (MaximumAttribute)attribute;
-			var intExclusively = maxAttribute.intExclusively;
+		protected override void Initialize()
+		{
+			this.maxValueGetter = ValueResolver.Get<double>(this.Property, this.Attribute.Expression, this.Attribute.MaxValue);
+		}
 
-			var intMax = intExclusively && maxAttribute.maxInt > int.MinValue ? maxAttribute.maxInt - 1 : maxAttribute.maxInt;
-			var floatMax = maxAttribute.maxFloat;
-
-			if (!string.IsNullOrEmpty(maxAttribute.maxPath))
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			if (this.maxValueGetter.HasError)
 			{
-				var maxValue = property.GetResultByLocalPath(maxAttribute.maxPath);
-				switch (maxValue)
-				{
-					case int intValue:
-						if (intExclusively && intValue > int.MinValue)
-							intValue--;
-						intMax = Math.Min(intValue, intMax);
-						floatMax = Math.Min((float)intValue, floatMax);
-						break;
-					case float floatValue:
-						intMax = Math.Min((int)floatValue, intMax);
-						floatMax = Math.Min(floatValue, floatMax);
-						break;
-				}
+				SirenixEditorGUI.ErrorMessageBox(this.maxValueGetter.ErrorMessage);
+				this.CallNextDrawer(label);
 			}
-
-			switch (currentPropertyData.property.propertyType)
+			else
 			{
-				case SerializedPropertyType.Integer:
-					if (currentPropertyData.property.intValue > intMax)
-					{
-						currentPropertyData.property.intValue = intMax;
-					}
-					break;
-				case SerializedPropertyType.Float:
-					if (currentPropertyData.property.floatValue > floatMax)
-					{
-						currentPropertyData.property.floatValue = floatMax;
-					}
-					break;
-				case SerializedPropertyType.Vector2:
-					var vector = currentPropertyData.property.vector2Value;
-					if (vector.x > floatMax)
-					{
-						vector.x = floatMax;
-						currentPropertyData.property.vector2Value = vector;
-					}
-					if (vector.y > floatMax)
-					{
-						vector.y = floatMax;
-						currentPropertyData.property.vector2Value = vector;
-					}
-					break;
+				this.CallNextDrawer(label);
+
+				T value = this.ValueEntry.SmartValue;
+				var max = this.maxValueGetter.GetValue();
+
+				if (!GenericNumberUtility.NumberIsInRange(value, double.MinValue, max))
+				{
+					this.ValueEntry.SmartValue = GenericNumberUtility.Clamp(value, double.MinValue, max);
+				}
 			}
 		}
 	}
