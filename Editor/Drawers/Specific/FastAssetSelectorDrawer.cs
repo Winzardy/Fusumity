@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers.Specific
 {
-	[CustomPropertyDrawer(typeof(AssetSelectorAttribute), true)]
-	public class AssetSelectorDrawer : FusumityPropertyDrawer
+	[CustomPropertyDrawer(typeof(FastAssetSelectorAttribute), true)]
+	public class FastAssetSelectorDrawer : FusumityPropertyDrawer
 	{
 		public override bool OverrideMethods => (currentPropertyData.property == null || currentPropertyData.property.propertyType == SerializedPropertyType.ObjectReference);
 
@@ -21,7 +21,7 @@ namespace Fusumity.Editor.Drawers.Specific
 
 			var fieldType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
 
-			var attr = (AssetSelectorAttribute)attribute;
+			var attr = (FastAssetSelectorAttribute)attribute;
 			var targetType = attr.type ?? fieldType;
 
 			currentPropertyData.property.objectReferenceValue.DrawAssetSelector(position, SUB_BODY_GUI_CONTENT, targetType, OnSelected);
