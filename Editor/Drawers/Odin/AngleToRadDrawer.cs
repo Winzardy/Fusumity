@@ -3,7 +3,7 @@ using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Drawers.Specific
+namespace Fusumity.Editor.Drawers
 {
 	public class AngleToRadDrawer : OdinAttributeDrawer<AngleToRadAttribute, float>
 	{

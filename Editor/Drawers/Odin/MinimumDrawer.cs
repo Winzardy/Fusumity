@@ -5,7 +5,7 @@ using Sirenix.OdinInspector.Editor.ValueResolvers;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 
-namespace Fusumity.Editor.Drawers.Specific
+namespace Fusumity.Editor.Drawers
 {
 	[DrawerPriority(0, 9000, 0)]
 	public class MinimumDrawer<T> : OdinAttributeDrawer<MinimumAttribute, T>
