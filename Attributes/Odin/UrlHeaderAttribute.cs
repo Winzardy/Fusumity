@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 
 namespace Fusumity.Attributes.Specific
 {
-	public class UrlHeaderAttribute : FusumityDrawerAttribute
+	public class UrlHeaderAttribute : Attribute
 	{
 		public string label;
 		public string url;
