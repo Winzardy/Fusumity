@@ -16,9 +16,9 @@ namespace Fusumity.Editor.Extensions
 			return folderPath;
 		}
 
-		public static T GetAssetOfType<T>(HashSet<T> exclude = null) where T: Object
+		public static T GetAssetOfType<T>(string[] searchInFolders = null, HashSet<T> exclude = null) where T: Object
 		{
-			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}");
+			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders);
 
 			foreach (var guid in guids)
 			{
@@ -33,9 +33,9 @@ namespace Fusumity.Editor.Extensions
 			return null;
 		}
 
-		public static List<T> GetAssetsOfType<T>(HashSet<T> exclude = null) where T: Object
+		public static List<T> GetAssetsOfType<T>(string[] searchInFolders = null, HashSet<T> exclude = null) where T: Object
 		{
-			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}");
+			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders);
 			var assets = new List<T>(guids.Length);
 
 			foreach (var guid in guids)
@@ -51,11 +51,11 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
-		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type)
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, string[] searchInFolders = null)
 		{
 			var gameObjectType = typeof(GameObject);
 
-			var guids = AssetDatabase.FindAssets($"t: {gameObjectType.Name}");
+			var guids = AssetDatabase.FindAssets($"t: {gameObjectType.Name}", searchInFolders);
 			var assets = new List<(Object asset, string path)>(guids.Length);
 
 			foreach (var guid in guids)
@@ -72,9 +72,9 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
-		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type)
+		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type, string[] searchInFolders = null)
 		{
-			var guids = AssetDatabase.FindAssets($"t: {type.Name}");
+			var guids = AssetDatabase.FindAssets($"t: {type.Name}", searchInFolders);
 			var assets = new List<(Object asset, string path)>(guids.Length);
 
 			foreach (var guid in guids)
