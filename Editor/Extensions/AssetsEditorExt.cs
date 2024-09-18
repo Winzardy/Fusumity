@@ -9,6 +9,53 @@ namespace Fusumity.Editor.Extensions
 {
 	public static class AssetsEditorExt
 	{
+		public static void DeleteAssetsWithoutDependencies<T>() where T: Object
+		{
+			AssetDatabase.SaveAssets();
+
+			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}");
+			var paths = new HashSet<string>(guids.Length);
+			foreach (var guid in guids)
+			{
+				paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+			}
+
+			var allAssetPaths = AssetDatabase.GetAllAssetPaths();
+			var dependencies = new HashSet<string>();
+			foreach (var path in allAssetPaths)
+			{
+				if (paths.Contains(path))
+					continue;
+
+				foreach (var dependency in AssetDatabase.GetDependencies(path, true))
+					dependencies.Add(dependency);
+			}
+
+			var assetsToDelete = new List<string>();
+			foreach (var path in paths)
+			{
+				if (dependencies.Contains(path))
+					continue;
+				assetsToDelete.Add(path);
+			}
+
+			foreach (var path in assetsToDelete)
+			{
+				AssetDatabase.DeleteAsset(path);
+			}
+		}
+
+		public static GUID GetAssetGuid<T>(this T asset) where T: Object
+		{
+			var assetPath = AssetDatabase.GetAssetPath(asset);
+			return AssetDatabase.GUIDFromAssetPath(assetPath);
+		}
+
+		public static string GetAssetPath<T>(this T asset) where T: Object
+		{
+			return AssetDatabase.GetAssetPath(asset);
+		}
+
 		public static string GetAssetFolder<T>(this T asset) where T: Object
 		{
 			var assetPath = AssetDatabase.GetAssetPath(asset);
@@ -92,7 +139,6 @@ namespace Fusumity.Editor.Extensions
 		{
 			var assetPath = AssetDatabase.GetAssetPath(scriptableObject.GetInstanceID());
 			AssetDatabase.RenameAsset(assetPath, newName);
-			AssetDatabase.SaveAssets();
 		}
 
 		public static void SaveChanges(this Object unityObject)
