@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Fusumity.Editor.Extensions;
+using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Fusumity.Editor.Assistance
 {
@@ -17,10 +19,20 @@ namespace Fusumity.Editor.Assistance
 		public ulong componentLocalId;
 		public string propertyPath;
 
+		public static FieldPath Create(InspectorProperty property, out bool isValid)
+		{
+			var targetObject = (Object)property.SerializationRoot.ValueEntry.WeakValues[0];
+			return Create(targetObject, property.Path, out isValid);
+		}
+
 		public static FieldPath Create(SerializedProperty property, out bool isValid)
 		{
 			var targetObject = property.serializedObject.targetObject;
+			return Create(targetObject, property.propertyPath, out isValid);
+		}
 
+		public static FieldPath Create(Object targetObject, string propertyPath, out bool isValid)
+		{
 			var componentLocalId = default(ulong);
 			var assetPath = default(string);
 
@@ -28,6 +40,7 @@ namespace Fusumity.Editor.Assistance
 
 			if (targetObject is Component component)
 			{
+				// We are on GameObject
 				var isPrefab = PrefabUtility.IsPartOfPrefabAsset(targetObject);
 
 				if (isPrefab)
@@ -37,7 +50,13 @@ namespace Fusumity.Editor.Assistance
 				}
 				else
 				{
+					// GameObject on the Scene
 					assetPath = component.gameObject.scene.path;
+
+					// INVALID if:
+					// We are Playing
+					// OR
+					// We are part of the Prefab
 					isValid = !Application.isPlaying && !PrefabUtility.IsPartOfPrefabInstance(targetObject);
 				}
 
@@ -51,7 +70,7 @@ namespace Fusumity.Editor.Assistance
 			return new FieldPath
 			{
 				assetGuid = AssetDatabase.AssetPathToGUID(assetPath),
-				propertyPath = property.propertyPath,
+				propertyPath = propertyPath,
 				componentLocalId = componentLocalId,
 			};
 		}
@@ -154,6 +173,18 @@ namespace Fusumity.Editor.Assistance
 		{
 			var serializedComponent = new SerializedObject(target);
 			return serializedComponent.FindProperty(propertyPath);
+		}
+
+		public static bool operator ==(FieldPath a, FieldPath b)
+		{
+			return a.propertyPath == b.propertyPath &&
+			       a.componentLocalId == b.componentLocalId &&
+			       a.assetGuid == b.assetGuid;
+		}
+
+		public static bool operator !=(FieldPath a, FieldPath b)
+		{
+			return !(a == b);
 		}
 	}
 }
