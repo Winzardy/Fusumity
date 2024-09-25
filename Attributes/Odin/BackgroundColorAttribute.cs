@@ -1,23 +1,22 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Fusumity.Attributes.Specific
 {
-	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-	public class BackgroundColorAttribute : FusumityDrawerAttribute
+	[DontApplyToListElements]
+	[AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
+	[System.Diagnostics.Conditional("UNITY_EDITOR")]
+	public class BackgroundColorAttribute : Attribute
 	{
 		public Color color;
-		public string conditionPath;
-		public string invertConditionPath;
 
-		public BackgroundColorAttribute(float r, float g, float b, float a = 1f, string conditionPath = null, string invertConditionPath = null)
+		public BackgroundColorAttribute(float r, float g, float b, float a = 1f)
 		{
 			color = new Color(r, g, b, a);
-			this.conditionPath = conditionPath;
-			this.invertConditionPath = invertConditionPath;
 		}
 
-		public BackgroundColorAttribute(BackgroundColor color, float a = 1f, string conditionPath = null, string invertConditionPath = null)
+		public BackgroundColorAttribute(BackgroundColor color, float a = 1f)
 		{
 			this.color = color switch
 			{
@@ -34,8 +33,6 @@ namespace Fusumity.Attributes.Specific
 			};
 			if (color != BackgroundColor.Clear)
 				this.color.a = a;
-			this.conditionPath = conditionPath;
-			this.invertConditionPath = invertConditionPath;
 		}
 	}
 
