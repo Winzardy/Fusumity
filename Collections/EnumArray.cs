@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Fusumity.Attributes.Odin;
+using Fusumity.Attributes.Specific;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -118,7 +120,7 @@ namespace Fusumity.Collections
 #if UNITY_EDITOR
 		private static readonly Array ENUM_VALUES = Enum.GetValues(typeof(TEnum));
 #endif
-		[SerializeField, HideLabel]
+		[SerializeField]
 		protected TEnumValue[] values;
 
 		public ref TEnumValue this[int index]
@@ -246,9 +248,9 @@ namespace Fusumity.Collections
 		[SerializeField, HideInInspector]
 		private string enumValueName;
 
-		[HideLabel, ReadOnly]
+		[Sirenix.OdinInspector.HideLabel, ReadOnly]
 		public TEnum enumValue;
-		[HideLabel]
+		[Sirenix.OdinInspector.HideLabel]
 		public TValue value;
 
 		TEnum IEnumValue<TEnum>.EnumValue
@@ -267,6 +269,11 @@ namespace Fusumity.Collections
 		{
 			return enumValue.CompareTo(other.enumValue);
 		}
+
+		public static implicit operator (TEnum, TValue)(EnumValue<TEnum, TValue> value)
+		{
+			return (value.enumValue, value.value);
+		}
 	}
 
 	[Serializable]
@@ -277,9 +284,9 @@ namespace Fusumity.Collections
 		[SerializeField, HideInInspector]
 		private string enumValueName;
 
-		[ReadOnly, HideLabel]
+		[ReadOnly, Sirenix.OdinInspector.HideLabel]
 		public TEnum enumValue;
-		[HideLabel]
+		[Sirenix.OdinInspector.HideLabel]
 		[SerializeReference]
 		public TValue value;
 
