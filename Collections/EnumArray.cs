@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Fusumity.Attributes.Odin;
 using Fusumity.Attributes.Specific;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -39,13 +40,23 @@ namespace Fusumity.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe int GetIndexOf(TEnum enumValue)
 		{
-			return _indexes[*(int*)(&enumValue)];
+			return EnumValueToIndex<TEnum>.GetIndex(enumValue);
 		}
 
 #if UNITY_EDITOR
+		public ReorderableEnumArray()
+		{
+			LazyInitializeInternal();
+		}
+
 		protected override void LazyInitialize()
 		{
 			base.LazyInitialize();
+			LazyInitializeInternal();
+		}
+
+		private void LazyInitializeInternal()
+		{
 			if (_indexes != null)
 				return;
 
@@ -60,12 +71,12 @@ namespace Fusumity.Collections
 			FillIndexes();
 		}
 
-		private unsafe void FillIndexes()
+		private void FillIndexes()
 		{
 			for (var i = 0; i < values.Length; i++)
 			{
 				var enumValue = values[i].EnumValue;
-				_indexes[*(int*)(&enumValue)] = i;
+				_indexes[GetIndexOf(enumValue)] = i;
 			}
 		}
 #endif
@@ -87,22 +98,17 @@ namespace Fusumity.Collections
 		where TEnum : unmanaged, Enum
 		where TEnumValue : IEnumValue<TEnum>, new()
 	{
-		public unsafe ref TEnumValue this[TEnum enumValue]
+		public ref TEnumValue this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref values[GetIndexOf(enumValue)];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe int GetIndexOf(TEnum enumValue)
+		public int GetIndexOf(TEnum enumValue)
 		{
-			return *(int*)(&enumValue);
+			return EnumValueToIndex<TEnum>.GetIndex(enumValue);
 		}
-	}
-	[Serializable]
-	public class MyClassContainer<TEnum, TValue> where TEnum : unmanaged, Enum
-	{
-		public EnumValue<TEnum, TValue>[] _values;
 	}
 
 	[Serializable]
@@ -117,9 +123,6 @@ namespace Fusumity.Collections
 		, new()
 #endif
 	{
-#if UNITY_EDITOR
-		private static readonly Array ENUM_VALUES = Enum.GetValues(typeof(TEnum));
-#endif
 		[SerializeField]
 		protected TEnumValue[] values;
 
@@ -138,6 +141,11 @@ namespace Fusumity.Collections
 		protected virtual bool IsReorderable => false;
 
 #if UNITY_EDITOR
+		public EnumArray()
+		{
+			LazyInitializeInternal();
+		}
+
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
 			UpdateValues();
@@ -150,10 +158,10 @@ namespace Fusumity.Collections
 			OnValuesUpdated();
 		}
 
-		public unsafe void UpdateValues()
+		protected unsafe void UpdateValues()
 		{
 			LazyInitialize();
-			if (values.Length == ENUM_VALUES.Length)
+			if (values.Length == EnumValues<TEnum>.ENUM_LENGHT)
 			{
 				for (var i = 0; i < values.Length; i++)
 				{
@@ -167,7 +175,7 @@ namespace Fusumity.Collections
 			}
 			update:
 
-			var valuesNew = new List<TEnumValue>(ENUM_VALUES.Length);
+			var valuesNew = new List<TEnumValue>(EnumValues<TEnum>.ENUM_LENGHT);
 			var hashSet = new HashSet<TEnum>();
 
 			var isValid = stackalloc bool[values.Length];
@@ -202,7 +210,7 @@ namespace Fusumity.Collections
 				}
 			}
 
-			foreach (TEnum enumValue in ENUM_VALUES)
+			foreach (TEnum enumValue in EnumValues<TEnum>.VALUES)
 			{
 				if (hashSet.Contains(enumValue))
 					continue;
@@ -223,16 +231,21 @@ namespace Fusumity.Collections
 
 		protected virtual void LazyInitialize()
 		{
+			LazyInitializeInternal();
+		}
+
+		private void LazyInitializeInternal()
+		{
 			if (values != null)
 				return;
 
-			values = new TEnumValue[ENUM_VALUES.Length];
+			values = new TEnumValue[EnumValues<TEnum>.ENUM_LENGHT];
 
-			for (var i = 0; i < ENUM_VALUES.Length; i++)
+			for (var i = 0; i < EnumValues<TEnum>.ENUM_LENGHT; i++)
 			{
 				values[i] = new TEnumValue
 				{
-					EnumValue = (TEnum)ENUM_VALUES.GetValue(i),
+					EnumValue = EnumValues<TEnum>.VALUES[i],
 				};
 			}
 		}
