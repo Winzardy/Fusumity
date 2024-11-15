@@ -40,7 +40,7 @@ namespace Fusumity.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe int GetIndexOf(TEnum enumValue)
 		{
-			return EnumValueToIndex<TEnum>.GetIndex(enumValue);
+			return EnumToIndex<TEnum>.GetIndex(enumValue);
 		}
 
 #if UNITY_EDITOR
@@ -107,7 +107,7 @@ namespace Fusumity.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int GetIndexOf(TEnum enumValue)
 		{
-			return EnumValueToIndex<TEnum>.GetIndex(enumValue);
+			return EnumToIndex<TEnum>.GetIndex(enumValue);
 		}
 	}
 
