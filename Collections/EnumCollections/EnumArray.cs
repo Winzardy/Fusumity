@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Fusumity.Attributes.Odin;
-using Fusumity.Attributes.Specific;
 using Sapientia.Extensions;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -24,7 +21,7 @@ namespace Fusumity.Collections
 	[Serializable]
 	public class ReorderableEnumArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
 		where TEnum : unmanaged, Enum
-		where TEnumValue : IEnumValue<TEnum>, new()
+		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		protected override bool IsReorderable => true;
 
@@ -35,12 +32,6 @@ namespace Fusumity.Collections
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref values[GetIndexOf(enumValue)];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe int GetIndexOf(TEnum enumValue)
-		{
-			return EnumToIndex<TEnum>.GetIndex(enumValue);
 		}
 
 #if UNITY_EDITOR
@@ -96,32 +87,23 @@ namespace Fusumity.Collections
 
 	public class OrderedEnumArray<TEnum, TValue, TEnumValue> : EnumArray<TEnum, TValue, TEnumValue>
 		where TEnum : unmanaged, Enum
-		where TEnumValue : IEnumValue<TEnum>, new()
+		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		public ref TEnumValue this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref values[GetIndexOf(enumValue)];
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetIndexOf(TEnum enumValue)
-		{
-			return EnumToIndex<TEnum>.GetIndex(enumValue);
-		}
 	}
 
 	[Serializable]
 	public class EnumArray<TEnum, TValue, TEnumValue> :
+		IEnumArray,
 #if UNITY_EDITOR
-		ISerializationCallbackReceiver,
+		ISerializationCallbackReceiver
 #endif
-		IEnumArray
 		where TEnum : unmanaged, Enum
-		where TEnumValue : IEnumValue<TEnum>
-#if UNITY_EDITOR
-		, new()
-#endif
+		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		[SerializeField]
 		protected TEnumValue[] values;
@@ -136,6 +118,12 @@ namespace Fusumity.Collections
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => values.Length;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected int GetIndexOf(TEnum enumValue)
+		{
+			return EnumToIndex<TEnum>.GetIndex(enumValue);
 		}
 
 		protected virtual bool IsReorderable => false;
@@ -252,80 +240,8 @@ namespace Fusumity.Collections
 #endif
 	}
 
-	public interface IEnumArray {}
-
-	[Serializable]
-	public struct EnumValue<TEnum, TValue> : IComparable<EnumValue<TEnum, TValue>>, IEnumValue<TEnum>
-		where TEnum: unmanaged, Enum
+	public interface IEnumArray
 	{
-		[SerializeField, HideInInspector]
-		private string enumValueName;
 
-		[Sirenix.OdinInspector.HideLabel, ReadOnly]
-		public TEnum enumValue;
-		[Sirenix.OdinInspector.HideLabel]
-		public TValue value;
-
-		TEnum IEnumValue<TEnum>.EnumValue
-		{
-			get => enumValue;
-			set => enumValue = value;
-		}
-
-		string IEnumValue<TEnum>.EnumValueName
-		{
-			get => enumValueName;
-			set => enumValueName = value;
-		}
-
-		public int CompareTo(EnumValue<TEnum, TValue> other)
-		{
-			return enumValue.CompareTo(other.enumValue);
-		}
-
-		public static implicit operator (TEnum, TValue)(EnumValue<TEnum, TValue> value)
-		{
-			return (value.enumValue, value.value);
-		}
 	}
-
-	[Serializable]
-	public struct EnumReferenceValue<TEnum, TValue> : IComparable<EnumReferenceValue<TEnum, TValue>>, IEnumValue<TEnum>
-		where TEnum: unmanaged, Enum
-		where TValue : class
-	{
-		[SerializeField, HideInInspector]
-		private string enumValueName;
-
-		[ReadOnly, Sirenix.OdinInspector.HideLabel]
-		public TEnum enumValue;
-		[Sirenix.OdinInspector.HideLabel]
-		[SerializeReference]
-		public TValue value;
-
-		TEnum IEnumValue<TEnum>.EnumValue
-		{
-			get => enumValue;
-			set => enumValue = value;
-		}
-
-		string IEnumValue<TEnum>.EnumValueName
-		{
-			get => enumValueName;
-			set => enumValueName = value;
-		}
-
-		public int CompareTo(EnumReferenceValue<TEnum, TValue> other)
-		{
-			return enumValue.CompareTo(other.enumValue);
-		}
-	}
-
-	public interface IEnumValue<TEnum>
-	{
-		public TEnum EnumValue { get; set; }
-		public string EnumValueName { get; set; }
-	}
-
-	public struct EmptyStruct{}
 }
