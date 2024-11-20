@@ -88,6 +88,8 @@ namespace Fusumity.Collections
 		{
 			Clear();
 
+			if (elements == null || elements.Length != Count)
+				elements = new TKeyValue[Count];
 			for (var i = 0; i < elements.Length; i++)
 			{
 #if UNITY_2022_3_OR_NEWER
