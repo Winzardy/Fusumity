@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -74,7 +75,7 @@ namespace Fusumity.Collections
 
 		public int CompareTo(EnumValue<TEnum, TValue> other)
 		{
-			return enumValue.CompareTo(other.enumValue);
+			return EnumToIndex<TEnum>.GetIndex(enumValue).CompareTo(EnumToIndex<TEnum>.GetIndex(other.enumValue));
 		}
 
 		public static implicit operator (TEnum, TValue)(EnumValue<TEnum, TValue> value)
@@ -111,7 +112,7 @@ namespace Fusumity.Collections
 
 		public int CompareTo(EnumReferenceValue<TEnum, TValue> other)
 		{
-			return enumValue.CompareTo(other.enumValue);
+			return EnumToIndex<TEnum>.GetIndex(enumValue).CompareTo(EnumToIndex<TEnum>.GetIndex(other.enumValue));
 		}
 	}
 
