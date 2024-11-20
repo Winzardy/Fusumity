@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -50,7 +51,7 @@ namespace Fusumity.Collections
 		[Newtonsoft.Json.JsonIgnore]
 #endif
 		[SerializeField, HideLabel]
-		private List<TKeyValue> _elements;
+		protected TKeyValue[] elements;
 
 		protected SerializableDictionary() : base() { }
 		protected SerializableDictionary(IDictionary<TKey, TValue> dictionary) : base(dictionary) { }
@@ -65,36 +66,46 @@ namespace Fusumity.Collections
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
-			if (_elements == null)
-				_elements = new List<TKeyValue>(Count);
-			_elements.Clear();
+			if (elements == null || elements.Length != Count)
+				elements = new TKeyValue[Count];
 
+			var i = 0;
 			foreach (var pair in this)
 			{
 				var keyValue = default(TKeyValue);
 				keyValue.Key = pair.Key;
 				keyValue.Value = pair.Value;
 
-				_elements.Add(keyValue);
+				elements[i++] = keyValue;
 			}
+
+#if UNITY_EDITOR
+			OnValuesUpdated();
+#endif
 		}
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 			Clear();
 
-			for (var i = 0; i < _elements.Count; i++)
+			for (var i = 0; i < elements.Length; i++)
 			{
 #if UNITY_2022_3_OR_NEWER
-				TryAdd(_elements[i].Key, _elements[i].Value);
+				TryAdd(elements[i].Key, elements[i].Value);
 #else
-			if (ContainsKey(_newElement.Key))
-				Add(_elements[i].Key, _elements[i].Value);
+				if (ContainsKey(_newElement.Key))
+					Add(_elements[i].Key, _elements[i].Value);
 #endif
 			}
+
+#if UNITY_EDITOR
+			OnValuesUpdated();
+#endif
 		}
 
 #if UNITY_EDITOR
+		protected virtual void OnValuesUpdated() {}
+
 		[Button]
 		private void AddElement()
 		{
@@ -127,6 +138,11 @@ namespace Fusumity.Collections
 			get => value;
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set => this.value = value;
+		}
+
+		public static implicit operator (TKey, TValue)(KeyValue<TKey, TValue> keyValue)
+		{
+			return (keyValue.Key, keyValue.Value);
 		}
 	}
 
