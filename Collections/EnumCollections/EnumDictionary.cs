@@ -18,7 +18,12 @@ namespace Fusumity.Collections
 
 		public bool TryGetValue(TEnum enumValue, out TValue value)
 		{
-			var index = GetIndexOf(enumValue);
+			return TryGetValue(enumValue, out value, out _);
+		}
+
+		public bool TryGetValue(TEnum enumValue, out TValue value, out int index)
+		{
+			index = GetIndexOf(enumValue);
 			if (index >= 0)
 			{
 				value = elements[index].value;
