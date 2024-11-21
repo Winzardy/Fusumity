@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers.Collections
 {
-	public class EnumArrayDrawer : OdinValueDrawer<IEnumArray>
+	public class ArrayContainerDrawer : OdinValueDrawer<IArrayContainer>
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{

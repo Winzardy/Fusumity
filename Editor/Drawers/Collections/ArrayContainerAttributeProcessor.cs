@@ -7,7 +7,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace Fusumity.Editor.Drawers.Collections
 {
-	public class EnumArrayAttributeProcessor : OdinAttributeProcessor<IEnumArray>
+	public class ArrayContainerAttributeProcessor : OdinAttributeProcessor<IArrayContainer>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

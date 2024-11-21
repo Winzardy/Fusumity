@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -14,7 +15,7 @@ namespace Fusumity.Collections
 
 	[Serializable]
 	public class EnumList<TEnum, TValue, TEnumValue> :
-		IEnumArray,
+		IArrayContainer,
 #if UNITY_EDITOR
 		ISerializationCallbackReceiver
 #endif
@@ -22,48 +23,40 @@ namespace Fusumity.Collections
 		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		[SerializeField, HideLabel, InlineProperty]
-		private TEnumValue[] _elements = new TEnumValue[0];
+		protected TEnumValue[] elements = new TEnumValue[0];
 
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _elements.Length;
+			get => elements.Length;
 		}
 
 		public ref TEnumValue this[int i]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _elements[i];
-		}
-
-		public ref TEnumValue this[TEnum enumValue]
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _elements[GetIndexOf(enumValue)];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected int GetIndexOf(TEnum enumValue)
-		{
-			return EnumToIndex<TEnum>.GetIndex(enumValue);
+			get => ref elements[i];
 		}
 
 		public void Add(TEnumValue value)
 		{
-			ArrayExt.Add(ref _elements, value);
+			ArrayExt.Add(ref elements, value);
+		}
+
+		public virtual void OnBeforeSerialize()
+		{
+#if UNITY_EDITOR
+			OnValuesUpdated();
+#endif
+		}
+
+		public virtual void OnAfterDeserialize()
+		{
+#if UNITY_EDITOR
+			OnValuesUpdated();
+#endif
 		}
 
 #if UNITY_EDITOR
-		void ISerializationCallbackReceiver.OnBeforeSerialize()
-		{
-			OnValuesUpdated();
-		}
-
-		void ISerializationCallbackReceiver.OnAfterDeserialize()
-		{
-			OnValuesUpdated();
-		}
-
 		protected virtual void OnValuesUpdated() {}
 #endif
 	}

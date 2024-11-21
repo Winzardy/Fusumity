@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -45,12 +44,7 @@ namespace Fusumity.Collections
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
-		[SerializeField]
-		private TKeyValue _newElement;
-#if NEWTONSOFT
-		[Newtonsoft.Json.JsonIgnore]
-#endif
-		[SerializeField, HideLabel]
+		[SerializeField, HideInInspector]
 		protected TKeyValue[] elements;
 
 		protected SerializableDictionary() : base() { }
@@ -78,18 +72,13 @@ namespace Fusumity.Collections
 
 				elements[i++] = keyValue;
 			}
-
-#if UNITY_EDITOR
-			OnValuesUpdated();
-#endif
 		}
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-			Clear();
-
-			if (elements == null || elements.Length != Count)
+			if (elements == null)
 				elements = new TKeyValue[Count];
+
 			for (var i = 0; i < elements.Length; i++)
 			{
 #if UNITY_2022_3_OR_NEWER
@@ -99,26 +88,7 @@ namespace Fusumity.Collections
 					Add(_elements[i].Key, _elements[i].Value);
 #endif
 			}
-
-#if UNITY_EDITOR
-			OnValuesUpdated();
-#endif
 		}
-
-#if UNITY_EDITOR
-		protected virtual void OnValuesUpdated() {}
-
-		[Button]
-		private void AddElement()
-		{
-#if UNITY_2022_3_OR_NEWER
-			TryAdd(_newElement.Key, _newElement.Value);
-#else
-			if (ContainsKey(_newElement.Key))
-				Add(_newElement.Key, _newElement.Value);
-#endif
-		}
-#endif
 	}
 
 	[Serializable]

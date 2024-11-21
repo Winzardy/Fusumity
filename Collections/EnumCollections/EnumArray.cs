@@ -98,7 +98,7 @@ namespace Fusumity.Collections
 
 	[Serializable]
 	public class EnumArray<TEnum, TValue, TEnumValue> :
-		IEnumArray,
+		IArrayContainer,
 #if UNITY_EDITOR
 		ISerializationCallbackReceiver
 #endif
@@ -238,10 +238,5 @@ namespace Fusumity.Collections
 			}
 		}
 #endif
-	}
-
-	public interface IEnumArray
-	{
-
 	}
 }
