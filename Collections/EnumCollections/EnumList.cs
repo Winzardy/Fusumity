@@ -13,9 +13,9 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public class EnumList<TEnum, TValue, TEnumValue> :
+	public class EnumList<TEnum, TValue, TEnumValue>
 #if UNITY_EDITOR
-		IArrayContainer,
+		: IArrayContainer,
 		ISerializationCallbackReceiver
 #endif
 		where TEnum : unmanaged, Enum

@@ -97,9 +97,9 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public class EnumArray<TEnum, TValue, TEnumValue> :
+	public class EnumArray<TEnum, TValue, TEnumValue>
 #if UNITY_EDITOR
-		IArrayContainer,
+		: IArrayContainer,
 		ISerializationCallbackReceiver
 #endif
 		where TEnum : unmanaged, Enum
