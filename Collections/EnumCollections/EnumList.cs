@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -15,8 +14,8 @@ namespace Fusumity.Collections
 
 	[Serializable]
 	public class EnumList<TEnum, TValue, TEnumValue> :
-		IArrayContainer,
 #if UNITY_EDITOR
+		IArrayContainer,
 		ISerializationCallbackReceiver
 #endif
 		where TEnum : unmanaged, Enum
