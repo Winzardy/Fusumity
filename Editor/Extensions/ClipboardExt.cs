@@ -8,6 +8,12 @@ namespace Fusumity.Editor.Extensions
 	{
 		private static object _source;
 
+		public static void CopyPasteValue<T>(this T source, ref T target)
+		{
+			CopyValue(source, out var boxedSource);
+			PasteValue(ref target, boxedSource);
+		}
+
 		public static void CopyValue(this SerializedProperty target)
 		{
 			target.CopyValue(out _source);
@@ -15,21 +21,19 @@ namespace Fusumity.Editor.Extensions
 
 		public static void CopyValue(this SerializedProperty target, out object source)
 		{
-#if UNITY_2022_3_OR_NEWER
-			if (target.boxedValue == null)
+			CopyValue(target.boxedValue, out source);
+		}
+
+		public static void CopyValue<T>(this T value, out object source)
+		{
+			if (value == null)
 			{
 				source = null;
 				return;
 			}
 
-			source = Activator.CreateInstance(target.boxedValue.GetType());
-			EditorUtility.CopySerializedManagedFieldsOnly(target.boxedValue, source);
-#else
-			var type = target.GetManagedReferenceType();
-			_source = Activator.CreateInstance(type);
-			var sourceObject = target.GetPropertyObjectByLocalPath(target.name);
-			EditorUtility.CopySerializedManagedFieldsOnly(sourceObject, _source);
-#endif
+			source = Activator.CreateInstance(value.GetType());
+			EditorUtility.CopySerializedManagedFieldsOnly(value, source);
 		}
 
 		public static void PasteValue(this SerializedProperty target)
@@ -49,6 +53,24 @@ namespace Fusumity.Editor.Extensions
 			try
 			{
 				target.boxedValue = value;
+			}
+			catch
+			{
+				Debug.LogWarning("Type is mismatched");
+			}
+		}
+
+		public static void PasteValue<T>(ref T value, object source)
+		{
+			if (source == null)
+			{
+				value = default;
+				return;
+			}
+			value = Activator.CreateInstance<T>();
+			try
+			{
+				EditorUtility.CopySerializedManagedFieldsOnly(source, value);
 			}
 			catch
 			{
