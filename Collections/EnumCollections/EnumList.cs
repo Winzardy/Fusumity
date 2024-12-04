@@ -56,7 +56,16 @@ namespace Fusumity.Collections
 		}
 
 #if UNITY_EDITOR
-		protected virtual void OnValuesUpdated() {}
+		protected virtual void OnValuesUpdated()
+		{
+			for (var i = 0; i < elements.Length; i++)
+			{
+				if (Enum.TryParse<TEnum>(elements[i].EnumValueName, out var enumValue))
+					elements[i].EnumValue = enumValue;
+				else
+					elements[i].EnumValueName = elements[i].EnumValue.ToString();
+			}
+		}
 #endif
 	}
 }
