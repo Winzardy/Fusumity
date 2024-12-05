@@ -19,6 +19,8 @@ namespace Fusumity.Editor.Assistance
 		public ulong componentLocalId;
 		public string propertyPath;
 
+		public bool IsValid => !string.IsNullOrEmpty(assetGuid) && !string.IsNullOrEmpty(propertyPath);
+
 		public static FieldPath Create(InspectorProperty property, out bool isValid)
 		{
 			var targetObject = (Object)property.SerializationRoot.ValueEntry.WeakValues[0];
