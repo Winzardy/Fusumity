@@ -51,6 +51,12 @@ namespace Fusumity.Editor.Extensions
 			return AssetDatabase.GUIDFromAssetPath(assetPath);
 		}
 
+		public static GUID GetAssetGuid<T>(this T asset, out string assetPath) where T: Object
+		{
+			assetPath = AssetDatabase.GetAssetPath(asset);
+			return AssetDatabase.GUIDFromAssetPath(assetPath);
+		}
+
 		public static string GetAssetPath<T>(this T asset) where T: Object
 		{
 			return AssetDatabase.GetAssetPath(asset);
@@ -61,6 +67,20 @@ namespace Fusumity.Editor.Extensions
 			var assetPath = AssetDatabase.GetAssetPath(asset);
 			var folderPath = Path.GetDirectoryName(assetPath);
 			return folderPath;
+		}
+
+		public static string[] GetGuidsOfAssetType<T>(string[] searchInFolders = null) where T : Object
+		{
+			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders);
+			return guids;
+		}
+
+		public static T GetAssetByGuid<T>(string guid) where T: Object
+		{
+			if (string.IsNullOrEmpty(guid))
+				return null;
+			var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+			return AssetDatabase.LoadAssetAtPath<T>(assetPath);
 		}
 
 		public static T GetAssetOfType<T>(string[] searchInFolders = null, HashSet<T> exclude = null) where T: Object
