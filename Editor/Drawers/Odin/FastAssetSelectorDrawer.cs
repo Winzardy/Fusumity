@@ -1,6 +1,7 @@
 using Fusumity.Attributes.Specific;
 using Fusumity.Editor.Extensions;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -8,18 +9,22 @@ using Object = UnityEngine.Object;
 namespace Fusumity.Editor.Drawers
 {
 	[DrawerPriority(0, 9000, 0)]
-	public class FastAssetSelectorDrawer<T> : OdinAttributeDrawer<FastAssetSelectorAttribute, T>
-		where T : Object
+	public class FastAssetSelectorDrawer : OdinAttributeDrawer<FastAssetSelectorAttribute>
 	{
+		protected override bool CanDrawAttributeProperty(InspectorProperty property)
+		{
+			return base.CanDrawAttributeProperty(property) && property.ValueEntry.TypeOfValue.InheritsFrom(typeof(Object));
+		}
+
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var targetType = Attribute.type ?? ValueEntry.TypeOfValue;
-			ValueEntry.SmartValue.DrawAssetSelector(label, targetType, OnSelected);
+			var targetType = Attribute.type ?? Property.ValueEntry.TypeOfValue;
+			((Object)Property.ValueEntry.WeakSmartValue).DrawAssetSelector(label, targetType, OnSelected);
 		}
 
 		private void OnSelected(Object target)
 		{
-			ValueEntry.SmartValue = (T)target;
+			Property.ValueEntry.WeakSmartValue = target;
 
 			var root = Property.SerializationRoot.ValueEntry.WeakSmartValue as Object;
 			EditorUtility.SetDirty(root);
