@@ -289,6 +289,13 @@ namespace Fusumity.Editor.Extensions
 			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
 		}
 
+		public static void DrawAssetSelector(this UnityEngine.Object target, GUIContent label, Type type, Action<UnityEngine.Object> onSelected)
+		{
+			var height = EditorGUIUtility.HasObjectThumbnail(type) ? 64f : 18f;
+			var position = EditorGUILayout.GetControlRect(true, height);
+			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
+		}
+
 		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)
 		{
 			_positionCache = position;

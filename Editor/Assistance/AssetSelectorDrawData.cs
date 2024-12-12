@@ -80,7 +80,10 @@ namespace Fusumity.Editor.Assistance
 					oldGuid = newGuid;
 				}
 
-				_onSelected?.Invoke(target);
+				if (isComponent)
+					_onSelected?.Invoke((target as GameObject)?.GetComponent(targetType));
+				else
+					_onSelected?.Invoke(target);
 			}
 		}
 

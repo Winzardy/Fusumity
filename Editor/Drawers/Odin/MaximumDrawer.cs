@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers
 {
-	[DrawerPriority(0, 9000, 0)]
 	public sealed class MaximumDrawer<T> : OdinAttributeDrawer<MaximumAttribute, T>
 		where T : struct
 	{
