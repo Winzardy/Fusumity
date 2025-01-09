@@ -11,13 +11,21 @@ namespace Fusumity.Collections
 	{
 		[FieldOffset(0)]
 		[SerializeField]
-		private long dummy1;
+		public long dummy1;
 		[FieldOffset(8)]
 		[SerializeField]
-		private long dummy2;
+		public long dummy2;
 
 		[FieldOffset(0)]
 		public Guid guid;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SerializableGuid(long dummy1, long dummy2)
+		{
+			guid = Guid.Empty;
+			this.dummy1 = dummy1;
+			this.dummy2 = dummy2;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Guid(SerializableGuid serializableGuid)
@@ -89,5 +97,10 @@ namespace Fusumity.Collections
 			return guid.GetHashCode();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override string ToString()
+		{
+			return (string)this;
+		}
 	}
 }

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Fusumity.Editor.Assistance;
 using UnityEditor;
 using UnityEditor.Build.Content;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace Fusumity.Editor.Extensions
 {
@@ -35,17 +38,46 @@ namespace Fusumity.Editor.Extensions
 			serializedObject.ApplyModifiedProperties();
 		}
 
-		public static ulong GetComponentLocalId(this Component component)
+		public static void GetUnityObjectSourceId(this Object unityObject, out ulong prefabInstanceId, out ulong unityObjectLocalId)
 		{
-			ObjectIdentifier.TryGetObjectIdentifier(component, out var objectIdentifier);
-			if (objectIdentifier.localIdentifierInFile != 0)
-				return (ulong)objectIdentifier.localIdentifierInFile;
+			prefabInstanceId = 0;
+			unityObjectLocalId = 0;
+
+			var originalComponent = PrefabUtility.GetCorrespondingObjectFromSource(unityObject);
+			if (originalComponent == null)
+			{
+				unityObjectLocalId = unityObject.GetUnityObjectLocalId();
+				return;
+			}
+
+			unityObjectLocalId = originalComponent.GetUnityObjectLocalId();
+
+			var handle = PrefabUtility.GetPrefabInstanceHandle(unityObject);
+			Debug.Assert(handle != null);
+
+			prefabInstanceId = handle.GetUnityObjectLocalId();
+		}
+
+		public static ulong GetUnityObjectLocalId(this Object unityObject)
+		{
+			ObjectIdentifier.TryGetObjectIdentifier(unityObject, out var objectIdentifier);
+			var id = (ulong)objectIdentifier.localIdentifierInFile;
+			if (id != 0)
+				return id;
 
 			// Scene Objects has no `localIdentifierInFile` until the scene was saved
 			// (And even after the saving the `localIdentifierInFile` often doesn't exist)
 			// `GlobalObjectId.GetGlobalObjectIdSlow` method forces to set the ObjectIdentifier to the scene Object
 			// And the `targetObjectId` is equal to the `localIdentifierInFile`
-			return GlobalObjectId.GetGlobalObjectIdSlow(component).targetObjectId;
+			id = GlobalObjectId.GetGlobalObjectIdSlow(unityObject).targetObjectId;
+			if (id != 0)
+				return id;
+
+			// Trying to get Id again (Can be used in Prefab case)
+			ObjectIdentifier.TryGetObjectIdentifier(unityObject, out objectIdentifier);
+			id = (ulong)objectIdentifier.localIdentifierInFile;
+
+			return id;
 		}
 
 		public static object GetObjectByPath(this SerializedObject serializedObject, string objectPath)

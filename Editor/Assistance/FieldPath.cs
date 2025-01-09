@@ -15,8 +15,12 @@ namespace Fusumity.Editor.Assistance
 	{
 		// Can be SO, Prefab or Scene
 		public string assetGuid;
-		// For a Prefab or a Scene Object
-		public ulong componentLocalId;
+
+		// Optional. Only for Prefab or Scene asset
+		public ulong prefabInstanceId;
+		// Optional. Only for Prefab or Scene asset
+		public ulong objectLocalId;
+
 		public string propertyPath;
 
 		public bool IsValid => !string.IsNullOrEmpty(assetGuid) && !string.IsNullOrEmpty(propertyPath);
@@ -35,7 +39,10 @@ namespace Fusumity.Editor.Assistance
 
 		public static FieldPath Create(Object targetObject, string propertyPath, out bool isValid)
 		{
-			var componentLocalId = default(ulong);
+			var result = new FieldPath
+			{
+				propertyPath = propertyPath,
+			};
 			var assetPath = default(string);
 
 			isValid = true;
@@ -43,12 +50,13 @@ namespace Fusumity.Editor.Assistance
 			if (targetObject is Component component)
 			{
 				// We are on GameObject
-				var isPrefab = PrefabUtility.IsPartOfPrefabAsset(targetObject);
+				var prefabStage = PrefabStageUtility.GetPrefabStage(component.transform.root.gameObject);
+				// prefabStage is `null` if we are in the Scene
+				var isPrefab = prefabStage != null;
 
 				if (isPrefab)
 				{
-					targetObject = component.transform.root.gameObject;
-					assetPath = AssetDatabase.GetAssetPath(targetObject);
+					assetPath = prefabStage.assetPath;
 				}
 				else
 				{
@@ -62,22 +70,21 @@ namespace Fusumity.Editor.Assistance
 					isValid = !Application.isPlaying && !PrefabUtility.IsPartOfPrefabInstance(targetObject);
 				}
 
-				componentLocalId = component.GetComponentLocalId();
+				component.GetUnityObjectSourceId(out var prefabInstanceId, out var componentLocalId);
+				result.prefabInstanceId = prefabInstanceId;
+				result.objectLocalId = componentLocalId;
 			}
 			else
 			{
 				assetPath = AssetDatabase.GetAssetPath(targetObject);
+				result.objectLocalId = targetObject.GetUnityObjectLocalId();
 			}
 
-			return new FieldPath
-			{
-				assetGuid = AssetDatabase.AssetPathToGUID(assetPath),
-				propertyPath = propertyPath,
-				componentLocalId = componentLocalId,
-			};
+			result.assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+			return result;
 		}
 
-		private static List<Component> _components = new ();
+		private static List<Component> _componentsBuffer = new ();
 
 		public bool TryFindProperty(out SerializedProperty property)
 		{
@@ -91,7 +98,7 @@ namespace Fusumity.Editor.Assistance
 			if (string.IsNullOrEmpty(path))
 				return false;
 
-			var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+			var asset = AssetDatabase.LoadAssetAtPath<Object>(path);
 			if (asset is SceneAsset)
 			{
 				Scene scene;
@@ -146,7 +153,7 @@ namespace Fusumity.Editor.Assistance
 			}
 			else if (asset is ScriptableObject)
 			{
-				property = CheckObject(asset);
+				property = CheckPropertyPath(asset);
 				return property != null;
 			}
 
@@ -158,20 +165,20 @@ namespace Fusumity.Editor.Assistance
 			hasLocalId = false;
 			property = null;
 
-			root.GetComponentsInChildren(_components);
-			foreach (var component in _components)
+			root.GetComponentsInChildren(_componentsBuffer);
+			foreach (var component in _componentsBuffer)
 			{
-				var localId = component.GetComponentLocalId();
-				if (localId != componentLocalId)
+				component.GetUnityObjectSourceId(out var otherPrefabInstanceId, out var otherComponentLocalId);
+				if (prefabInstanceId != otherPrefabInstanceId && objectLocalId != otherComponentLocalId)
 					continue;
 
 				hasLocalId = true;
-				property = CheckObject(component);
+				property = CheckPropertyPath(component);
 				return;
 			}
 		}
 
-		private SerializedProperty CheckObject(UnityEngine.Object target)
+		private SerializedProperty CheckPropertyPath(Object target)
 		{
 			var serializedComponent = new SerializedObject(target);
 			return serializedComponent.FindProperty(propertyPath);
@@ -180,13 +187,19 @@ namespace Fusumity.Editor.Assistance
 		public static bool operator ==(FieldPath a, FieldPath b)
 		{
 			return a.propertyPath == b.propertyPath &&
-			       a.componentLocalId == b.componentLocalId &&
-			       a.assetGuid == b.assetGuid;
+					a.prefabInstanceId == b.prefabInstanceId &&
+					a.objectLocalId == b.objectLocalId &&
+					a.assetGuid == b.assetGuid;
 		}
 
 		public static bool operator !=(FieldPath a, FieldPath b)
 		{
 			return !(a == b);
+		}
+
+		public override string ToString()
+		{
+			return $"[{nameof(FieldPath)}: {nameof(assetGuid)}={assetGuid}, {nameof(prefabInstanceId)}={prefabInstanceId}, {nameof(objectLocalId)}={objectLocalId}, {nameof(propertyPath)}={propertyPath}]";
 		}
 	}
 }

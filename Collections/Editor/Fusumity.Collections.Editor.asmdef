@@ -2,7 +2,8 @@
     "name": "Fusumity.Collections.Editor",
     "rootNamespace": "",
     "references": [
-        "Fusumity"
+        "Fusumity",
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"
