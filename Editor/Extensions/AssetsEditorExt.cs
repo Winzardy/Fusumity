@@ -131,6 +131,24 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
+		public static List<T> GetAssetsOfType<T>(out string[] guids, string[] searchInFolders = null, HashSet<T> exclude = null) where T: Object
+		{
+			guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders);
+			var assets = new List<T>(guids.Length);
+
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				if (exclude != null && exclude.Contains(asset))
+					continue;
+
+				assets.Add(asset);
+			}
+
+			return assets;
+		}
+
 		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, string[] searchInFolders = null)
 		{
 			var gameObjectType = typeof(GameObject);

@@ -16,7 +16,7 @@ namespace Fusumity.Editor.Assistance
 			public int dummy2LineIndex;
 		}
 
-		public static void SearchGuidPathsInFile(string[] lines, List<GuidPath> buffer)
+		public static void SearchGuidPathsInFile(string assetGuid, string[] lines, List<GuidPath> buffer)
 		{
 			buffer.Clear();
 			var processor = new BlockProcessor();
@@ -29,7 +29,10 @@ namespace Fusumity.Editor.Assistance
 					text = lines[i],
 				};
 				if (processor.TryGetGuidPath(textLine, out var guidPath))
+				{
+					guidPath.path.assetGuid = assetGuid;
 					buffer.Add(guidPath);
+				}
 			}
 		}
 
