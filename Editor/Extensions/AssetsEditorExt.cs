@@ -69,6 +69,19 @@ namespace Fusumity.Editor.Extensions
 			return folderPath;
 		}
 
+		public static string GetPathOfAssetType<T>(string[] searchInFolders = null) where T : Object
+		{
+			var guid = GetGuidOfAssetType<T>(searchInFolders);
+			var databasePath = AssetDatabase.GUIDToAssetPath(guid);
+			return databasePath;
+		}
+
+		public static string GetGuidOfAssetType<T>(string[] searchInFolders = null) where T : Object
+		{
+			var guid = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders)[0];
+			return guid;
+		}
+
 		public static string[] GetGuidsOfAssetType<T>(string[] searchInFolders = null) where T : Object
 		{
 			var guids = AssetDatabase.FindAssets($"t: {typeof(T).Name}", searchInFolders);
