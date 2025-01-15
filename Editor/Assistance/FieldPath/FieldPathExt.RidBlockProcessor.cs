@@ -229,6 +229,7 @@ namespace Fusumity.Editor.Assistance
 							result.Add(currentRidKey, currentRidBlock);
 					}
 
+					ridIndentCount = -1;
 					// Проверяем на начало Rid блока
 					var ridMatch = _ridRegex.Match(line.Text);
 					if (ridMatch.Success)
@@ -249,8 +250,6 @@ namespace Fusumity.Editor.Assistance
 						ridIndentCount = indentCount;
 						continue;
 					}
-					else
-						ridIndentCount = -1;
 
 					// Если блок RefIds закончился, то пропускаем всё до следующего main блока
 					if (refIdsIndentCount >= indentCount)
