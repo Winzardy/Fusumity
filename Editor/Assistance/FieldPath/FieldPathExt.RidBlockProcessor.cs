@@ -116,7 +116,9 @@ namespace Fusumity.Editor.Assistance
 						rid = rid,
 					};
 
-					if (ridBlocks.TryGetValue(ridKey, out var ridBlock))
+					// Обрабатываем только 1ю ссылку на Rid блок
+					// Если существует больше 1й ссылки - остальные игнорируем
+					if (ridBlocks.Remove(ridKey, out var ridBlock))
 					{
 						// Формат Rid блока:
 						// - rid: 303242092361811255
