@@ -219,9 +219,13 @@ namespace Fusumity.Editor.Assistance
 
 					if (ridIndentCount != -1)
 					{
+						var isLastLine = i == lines.Length - 1;
 						// Если Rid блок обрабатывается, то пропускаем строки
-						if (ridIndentCount < indentCount)
+						if (!isLastLine && ridIndentCount < indentCount)
 							continue;
+
+						if (isLastLine)
+							i = lines.Length;
 
 						// Если блок Rid закончился, то сохраняем его
 						// Убираем "data:"
