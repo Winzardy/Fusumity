@@ -19,6 +19,7 @@ namespace Fusumity.Editor.Assistance
 		public string AssetName => target == null ? NoAssetString : target.name;
 		public int AssetId => target == null ? 0 : target.GetInstanceID();
 		public string oldGuid;
+		public readonly Type propertyType;
 		public readonly Type targetType;
 
 		public readonly bool isComponent;
@@ -28,10 +29,11 @@ namespace Fusumity.Editor.Assistance
 
 		private Texture _caretTexture;
 
-		public AssetSelectorDrawData(Object target, GUIContent label, Type targetType, Action<Object> onSelected)
+		public AssetSelectorDrawData(Object target, GUIContent label, Type propertyType, Type targetType, Action<Object> onSelected)
 		{
 			this._onSelected = onSelected;
 			this.target = target;
+			this.propertyType = propertyType;
 			this.targetType = targetType;
 			isComponent = typeof(Component).IsAssignableFrom(targetType);
 			_label = label;
@@ -332,8 +334,8 @@ namespace Fusumity.Editor.Assistance
 
 				root.AddChild(new AssetTreeViewItem(0, 0, _drawer.NoAssetString, string.Empty));
 				var allAssets = _drawer.isComponent ?
-					AssetsEditorExt.GetAssetsOfComponentTypeWithPath(_drawer.targetType) :
-					AssetsEditorExt.GetAssetsOfTypeWithPath(_drawer.targetType);
+					AssetsEditorExt.GetAssetsOfComponentTypeWithPath(_drawer.propertyType, _drawer.targetType) :
+					AssetsEditorExt.GetAssetsOfTypeWithPath(_drawer.propertyType, _drawer.targetType);
 
 				foreach (var (entry, path) in allAssets)
 				{

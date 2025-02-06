@@ -18,8 +18,9 @@ namespace Fusumity.Editor.Drawers
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var targetType = Attribute.type ?? Property.ValueEntry.TypeOfValue;
-			((Object)Property.ValueEntry.WeakSmartValue).DrawAssetSelector(label, targetType, OnSelected);
+			var propertyType = Property.ValueEntry.TypeOfValue;
+			var targetType = Attribute.type ?? propertyType;
+			((Object)Property.ValueEntry.WeakSmartValue).DrawAssetSelector(label, propertyType, targetType, OnSelected);
 		}
 
 		private void OnSelected(Object target)

@@ -316,16 +316,16 @@ namespace Fusumity.Editor.Extensions
 			new TypeSelectorDrawData(property, label, targetType, currentType, onSelected, insertNull).Draw(position);
 		}
 
-		public static void DrawAssetSelector(this UnityEngine.Object target, Rect position, GUIContent label, Type type, Action<UnityEngine.Object> onSelected)
+		public static void DrawAssetSelector(this UnityEngine.Object target, Rect position, GUIContent label, Type propertyType, Type targetType, Action<UnityEngine.Object> onSelected)
 		{
-			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
+			new AssetSelectorDrawData(target, label, propertyType, targetType, onSelected).Draw(position);
 		}
 
-		public static void DrawAssetSelector(this UnityEngine.Object target, GUIContent label, Type type, Action<UnityEngine.Object> onSelected)
+		public static void DrawAssetSelector(this UnityEngine.Object target, GUIContent label, Type propertyType, Type targetType, Action<UnityEngine.Object> onSelected)
 		{
-			var height = EditorGUIUtility.HasObjectThumbnail(type) ? 64f : 18f;
+			var height = EditorGUIUtility.HasObjectThumbnail(propertyType) ? 64f : 18f;
 			var position = EditorGUILayout.GetControlRect(true, height);
-			new AssetSelectorDrawData(target, label, type, onSelected).Draw(position);
+			new AssetSelectorDrawData(target, label, propertyType, targetType, onSelected).Draw(position);
 		}
 
 		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)

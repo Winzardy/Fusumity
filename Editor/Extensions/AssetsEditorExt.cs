@@ -149,6 +149,34 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type propertyType, Type targetType, string[] searchInFolders = null)
+		{
+			if (propertyType == targetType)
+				return GetAssetsOfTypeWithPath(propertyType, searchInFolders);
+
+			if (propertyType.IsAssignableFrom(targetType))
+				(targetType, propertyType) = (propertyType, targetType);
+
+			var gameObjectType = typeof(GameObject);
+
+			var guids = AssetDatabase.FindAssets($"t: {gameObjectType.Name}", searchInFolders);
+			var assets = new List<(Object asset, string path)>(guids.Length);
+
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+				var component = asset?.GetComponent(propertyType);
+				if (component == null || !targetType.IsAssignableFrom(component.GetType()))
+					continue;
+
+				assets.Add((asset, path));
+			}
+
+			return assets;
+		}
+
 		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, string[] searchInFolders = null)
 		{
 			var gameObjectType = typeof(GameObject);
@@ -170,8 +198,32 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
+		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type propertyType, Type targetType, string[] searchInFolders = null)
+		{
+			if (propertyType == targetType)
+				return GetAssetsOfTypeWithPath(propertyType, searchInFolders);
+
+			if (propertyType.IsAssignableFrom(targetType))
+				(targetType, propertyType) = (propertyType, targetType);
+
+			var guids = AssetDatabase.FindAssets($"t: {propertyType.Name}", searchInFolders);
+			var assets = new List<(Object asset, string path)>(guids.Length);
+
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				var asset = AssetDatabase.LoadAssetAtPath(path, propertyType);
+
+				if (targetType.IsAssignableFrom(asset.GetType()))
+					assets.Add((asset, path));
+			}
+
+			return assets;
+		}
+
 		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type, string[] searchInFolders = null)
 		{
+			var isInterface = type.IsInterface;
 			var guids = AssetDatabase.FindAssets($"t: {type.Name}", searchInFolders);
 			var assets = new List<(Object asset, string path)>(guids.Length);
 
