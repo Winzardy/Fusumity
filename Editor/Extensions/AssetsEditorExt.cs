@@ -152,7 +152,7 @@ namespace Fusumity.Editor.Extensions
 		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type propertyType, Type targetType, string[] searchInFolders = null)
 		{
 			if (propertyType == targetType)
-				return GetAssetsOfTypeWithPath(propertyType, searchInFolders);
+				return GetAssetsOfComponentTypeWithPath(propertyType, searchInFolders);
 
 			if (propertyType.IsAssignableFrom(targetType))
 				(targetType, propertyType) = (propertyType, targetType);
@@ -223,7 +223,6 @@ namespace Fusumity.Editor.Extensions
 
 		public static List<(Object asset, string path)> GetAssetsOfTypeWithPath(Type type, string[] searchInFolders = null)
 		{
-			var isInterface = type.IsInterface;
 			var guids = AssetDatabase.FindAssets($"t: {type.Name}", searchInFolders);
 			var assets = new List<(Object asset, string path)>(guids.Length);
 
