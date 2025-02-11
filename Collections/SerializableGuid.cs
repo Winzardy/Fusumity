@@ -17,6 +17,7 @@ namespace Fusumity.Collections
 		public long dummy2;
 
 		[FieldOffset(0)]
+		[NonSerialized]
 		public Guid guid;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
