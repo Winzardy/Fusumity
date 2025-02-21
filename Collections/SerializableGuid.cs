@@ -79,9 +79,9 @@ namespace Fusumity.Collections
 		public static bool operator !=(Guid a, SerializableGuid b) => !(b == a);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(SerializableGuid a, SerializableGuid b) => a.guid == b.guid;
+		public static bool operator ==(SerializableGuid a, SerializableGuid b) => a.dummy1 == b.dummy1 && a.dummy2 == b.dummy2;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(SerializableGuid a, SerializableGuid b) => a.guid != b.guid;
+		public static bool operator !=(SerializableGuid a, SerializableGuid b) => !(a == b);
 
 		public bool Equals(SerializableGuid other)
 		{
