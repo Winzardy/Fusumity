@@ -149,7 +149,7 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
-		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type propertyType, Type targetType, string[] searchInFolders = null)
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type propertyType, Type targetType, params string[] searchInFolders)
 		{
 			if (propertyType == targetType)
 				return GetAssetsOfComponentTypeWithPath(propertyType, searchInFolders);
@@ -177,7 +177,7 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
-		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, string[] searchInFolders = null)
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, params string[] searchInFolders)
 		{
 			var gameObjectType = typeof(GameObject);
 

@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,6 +13,12 @@ namespace Fusumity.Editor.Extensions
 		{
 			CopyValue(source, out var boxedSource);
 			PasteValue(ref target, boxedSource);
+		}
+
+		public static void CopyPasteValueAs<T, T1>(this T source, ref T1 result)
+		{
+			var clone = UnsafeUtility.As<T, T1>(ref source);
+			clone.CopyPasteValue(ref result);
 		}
 
 		public static void CopyValue(this SerializedProperty target)
@@ -32,7 +39,8 @@ namespace Fusumity.Editor.Extensions
 				return;
 			}
 
-			source = Activator.CreateInstance(value.GetType());
+			source = CreateInstance(value.GetType());
+
 			EditorUtility.CopySerializedManagedFieldsOnly(value, source);
 		}
 
@@ -48,7 +56,8 @@ namespace Fusumity.Editor.Extensions
 				target.boxedValue = null;
 				return;
 			}
-			var value = Activator.CreateInstance(source.GetType());
+			var value = CreateInstance(source.GetType());
+
 			EditorUtility.CopySerializedManagedFieldsOnly(source, value);
 			try
 			{
@@ -67,7 +76,7 @@ namespace Fusumity.Editor.Extensions
 				value = default;
 				return;
 			}
-			value = Activator.CreateInstance<T>();
+			value = CreateInstance<T>();
 			try
 			{
 				EditorUtility.CopySerializedManagedFieldsOnly(source, value);
@@ -76,6 +85,23 @@ namespace Fusumity.Editor.Extensions
 			{
 				Debug.LogWarning("Type is mismatched");
 			}
+		}
+
+		private static T CreateInstance<T>()
+		{
+			var valueType = typeof(T);
+			if (valueType.IsArray)
+				return (T)(object)Array.CreateInstance(valueType.GetElementType()!, 0);
+			else
+				return Activator.CreateInstance<T>();
+		}
+
+		private static object CreateInstance(Type valueType)
+		{
+			if (valueType.IsArray)
+				return Array.CreateInstance(valueType.GetElementType()!, 0);
+			else
+				return Activator.CreateInstance(valueType);
 		}
 	}
 }
