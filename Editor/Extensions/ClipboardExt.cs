@@ -10,12 +10,15 @@ namespace Fusumity.Editor.Extensions
 		private static object _source;
 
 		public static void CopyPasteValue<T>(this T source, ref T target)
+			where T: class
 		{
 			CopyValue(source, out var boxedSource);
 			PasteValue(ref target, boxedSource);
 		}
 
 		public static void CopyPasteValueAs<T, T1>(this T source, ref T1 result)
+			where T: class
+			where T1: class
 		{
 			var clone = UnsafeUtility.As<T, T1>(ref source);
 			clone.CopyPasteValue(ref result);
@@ -70,10 +73,11 @@ namespace Fusumity.Editor.Extensions
 		}
 
 		public static void PasteValue<T>(ref T value, object source)
+			where T: class
 		{
 			if (source == null)
 			{
-				value = default;
+				value = null;
 				return;
 			}
 			value = CreateInstance<T>();
