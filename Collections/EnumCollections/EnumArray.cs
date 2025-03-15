@@ -106,7 +106,7 @@ namespace Fusumity.Collections
 		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		[SerializeField]
-		protected TEnumValue[] values;
+		public TEnumValue[] values;
 
 		public ref TEnumValue this[int index]
 		{

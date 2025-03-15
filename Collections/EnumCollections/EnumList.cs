@@ -22,7 +22,7 @@ namespace Fusumity.Collections
 		where TEnumValue : struct, IEnumValue<TEnum>
 	{
 		[SerializeField, HideLabel, InlineProperty]
-		protected TEnumValue[] elements = new TEnumValue[0];
+		public TEnumValue[] elements = new TEnumValue[0];
 
 		public int Count
 		{

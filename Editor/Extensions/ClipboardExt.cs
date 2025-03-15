@@ -16,14 +16,6 @@ namespace Fusumity.Editor.Extensions
 			PasteValue(ref target, boxedSource);
 		}
 
-		public static void CopyPasteValueAs<T, T1>(this T source, ref T1 result)
-			where T: class
-			where T1: class
-		{
-			var clone = UnsafeUtility.As<T, T1>(ref source);
-			clone.CopyPasteValue(ref result);
-		}
-
 		public static void CopyValue(this SerializedProperty target)
 		{
 			target.CopyValue(out _source);
