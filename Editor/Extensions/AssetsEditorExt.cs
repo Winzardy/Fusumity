@@ -104,6 +104,9 @@ namespace Fusumity.Editor.Extensions
 			{
 				var path = AssetDatabase.GUIDToAssetPath(guid);
 				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+
+				if (asset == null)
+					continue;
 				if (exclude != null && exclude.Contains(asset))
 					continue;
 
