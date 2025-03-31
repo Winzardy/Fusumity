@@ -8,7 +8,7 @@ namespace Fusumity.Editor.Assistance
 	{
 		private struct RidKey : IEquatable<RidKey>
 		{
-			public ulong blockId;
+			public long blockId;
 			public long rid;
 
 			public bool Equals(RidKey other)
@@ -53,7 +53,7 @@ namespace Fusumity.Editor.Assistance
 			private int _referencesIndent;
 			private List<(int currentIndex, int additionalIndent, RidBlock ridBlock)> _currentRidBlocks;
 
-			public bool TryParseLine(ulong blockId, ref Line line, Dictionary<RidKey, RidBlock> ridBlocks,
+			public bool TryParseLine(long blockId, ref Line line, Dictionary<RidKey, RidBlock> ridBlocks,
 				out bool repeat, out int indentCount, out bool skipHeader)
 			{
 				repeat = false;

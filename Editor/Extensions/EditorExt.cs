@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using Fusumity.Editor.Assistance;
 using UnityEditor;
@@ -38,7 +37,7 @@ namespace Fusumity.Editor.Extensions
 			serializedObject.ApplyModifiedProperties();
 		}
 
-		public static void GetUnityObjectSourceId(this Object unityObject, out ulong prefabInstanceId, out ulong unityObjectLocalId)
+		public static void GetUnityObjectSourceId(this Object unityObject, out long prefabInstanceId, out long unityObjectLocalId)
 		{
 			prefabInstanceId = 0;
 			unityObjectLocalId = 0;
@@ -58,10 +57,10 @@ namespace Fusumity.Editor.Extensions
 			prefabInstanceId = handle.GetUnityObjectLocalId();
 		}
 
-		public static ulong GetUnityObjectLocalId(this Object unityObject)
+		public static long GetUnityObjectLocalId(this Object unityObject)
 		{
 			ObjectIdentifier.TryGetObjectIdentifier(unityObject, out var objectIdentifier);
-			var id = (ulong)objectIdentifier.localIdentifierInFile;
+			var id = objectIdentifier.localIdentifierInFile;
 			if (id != 0)
 				return id;
 
@@ -69,13 +68,13 @@ namespace Fusumity.Editor.Extensions
 			// (And even after the saving the `localIdentifierInFile` often doesn't exist)
 			// `GlobalObjectId.GetGlobalObjectIdSlow` method forces to set the ObjectIdentifier to the scene Object
 			// And the `targetObjectId` is equal to the `localIdentifierInFile`
-			id = GlobalObjectId.GetGlobalObjectIdSlow(unityObject).targetObjectId;
+			id = (long)GlobalObjectId.GetGlobalObjectIdSlow(unityObject).targetObjectId;
 			if (id != 0)
 				return id;
 
 			// Trying to get Id again (Can be used in Prefab case)
 			ObjectIdentifier.TryGetObjectIdentifier(unityObject, out objectIdentifier);
-			id = (ulong)objectIdentifier.localIdentifierInFile;
+			id = objectIdentifier.localIdentifierInFile;
 
 			return id;
 		}

@@ -17,7 +17,7 @@ namespace Fusumity.Editor.Assistance
 			public BlockType blockType;
 
 			private int _blockHeaderId;
-			private ulong _blockId;
+			private long _blockId;
 
 			private const string _blockHeaderIdGroup = "headerId";
 			private const string _blockIdGroup = "id";
@@ -27,7 +27,7 @@ namespace Fusumity.Editor.Assistance
 			private PrefabProcessor _prefabProcessor;
 			private RidBlockProcessor _ridBlockProcessor;
 
-			public bool TryParseHeader(Line line, out ulong blockId)
+			public bool TryParseHeader(Line line, out long blockId)
 			{
 				blockId = 0;
 				var match = _headerRegex.Match(line.Text);
@@ -35,7 +35,7 @@ namespace Fusumity.Editor.Assistance
 					return false;
 
 				_blockHeaderId = int.Parse(match.Groups[_blockHeaderIdGroup].Value);
-				_blockId = ulong.Parse(match.Groups[_blockIdGroup].Value);
+				_blockId = long.Parse(match.Groups[_blockIdGroup].Value);
 
 				if (_blockHeaderId == MonoBehaviourProcessor.headerId)
 				{

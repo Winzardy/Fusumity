@@ -136,7 +136,7 @@ namespace Fusumity.Editor.Assistance
 						_guidPath.dummy2LineIndex = line.lineIndex;
 						_modificationType = ModificationType.Skip;
 
-						_guidPath.path.objectLocalId = ulong.Parse(_targetFileId);
+						_guidPath.path.objectLocalId = long.Parse(_targetFileId);
 						_guidPath.path.propertyPath = _propertyPath.Replace(_arrayStart, _arrayElementPrefix).Replace(_arrayEnd, string.Empty);
 
 						guidPath = _guidPath;

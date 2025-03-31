@@ -17,9 +17,9 @@ namespace Fusumity.Editor.Assistance
 		public string assetGuid;
 
 		// Optional. Only for Prefab or Scene asset
-		public ulong prefabInstanceId;
+		public long prefabInstanceId;
 		// Optional. Only for Prefab or Scene asset
-		public ulong objectLocalId;
+		public long objectLocalId;
 
 		public string propertyPath;
 

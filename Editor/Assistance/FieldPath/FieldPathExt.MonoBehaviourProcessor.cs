@@ -28,7 +28,7 @@ namespace Fusumity.Editor.Assistance
 
 			private RidBlockProcessor _ridBlockProcessor;
 
-			public bool TryGetGuidPath(ulong blockId, Line line, Dictionary<RidKey, RidBlock> ridBlocks, out GuidPath guidPath, out bool repeat)
+			public bool TryGetGuidPath(long blockId, Line line, Dictionary<RidKey, RidBlock> ridBlocks, out GuidPath guidPath, out bool repeat)
 			{
 				var result = false;
 				guidPath = default;
