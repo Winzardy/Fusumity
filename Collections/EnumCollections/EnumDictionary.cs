@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections.Ext;
 using Sapientia.Extensions;
 
 namespace Fusumity.Collections
