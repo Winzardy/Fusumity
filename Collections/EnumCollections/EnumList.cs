@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections.Ext;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
