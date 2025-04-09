@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Fusumity.Editor.Extensions;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using SearchField = UnityEditor.IMGUI.Controls.SearchField;
 
 namespace Fusumity.Editor.Assistance
 {
@@ -91,14 +93,17 @@ namespace Fusumity.Editor.Assistance
 
 		private void DrawControl(string guid)
 		{
-			const float pickerWidth = 15f;
+			const float pickerWidth = 19.95f;
 			var pickerRect = _position;
-			pickerRect.x = pickerRect.xMax - pickerWidth * 1.33f;
+			pickerRect.x = pickerRect.xMax - pickerWidth;
 			pickerRect.width = pickerWidth;
 
-			var isPickerPressed = Event.current.type == EventType.MouseDown && Event.current.button == 0 && pickerRect.Contains(Event.current.mousePosition);
-
 			DrawCaret(pickerRect);
+
+			// In new Unity Event.current.type == EventType.MouseDown doesn't work
+			// Use Event.current.type == EventType.Used
+			var isTypeOk = Event.current.type == EventType.MouseDown || Event.current.type == EventType.Used;
+			var isPickerPressed = isTypeOk && pickerRect.Contains(Event.current.mousePosition);
 
 			if (isPickerPressed)
 			{
@@ -331,6 +336,7 @@ namespace Fusumity.Editor.Assistance
 			protected override TreeViewItem BuildRoot()
 			{
 				var root = new TreeViewItem(-1, -1);
+
 
 				root.AddChild(new AssetTreeViewItem(0, 0, _drawer.NoAssetString, string.Empty));
 				var allAssets = _drawer.isComponent ?
