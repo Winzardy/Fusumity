@@ -1,11 +1,13 @@
-using UnityEngine;
+using Fusumity.Editor.UserSettingsExtensions;
 
 namespace Fusumity.Editor.Assistance
 {
 	public static class InspectorDebug
 	{
-		public const string INSPECTOR_DEBUG_KEY = "InspectorDebug";
+		private const string INSPECTOR_DEBUG_KEY = "InspectorDebug";
 		private const string INSPECTOR_DEBUG_MENU_PATH = "Debug/Inspector Debug";
+
+		private static readonly EditorUserSettingsBoolValue _inspectorDebug = new(INSPECTOR_DEBUG_KEY, false);
 
 		[UnityEditor.MenuItem(INSPECTOR_DEBUG_MENU_PATH, validate = true)]
 		private static bool ValidateInspectorDebug()
@@ -17,13 +19,12 @@ namespace Fusumity.Editor.Assistance
 		[UnityEditor.MenuItem(INSPECTOR_DEBUG_MENU_PATH)]
 		private static void SwitchInspectorDebug()
 		{
-			PlayerPrefs.SetInt(INSPECTOR_DEBUG_KEY, IsEnabled() ? 0 : 1);
-			PlayerPrefs.Save();
+			_inspectorDebug.Value = !_inspectorDebug.Value;
 		}
 
 		public static bool IsEnabled()
 		{
-			return PlayerPrefs.GetInt(INSPECTOR_DEBUG_KEY, 0) == 1;
+			return _inspectorDebug.Value;
 		}
 	}
 }
