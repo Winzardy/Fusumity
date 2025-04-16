@@ -111,7 +111,7 @@ namespace Fusumity.Editor.Assistance
 			}
 			else
 			{
-				var newTarget = EditorGUI.ObjectField(_position, _label, target, targetType, true);
+				var newTarget = _label == null ? EditorGUI.ObjectField(_position, target, targetType, true) : EditorGUI.ObjectField(_position, _label, target, targetType, true);
 				if (newTarget != target)
 				{
 					var newGuid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(newTarget));
