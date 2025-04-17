@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Fusumity.Editor.Assistance
 {
@@ -107,7 +107,7 @@ namespace Fusumity.Editor.Assistance
 					var dummy2PathMatch = _propertyPathDummy2Regex.Match(line.Text);
 					if (dummy2PathMatch.Success)
 					{
-						System.Diagnostics.Debug.Assert(_propertyPath == dummy1PathMatch.Groups[_propertyPathGroup].Value);
+						Debug.Assert(_propertyPath == dummy1PathMatch.Groups[_propertyPathGroup].Value);
 						_modificationType = ModificationType.Dummy2;
 						return false;
 					}
