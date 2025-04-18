@@ -232,7 +232,9 @@ namespace Fusumity.Editor.Assistance
 						currentRidBlock.dataLineIndex += 1;
 						currentRidBlock.length = i - currentRidBlock.dataLineIndex;
 						if (currentRidBlock.length > 0)
-							result.Add(currentRidKey, currentRidBlock);
+						{
+							result.TryAdd(currentRidKey, currentRidBlock);
+						}
 					}
 
 					ridIndentCount = -1;
