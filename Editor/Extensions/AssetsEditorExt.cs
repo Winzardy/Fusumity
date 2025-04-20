@@ -172,6 +172,11 @@ namespace Fusumity.Editor.Extensions
 			return assets;
 		}
 
+		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath<T>(params string[] searchInFolders) where T: Component
+		{
+			return GetAssetsOfComponentTypeWithPath(typeof(T), searchInFolders);
+		}
+
 		public static List<(Object asset, string path)> GetAssetsOfComponentTypeWithPath(Type type, params string[] searchInFolders)
 		{
 			var gameObjectType = typeof(GameObject);
