@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
-using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -17,7 +17,7 @@ namespace Fusumity.Collections
 	public class EnumList<TEnum, TValue, TEnumValue>
 		: ISerializationCallbackReceiver
 #if UNITY_EDITOR
-		,IArrayContainer
+			, IArrayContainer
 #endif
 		where TEnum : unmanaged, Enum
 		where TEnumValue : struct, IEnumValue<TEnum>
@@ -68,5 +68,15 @@ namespace Fusumity.Collections
 			}
 		}
 #endif
+	}
+
+	public static class EnumListExtensions
+	{
+		public static IEnumerable<TEnum> ToEnums<TEnum, TData>(this EnumList<TEnum, TData> enumList)
+			where TEnum : unmanaged, Enum
+		{
+			for (int i = 0; i < enumList.Count; i++)
+				yield return enumList[i].enumValue;
+		}
 	}
 }

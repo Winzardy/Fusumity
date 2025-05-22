@@ -1,0 +1,19 @@
+{
+  "name": "Fusumity.Utility.Camera.Editor",
+  "rootNamespace": "",
+  "references": [
+    "Fusumity.Utility.Camera",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

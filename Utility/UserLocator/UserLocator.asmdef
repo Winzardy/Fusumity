@@ -1,0 +1,9 @@
+{
+  "name": "UserLocator",
+  "references": [
+    "UniTask",
+    "App.Data",
+    "Sapientia.Editor",
+    "Fusumity"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Fusumity.Utility.Camera",
+  "references": [
+    "Content.Attributes",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ]
+}

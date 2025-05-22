@@ -1,0 +1,23 @@
+{
+  "name": "Content.ScriptableObjects.Importer.Editor",
+  "rootNamespace": "",
+  "references": [
+    "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
+    "GUID:1386a2676ba04ebe8019875f4096a71c",
+    "GUID:76e3823b27f8afd439201973cc45e070",
+    "GUID:e4edc5bac6164599b9de4c8347ed6eca",
+    "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+    "UniTask"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

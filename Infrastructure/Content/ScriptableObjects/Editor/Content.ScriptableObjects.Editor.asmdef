@@ -1,0 +1,33 @@
+{
+    "name": "Content.ScriptableObjects.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Sapientia",
+        "Content",
+        "Content.Editor",
+        "Content.ScriptableObjects",
+        "Content.Management",
+        "AssetManagement.Addressables.Editor",
+        "Unity.Addressables.Editor",
+        "Unity.Addressables",
+        "Content.Attributes",
+        "UniTask",
+        "Content.ScriptableObjects.Configurer",
+        "Content.ScriptableObjects.Configuration",
+        "Sapientia.Editor",
+        "Generic",
+        "Fusumity.Editor",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

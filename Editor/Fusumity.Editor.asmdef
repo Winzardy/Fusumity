@@ -2,7 +2,11 @@
     "name": "Fusumity.Editor",
     "rootNamespace": "",
     "references": [
-        "Fusumity"
+        "Fusumity",
+        "Sapientia",
+        "Unity.Addressables",
+        "Content",
+        "Content.Attributes"
     ],
     "includePlatforms": [
         "Editor"
