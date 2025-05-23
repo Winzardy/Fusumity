@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
@@ -45,4 +44,3 @@ namespace Content.ScriptableObjects
 	{
 	}
 }
-#endif

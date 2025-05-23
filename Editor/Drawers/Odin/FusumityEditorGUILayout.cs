@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using Content;
 using Sapientia.Extensions;
@@ -260,4 +259,3 @@ namespace Fusumity.Editor
 		}
 	}
 }
-#endif

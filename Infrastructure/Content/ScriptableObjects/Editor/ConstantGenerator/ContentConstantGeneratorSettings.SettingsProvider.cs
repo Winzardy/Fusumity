@@ -27,7 +27,8 @@ namespace Content.Editor
 
 			void OnGUI(string _)
 			{
-				CreateOrUpdateEditor();
+				if(CreateOrUpdateEditor())
+					return;
 
 				SirenixEditorGUI.BeginIndentedVertical(style);
 				{
@@ -36,17 +37,25 @@ namespace Content.Editor
 				SirenixEditorGUI.EndIndentedVertical();
 			}
 
-			void CreateOrUpdateEditor()
+			// Возвращает true, если нельзя отрисовывать редактор
+			bool CreateOrUpdateEditor()
 			{
+				if (!Asset)
+					return true;
+
 				if (!_editor)
 				{
 					CreateEditor();
+					return true;
 				}
 				else if (_editor.target != Asset)
 				{
 					_editor.Destroy();
 					CreateEditor();
+					return true;
 				}
+
+				return false;
 			}
 
 			void CreateEditor() => _editor = (OdinEditor) OdinEditor.CreateEditor(Asset, typeof(OdinEditor));
@@ -62,7 +71,7 @@ namespace Content.Editor
 					var offset = _style.margin;
 					offset.top += 3;
 					offset.left += 10;
-					offset.right += 5;
+					offset.right += 3;
 					_style.margin = offset;
 				}
 

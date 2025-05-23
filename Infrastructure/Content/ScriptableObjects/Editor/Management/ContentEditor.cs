@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
@@ -94,4 +93,3 @@ namespace Content.Editor
 			=> ContentEditor.Edit(reference, editing);
 	}
 }
-#endif

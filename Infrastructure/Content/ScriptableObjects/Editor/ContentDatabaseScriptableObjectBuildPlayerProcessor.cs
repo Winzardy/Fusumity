@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using UnityEditor.Build;
 
 namespace Content.ScriptableObjects.Editor
@@ -11,4 +10,3 @@ namespace Content.ScriptableObjects.Editor
 			=> ContentDatabaseEditorUtility.SyncContent();
 	}
 }
-#endif

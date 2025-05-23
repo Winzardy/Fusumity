@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Reflection;
 
@@ -16,4 +15,3 @@ namespace Content.ScriptableObjects
 		public void ClearNestedCollection() => nested.Clear();
 	}
 }
-#endif

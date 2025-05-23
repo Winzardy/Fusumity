@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 namespace Content.ScriptableObjects
 {
 	public abstract partial class SingleContentEntryScriptableObject<T>
@@ -11,4 +10,3 @@ namespace Content.ScriptableObjects
 		}
 	}
 }
-#endif

@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Fusumity
 {
-	[Serializable]
 	[Constants]
+	[Serializable]
 	public struct CameraRenderEntry
 	{
 		public LayerMask cullingMask;

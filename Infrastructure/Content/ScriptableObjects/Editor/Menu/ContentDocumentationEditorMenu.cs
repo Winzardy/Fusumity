@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
@@ -13,4 +12,3 @@ namespace Content.ScriptableObjects.Editor
 		public static void OpenDocumentation() => Application.OpenURL(DOC_URL);
 	}
 }
-#endif

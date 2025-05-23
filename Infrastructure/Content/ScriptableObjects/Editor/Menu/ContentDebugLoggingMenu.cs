@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEditor;
 
@@ -77,4 +76,3 @@ namespace Content.ScriptableObjects.Editor
 		}
 	}
 }
-#endif

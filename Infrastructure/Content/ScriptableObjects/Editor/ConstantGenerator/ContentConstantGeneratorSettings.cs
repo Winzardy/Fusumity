@@ -1,9 +1,7 @@
-using Content.ScriptableObjects;
 using Fusumity;
 using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using UnityEditor;
-using UnityEngine;
 
 namespace Content.Editor
 {

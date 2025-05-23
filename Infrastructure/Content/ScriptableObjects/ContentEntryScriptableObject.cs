@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using System;
+﻿using System;
 using Sapientia;
 using Sapientia.Extensions;
 using UnityEngine;
@@ -128,4 +127,3 @@ namespace Content.ScriptableObjects
 	{
 	}
 }
-#endif

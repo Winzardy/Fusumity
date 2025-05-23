@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using Sapientia.Extensions;
 using UnityEditor;
@@ -72,4 +71,3 @@ namespace Content.ScriptableObjects.Editor
 		}
 	}
 }
-#endif

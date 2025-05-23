@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using System;
+﻿using System;
 
 namespace Content.ScriptableObjects
 {
@@ -17,4 +16,3 @@ namespace Content.ScriptableObjects
 		}
 	}
 }
-#endif

@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Sirenix.OdinInspector;
@@ -64,4 +63,3 @@ namespace Content.ScriptableObjects.Editor
 		}
 	}
 }
-#endif

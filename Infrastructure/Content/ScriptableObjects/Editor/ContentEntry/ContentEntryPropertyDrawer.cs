@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using Content.ScriptableObjects;
 using Sirenix.OdinInspector.Editor;
@@ -152,4 +151,3 @@ namespace Content.Editor
 		}
 	}
 }
-#endif

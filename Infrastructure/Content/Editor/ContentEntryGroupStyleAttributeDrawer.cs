@@ -7,10 +7,11 @@ using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
-using Clipboard = Sirenix.Utilities.Editor.Clipboard;
 
 namespace Content.Editor
 {
+	using Clipboard = Fusumity.Utility.Clipboard;
+
 	internal class ContentEntryGroupStyleAttributeDrawer : OdinAttributeDrawer<ContentEntryGroupStyleAttribute>
 	{
 		private static readonly string LABEL_GUID = "Guid";

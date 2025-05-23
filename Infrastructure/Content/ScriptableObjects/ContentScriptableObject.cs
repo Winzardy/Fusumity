@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
@@ -16,4 +15,3 @@ namespace Content.ScriptableObjects
 		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
 	}
 }
-#endif

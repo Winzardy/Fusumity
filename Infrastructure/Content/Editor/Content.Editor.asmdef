@@ -2,13 +2,12 @@
     "name": "Content.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
-        "GUID:a0100c03f96b4df0b1333cdbca10eeb9",
-        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
-        "GUID:17eb6086fb1b4f13b640ba906df3d2b7",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:72fc6620f02967440a0be6690a91e128",
-        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c"
+        "UniTask",
+        "Content",
+        "Content.Attributes",
+        "Sapientia",
+        "Fusumity",
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"

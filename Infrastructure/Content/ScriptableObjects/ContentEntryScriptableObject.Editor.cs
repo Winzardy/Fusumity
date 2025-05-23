@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Content.Editor;
 using Sapientia;
 using UnityEditor;
@@ -112,4 +111,3 @@ namespace Content.ScriptableObjects
 		public long TimeCreated { get; }
 	}
 }
-#endif

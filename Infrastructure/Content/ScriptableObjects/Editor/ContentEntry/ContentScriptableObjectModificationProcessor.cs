@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using Content.Editor;
 using UnityEditor;
 
@@ -24,4 +23,3 @@ namespace Content.ScriptableObjects.Editor
 		}
 	}
 }
-#endif

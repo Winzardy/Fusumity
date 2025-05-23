@@ -4,9 +4,8 @@
     "references": [
         "Fusumity",
         "Sapientia",
-        "Unity.Addressables",
         "Content",
-        "Content.Attributes"
+        "Unity.Addressables"
     ],
     "includePlatforms": [
         "Editor"

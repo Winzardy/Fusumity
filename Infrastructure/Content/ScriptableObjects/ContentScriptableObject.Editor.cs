@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace Content.ScriptableObjects
@@ -40,4 +39,3 @@ namespace Content.ScriptableObjects
 		}
 	}
 }
-#endif

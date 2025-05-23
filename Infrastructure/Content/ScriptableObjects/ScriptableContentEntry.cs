@@ -1,5 +1,4 @@
-﻿#if CLIENT
-using System;
+﻿using System;
 using Sapientia;
 using Sapientia.Extensions;
 
@@ -54,4 +53,3 @@ namespace Content.ScriptableObjects
 		public ContentScriptableObject ScriptableObject { get; }
 	}
 }
-#endif

@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using UnityEditor;
+﻿using UnityEditor;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -21,4 +20,3 @@ namespace Content.ScriptableObjects.Editor
 		}
 	}
 }
-#endif

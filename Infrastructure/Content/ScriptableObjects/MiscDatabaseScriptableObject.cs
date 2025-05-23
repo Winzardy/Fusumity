@@ -1,4 +1,3 @@
-#if CLIENT
 namespace Content.ScriptableObjects
 {
 	/// <summary>
@@ -8,4 +7,3 @@ namespace Content.ScriptableObjects
 	{
 	}
 }
-#endif
