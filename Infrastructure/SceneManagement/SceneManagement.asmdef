@@ -1,4 +1,16 @@
 {
-  "name": "SceneManagement",
-  "references":[ "GUID:bd10b8cc39d09ac4e9c31728752096c0" ]
+    "name": "SceneManagement",
+    "rootNamespace": "",
+    "references": [
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

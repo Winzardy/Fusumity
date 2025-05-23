@@ -1,0 +1,22 @@
+{
+    "name": "InAppPurchasing.Unity.Editor",
+    "rootNamespace": "",
+    "references": [
+        "InAppPurchasing.Unity",
+        "Generic",
+        "Fusumity",
+        "InAppPurchasing",
+        "GUID:17eb6086fb1b4f13b640ba906df3d2b7"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

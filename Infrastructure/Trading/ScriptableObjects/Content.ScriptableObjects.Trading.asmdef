@@ -1,0 +1,20 @@
+{
+    "name": "Content.ScriptableObjects.Trading",
+    "rootNamespace": "Content.ScriptableObjects.Trading",
+    "references": [
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
+        "Trading",
+        "Content",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,19 @@
+{
+    "name": "Localization",
+    "rootNamespace": "",
+    "references": [
+        "I2Loc",
+        "Sapientia",
+        "UniTask",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

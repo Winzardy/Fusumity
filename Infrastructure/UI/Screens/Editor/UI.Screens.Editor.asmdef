@@ -1,0 +1,22 @@
+{
+    "name": "UI.Screens.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "UI.Screens",
+        "UI.Editor",
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

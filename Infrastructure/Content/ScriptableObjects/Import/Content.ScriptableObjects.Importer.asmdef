@@ -2,12 +2,12 @@
     "name": "Content.ScriptableObjects.Importer",
     "rootNamespace": "",
     "references": [
-        "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
+        "Content",
         "GUID:370ed20472484151a20120c2a4896416",
-        "GUID:1386a2676ba04ebe8019875f4096a71c",
-        "GUID:0d45af6c6efa465a88906899e8374441",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:bd10b8cc39d09ac4e9c31728752096c0"
+        "Content.ScriptableObjects",
+        "AssetManagement",
+        "UniTask",
+        "Sapientia"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

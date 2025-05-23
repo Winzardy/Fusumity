@@ -1,0 +1,19 @@
+{
+    "name": "Content.ScriptableObjects.Analytics",
+    "rootNamespace": "",
+    "references": [
+        "Content.ScriptableObjects",
+        "Analytics",
+        "Content.ScriptableObjects.Editor",
+        "Content"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

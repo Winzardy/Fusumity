@@ -1,0 +1,21 @@
+{
+    "name": "Audio.ScriptableObjects",
+    "rootNamespace": "",
+    "references": [
+        "Audio",
+        "Content",
+        "Content.ScriptableObjects",
+        "Generic",
+        "Content.ScriptableObjects.Editor",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

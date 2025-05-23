@@ -1,0 +1,20 @@
+{
+    "name": "Distribution.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Distribution",
+        "Content.ScriptableObjects.Editor",
+        "Content.ScriptableObjects"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,20 @@
+{
+    "name": "Notifications",
+    "rootNamespace": "",
+    "references": [
+        "Sapientia",
+        "Localization",
+        "Content",
+        "Fusumity",
+        "Messaging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

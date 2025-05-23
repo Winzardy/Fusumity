@@ -1,0 +1,23 @@
+{
+    "name": "Content.ScriptableObjects.InAppPurchasing.Unity",
+    "rootNamespace": "",
+    "references": [
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.InAppPurchasing",
+        "InAppPurchasing.Unity",
+        "Fusumity",
+        "Distribution",
+        "InAppPurchasing",
+        "Content",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

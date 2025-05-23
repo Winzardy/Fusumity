@@ -1,0 +1,32 @@
+{
+    "name": "InAppPurchasing.Unity",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Unity.Services.Core",
+        "InAppPurchasing",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores",
+        "UnityEngine.Purchasing.Security",
+        "UnityEngine.Purchasing.Security.Generated",
+        "UnityEngine.Purchasing.SecurityStub",
+        "UnityEngine.Purchasing.SecurityCore",
+        "Content",
+        "Sapientia",
+        "Generic",
+        "Game.App.LocalSave",
+        "Fusumity",
+        "Distribution",
+        "Fusumity.Utility.UnityServices",
+        "UserLocator"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

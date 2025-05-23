@@ -1,0 +1,21 @@
+{
+    "name": "Notifications.iOS.Entry",
+    "rootNamespace": "",
+    "references": [
+        "Notifications",
+        "Unity.Notifications.iOS",
+        "Generic",
+        "Sapientia",
+        "GUID:dc8e8e524b04497ab575e558b7649abb",
+        "Localization"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

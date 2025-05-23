@@ -1,0 +1,23 @@
+{
+    "name": "InAppReview.GooglePlay",
+    "rootNamespace": "",
+    "references": [
+        "InAppReview",
+        "Google.Play.Review",
+        "Google.Play.Common",
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

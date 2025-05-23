@@ -1,0 +1,29 @@
+{
+    "name": "UI",
+    "rootNamespace": "",
+    "references": [
+        "AssetManagement",
+        "Input",
+        "Content",
+        "Content.Constants",
+        "UniTask",
+        "Unity.TextMeshPro",
+        "Localization",
+        "Sapientia",
+        "Fusumity",
+        "WLog",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Fusumity.Utility.Camera",
+        "ZenoTween",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

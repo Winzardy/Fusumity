@@ -1,0 +1,26 @@
+{
+    "name": "AssetManagement",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "UniTask.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "Sapientia",
+        "AssetManagement.Addressables.Editor",
+        "Generic",
+        "WLog",
+        "GUID:17eb6086fb1b4f13b640ba906df3d2b7",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

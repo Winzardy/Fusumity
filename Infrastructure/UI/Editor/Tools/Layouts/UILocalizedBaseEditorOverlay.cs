@@ -1,0 +1,69 @@
+using System.Collections.Generic;
+using System.Linq;
+using Localizations;
+using Sapientia.Collections;
+using UnityEditor;
+using UnityEditor.Overlays;
+
+namespace UI.Editor
+{
+	[Overlay(typeof(SceneView), "Layout Language", "Layout Language")]
+	public class UILocalizedBaseEditorOverlay : IMGUIOverlay, ITransientOverlay
+	{
+		private UILocalizedBaseLayout _target;
+
+		public bool visible => _target && _target.Placeholder && _target.locInfo;
+
+		public override void OnGUI()
+		{
+			OnSelectionChanged();
+
+			if (!_target)
+				return;
+
+			var languages = GetAllLanguages().ToArray();
+			var selected = 0;
+			foreach (var (language, index) in languages.WithIndexSafe())
+			{
+				if (language.language == _target.languageEditor)
+					selected = index;
+			}
+
+			_target.languageEditor = languages[EditorGUILayout.Popup(selected, languages.Select(x => x.label).ToArray())].language;
+			EditorUtility.SetDirty(_target);
+		}
+
+		public override void OnCreated()
+		{
+			Selection.selectionChanged += OnSelectionChanged;
+			OnSelectionChanged();
+		}
+
+		public override void OnWillBeDestroyed()
+		{
+			Selection.selectionChanged -= OnSelectionChanged;
+			OnSelectionChanged();
+		}
+
+		private void OnSelectionChanged()
+		{
+			_target = null;
+
+			if (Selection.activeGameObject == null)
+				return;
+
+			Selection.activeGameObject.TryGetComponent(out _target);
+		}
+
+		private IEnumerable<(string label, string language)> GetAllLanguages()
+		{
+			foreach (var language in Localization.GetAllLanguagesEditor())
+			{
+				var label = language;
+				if (Localization.CurrentLanguageEditor == language)
+					label += " (Default)";
+				yield return (label, language);
+			}
+		}
+	}
+}

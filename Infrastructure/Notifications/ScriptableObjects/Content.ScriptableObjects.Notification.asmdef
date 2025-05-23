@@ -1,0 +1,20 @@
+{
+    "name": "Content.ScriptableObjects.Notifications",
+    "rootNamespace": "",
+    "references": [
+        "Content.ScriptableObjects",
+        "Notifications",
+        "Generic",
+        "Content.ScriptableObjects.Editor",
+        "Content"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

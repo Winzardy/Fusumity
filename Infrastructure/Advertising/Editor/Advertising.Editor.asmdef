@@ -1,0 +1,23 @@
+{
+    "name": "Advertising.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:6dec8a5bf86841e59bcb2c2957cbac16",
+        "GUID:a527b238a468414383742720c350ba3f",
+        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "Sirenix.OdinInspector.Editor.dll",
+        "Sirenix.OdinInspector.Attributes.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

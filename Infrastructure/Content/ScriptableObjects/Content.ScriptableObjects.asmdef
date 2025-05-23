@@ -2,12 +2,12 @@
     "name": "Content.ScriptableObjects",
     "rootNamespace": "",
     "references": [
-        "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
+        "Content",
         "Content.Editor",
-        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+        "Sapientia",
         "GUID:17eb6086fb1b4f13b640ba906df3d2b7",
         "UniTask",
-        "GUID:72fc6620f02967440a0be6690a91e128"
+        "Fusumity.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
