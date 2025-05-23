@@ -1,12 +1,14 @@
 using Content.ScriptableObjects;
+using Fusumity;
 using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using UnityEditor;
+using UnityEngine;
 
 namespace Content.Editor
 {
 	[HideMonoScript]
-	public partial class ContentConstantGeneratorSettings : ContentScriptableObject
+	public partial class ContentConstantGeneratorSettings : AdvancedScriptableObject
 	{
 		private const string ROOT_FOLDER = "Assets/ProjectSettings/";
 		private const string FOLDER = ROOT_FOLDER + "Content";
