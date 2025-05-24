@@ -155,7 +155,7 @@ namespace Advertising.UnityLevelPlay
 				AdsDebug.LogError("Failed to initialize: Interstitial AdUnitId is empty!");
 			}
 
-			Desk.UserId.Subscribe(OnUserIdChanged);
+			ProjectDesk.UserId.Subscribe(OnUserIdChanged);
 
 			SetPause(UnityLifecycle.ApplicationPause);
 			UnityLifecycle.ApplicationPauseEvent += OnApplicationPause;
@@ -196,7 +196,7 @@ namespace Advertising.UnityLevelPlay
 				_interstitial.ad.Dispose();
 			}
 
-			Desk.UserId.Unsubscribe(OnUserIdChanged);
+			ProjectDesk.UserId.Unsubscribe(OnUserIdChanged);
 
 			UnityLifecycle.ApplicationPauseEvent -= OnApplicationPause;
 			UnityLifecycle.ApplicationResumeEvent -= OnApplicationResume;

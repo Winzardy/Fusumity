@@ -35,7 +35,7 @@ namespace InAppReview
 			if (!_useStorePage)
 				return;
 
-			var link = Desk.GetReviewLink();
+			var link = ProjectDesk.GetReviewLink();
 
 			if (!link.IsNullOrEmpty())
 				Application.OpenURL(link);

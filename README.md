@@ -1,2 +1,2 @@
 # Fusumity
-Utility and extension layer for infrastructure systems in Unity
+Utility layer for Unity and extension layer for infrastructure systems in Unity
