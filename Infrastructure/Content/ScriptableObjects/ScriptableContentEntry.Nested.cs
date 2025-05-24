@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Sapientia.Collections;
+using Fusumity.Collections;
 using Sapientia.Reflection;
 
 namespace Content.ScriptableObjects

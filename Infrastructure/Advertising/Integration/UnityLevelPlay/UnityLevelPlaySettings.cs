@@ -1,5 +1,5 @@
 using System;
-using Sapientia.Collections;
+using Fusumity.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

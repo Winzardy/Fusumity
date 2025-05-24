@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Sapientia.Collections;
+using Fusumity.Collections;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;

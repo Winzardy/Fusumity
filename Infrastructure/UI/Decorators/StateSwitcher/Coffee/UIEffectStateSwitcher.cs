@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Coffee.UIEffects;
-using Sapientia.Collections;
+using Fusumity.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
