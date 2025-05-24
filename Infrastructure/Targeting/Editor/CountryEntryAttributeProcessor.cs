@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UnityEngine;
 
-namespace Distribution.Editor
+namespace Targeting.Editor
 {
-	public class PlatformEntryAttributeProcessor : OdinAttributeProcessor<PlatformEntry>
+	public class CountryEntryAttributeProcessor : OdinAttributeProcessor<CountryEntry>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,9 +15,12 @@ namespace Distribution.Editor
 
 			switch (member.Name)
 			{
-				case nameof(PlatformEntry.platform):
-					attributes.Add(new PlatformDropdownAttribute());
+				case nameof(CountryEntry.code):
+					attributes.Add(new CountryDropdownAttribute());
 					attributes.Add(new HideLabelAttribute());
+					break;
+				case nameof(CountryEntry.name):
+					attributes.Add(new HideInInspector());
 					break;
 			}
 		}

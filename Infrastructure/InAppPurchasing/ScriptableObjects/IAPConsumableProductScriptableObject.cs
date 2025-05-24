@@ -12,9 +12,9 @@ namespace Content.ScriptableObjects.InAppPurchasing
 		[Tooltip("[High Priority] Platform <-> Id, если магазина нет в словаре, то будет использовать 'Custom' или стандартны Id")]
 		public SerializableDictionary<IAPPlatformEntry, string> platformToId;
 
-		protected override void OnImport()
+		protected override void OnImport(ref IAPConsumableProductEntry product)
 		{
-			Value.platformToId = platformToId;
+			product.platformToId = platformToId;
 		}
 	}
 }

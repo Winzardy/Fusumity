@@ -17,7 +17,6 @@ namespace Content.Editor
 				if (rawDatabase is IContentEntryScriptableObject<T> database)
 				{
 					database.Edit(editing);
-					Save(rawDatabase);
 					return;
 				}
 
@@ -27,7 +26,6 @@ namespace Content.Editor
 						continue;
 
 					scriptableObject.Edit(editing);
-					Save(target);
 					return;
 				}
 			}
@@ -48,7 +46,6 @@ namespace Content.Editor
 						continue;
 
 					source.Edit(editing);
-					Save(target);
 					return;
 				}
 			}
@@ -69,18 +66,11 @@ namespace Content.Editor
 						continue;
 
 					source.Edit(editing);
-					Save(target);
 					return;
 				}
 			}
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + guid + " ]");
-		}
-
-		private static void Save(ContentScriptableObject scriptableObject)
-		{
-			EditorUtility.SetDirty(scriptableObject);
-			AssetDatabase.SaveAssetIfDirty(scriptableObject);
 		}
 	}
 

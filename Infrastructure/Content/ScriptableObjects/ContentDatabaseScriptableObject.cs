@@ -15,34 +15,26 @@ namespace Content.ScriptableObjects
 
 		public Type ValueType => typeof(T);
 
-		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry
+		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry => _entry;
+
+		public override IScriptableContentEntry Import()
 		{
-			get
-			{
-				OnImport();
-				return _entry;
-			}
+			OnImport(ref _entry.ScriptableEditValue);
+			return _entry;
 		}
 
-		protected virtual void OnImport()
+		protected virtual void OnImport(ref T value)
 		{
 		}
 
-		private void OnValidate()
+		protected override void OnValidate()
 		{
+			base.OnValidate();
 			_entry.scriptableObject = this;
 		}
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
-
-		public void SetValue(T value) => _entry.SetValue(value);
-		public void Edit(ContentEditing<T> editing)
-		{
-			var value = _entry.Value;
-			editing(ref value);
-			_entry.SetValue(value);
-		}
 	}
 
 	public abstract class ContentDatabaseScriptableObject : SingleContentEntryScriptableObject

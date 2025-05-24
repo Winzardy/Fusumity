@@ -1,4 +1,4 @@
-using Distribution;
+using Targeting;
 using InAppPurchasing;
 using InAppPurchasing.Unity;
 using Sapientia.Collections;
@@ -14,16 +14,11 @@ namespace Content.ScriptableObjects.InAppPurchasing
 		[Space, DictionaryDrawerSettings(KeyLabel = "Store", ValueLabel = "Country To Platform")]
 		public SerializableDictionary<StorePlatformEntry, SerializableDictionary<CountryEntry, IAPPlatformEntry>> storeToCountryToPlatform;
 
-		protected override void OnImport()
+		protected override void OnImport(ref UnityPurchasingSettings settings)
 		{
-			Edit(OnEdit);
-
-			void OnEdit(ref UnityPurchasingSettings settings)
-			{
-				settings.storeToCountryToPlatform = new();
-				foreach (var (store, dictionary) in storeToCountryToPlatform)
-					settings.storeToCountryToPlatform[store] = dictionary;
-			}
+			settings.storeToCountryToPlatform = new();
+			foreach (var (store, dictionary) in storeToCountryToPlatform)
+				settings.storeToCountryToPlatform[store] = dictionary;
 		}
 	}
 }

@@ -13,25 +13,19 @@ namespace Content.ScriptableObjects
 
 			foreach (var database in data)
 			{
-				if (TryExtractEntry(database, out var entry))
+				if (TryImport(database, out var entry))
 					entries.Add(entry);
 
 				foreach (var scriptableObject in database.scriptableObjects)
 				{
-					if (TryExtractEntry(scriptableObject, out entry))
+					if (TryImport(scriptableObject, out entry))
 						entries.Add(entry);
 				}
 
-				bool TryExtractEntry(ContentScriptableObject target, out IContentEntry contentEntry)
+				bool TryImport(ContentScriptableObject target, out IContentEntry entry)
 				{
-					contentEntry = null;
-					if (target is IContentEntryScriptableObject scriptableObject)
-					{
-						contentEntry = scriptableObject.ScriptableContentEntry;
-						return true;
-					}
-
-					return false;
+					entry = target.Import();
+					return entry != null;
 				}
 			}
 

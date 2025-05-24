@@ -18,7 +18,8 @@
         "Fusumity",
         "Distribution",
         "Fusumity.Utility.UnityServices",
-        "UserLocator"
+        "UserLocator",
+        "Targeting"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

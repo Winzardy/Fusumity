@@ -15,8 +15,6 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		private ScriptableContentEntry<T> _entry;
 
-		public ref readonly T Value => ref _entry.Value;
-
 		public IScriptableContentEntry<T> ScriptableContentEntry => _entry;
 
 		ScriptableContentEntry<T> IIdentifierSource<ScriptableContentEntry<T>>.Source => _entry;
@@ -47,9 +45,18 @@ namespace Content.ScriptableObjects
 				if (!useCustomId)
 					_entry.id = Id;
 
-				OnImport();
 				return _entry;
 			}
+		}
+
+		public override IScriptableContentEntry Import()
+		{
+			OnImport(ref _entry.ScriptableEditValue);
+			return ScriptableContentEntry;
+		}
+
+		protected virtual void OnImport(ref T value)
+		{
 		}
 
 		bool IUniqueContentEntryScriptableObject.UseCustomId => useCustomId;
@@ -57,10 +64,6 @@ namespace Content.ScriptableObjects
 		public Type ValueType => typeof(T);
 
 		public ref readonly SerializableGuid Guid => ref _entry.Guid;
-
-		protected virtual void OnImport()
-		{
-		}
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IUniqueContentEntry<T> IUniqueContentEntrySource<T>.UniqueContentEntry => _entry;
@@ -82,15 +85,6 @@ namespace Content.ScriptableObjects
 
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>
 			scriptableObject ? new(in scriptableObject._entry.Guid) : new(SerializableGuid.Empty);
-
-		public void SetValue(T value) => _entry.SetValue(value);
-
-		public void Edit(ContentEditing<T> editing)
-		{
-			var value = _entry.Value;
-			editing(ref value);
-			SetValue(value);
-		}
 	}
 
 	public abstract partial class ContentEntryScriptableObject : ContentScriptableObject
@@ -106,10 +100,8 @@ namespace Content.ScriptableObjects
 	{
 		public IScriptableContentEntry<T> ScriptableContentEntry { get; }
 
-		public void Edit(ContentEditing<T> editing);
+		internal ref T EditValue => ref ScriptableContentEntry.EditValue;
 	}
-
-	public delegate void ContentEditing<T>(ref T value);
 
 	public interface IUniqueContentEntryScriptableObject : IContentEntryScriptableObject, IUniqueContentEntrySource
 	{
@@ -120,6 +112,7 @@ namespace Content.ScriptableObjects
 	public interface IContentEntryScriptableObject : IContentScriptableObject
 	{
 		public IScriptableContentEntry ScriptableContentEntry { get; }
+
 		public Type ValueType { get; }
 	}
 

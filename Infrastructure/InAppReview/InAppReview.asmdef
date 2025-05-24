@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Sapientia",
-        "Distribution"
+        "Distribution",
+        "Targeting"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

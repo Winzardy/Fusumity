@@ -7,6 +7,8 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		protected long timeCreated;
 
+		public virtual IScriptableContentEntry Import() => null;
+
 		/// <summary>
 		/// Используется ли контент? Если нет, то при обновлении базы пропустит ScriptableObject
 		/// </summary>

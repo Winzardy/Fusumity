@@ -4,7 +4,7 @@ using System.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 
-namespace Distribution.Editor
+namespace Targeting.Editor
 {
 	public class StorePlatformEntryAttributeProcessor : OdinAttributeProcessor<StorePlatformEntry>
 	{

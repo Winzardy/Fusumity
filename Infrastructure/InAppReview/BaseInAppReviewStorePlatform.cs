@@ -1,6 +1,6 @@
 using System;
-using Distribution;
 using Sapientia.Extensions;
+using Targeting;
 using UnityEngine;
 
 namespace InAppReview
@@ -35,7 +35,7 @@ namespace InAppReview
 			if (!_useStorePage)
 				return;
 
-			var link = DistributionProvider.GetReviewLink();
+			var link = Desk.GetReviewLink();
 
 			if (!link.IsNullOrEmpty())
 				Application.OpenURL(link);

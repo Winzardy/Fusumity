@@ -9,7 +9,8 @@
         "Distribution",
         "InAppPurchasing",
         "Content",
-        "Sapientia"
+        "Sapientia",
+        "Targeting"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

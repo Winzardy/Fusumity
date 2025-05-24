@@ -1,8 +1,8 @@
 {
-    "name": "Distribution.Editor",
+    "name": "Targeting.Editor",
     "rootNamespace": "",
     "references": [
-        "Distribution",
+        "Targeting",
         "Content.ScriptableObjects.Editor",
         "Content.ScriptableObjects"
     ],

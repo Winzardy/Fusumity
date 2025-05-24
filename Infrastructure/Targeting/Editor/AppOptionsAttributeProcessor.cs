@@ -4,9 +4,9 @@ using System.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 
-namespace Distribution.Editor
+namespace Targeting.Editor
 {
-	public class AppOptionsAttributeProcessor : OdinAttributeProcessor<AppOptions>
+	public class AppOptionsAttributeProcessor : OdinAttributeProcessor<TargetingOptions>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,9 +14,9 @@ namespace Distribution.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AppOptions.buildNumber):
-				case nameof(AppOptions.identifier):
-				case nameof(AppOptions.version):
+				case nameof(TargetingOptions.buildNumber):
+				case nameof(TargetingOptions.identifier):
+				case nameof(TargetingOptions.version):
 					attributes.Add(new HideInInspector());
 					break;
 			}

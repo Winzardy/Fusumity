@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Sirenix.OdinInspector;
 
-namespace Distribution.Editor
+namespace Targeting.Editor
 {
 	[Conditional("UNITY_EDITOR")]
 	[IncludeMyAttributes]

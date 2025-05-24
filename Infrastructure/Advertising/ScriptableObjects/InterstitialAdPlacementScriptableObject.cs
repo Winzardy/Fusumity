@@ -1,5 +1,5 @@
 using Advertising;
-using Distribution;
+using Targeting;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -14,9 +14,9 @@ namespace Content.ScriptableObjects.Advertising
 		[Space, DictionaryDrawerSettings(KeyLabel = "Platform", ValueLabel = "Name")]
 		public SerializableDictionary<PlatformEntry, string> platformToName;
 
-		protected override void OnImport()
+		protected override void OnImport(ref InterstitialAdPlacementEntry placement)
 		{
-			Value.platformToName = platformToName;
+			placement.platformToName = platformToName;
 		}
 	}
 }

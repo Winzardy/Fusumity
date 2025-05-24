@@ -11,6 +11,9 @@ namespace Content.ScriptableObjects
 
 		public override object Context => scriptableObject;
 
+		internal ref T ScriptableEditValue => ref ContentEditValue;
+		ref T IScriptableContentEntry<T>.EditValue => ref ScriptableEditValue;
+
 		public ScriptableSingleContentEntry(in T value) : base(in value)
 		{
 		}
