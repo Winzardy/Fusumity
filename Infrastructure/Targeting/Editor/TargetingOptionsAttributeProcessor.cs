@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Targeting.Editor
 {
-	public class AppOptionsAttributeProcessor : OdinAttributeProcessor<TargetingOptions>
+	public class AppOptionsAttributeProcessor : OdinAttributeProcessor<ProjectInfo>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,9 +14,9 @@ namespace Targeting.Editor
 
 			switch (member.Name)
 			{
-				case nameof(TargetingOptions.buildNumber):
-				case nameof(TargetingOptions.identifier):
-				case nameof(TargetingOptions.version):
+				case nameof(ProjectInfo.buildNumber):
+				case nameof(ProjectInfo.identifier):
+				case nameof(ProjectInfo.version):
 					attributes.Add(new HideInInspector());
 					break;
 			}

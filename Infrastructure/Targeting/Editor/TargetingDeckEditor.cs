@@ -5,9 +5,9 @@ public class TargetingDeckEditor
 {
 	public static void SetupBuildNumber(int value)
 	{
-		ContentEditor.Edit<TargetingOptions>(OnEdit);
+		ContentEditor.Edit<ProjectInfo>(OnEdit);
 
-		void OnEdit(ref TargetingOptions options)
+		void OnEdit(ref ProjectInfo options)
 		{
 			options.buildNumber = value;
 		}
