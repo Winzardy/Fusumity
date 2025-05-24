@@ -17,6 +17,6 @@ namespace Targeting.Editor
 	public static class CountryDropdownAttributeHelper
 	{
 		public static IEnumerable<ValueDropdownItem<string>> GetAll() =>
-			CountryEntryExt.GetAll().Select(@ref => new ValueDropdownItem<string>(@ref.entry.ToLabel(), @ref.entry));
+			CountryEntryUtility.GetAll().Select(@ref => new ValueDropdownItem<string>(@ref.entry.ToLabel(), @ref.entry));
 	}
 }

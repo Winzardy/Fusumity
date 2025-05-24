@@ -17,6 +17,6 @@ namespace Targeting.Editor
 	public static class StorePlatformDropdownAttributeHelper
 	{
 		public static IEnumerable<ValueDropdownItem<string>> GetAllPlatforms() =>
-			StorePlatformExt.GetAllPlatforms().Select(entry => new ValueDropdownItem<string>(entry.ToLabel(), entry));
+			StorePlatformUtility.GetAllPlatforms().Select(entry => new ValueDropdownItem<string>(entry.ToLabel(), entry));
 	}
 }
