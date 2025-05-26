@@ -4,7 +4,8 @@
     "references": [
         "Sapientia",
         "Distribution",
-        "Targeting"
+        "Targeting",
+        "Messaging"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

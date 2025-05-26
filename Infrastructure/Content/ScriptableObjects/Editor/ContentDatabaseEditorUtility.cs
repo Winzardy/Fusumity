@@ -23,6 +23,8 @@ namespace Content.ScriptableObjects.Editor
 		private const string ADDRESSABLE_GROUP = "Content Database Group";
 		private const string ADDRESSABLE_NAME_FORMAT = "Database/{0}";
 
+		public const string DEFAULT_NAME_ENDING = "Database";
+
 		private static List<ContentDatabaseScriptableObject> _cache;
 
 		public static List<ContentDatabaseScriptableObject> Databases
@@ -54,7 +56,7 @@ namespace Content.ScriptableObjects.Editor
 
 			_cache?.Add(database);
 
-			addressableName ??= name.Replace("Database", string.Empty);
+			addressableName ??= name.Remove(DEFAULT_NAME_ENDING);
 			database.MakeAddressable(
 				ADDRESSABLE_GROUP,
 				ADDRESSABLE_NAME_FORMAT.Format(addressableName),
@@ -360,7 +362,6 @@ namespace Content.ScriptableObjects.Editor
 				var collisionsMap = new HashSet<string>();
 				var collided = false;
 
-
 				using (ListPool<IUniqueContentEntryScriptableObject>.Get(out var content))
 				{
 					foreach (var scriptableObject in scriptableObjects)
@@ -503,5 +504,8 @@ namespace Content.ScriptableObjects.Editor
 
 			dictionary[valueType].Add(scriptableObject);
 		}
+
+		public static string ToLabel(this ContentDatabaseScriptableObject database)
+			=> database.name.Remove(DEFAULT_NAME_ENDING);
 	}
 }

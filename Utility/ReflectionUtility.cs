@@ -12,6 +12,9 @@ namespace Fusumity.Utility
 {
 	public static class ReflectionUtility
 	{
+		/// <summary>
+		/// Способ удешевить перебор всех сборок
+		/// </summary>
 		private static readonly string[] _allowedAssemblyTags =
 		{
 			"CSharp",
@@ -28,6 +31,8 @@ namespace Fusumity.Utility
 			"Notifications",
 			"Trading"
 		};
+
+		private static readonly string _editorAssemblyTag = "Editor";
 
 		public static bool HasAttribute<T>(this Type type, bool inherit = false) where T : Attribute
 		{
@@ -68,35 +73,68 @@ namespace Fusumity.Utility
 			}
 		}
 
-		public static IEnumerable<Assembly> GetAssemblies(params string[] tags)
+		public static IEnumerable<Assembly> GetAssemblies(string[] tags, bool editor = false)
 		{
 			return GetAssemblies(Predicate);
 
 			bool Predicate(Assembly assembly)
 			{
-				return
-					tags.IsNullOrEmpty() ||
-					tags.Any(name => assembly.GetName().Name == name);
+				if (!editor)
+					return PredicateByTags(assembly, tags, _editorAssemblyTag);
+				return PredicateByTags(assembly, tags);
 			}
 		}
 
 		public static IEnumerable<Assembly> GetAllowedAssemblies(bool editor = false)
 		{
-			return GetAssemblies(CheckIfValid);
+			return GetAssemblies(Predicate);
 
-			bool CheckIfValid(Assembly assembly)
+			bool Predicate(Assembly assembly)
 			{
-				return
-					_allowedAssemblyTags.Any(assembly.FullName.Contains) &&
-					(editor || !assembly.FullName.Contains("Editor"));
+				if (!editor)
+					return PredicateByTags(assembly, _allowedAssemblyTags, _editorAssemblyTag);
+				return PredicateByTags(assembly, _allowedAssemblyTags);
 			}
 		}
 
-		public static bool TryGetType(string typeName, out Type type, params string[] assemblyNames)
+		private static bool PredicateByTags(Assembly assembly, string[] includeTags, params string[] excludeTags)
 		{
-			var assemblies =
-				assemblyNames.IsNullOrEmpty() ? GetAllowedAssemblies() : GetAssemblies(assemblyNames);
+			var name = assembly.FullName;
 
+			if (!includeTags.IsNullOrEmpty())
+			{
+				if (name.IsNullOrEmpty())
+					return false;
+
+				var matched = false;
+				for (int i = 0; i < includeTags.Length; i++)
+				{
+					if (name.Contains(includeTags[i]))
+					{
+						matched = true;
+						break;
+					}
+				}
+
+				if (!matched)
+					return false;
+			}
+
+			if (!name.IsNullOrEmpty() && !excludeTags.IsNullOrEmpty())
+			{
+				for (int i = 0; i < excludeTags.Length; i++)
+				{
+					if (name.Contains(excludeTags[i]))
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		public static bool TryGetType(string typeName, out Type type, params string[] assemblyTags)
+		{
+			var assemblies = assemblyTags != null ? GetAssemblies(assemblyTags) : GetAllowedAssemblies();
 			foreach (var assembly in assemblies)
 			{
 				type = assembly.GetTypeByName(typeName);
@@ -141,13 +179,22 @@ namespace Fusumity.Utility
 		/// <summary>
 		/// Исключает абстрактные и интерфейсные типы
 		/// </summary>
-		public static List<Type> GetAllTypes<T>(bool includeSelf = true, bool editor = false) =>
-			GetAllTypes(typeof(T), includeSelf, editor);
+		public static List<Type> GetAllTypes<T>(bool includeSelf = false, bool editor = false) =>
+			GetAllTypes(typeof(T), _allowedAssemblyTags, includeSelf, editor);
 
-		public static List<Type> GetAllTypes(this Type baseType, bool includeSelf = true, bool editor = false)
+		public static List<Type> GetAllTypes<T>(string[] assemblyTags, bool includeSelf = false, bool editor = false)
+			=> GetAllTypes(typeof(T), assemblyTags, includeSelf, editor);
+
+		public static List<Type> GetAllTypes(this Type type, bool includeSelf = false, bool editor = false) =>
+			GetAllTypes(type, _allowedAssemblyTags, includeSelf, editor);
+
+		public static List<Type> GetAllTypes(this Type baseType,
+			string[] assemblyTags,
+			bool includeSelf = false,
+			bool editor = false)
 		{
 			List<Type> list = new List<Type>();
-			foreach (Assembly assembly in GetAllowedAssemblies(editor))
+			foreach (Assembly assembly in GetAssemblies(assemblyTags, editor))
 			{
 				try
 				{

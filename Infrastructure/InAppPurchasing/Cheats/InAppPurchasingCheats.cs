@@ -4,7 +4,7 @@ using MobileConsole;
 
 namespace InAppPurchasing.Cheats
 {
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + "Get Product Status")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + "Get Product Status")]
 	public class IAPPurchaseSubscriptionAdCheats : Command
 	{
 		private Dictionary<string, IAPProductEntry> _nameToEntry = new(2);

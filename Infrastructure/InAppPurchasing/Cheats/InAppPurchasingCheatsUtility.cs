@@ -9,8 +9,10 @@ namespace InAppPurchasing.Cheats
 	[Preserve]
 	internal static class InAppPurchasingCheatsUtility
 	{
-		public const string PATH = "App/IAP/";
 		public const string NONE = "None";
+
+		public const string COMMAND_PATH = "App/IAP/";
+		public const string SETTINGS_PATH = "System/IAP";
 
 		public static string[] GetProducts<T>()
 			where T : IAPProductEntry

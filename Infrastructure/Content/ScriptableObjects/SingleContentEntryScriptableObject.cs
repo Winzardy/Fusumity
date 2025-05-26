@@ -17,10 +17,14 @@ namespace Content.ScriptableObjects
 
 		public Type ValueType => typeof(T);
 
-		public override IScriptableContentEntry Import()
+		public override IContentEntry Import(bool clone)
 		{
 			OnImport(ref _entry.ScriptableEditValue);
-			return ScriptableContentEntry;
+
+			if (!clone)
+				return _entry;
+
+			return _entry.Clone();
 		}
 
 		protected virtual void OnImport(ref T value)

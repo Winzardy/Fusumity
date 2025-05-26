@@ -7,7 +7,8 @@
         "Localization",
         "Sapientia",
         "Fusumity",
-        "ZenoTween"
+        "ZenoTween",
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"

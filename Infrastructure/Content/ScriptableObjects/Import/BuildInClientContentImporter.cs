@@ -10,7 +10,7 @@ namespace Content.ScriptableObjects
 		public override async Task<IList<IContentEntry>> ImportAsync(CancellationToken cancellationToken = default)
 		{
 			var data = await AssetLoader.LoadAssetsAsync<ContentDatabaseScriptableObject>(ContentDatabaseScriptableObject.LABEL, cancellationToken);
-			return Extract(data);
+			return ClientContentImporterUtility.Extract(data);
 		}
 	}
 }

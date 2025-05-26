@@ -11,7 +11,6 @@ namespace UI.Editor
 		{
 			base.ProcessSelfAttributes(property, attributes);
 			attributes.Add(new DisableInEditorModeAttribute());
-			attributes.Add(new InfoBoxAttribute("Only in Play Mode", InfoMessageType.Warning, "@!(UnityEngine.Application.isPlaying)"));
 		}
 	}
 }

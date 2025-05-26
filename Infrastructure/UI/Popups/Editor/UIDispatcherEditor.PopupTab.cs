@@ -14,23 +14,33 @@ namespace UI.Popups.Editor
 		int IUIDispatcherEditorTab.Order => 2;
 		public string Title => "Popups";
 
-		[ShowInInspector, HideLabel, InlineButton(nameof(TryShowPopupEditor), " Show ")]
-		[ValueDropdown(nameof(GetPopupTypes))]
-		[OnValueChanged(nameof(PopupTypeChanged))]
-		public Type popupType;
+		[OnValueChanged(nameof(OnTypeChanged))]
+		public Type type;
+		public IPopupArgs args;
 
-		[LabelText("Force")]
-		public bool popupShowForce;
-
-		[PolymorphicDrawerSettings(ReadOnlyIfNotNullReference = true)]
-		[ShowInInspector, ShowIf(nameof(popupArgs), null), LabelText("Args")]
-		public IPopupArgs popupArgs;
-
-		private void PopupTypeChanged()
+		internal void Show(bool force = false)
 		{
-			popupArgs = null;
+			if (type == null)
+			{
+				GUIDebug.LogError("Выберите тип экрана!");
+				return;
+			}
 
-			var baseType = popupType?.BaseType;
+			_dispatcher?.GetType()
+			   .GetMethod(nameof(_dispatcher.Show))?
+			   .MakeGenericMethod(type)
+			   .Invoke(_dispatcher, new object[]
+				{
+					args,
+					force
+				});
+		}
+
+		private void OnTypeChanged()
+		{
+			args = null;
+
+			var baseType = this.type?.BaseType;
 
 			if (baseType is not {IsGenericType: true})
 				return;
@@ -45,44 +55,15 @@ namespace UI.Popups.Editor
 			if (type == typeof(EmptyPopupArgs))
 				return;
 
-			popupArgs = type.CreateInstance<IPopupArgs>();
+			args = type.CreateInstance<IPopupArgs>();
 		}
 
-		private void TryShowPopupEditor()
-		{
-			if (popupType == null)
-			{
-				GUIDebug.LogError("Выберите тип экрана!");
-				return;
-			}
-
-			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(popupType)
-			   .Invoke(_dispatcher, new object[]
-				{
-					popupArgs,
-					popupShowForce
-				});
-		}
-
+		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
 		[PropertySpace(10, 0)]
-		[Button("Hide")]
+		[Button("Hide Current")]
 		private void HidePopupEditor()
 		{
 			_dispatcher.TryHideCurrent();
-		}
-
-		private IEnumerable GetPopupTypes()
-		{
-			var types = ReflectionUtility.GetAllTypes<IPopup>(false);
-			foreach (var type in types)
-			{
-				var name = type.Name
-				   .Replace("Popup", string.Empty);
-
-				yield return new ValueDropdownItem(name, type);
-			}
 		}
 	}
 }

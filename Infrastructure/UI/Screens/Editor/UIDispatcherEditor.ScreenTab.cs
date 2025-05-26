@@ -12,13 +12,11 @@ namespace UI.Screens.Editor
 		private UIScreenDispatcher _dispatcher => ServiceLocator<UIScreenDispatcher>.Instance;
 		public string Title => "Screens";
 
-		[ShowInInspector, HideLabel, InlineButton(nameof(TryShowScreenEditor), " Show ")]
-		[ValueDropdown(nameof(GetScreenTypes))]
-		public Type screenType;
+		public Type type;
 
-		private void TryShowScreenEditor()
+		internal void Show()
 		{
-			if (screenType == null)
+			if (type == null)
 			{
 				GUIDebug.LogError("Выберите тип экрана!");
 				return;
@@ -26,10 +24,11 @@ namespace UI.Screens.Editor
 
 			_dispatcher?.GetType()
 			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(screenType)
+			   .MakeGenericMethod(type)
 			   .Invoke(_dispatcher, null);
 		}
 
+		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
 		[Button("Try Show Default")]
 		[PropertySpace(10)]
 		private void TryShowDefaultScreenEditor()
@@ -51,22 +50,10 @@ namespace UI.Screens.Editor
 			_dispatcher.RemoveShowBlocker(this);
 		}
 
-		[Button("Hide")]
+		[Button("Hide Current")]
 		private void HideScreenEditor()
 		{
 			_dispatcher.Hide();
-		}
-
-		private IEnumerable GetScreenTypes()
-		{
-			var types = ReflectionUtility.GetAllTypes<IScreen>(false);
-			foreach (var type in types)
-			{
-				var name = type.Name
-				   .Replace("Screen", string.Empty);
-
-				yield return new ValueDropdownItem(name, type);
-			}
 		}
 	}
 }

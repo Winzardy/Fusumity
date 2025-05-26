@@ -5,8 +5,7 @@ using MobileConsole;
 
 namespace InAppPurchasing.Cheats
 {
-#if DebugLog
-	[SettingCommand(name = "System/" + nameof(InAppPurchasing))]
+	[SettingCommand(name = InAppPurchasingCheatsUtility.SETTINGS_PATH)]
 	public class IAPFakeCheats : Command
 	{
 		[Variable(OnValueChanged = nameof(OnUseFakeUpdated))]
@@ -53,7 +52,7 @@ namespace InAppPurchasing.Cheats
 		}
 	}
 
-	[SettingCommand(name = "System/" + nameof(InAppPurchasing))]
+	[SettingCommand(name = InAppPurchasingCheatsUtility.SETTINGS_PATH)]
 	public class IAPFakeRestoreTransactionsCheats : Command
 	{
 		[Variable(OnValueChanged = nameof(OnUseFakeRestoreTransactionsUpdated))]
@@ -109,5 +108,4 @@ namespace InAppPurchasing.Cheats
 				service.IsRestoreTransactionsSupported = useFakeRestoreTransactions;
 		}
 	}
-#endif
 }

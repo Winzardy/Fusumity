@@ -2,7 +2,7 @@ using MobileConsole;
 
 namespace InAppPurchasing.Cheats.Subscription
 {
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + nameof(IAPProductType.Subscription) + "/Purchase..")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + nameof(IAPProductType.Subscription) + "/Purchase..")]
 	public class IAPPurchaseSubscriptionAdCheats : Command
 	{
 		[Dropdown(methodName: nameof(GetProducts))]
@@ -15,7 +15,7 @@ namespace InAppPurchasing.Cheats.Subscription
 		private string[] GetProducts() => InAppPurchasingCheatsUtility.GetProducts<IAPSubscriptionProductEntry>();
 	}
 
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + nameof(IAPProductType.Subscription) + "/Can Purchase..")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + nameof(IAPProductType.Subscription) + "/Can Purchase..")]
 	public class IAPCanPurchaseSubscriptionAdCheats : Command
 	{
 		[Dropdown(methodName: nameof(GetProducts))]
@@ -27,7 +27,7 @@ namespace InAppPurchasing.Cheats.Subscription
 		private string[] GetProducts() => InAppPurchasingCheatsUtility.GetProducts<IAPSubscriptionProductEntry>();
 	}
 
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + nameof(IAPProductType.Subscription) + "/Get Info")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + nameof(IAPProductType.Subscription) + "/Get Info")]
 	public class IAPGetInfoSubscriptionAdCheats : Command
 	{
 		[Dropdown(methodName: nameof(GetProducts))]

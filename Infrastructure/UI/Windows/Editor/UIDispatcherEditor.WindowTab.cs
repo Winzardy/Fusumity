@@ -15,20 +15,33 @@ namespace UI.Windows.Editor
 
 		public string Title => "Windows";
 
-		[ShowInInspector, HideLabel, InlineButton(nameof(TryShowWindowEditor), " Show ")]
-		[ValueDropdown(nameof(GetWindowTypes))]
-		[OnValueChanged(nameof(WindowTypeChanged))]
-		public Type windowType;
+		[OnValueChanged(nameof(OnTypeChanged))]
+		public Type type;
 
-		[PolymorphicDrawerSettings(ReadOnlyIfNotNullReference = true)]
-		[ShowInInspector, ShowIf(nameof(windowArgs), null), LabelText("Args")]
-		public IWindowArgs windowArgs;
+		public IWindowArgs args;
 
-		private void WindowTypeChanged()
+		internal void Show()
 		{
-			windowArgs = null;
+			if (type == null)
+			{
+				GUIDebug.LogError("Выберите тип экрана!");
+				return;
+			}
 
-			var baseType = windowType?.BaseType;
+			_dispatcher?.GetType()
+			   .GetMethod(nameof(_dispatcher.Show))?
+			   .MakeGenericMethod(type)
+			   .Invoke(_dispatcher, new object[]
+				{
+					args
+				});
+		}
+
+		private void OnTypeChanged()
+		{
+			args = null;
+
+			var baseType = this.type?.BaseType;
 
 			if (baseType is not {IsGenericType: true})
 				return;
@@ -43,43 +56,15 @@ namespace UI.Windows.Editor
 			if (type == typeof(EmptyWindowArgs))
 				return;
 
-			windowArgs = type.CreateInstance<IWindowArgs>();
+			args = type.CreateInstance<IWindowArgs>();
 		}
 
-		private void TryShowWindowEditor()
-		{
-			if (windowType == null)
-			{
-				GUIDebug.LogError("Выберите тип экрана!");
-				return;
-			}
-
-			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(windowType)
-			   .Invoke(_dispatcher, new object[]
-				{
-					windowArgs
-				});
-		}
-
+		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
 		[PropertySpace(10, 0)]
-		[Button("Hide")]
+		[Button("Hide Current")]
 		private void HideWindowEditor()
 		{
 			_dispatcher.TryHideCurrent();
-		}
-
-		private IEnumerable GetWindowTypes()
-		{
-			var types = ReflectionUtility.GetAllTypes<IWindow>(false);
-			foreach (var type in types)
-			{
-				var name = type.Name
-				   .Replace("Window", string.Empty);
-
-				yield return new ValueDropdownItem(name, type);
-			}
 		}
 	}
 }

@@ -1,17 +1,30 @@
 using System.Collections.Generic;
+using Fusumity.Editor;
 using Fusumity.Utility;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
+using UnityEditor;
 using UnityEngine;
 using OdinMenuTree = Sirenix.OdinInspector.Editor.OdinMenuTree;
 
 namespace UI.Editor
 {
-	public class UIDispatcherEditor : OdinMenuEditorWindow
+	public class UIDispatcherEditorWindow : OdinMenuEditorWindow
 	{
 		private List<IUIDispatcherEditorTab> _tabs;
+
+		protected override void OnImGUI()
+		{
+			if (!Application.isPlaying)
+			{
+				FusumityEditorGUILayout.DrawWarning("Только в Play Mode", iconSize: 60);
+				return;
+			}
+
+			base.OnImGUI();
+		}
 
 		protected override void OnEnable()
 		{
@@ -25,7 +38,7 @@ namespace UI.Editor
 		{
 			_tabs = ListPool<IUIDispatcherEditorTab>.Get();
 
-			var types = ReflectionUtility.GetAllTypes<IUIDispatcherEditorTab>(false, true);
+			var types = ReflectionUtility.GetAllTypes<IUIDispatcherEditorTab>(editor: true);
 			using (ListPool<IUIDispatcherEditorTab>.Get(out var list))
 			{
 				foreach (var type in types)

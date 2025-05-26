@@ -19,7 +19,7 @@ namespace Content.ScriptableObjects
 			if (ClientEditorContentImporterMenu.IsEnable)
 				data.SyncContent();
 
-			return Task.FromResult(Extract(data));
+			return Task.FromResult(ClientContentImporterUtility.Extract(data));
 		}
 	}
 }

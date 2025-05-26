@@ -2,7 +2,7 @@ using MobileConsole;
 
 namespace InAppPurchasing.Cheats.NonConsumable
 {
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + nameof(IAPProductType.NonConsumable) + "/Purchase.")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + nameof(IAPProductType.NonConsumable) + "/Purchase.")]
 	public class IAPPurchaseNonConsumableAdCheats : Command
 	{
 		[Dropdown(methodName: nameof(GetProducts))]
@@ -15,7 +15,7 @@ namespace InAppPurchasing.Cheats.NonConsumable
 		private string[] GetProducts() => InAppPurchasingCheatsUtility.GetProducts<IAPNonConsumableProductEntry>();
 	}
 
-	[ExecutableCommand(name = InAppPurchasingCheatsUtility.PATH + nameof(IAPProductType.NonConsumable) + "/Can Purchase.")]
+	[ExecutableCommand(name = InAppPurchasingCheatsUtility.COMMAND_PATH + nameof(IAPProductType.NonConsumable) + "/Can Purchase.")]
 	public class IAPCanPurchaseNonConsumableAdCheats : Command
 	{
 		[Dropdown(methodName: nameof(GetProducts))]

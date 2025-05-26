@@ -1,5 +1,6 @@
 using System;
 using Content;
+using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -256,6 +257,37 @@ namespace Fusumity.Editor
 			width /= 2;
 			width -= 21;
 			return width;
+		}
+
+		public static void DrawWarning(string text,
+			int topFlexibleSpace = 1,
+			int bottomFlexibleSpace = 3,
+			float iconSize = 48,
+			GUIContent icon = null)
+		{
+			for (int i = 0; i < topFlexibleSpace; i++)
+				GUILayout.FlexibleSpace();
+
+			using (new EditorGUILayout.VerticalScope())
+			{
+				var style = new GUIStyle(EditorStyles.boldLabel)
+				{
+					alignment = TextAnchor.MiddleCenter,
+					fontStyle = FontStyle.Bold,
+					padding = new RectOffset(10, 10, 10, 10),
+					fontSize = 20
+				};
+
+				icon ??= EditorGUIUtility.IconContent("console.warnicon");
+
+				var iconRect = GUILayoutUtility.GetRect(iconSize, iconSize, GUILayout.ExpandWidth(true));
+				GUI.DrawTexture(iconRect, icon.image, ScaleMode.ScaleToFit);
+
+				GUILayout.Label(text, style, GUILayout.ExpandWidth(true));
+			}
+
+			for (int i = 0; i < bottomFlexibleSpace; i++)
+				GUILayout.FlexibleSpace();
 		}
 	}
 }
