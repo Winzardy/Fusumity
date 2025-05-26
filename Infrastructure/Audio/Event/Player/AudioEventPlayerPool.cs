@@ -5,11 +5,7 @@ namespace Audio
 {
 	public class AudioEventPlayerPool : ObjectPool<AudioEventPlayer>
 	{
-		public AudioEventPlayerPool(AudioFactory factory,
-			bool collectionCheck = false,
-			int capacity = 0,
-			int maxSize = 0)
-			: base(new Policy(factory), collectionCheck, capacity, maxSize)
+		public AudioEventPlayerPool(AudioFactory factory) : base(new Policy(factory))
 		{
 		}
 

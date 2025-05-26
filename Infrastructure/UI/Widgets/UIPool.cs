@@ -12,20 +12,15 @@ namespace UI
 			public UIWidget root;
 			public TLayout template;
 			public RectTransform parent = null;
-			public bool collectionCheck = false;
-			public int capacity = 0;
-			public int maxSize = 0;
 			public bool autoActivation = true;
 		}
 
-		public UIPool(UIWidget root, TLayout template, RectTransform parent = null, bool collectionCheck = false,
-			int capacity = 0, int maxSize = 0, bool autoActivation = true)
-			: base(new Policy(root, template, parent, autoActivation), collectionCheck, capacity, maxSize)
+		public UIPool(Args args) : this(args.root, args.template, args.parent, args.autoActivation)
 		{
 		}
 
-		public UIPool(Args args) : this(args.root, args.template, args.parent, args.collectionCheck, args.capacity,
-			args.maxSize, args.autoActivation)
+		public UIPool(UIWidget root, TLayout template, RectTransform parent = null, bool autoActivation = true)
+			: base(new Policy(root, template, parent, autoActivation))
 		{
 		}
 

@@ -6,9 +6,7 @@ namespace Fusumity.Pooling
 	public class UnityObjectPool<T> : ObjectPool<T>
 		where T : MonoBehaviour
 	{
-		public UnityObjectPool(Transform parent, T template, bool collectionCheck = false,
-			int capacity = 0, int maxSize = 0)
-			: base(new Policy(parent, template), collectionCheck, capacity, maxSize)
+		public UnityObjectPool(Transform parent, T template) : base(new Policy(parent, template))
 		{
 		}
 

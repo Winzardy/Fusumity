@@ -11,8 +11,7 @@ namespace UI.Popups
 	public class PopupPool<T> : ObjectPool<T>, IPopupPool
 		where T : UIWidget, IPopup
 	{
-		public PopupPool(UIPopupFactory factory, bool collectionCheck = false, int capacity = 0, int maxSize = 0)
-			: base(new Policy(factory), collectionCheck, capacity, maxSize)
+		public PopupPool(UIPopupFactory factory) : base(new Policy(factory))
 		{
 		}
 

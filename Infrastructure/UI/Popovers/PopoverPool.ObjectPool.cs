@@ -11,8 +11,7 @@ namespace UI.Popovers
 	public class PopoverObjectPool<T> : ObjectPool<T>, IPopoverObjectPool
 		where T : UIWidget, IPopover
 	{
-		public PopoverObjectPool(UIPopoverFactory factory, bool collectionCheck = false, int capacity = 0, int maxSize = 0)
-			: base(new Policy(factory), collectionCheck, capacity, maxSize)
+		public PopoverObjectPool(UIPopoverFactory factory) : base(new Policy(factory))
 		{
 		}
 

@@ -24,7 +24,7 @@ namespace UI.Popups
 		public UIPopupManager()
 		{
 			var factory = new UIPopupFactory();
-			_pool = new PopupsPool(factory, 2);
+			_pool = new PopupsPool(factory);
 
 			InitializeAssetsPreloader();
 

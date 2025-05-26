@@ -11,8 +11,7 @@ namespace UI
 		public static Camera Get() => _pool.Get();
 		public static void Release(Camera camera) => _pool.Release(camera);
 
-		public UICameraPool(bool collectionCheck = false, int capacity = 0, int maxSize = 3) :
-			base(new Policy(), collectionCheck, capacity, maxSize)
+		public UICameraPool() : base(new Policy())
 		{
 		}
 

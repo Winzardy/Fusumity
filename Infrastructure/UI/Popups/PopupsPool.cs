@@ -10,9 +10,8 @@ namespace UI.Popups
 
 		private Dictionary<Type, IPopupPool> _pools = new(8);
 
-		public PopupsPool(UIPopupFactory factory, int maxSize = 0)
+		public PopupsPool(UIPopupFactory factory)
 		{
-			_maxSize = maxSize;
 			_factory = factory;
 		}
 
@@ -32,7 +31,7 @@ namespace UI.Popups
 			if (TryGetPool<T>(out var pool))
 				return pool.Get();
 
-			pool = new PopupPool<T>(_factory, maxSize: _maxSize);
+			pool = new PopupPool<T>(_factory);
 			_pools[typeof(T)] = pool;
 
 			return pool.Get();

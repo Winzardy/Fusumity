@@ -25,7 +25,7 @@ namespace UI.Popovers
 		public UIPopoverManager()
 		{
 			var factory = new UIPopoverFactory();
-			_pool = new PopoverPool(factory, 2);
+			_pool = new PopoverPool(factory);
 
 			InitializeAssetsPreloader();
 

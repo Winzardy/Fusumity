@@ -10,9 +10,8 @@ namespace UI.Popovers
 
 		private Dictionary<Type, IPopoverObjectPool> _pools = new(8);
 
-		public PopoverPool(UIPopoverFactory factory, int maxSize = 0)
+		public PopoverPool(UIPopoverFactory factory)
 		{
-			_maxSize = maxSize;
 			_factory = factory;
 		}
 
@@ -32,7 +31,7 @@ namespace UI.Popovers
 			if (TryGetPool<T>(out var pool))
 				return pool.Get();
 
-			pool = new PopoverObjectPool<T>(_factory, maxSize: _maxSize);
+			pool = new PopoverObjectPool<T>(_factory);
 			_pools[typeof(T)] = pool;
 
 			return pool.Get();
