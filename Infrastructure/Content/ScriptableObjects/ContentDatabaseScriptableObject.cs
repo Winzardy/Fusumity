@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
-	public abstract class ContentDatabaseScriptableObject<T> : ContentDatabaseScriptableObject, IContentEntryScriptableObject<T>
+	public abstract partial class ContentDatabaseScriptableObject<T> : ContentDatabaseScriptableObject, IContentEntryScriptableObject<T>
 	{
 		[SerializeField]
 		private ScriptableSingleContentEntry<T> _entry;
@@ -29,12 +29,6 @@ namespace Content.ScriptableObjects
 
 		protected virtual void OnImport(ref T value)
 		{
-		}
-
-		protected override void OnValidate()
-		{
-			base.OnValidate();
-			_entry.scriptableObject = this;
 		}
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;

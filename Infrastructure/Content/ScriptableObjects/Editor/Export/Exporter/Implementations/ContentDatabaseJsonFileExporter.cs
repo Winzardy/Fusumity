@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -61,12 +60,19 @@ namespace Content.ScriptableObjects.Editor
 					Directory.CreateDirectory(directory);
 
 				var exists = File.Exists(path);
+				var writing = true;
+				if (exists)
+				{
+					var prevText = File.ReadAllText(path);
+					writing = prevText != text;
+				}
 
-				File.WriteAllText(path, text);
+				if (writing)
+					File.WriteAllText(path, text);
 
 				AssetDatabase.ImportAsset(unityAssetPath);
 				var textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(unityAssetPath);
-				var prefix = exists ? "Updated" : "Created";
+				var prefix = exists ? writing ? "Updated" : "Not changed" : "Created";
 				ContentDebug.Log($"{prefix} content json file by path: {path}", textAsset);
 			}
 			finally
@@ -102,6 +108,7 @@ namespace Content.ScriptableObjects.Editor
 			   .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 			   .Where(f => !typeof(UnityEngine.Object).IsAssignableFrom(f.FieldType))
 			   .Where(f => !f.Name.Contains("k__BackingField"))
+			   .Where(f => !f.IsDefined(typeof(NonSerializedAttribute), true))
 			   .ToList();
 
 			var props = new List<JsonProperty>();

@@ -48,7 +48,7 @@ namespace Content.ScriptableObjects.Editor
 					break;
 
 				case nameof(ContentDatabaseExport.Button):
-					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 80));
+					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 100));
 					attributes.Add(new ButtonAttribute("Export",ButtonSizes.Large));
 					break;
 			}

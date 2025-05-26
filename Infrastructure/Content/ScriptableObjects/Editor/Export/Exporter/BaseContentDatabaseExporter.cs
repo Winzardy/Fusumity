@@ -2,23 +2,8 @@ using System.Collections.Generic;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public interface IContentDatabaseExporterArgs
-	{
-		public List<ContentDatabaseScriptableObject> Databases { get; set; }
-	}
-
-	public interface IContentDatabaseExporter
-	{
-		public void Export(IContentDatabaseExporterArgs args = null);
-	}
-
 	public abstract class BaseContentDatabaseExporter : BaseContentDatabaseExporter<DefaultExporterArgs>
 	{
-	}
-
-	public struct DefaultExporterArgs : IContentDatabaseExporterArgs
-	{
-		public List<ContentDatabaseScriptableObject> Databases { get; set; }
 	}
 
 	public abstract class BaseContentDatabaseExporter<TArgs> : IContentDatabaseExporter
@@ -38,5 +23,20 @@ namespace Content.ScriptableObjects.Editor
 			}else if (args is TArgs typedArgs)
 				OnExport(ref typedArgs);
 		}
+	}
+
+	public interface IContentDatabaseExporter
+	{
+		public void Export(IContentDatabaseExporterArgs args = null);
+	}
+
+	public interface IContentDatabaseExporterArgs
+	{
+		public List<ContentDatabaseScriptableObject> Databases { get; set; }
+	}
+
+	public struct DefaultExporterArgs : IContentDatabaseExporterArgs
+	{
+		public List<ContentDatabaseScriptableObject> Databases { get; set; }
 	}
 }

@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
+using Fusumity.Attributes;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
-using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -20,6 +20,7 @@ namespace Content.ScriptableObjects.Editor
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type = typeof(ContentDatabaseJsonFileExporter);
 
+		[DarkCardBox]
 		internal IContentDatabaseExporterArgs _args = new ContentDatabaseJsonFileExporter.Args();
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Attributes;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -34,7 +35,7 @@ namespace UI.Windows.Editor
 					attributes.Add(new HideReferenceObjectPickerAttribute());
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new UIArgsDarkBoxAttribute());
+					attributes.Add(new DarkCardBoxAttribute());
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorWindowTab.args), null));
 
