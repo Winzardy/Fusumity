@@ -38,18 +38,18 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetExporters)}()"));
 					break;
 
-				case nameof(ContentDatabaseExport._args):
+				case ContentDatabaseExport.ARGS_FIELD_NAME:
 					attributes.Add(new HideReferenceObjectPickerAttribute());
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
 					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(ContentDatabaseExport._args), null));
+					attributes.Add(new ShowIfAttribute(ContentDatabaseExport.ARGS_FIELD_NAME, null));
 
 					break;
 
 				case nameof(ContentDatabaseExport.Button):
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 100));
-					attributes.Add(new ButtonAttribute("Export",ButtonSizes.Large));
+					attributes.Add(new ButtonAttribute("Export", ButtonSizes.Large));
 					break;
 			}
 		}

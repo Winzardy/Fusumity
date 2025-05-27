@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Content.ScriptableObjects.Editor
@@ -33,10 +34,13 @@ namespace Content.ScriptableObjects.Editor
 	public interface IContentDatabaseExporterArgs
 	{
 		public List<ContentDatabaseScriptableObject> Databases { get; set; }
+
+		public Type ExporterType { get; }
 	}
 
 	public struct DefaultExporterArgs : IContentDatabaseExporterArgs
 	{
 		public List<ContentDatabaseScriptableObject> Databases { get; set; }
+		public Type ExporterType => null;
 	}
 }

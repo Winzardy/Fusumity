@@ -4,6 +4,7 @@ using Fusumity.Attributes;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -15,13 +16,16 @@ namespace Content.ScriptableObjects.Editor
 
 	public partial class ContentDatabaseExport
 	{
+		/// <see cref="ContentDatabaseExport._args"/>
+		public const string ARGS_FIELD_NAME = "_args";
 		public ContentDatabaseExportOptions options;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type = typeof(ContentDatabaseJsonFileExporter);
 
 		[DarkCardBox]
-		internal IContentDatabaseExporterArgs _args = new ContentDatabaseJsonFileExporter.Args();
+		[SerializeField, SerializeReference]
+		protected IContentDatabaseExporterArgs _args = new ContentDatabaseJsonFileExporter.Args();
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)
 			where T : IContentDatabaseExporter
@@ -67,6 +71,6 @@ namespace Content.ScriptableObjects.Editor
 			_args = type.CreateInstance<IContentDatabaseExporterArgs>();
 		}
 
-		internal void Button() => Export(type, _args);
+		internal void Button() => Export(_args.ExporterType, _args);
 	}
 }

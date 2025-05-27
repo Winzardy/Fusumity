@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Content.Management;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
@@ -15,13 +16,16 @@ namespace Content.ScriptableObjects.Editor
 {
 	public class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
 	{
+		private string ASSETS_FOLDER_NAME = "Assets";
+
 		public class Args : IContentDatabaseExporterArgs
 		{
 			public List<ContentDatabaseScriptableObject> Databases { get; set; }
+			public Type ExporterType => typeof(ContentDatabaseJsonFileExporter);
 
 			public JsonFullPath path = new()
 			{
-				path = "Assets/Content/",
+				path = "Builds/", //TODO: Перенести Builder в Fusumity и брать константу Builder.FOLDER
 				name = "Content"
 			};
 
@@ -42,38 +46,46 @@ namespace Content.ScriptableObjects.Editor
 					EditorUtility.DisplayProgressBar(displayProgressTitle, name, index / (float) dbs.Count);
 					var list = new List<IContentEntry>();
 					database.Fill(list, true);
-					jsonObject.Add(name, list);
+
+					if (list.Count > 0)
+						jsonObject.Add(name, list);
 				}
 
 				EditorUtility.DisplayProgressBar(displayProgressTitle, "Json File", 0.9f);
-				var text = jsonObject.ToJson(new JsonSerializerSettings
-				{
-					ContractResolver = new CustomContractResolver(),
-					Formatting = args.formatting,
-					TypeNameHandling = TypeNameHandling.Auto
-				});
 
-				string unityAssetPath = args.path;
-				var path = Path.Combine(Application.dataPath, unityAssetPath.Remove("Assets/"));
-				var directory = Path.GetDirectoryName(path);
+				var settings = new JsonSerializerSettings(ContentNewtonsoftJsonImporter.Settings)
+				{
+					ContractResolver = new ContentContractResolver(),
+					Formatting = args.formatting
+				};
+				var text = jsonObject.ToJson(settings);
+				var path = args.path;
+
+				var fullPath = Path.Combine(Application.dataPath.Remove(ASSETS_FOLDER_NAME), path);
+				var directory = Path.GetDirectoryName(fullPath);
 				if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
 					Directory.CreateDirectory(directory);
 
-				var exists = File.Exists(path);
+				var exists = File.Exists(fullPath);
 				var writing = true;
 				if (exists)
 				{
-					var prevText = File.ReadAllText(path);
+					var prevText = File.ReadAllText(fullPath);
 					writing = prevText != text;
 				}
 
 				if (writing)
-					File.WriteAllText(path, text);
+					File.WriteAllText(fullPath, text);
 
-				AssetDatabase.ImportAsset(unityAssetPath);
-				var textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(unityAssetPath);
+				TextAsset textAsset = null;
+				if (fullPath.Contains(ASSETS_FOLDER_NAME))
+				{
+					AssetDatabase.ImportAsset(fullPath);
+					textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+				}
+
 				var prefix = exists ? writing ? "Updated" : "Not changed" : "Created";
-				ContentDebug.Log($"{prefix} content json file by path: {path}", textAsset);
+				ContentDebug.Log($"{prefix} content json file by path: {fullPath}", textAsset);
 			}
 			finally
 			{
@@ -100,7 +112,7 @@ namespace Content.ScriptableObjects.Editor
 		public override string ToString() => Path.Combine(path, name + EXTENSION);
 	}
 
-	public class CustomContractResolver : DefaultContractResolver
+	public class ContentContractResolver : DefaultContractResolver
 	{
 		protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
 		{
