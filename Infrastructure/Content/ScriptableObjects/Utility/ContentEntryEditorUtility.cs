@@ -1,17 +1,17 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
 using UnityEditor;
+using Object = UnityEngine.Object;
 
 namespace Content.Editor
 {
-	using UnityObject = UnityEngine.Object;
+	using UnityObject = Object;
 
 	public static partial class ContentEntryEditorUtility
 	{
@@ -27,7 +27,7 @@ namespace Content.Editor
 
 		private static bool _scheduledRefreshAndSave;
 
-		public static void Refresh(this ContentScriptableObject asset)
+		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
 		{
 			if (asset is not IContentEntryScriptableObject scriptableObject)
 				return;
@@ -46,8 +46,8 @@ namespace Content.Editor
 			var so = new SerializedObject(asset);
 
 			scriptableObject.ScriptableContentEntry.ClearNested();
-			Refresh(asset, so);
-			SetDirty(so);
+			Refresh(asset, so, refreshAndSave);
+			SetDirty(so, refreshAndSave);
 
 			if (ContentDebug.Logging.Nested.refresh)
 			{
@@ -58,7 +58,7 @@ namespace Content.Editor
 			}
 		}
 
-		private static void Refresh(ContentScriptableObject asset, SerializedObject serializedObject)
+		private static void Refresh(ContentScriptableObject asset, SerializedObject serializedObject, bool refreshAndSave = true)
 		{
 			if (asset is not IContentEntryScriptableObject scriptableObject)
 				return;
@@ -79,10 +79,10 @@ namespace Content.Editor
 
 				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
 				{
-					iterator.RegenerateGuid(entry, asset);
+					iterator.RegenerateGuid(entry, asset, refreshAndSave);
 
 					if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
-						SetDirty(serializedObject);
+						SetDirty(serializedObject, refreshAndSave);
 					else
 						throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
 				}
