@@ -9,8 +9,9 @@ using UnityEngine;
 namespace Content.ScriptableObjects.Editor
 {
 	[Serializable]
-	public struct ContentDatabaseExportOptions
+	public class ContentDatabaseExportOptions
 	{
+		public bool exportOnBuild = true;
 		public string[] skipDatabases;
 	}
 
@@ -18,6 +19,7 @@ namespace Content.ScriptableObjects.Editor
 	{
 		/// <see cref="ContentDatabaseExport._args"/>
 		public const string ARGS_FIELD_NAME = "_args";
+
 		public ContentDatabaseExportOptions options;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
@@ -26,6 +28,8 @@ namespace Content.ScriptableObjects.Editor
 		[DarkCardBox]
 		[SerializeField, SerializeReference]
 		protected IContentDatabaseExporterArgs _args = new ContentDatabaseJsonFileExporter.Args();
+
+		internal void Export() => Export(_args.ExporterType, _args);
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)
 			where T : IContentDatabaseExporter
@@ -41,7 +45,7 @@ namespace Content.ScriptableObjects.Editor
 			{
 				foreach (var database in ContentDatabaseEditorUtility.Databases)
 				{
-					if (options.skipDatabases.Contains(database.name))
+					if (Asset.options.skipDatabases.Contains(database.name))
 						continue;
 
 					filtered.Add(database);
@@ -49,7 +53,7 @@ namespace Content.ScriptableObjects.Editor
 
 				args ??= new DefaultExporterArgs();
 				args.Databases = filtered;
-				exporter.Export(_args);
+				exporter.Export(Asset._args);
 			}
 		}
 
@@ -71,6 +75,7 @@ namespace Content.ScriptableObjects.Editor
 			_args = type.CreateInstance<IContentDatabaseExporterArgs>();
 		}
 
-		internal void Button() => Export(_args.ExporterType, _args);
+		internal static bool UseExportOnBuild => Asset.options.exportOnBuild;
+		internal static void DefaultExport() => Asset.Export();
 	}
 }

@@ -2,7 +2,7 @@ using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Content.Editor
+namespace Content.ScriptableObjects.Editor
 {
 	public partial class ContentConstantGenerator
 	{

@@ -11,7 +11,7 @@ namespace Content.Editor
 
 		public static bool IsEnable => _enable;
 
-		[MenuItem(PATH, priority = 1000)]
+		[MenuItem(PATH, priority = 1100)]
 		private static void Toggle() => Toggle(!_enable);
 
 		static ContentEntryDebugModeMenu()

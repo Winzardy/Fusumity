@@ -84,7 +84,7 @@ namespace Content.ScriptableObjects.Editor
 
 		public static bool IsEnable => _enable;
 
-		[MenuItem(PATH, priority = 1000)]
+		[MenuItem(PATH, priority = 1101)]
 		private static void Toggle() => Toggle(!_enable);
 
 		static ContentEntryMonoScriptVisibilityMenu()

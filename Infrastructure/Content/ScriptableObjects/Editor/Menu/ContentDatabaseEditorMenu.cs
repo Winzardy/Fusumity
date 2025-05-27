@@ -22,7 +22,7 @@ namespace Content.ScriptableObjects.Editor
 		}
 
 		[MenuItem(ContentMenuConstants.DATABASE_MENU + "/Export", priority = PRIORITY + 40)]
-		public static void Export() => ContentDatabaseExportEditorWindow.Open();
+		public static void Export() => ContentDatabaseExport.DefaultExport();
 	}
 
 	[InitializeOnLoad]

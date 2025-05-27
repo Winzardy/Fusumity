@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Content.ScriptableObjects;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Sapientia.Collections;
@@ -13,7 +12,7 @@ using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 
-namespace Content.Editor
+namespace Content.ScriptableObjects.Editor
 {
 	public static partial class ContentConstantGenerator
 	{

@@ -3,7 +3,7 @@ using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using UnityEditor;
 
-namespace Content.Editor
+namespace Content.ScriptableObjects.Editor
 {
 	[HideMonoScript]
 	public partial class ContentConstantGeneratorSettings : AdvancedScriptableObject

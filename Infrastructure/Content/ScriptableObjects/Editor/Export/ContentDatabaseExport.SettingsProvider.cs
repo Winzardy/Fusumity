@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public partial class ContentConstantGeneratorSettings
+	public partial class ContentDatabaseExport
 	{
 		private const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Content/";
-		private const string SETTINGS_PROVIDER_LABEL = "Constant Generator";
+		private const string SETTINGS_PROVIDER_LABEL = "Database Export";
 		private const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;
 
 		private static OdinEditor _editor;

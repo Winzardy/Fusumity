@@ -23,7 +23,7 @@ namespace Content.ScriptableObjects.Editor
 			switch (member.Name)
 			{
 				case nameof(ContentDatabaseExport.options):
-					attributes.Add(new TitleAttribute("Options"));
+					attributes.Add(new PropertySpaceAttribute(0, 10));
 					attributes.Add(new HideLabelAttribute());
 					break;
 
@@ -32,7 +32,7 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new BoxGroupAttribute("Box", showLabel: false));
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal"));
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new LabelTextAttribute("Type"));
+					attributes.Add(new LabelTextAttribute("Export To"));
 
 					var className = nameof(ContentDatabaseExportAttributeProcessor);
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetExporters)}()"));
@@ -47,9 +47,15 @@ namespace Content.ScriptableObjects.Editor
 
 					break;
 
-				case nameof(ContentDatabaseExport.Button):
+				case nameof(ContentDatabaseExport.Export):
+					if (member is MethodInfo method)
+					{
+						if (method.GetParameters().Length > 0)
+							break;
+					}
+
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 100));
-					attributes.Add(new ButtonAttribute("Export", ButtonSizes.Large));
+					attributes.Add(new ButtonAttribute("Run", ButtonSizes.Large));
 					break;
 			}
 		}
