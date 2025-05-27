@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
@@ -67,7 +68,8 @@ namespace Content.Editor
 				return;
 			do
 			{
-				if (!iterator.TryGetContentEntry(out var entry))
+				using var modification = iterator.TryStartModificationEntry(out var entry);
+				if (!modification)
 					continue;
 
 				var reference = iterator.ToContentReference();
@@ -120,6 +122,9 @@ namespace Content.Editor
 
 		public static bool Untrack(in (ContentScriptableObject asset, MemberReflectionReference<IUniqueContentEntry> reference) key)
 		{
+			if (!key.asset)
+				return false;
+
 			var hash = $"{key.asset.GetInstanceID()}:{key.reference.Path}";
 			return _tracking.Remove(hash);
 		}
@@ -149,25 +154,6 @@ namespace Content.Editor
 				reference.CacheClear();
 		}
 
-		private static bool TryGetContentEntry(this SerializedProperty property, out IUniqueContentEntry entry)
-		{
-			entry = null;
-			if (!property.type.StartsWith(CONTENT_ENTRY_PREFIX))
-				return false;
-
-			var value = property.propertyType == SerializedPropertyType.ManagedReference
-				? property.managedReferenceValue
-				: property.isArray
-					? null
-					: property.boxedValue;
-
-			if (value is not IUniqueContentEntry contentEntry)
-				return false;
-
-			entry = contentEntry;
-			return true;
-		}
-
 		[CanBeNull]
 		public static MemberReflectionReference<IUniqueContentEntry> ToContentReference(this SerializedProperty property)
 		{
@@ -192,7 +178,7 @@ namespace Content.Editor
 			return reference;
 		}
 
-		public static void RecursiveRegenerateAndRefresh(this ContentScriptableObject asset)
+		public static void RecursiveRegenerateAndRefresh(this ContentScriptableObject asset, bool refreshAndSave = true)
 		{
 			if (asset is not IContentEntryScriptableObject scriptableObject)
 				return;
@@ -205,20 +191,21 @@ namespace Content.Editor
 				return;
 			do
 			{
-				if (!iterator.TryGetContentEntry(out var entry) || entry is IScriptableContentEntry)
+				using var modification = iterator.TryStartModificationEntry(out var entry);
+				if (!modification || entry is IScriptableContentEntry)
 					continue;
 
 				var reference = iterator.ToContentReference();
 				if (reference == null)
 					continue;
 
-				iterator.RegenerateGuid(entry, asset);
+				iterator.RegenerateGuid(entry, asset, refreshAndSave);
+				SetDirty(iterator.serializedObject, refreshAndSave);
 
 				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
 					throw new Exception($"Can't add nested entry with guid [ {entry.Guid} ] by path [ {reference.Path} ]");
 
 				Track((asset, reference), in entry.Guid);
-				SetDirty(iterator.serializedObject);
 			} while (iterator.NextVisible(true));
 		}
 
@@ -237,30 +224,15 @@ namespace Content.Editor
 
 		public static void RegenerateGuid(this SerializedProperty property,
 			IUniqueContentEntry entry,
-			ContentScriptableObject asset)
+			ContentScriptableObject asset,
+			bool refreshAndSave = true)
 		{
-			RegenerateGuid(entry, property.propertyPath, asset);
-			RecursiveRegenerateGuidForChildren(property, asset);
+			RegenerateGuid(entry, property.propertyPath, asset, refreshAndSave);
+			RecursiveRegenerateGuidForChildren(property, asset, refreshAndSave);
 		}
 
-		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject asset)
-		{
-			var prevEntryGuid = entry.Guid;
-			entry.RegenerateGuid();
-			EditorUtility.SetDirty(asset);
-			ScheduleRefreshAndSave();
-
-			if (ContentDebug.Logging.Nested.regenerate)
-			{
-				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
-				if (prevEntryGuid != SerializableGuid.Empty)
-					msg += $" from [ {prevEntryGuid} ]";
-				msg += " for content entry by path: " + path;
-				ContentDebug.LogWarning(msg, asset);
-			}
-		}
-
-		private static void RecursiveRegenerateGuidForChildren(this SerializedProperty property, ContentScriptableObject asset)
+		private static void RecursiveRegenerateGuidForChildren(this SerializedProperty property, ContentScriptableObject asset,
+			bool refreshAndSave = true)
 		{
 			var iterator = property.Copy();
 			var depth = property.depth;
@@ -273,13 +245,33 @@ namespace Content.Editor
 				if (iterator.depth <= depth)
 					break;
 
+				using var modification = iterator.TryStartModificationEntry(out var entry);
 				// Попробуем получить объект из property
-				if (!iterator.TryGetContentEntry(out var entry))
+				if (!modification)
 					continue;
 
-				RegenerateGuid(entry, iterator.propertyPath, asset);
-				SetDirty(iterator.serializedObject);
+				RegenerateGuid(entry, iterator.propertyPath, asset, refreshAndSave);
+				SetDirty(iterator.serializedObject, refreshAndSave);
 			} while (iterator.NextVisible(true));
+		}
+
+		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject asset, bool refreshAndSave = true)
+		{
+			var prevEntryGuid = entry.Guid;
+
+			entry.RegenerateGuid();
+			EditorUtility.SetDirty(asset);
+			if (refreshAndSave)
+				ScheduleRefreshAndSave();
+
+			if (ContentDebug.Logging.Nested.regenerate)
+			{
+				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
+				if (prevEntryGuid != SerializableGuid.Empty)
+					msg += $" from [ {prevEntryGuid} ]";
+				msg += " for content entry by path: " + path;
+				ContentDebug.LogWarning(msg, asset);
+			}
 		}
 
 		private static void RestoreGuid(IUniqueContentEntry entry, in SerializableGuid guid, string path, UnityObject source)
@@ -293,12 +285,13 @@ namespace Content.Editor
 					source);
 		}
 
-		private static void SetDirty(SerializedObject serializedObject)
+		private static void SetDirty(SerializedObject serializedObject, bool refreshAndSave = true)
 		{
 			EditorUtility.SetDirty(serializedObject.targetObject);
 			serializedObject.ApplyModifiedProperties();
 
-			ScheduleRefreshAndSave();
+			if (refreshAndSave)
+				ScheduleRefreshAndSave();
 		}
 
 		private static void ScheduleRefreshAndSave()
@@ -315,6 +308,41 @@ namespace Content.Editor
 				AssetDatabase.SaveAssets();
 				_scheduledRefreshAndSave = false;
 			}
+		}
+
+		private static SerializedPropertyModification TryStartModificationEntry(this SerializedProperty property,
+			out IUniqueContentEntry entry)
+		{
+			entry = null;
+			if (!property.type.StartsWith(CONTENT_ENTRY_PREFIX))
+				return null;
+
+			if (property.isArray)
+				return null;
+
+			var propertyValue = property.GetValueByReflection();
+			if (propertyValue is not IUniqueContentEntry uniqueContentEntry)
+				return null;
+
+			entry = uniqueContentEntry;
+			return entry == null ? null : new SerializedPropertyModification(property);
+		}
+
+		private class SerializedPropertyModification : IDisposable
+		{
+			private readonly SerializedProperty _property;
+
+			public SerializedPropertyModification(SerializedProperty property)
+			{
+				_property = property;
+			}
+
+			public void Dispose()
+			{
+				_property.serializedObject.ApplyModifiedProperties();
+			}
+
+			public static implicit operator bool(SerializedPropertyModification modification) => modification != null;
 		}
 	}
 }

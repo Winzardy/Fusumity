@@ -216,6 +216,8 @@ namespace Content.ScriptableObjects.Editor
 						if (scriptableObject is ContentDatabaseScriptableObject)
 							continue;
 
+						scriptableObject.Sync();
+
 						var type = scriptableObject.GetType();
 						if (type.Namespace == moduleName)
 						{

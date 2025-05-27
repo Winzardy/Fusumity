@@ -25,6 +25,20 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		public virtual bool UseCustomInspector => false;
 
+		/// <inheritdoc cref="Sync(bool)"/>
+		public void Sync() => Sync(true);
+
+		/// <summary>
+		/// Синхронизирует Entry с ScriptableObject
+		/// </summary>
+		public void Sync(bool forceSave) => OnSync(forceSave);
+
+		protected virtual void OnSync(bool forceSave)
+		{
+		}
+
+		public virtual bool NeedSync() => false;
+
 		protected virtual void OnValidate()
 		{
 			if (timeCreated != 0)

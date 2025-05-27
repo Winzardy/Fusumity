@@ -59,24 +59,28 @@ namespace Content.ScriptableObjects
 			return _entry.Clone();
 		}
 
-		protected virtual void OnImport(ref T value)
-		{
-		}
-
 		bool IUniqueContentEntryScriptableObject.UseCustomId => useCustomId;
+
 		IUniqueContentEntry IUniqueContentEntrySource.UniqueContentEntry => _entry;
+
 		public Type ValueType => typeof(T);
 
 		public ref readonly SerializableGuid Guid => ref _entry.Guid;
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
+
 		IUniqueContentEntry<T> IUniqueContentEntrySource<T>.UniqueContentEntry => _entry;
+
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
 		public virtual bool Validate()
 		{
 #if UNITY_EDITOR
-			ForceUpdateEntry();
+			if (NeedSync())
+			{
+				ContentDebug.LogError("Need sync!", this);
+				return false;
+			}
 #endif
 			if (Id.IsNullOrEmpty())
 			{
@@ -85,6 +89,10 @@ namespace Content.ScriptableObjects
 			}
 
 			return true;
+		}
+
+		protected virtual void OnImport(ref T value)
+		{
 		}
 
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>

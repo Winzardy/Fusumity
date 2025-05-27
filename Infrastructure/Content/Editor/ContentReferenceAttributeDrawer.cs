@@ -29,6 +29,7 @@ namespace Content.Editor
 	public class ContentReferenceDrawer : OdinValueDrawer<ContentReference>
 	{
 		public const string TOOLTIP_SPACE = "\n\n";
+		public const string TOOLTIP_SINGLE_SPACE = "\n";
 
 		private bool _guidRawMode;
 
@@ -196,7 +197,9 @@ namespace Content.Editor
 						if (!uniqueId.IsNullOrEmpty() && !uniqueId.Contains(guidStr))
 						{
 							if (!targetLabel.tooltip.IsNullOrEmpty())
-								targetLabel.tooltip += ContentReferenceDrawer.TOOLTIP_SPACE;
+								targetLabel.tooltip += guidStr == string.Empty
+									? ContentReferenceDrawer.TOOLTIP_SPACE
+									: ContentReferenceDrawer.TOOLTIP_SINGLE_SPACE;
 
 							targetLabel.tooltip += $"{TOOLTIP_PREFIX}{uniqueId}";
 						}

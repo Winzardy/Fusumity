@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Sapientia.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -170,6 +172,33 @@ namespace Fusumity.Editor.Utility
 			}
 
 			return parentSerializedProperty;
+		}
+
+		public static object GetValueByReflection(this SerializedProperty property)
+		{
+			object obj = property.serializedObject.targetObject;
+			var path = property.propertyPath.Replace(".Array.data[", "[").Split('.');
+
+			foreach (var part in path)
+			{
+				if (part.Contains("["))
+				{
+					var fieldName = part[..part.IndexOf('[')];
+					var index = int.Parse(part[(part.IndexOf('[') + 1)..^1]);
+
+					var list = obj.GetValueByReflectionSafe(fieldName) as IList;
+					obj = list![index];
+				}
+				else
+				{
+					obj = obj.GetValueByReflectionSafe(part);
+				}
+
+				if (obj == null)
+					break;
+			}
+
+			return obj;
 		}
 	}
 }

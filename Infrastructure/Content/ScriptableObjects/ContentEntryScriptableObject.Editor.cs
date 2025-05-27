@@ -1,7 +1,9 @@
 ﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using Content.Editor;
+using Fusumity.Editor.Utility;
 using Sapientia;
+using Sapientia.Extensions;
 using UnityEditor;
 
 namespace Content.ScriptableObjects
@@ -37,24 +39,14 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		private SerializableGuid _guid => Guid;
 
-		private void OnEnable()
+		protected override void OnSync(bool forceSave)
 		{
-			ForceUpdateEntry();
-		}
-
-		//TODO: вызывается при ренейме?
-		private void ForceUpdateEntry(bool skip = true)
-		{
-			var path = AssetDatabase.GetAssetPath(this);
-			var unityGuidStr = AssetDatabase.AssetPathToGUID(path);
-
-			//Вызывается два раза и второй раз валидно все, а первый нет...
-			if (skip && _firstSkip.Add(unityGuidStr))
-				return;
+			var unityGuidStr = this.ToGuid();
 
 			if (!SerializableGuid.TryParse(unityGuidStr, out var guid))
 			{
-				ContentDebug.LogWarning("Can't [" + unityGuidStr + "] parse guid", this);
+				if (!unityGuidStr.IsNullOrWhiteSpace())
+					ContentDebug.LogWarning("Can't [" + unityGuidStr + "] parse guid", this);
 				return;
 			}
 
@@ -70,22 +62,27 @@ namespace Content.ScriptableObjects
 			if (_entry.Guid == guid)
 				return;
 
+			ForceUpdateTimeCreated();
+			this.RecursiveRegenerateAndRefresh(false);
 			_entry.scriptableObject = this;
 			_entry.SetGuid(in guid);
-			ForceUpdateTimeCreated();
 
-			if (skip)
-				this.RecursiveRegenerateAndRefresh();
+			if (!forceSave)
+				return;
+
+			EditorUtility.SetDirty(this);
+			AssetDatabase.SaveAssetIfDirty(this);
+			AssetDatabase.Refresh();
 		}
 
-		protected override void OnValidate()
+		public override bool NeedSync()
 		{
-			base.OnValidate();
+			var unityGuidStr = this.ToGuid();
 
-			if (_entry.Guid == SerializableGuid.Empty)
-				ForceUpdateEntry(false);
+			if (!SerializableGuid.TryParse(unityGuidStr, out var guid))
+				return true;
 
-			_entry.scriptableObject = this;
+			return _entry.Guid != guid;
 		}
 	}
 
