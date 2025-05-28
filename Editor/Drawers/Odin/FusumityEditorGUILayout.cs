@@ -1,6 +1,5 @@
 using System;
 using Content;
-using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -16,7 +15,7 @@ namespace Fusumity.Editor
 		public static bool drawAssetReference = true;
 	}
 
-	public static class FusumityEditorGUILayout
+	public static partial class FusumityEditorGUILayout
 	{
 		public const string NONE = "None";
 

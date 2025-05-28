@@ -8,19 +8,10 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
-	[Serializable]
-	public class ContentDatabaseExportOptions
-	{
-		public bool exportOnBuild = true;
-		public string[] skipDatabases;
-	}
-
 	public partial class ContentDatabaseExport
 	{
 		/// <see cref="ContentDatabaseExport._args"/>
 		public const string ARGS_FIELD_NAME = "_args";
-
-		public ContentDatabaseExportOptions options;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type = typeof(ContentDatabaseJsonFileExporter);
@@ -45,7 +36,7 @@ namespace Content.ScriptableObjects.Editor
 			{
 				foreach (var database in ContentDatabaseEditorUtility.Databases)
 				{
-					if (Asset.options.skipDatabases.Contains(database.name))
+					if (Asset.projectSettings.skipDatabases.Contains(database.name))
 						continue;
 
 					filtered.Add(database);
@@ -75,7 +66,7 @@ namespace Content.ScriptableObjects.Editor
 			_args = type.CreateInstance<IContentDatabaseExporterArgs>();
 		}
 
-		internal static bool UseExportOnBuild => Asset.options.exportOnBuild;
+		internal static bool UseExportOnBuild => Asset.projectSettings.exportOnBuild;
 		internal static void DefaultExport() => Asset.Export();
 	}
 }

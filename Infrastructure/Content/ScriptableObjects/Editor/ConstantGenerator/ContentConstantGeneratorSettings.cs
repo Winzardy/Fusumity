@@ -14,7 +14,7 @@ namespace Content.ScriptableObjects.Editor
 		private const string PATH = FOLDER + "/" + nameof(ContentConstantGeneratorSettings) + FORMAT;
 
 		[HideLabel]
-		public ContentConstantGenerator.ProjectSettings projectSettings;
+		public ContentConstantGenerator.ProjectSettings settings;
 
 		public static ContentConstantGeneratorSettings Asset
 		{

@@ -1,12 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
 using Sapientia.Extensions;
-using Sapientia.Pooling;
-using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 
@@ -22,9 +19,10 @@ namespace Content.ScriptableObjects.Editor
 
 			switch (member.Name)
 			{
-				case nameof(ContentDatabaseExport.options):
+				case nameof(ContentDatabaseExport.projectSettings):
 					attributes.Add(new PropertySpaceAttribute(0, 10));
 					attributes.Add(new HideLabelAttribute());
+					attributes.Add(new PropertyOrderAttribute(-1));
 					break;
 
 				case nameof(ContentDatabaseExport.type):
@@ -71,35 +69,6 @@ namespace Content.ScriptableObjects.Editor
 				   .NicifyText();
 
 				yield return new ValueDropdownItem(label, type);
-			}
-		}
-	}
-
-	public class ContentDatabaseExportOptionsAttributeProcessor : OdinAttributeProcessor<ContentDatabaseExportOptions>
-	{
-		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
-		{
-			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
-
-			switch (member.Name)
-			{
-				case nameof(ContentDatabaseExportOptions.skipDatabases):
-					var className = nameof(ContentDatabaseExportOptionsAttributeProcessor);
-					var dropdownAttribute = new ValueDropdownAttribute($"@{className}.{nameof(GetDatabases)}()")
-					{
-						IsUniqueList = true
-					};
-					attributes.Add(dropdownAttribute);
-					break;
-			}
-		}
-
-		private static IEnumerable GetDatabases()
-		{
-			foreach (var database in ContentDatabaseEditorUtility.Databases)
-			{
-				var name = database.name;
-				yield return new ValueDropdownItem(database.ToLabel(), name);
 			}
 		}
 	}

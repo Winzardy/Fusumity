@@ -1,8 +1,7 @@
+using Fusumity.Editor;
 using Fusumity.Utility;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
-using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -13,7 +12,6 @@ namespace Content.ScriptableObjects.Editor
 		private const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;
 
 		private static OdinEditor _editor;
-		private static GUIStyle _style;
 
 		[SettingsProvider]
 		public static SettingsProvider CreateProvider()
@@ -30,11 +28,10 @@ namespace Content.ScriptableObjects.Editor
 				if (CreateOrUpdateEditor())
 					return;
 
-				SirenixEditorGUI.BeginIndentedVertical(style);
+				using (new FusumityEditorGUILayout.SettingsProviderScope())
 				{
 					_editor.OnInspectorGUI();
 				}
-				SirenixEditorGUI.EndIndentedVertical();
 			}
 
 			// Возвращает true, если нельзя отрисовывать редактор
@@ -59,24 +56,6 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			void CreateEditor() => _editor = (OdinEditor) OdinEditor.CreateEditor(Asset, typeof(OdinEditor));
-		}
-
-		private static GUIStyle style
-		{
-			get
-			{
-				if (_style == null)
-				{
-					_style = new GUIStyle();
-					var offset = _style.margin;
-					offset.top += 3;
-					offset.left += 10;
-					offset.right += 3;
-					_style.margin = offset;
-				}
-
-				return _style;
-			}
 		}
 	}
 }
