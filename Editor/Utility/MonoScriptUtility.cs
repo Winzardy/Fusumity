@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Fusumity.Editor.Extensions;
 using Sapientia.Extensions;
 using UnityEditor;
 
@@ -8,16 +10,18 @@ namespace Fusumity.Editor.Utility
 {
 	public static class MonoScriptUtility
 	{
-		private static Dictionary<Type, MonoScript> _cache;
-		private static Dictionary<string, MonoScript> _cacheByName;
+		private static Dictionary<string, MonoScript> _pathToScript;
+		private static Dictionary<Type, MonoScript> _typeToScript;
+		private static Dictionary<string, HashSet<Type>> _scriptToTypes;
+		private static Dictionary<string, MonoScript> _typeNameToScript;
 
 		public static MonoScript FindMonoScriptByTypeName(this string typeName)
 		{
 			if (typeName.IsNullOrEmpty())
 				return null;
 
-			_cacheByName ??= new Dictionary<string, MonoScript>(16);
-			if (_cacheByName.TryGetValue(typeName, out var cachedScript))
+			_typeNameToScript ??= new Dictionary<string, MonoScript>(16);
+			if (_typeNameToScript.TryGetValue(typeName, out var cachedScript))
 				return cachedScript;
 
 			var scripts = AssetDatabaseUtility.GetAssets<MonoScript>();
@@ -25,12 +29,12 @@ namespace Fusumity.Editor.Utility
 			{
 				if (script.name == typeName)
 				{
-					_cacheByName[typeName] = script;
+					_typeNameToScript[typeName] = script;
 					return script;
 				}
 			}
 
-			_cacheByName[typeName] = null;
+			_typeNameToScript[typeName] = null;
 			return null;
 		}
 
@@ -49,22 +53,27 @@ namespace Fusumity.Editor.Utility
 			if (typeof(IList).IsAssignableFrom(type) && type.IsGenericType)
 				type = type.GetGenericArguments()[0];
 
-			var scripts = AssetDatabaseUtility.GetAssets<MonoScript>();
+			_pathToScript ??= AssetDatabaseUtility.GetAssets<MonoScript>()
+			   .ToDictionary(AssetDatabase.GetAssetPath, x => x);
 
-			_cache ??= new Dictionary<Type, MonoScript>(16);
-			if (_cache.TryGetValue(type, out var cachedScript))
+			_typeToScript ??= new Dictionary<Type, MonoScript>(16);
+			if (_typeToScript.TryGetValue(type, out var cachedScript))
 				return cachedScript;
 
-			foreach (var script in scripts)
+			foreach (var script in _pathToScript.Values)
 			{
 				if (script.GetClass() == type)
 				{
-					_cache[type] = script;
+					_typeToScript[type] = script;
+					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
+					var scriptPath = script.GetAssetPath();
+					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
+					_scriptToTypes[scriptPath].Add(type);
 					return script;
 				}
 			}
 
-			foreach (var script in scripts)
+			foreach (var script in _pathToScript.Values)
 			{
 				var c = script.GetClass();
 
@@ -89,13 +98,41 @@ namespace Fusumity.Editor.Utility
 
 				if (script.text.Contains(str))
 				{
-					_cache[type] = script;
+					_typeToScript[type] = script;
+					var scriptPath = script.GetAssetPath();
+					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
+					_scriptToTypes[scriptPath].Add(type);
 					return script;
 				}
 			}
 
-			_cache = null;
+			_typeToScript = null;
 			return null;
+		}
+
+		public static MonoScript GetMonoScript(string path)
+		{
+			return _pathToScript[path];
+		}
+
+		public static HashSet<Type> GetTypes(string path)
+		{
+			return _scriptToTypes[path];
+		}
+
+		public static HashSet<Type> GetTypes(MonoScript script)
+		{
+			return _scriptToTypes[script.GetAssetPath()];
+		}
+
+		public static void ClearCache()
+		{
+			_pathToScript.Clear();
+
+			foreach (var hashSet in _scriptToTypes.Values)
+				hashSet.Clear();
+
+			_scriptToTypes.Clear();
 		}
 	}
 }

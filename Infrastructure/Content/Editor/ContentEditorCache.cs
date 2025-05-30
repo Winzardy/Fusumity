@@ -24,14 +24,19 @@ namespace Content.Editor
 			}
 		}
 
-		public static ScriptableObject GetAsset(string guid) => cache[guid];
-
 		public static void Refresh()
 		{
 			_cache ??= new();
 			_cache.Clear();
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
 				cache[scriptableObject.ToGuid()] = scriptableObject;
+		}
+
+		public static void Refresh<T>(IUniqueContentEntrySource<T> source)
+		{
+			var asset = (ScriptableObject) source;
+			cache[asset.ToGuid()] = asset;
+			Register(typeof(T), source);
 		}
 
 		public static bool TryGetSource(Type type, in SerializableGuid guid, out IContentEntrySource source)
@@ -41,7 +46,8 @@ namespace Content.Editor
 			if (EditorContentEntryMap.Contains(type, in guid))
 			{
 				source = EditorContentEntryMap.Get(type, in guid);
-				return true;
+				if (source != null)
+					return true;
 			}
 
 			Refresh(type);
@@ -49,7 +55,7 @@ namespace Content.Editor
 			if (EditorContentEntryMap.Contains(type, in guid))
 			{
 				source = EditorContentEntryMap.Get(type, in guid);
-				return true;
+				return source != null;
 			}
 
 			return false;
@@ -62,7 +68,8 @@ namespace Content.Editor
 			if (EditorContentEntryMap.Contains(type, id))
 			{
 				source = EditorContentEntryMap.Get(type, id);
-				return true;
+				if (source != null)
+					return true;
 			}
 
 			Refresh(type);
@@ -70,7 +77,7 @@ namespace Content.Editor
 			if (EditorContentEntryMap.Contains(type, id))
 			{
 				source = EditorContentEntryMap.Get(type, id);
-				return true;
+				return source != null;
 			}
 
 			return false;
@@ -83,7 +90,8 @@ namespace Content.Editor
 			if (EditorSingleContentEntryShortcut.Contains(type))
 			{
 				source = EditorSingleContentEntryShortcut.Get(type);
-				return true;
+				if (source != null)
+					return true;
 			}
 
 			Refresh(type);
@@ -91,7 +99,7 @@ namespace Content.Editor
 			if (EditorSingleContentEntryShortcut.Contains(type))
 			{
 				source = EditorSingleContentEntryShortcut.Get(type);
-				return true;
+				return source != null;
 			}
 
 			return false;
@@ -105,7 +113,7 @@ namespace Content.Editor
 			if (reference.IsEmpty())
 			{
 				source = null;
-				return false;
+				return true;
 			}
 
 			return TryGetSource(reference.ValueType, reference.Guid, out source);
@@ -138,26 +146,30 @@ namespace Content.Editor
 			EditorContentEntryMap.Clear(type);
 			foreach (var scriptableObject in cache.Values)
 			{
-				if (scriptableObject is IContentEntrySource target)
-				{
-					var valueType = target.ContentEntry.ValueType;
-					if (valueType == type)
-					{
-						EditorContentEntryMap.Register(valueType, target);
+				if (scriptableObject is not IContentEntrySource target)
+					continue;
 
-						if (!target.ContentEntry.IsUnique())
-							EditorSingleContentEntryShortcut.Register(valueType, target);
-					}
+				var valueType = target.ContentEntry.ValueType;
 
-					if (target.ContentEntry.Nested.IsNullOrEmpty())
-						continue;
+				if (valueType == type)
+					Register(valueType, target);
 
-					EditorContentEntryMap.Register(valueType, target);
+				if (target.ContentEntry.Nested.IsNullOrEmpty())
+					continue;
 
-					if (!target.ContentEntry.IsUnique())
-						EditorSingleContentEntryShortcut.Register(valueType, target);
-				}
+				Register(valueType, target);
 			}
+		}
+
+		private static void Register(Type valueType, IContentEntrySource target)
+		{
+			if (!target.Validate())
+				return;
+
+			EditorContentEntryMap.Register(valueType, target);
+
+			if (!target.ContentEntry.IsUnique())
+				EditorSingleContentEntryShortcut.Register(valueType, target);
 		}
 	}
 
@@ -379,20 +391,6 @@ namespace Content.Editor
 		}
 	}
 
-	public static class ContentReferenceExtensions
-	{
-		public static string ToLabel<T>(this ContentReference<T> reference)
-		{
-			if (ContentEditorCache.TryGetSource(typeof(T), in reference.guid, out var source))
-			{
-				if (source.ContentEntry is IIdentifiable identifiable)
-					return identifiable.Id;
-			}
-
-			return reference.guid.ToString();
-		}
-	}
-
 	internal class NestedContentEntrySource : INestedContentEntrySource
 	{
 		public IContentEntrySource source;
@@ -402,5 +400,7 @@ namespace Content.Editor
 		public IUniqueContentEntry UniqueContentEntry
 			=> source.ContentEntry.Nested[guid]
 			   .Resolve(source.ContentEntry, true);
+
+		public bool Validate() => source.Validate();
 	}
 }

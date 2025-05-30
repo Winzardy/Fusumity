@@ -19,7 +19,7 @@ namespace Content.ScriptableObjects.Editor
 
 			switch (member.Name)
 			{
-				case nameof(ContentDatabaseExport.projectSettings):
+				case nameof(ContentDatabaseExport.settings):
 					attributes.Add(new PropertySpaceAttribute(0, 10));
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new PropertyOrderAttribute(-1));

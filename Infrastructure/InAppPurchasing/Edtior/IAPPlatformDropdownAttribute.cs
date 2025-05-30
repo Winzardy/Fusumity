@@ -17,6 +17,6 @@ namespace InAppPurchasing.Editor
 	public static class IAPPlatformDropdownAttributeHelper
 	{
 		public static IEnumerable<ValueDropdownItem<string>> GetAll() =>
-			IAPPlatformExt.GetAll().Select(pair => new ValueDropdownItem<string>(IAPPlatformExt.GetLabel(pair.platform), pair.platform));
+			IAPPlatformExtensions.GetAll().Select(pair => new ValueDropdownItem<string>(IAPPlatformExtensions.GetLabel(pair.platform), pair.platform));
 	}
 }

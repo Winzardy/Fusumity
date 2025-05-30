@@ -89,7 +89,7 @@ namespace Content.Editor
 
 		private bool _nestedFoldout;
 
-		private readonly Dictionary<Type, bool> _keyToSearchResult = new();
+		private bool? _found;
 
 		private static Dictionary<Type, Type> _valueTypeToSourceType = new();
 
@@ -570,68 +570,67 @@ namespace Content.Editor
 
 		private IContentEntrySource FindSelectedSource(Type type, string id)
 		{
-			if (_keyToSearchResult.ContainsKey(type) && !_keyToSearchResult[type])
-				return null;
-
 			if (ContentEditorCache.TryGetSource(type, id, out var source))
 			{
-				_keyToSearchResult[type] = true;
+				_found = true;
 				return source;
 			}
 
+			if (_found ?? false)
+				return null;
+
 			ContentEditorCache.Refresh();
-			if (ContentEditorCache.TryGetSource(type, id, out var refreshed))
+			if (ContentEditorCache.TryGetSource(type, id, out source))
 			{
-				_keyToSearchResult[type] = true;
-				return refreshed;
+				_found = true;
+				return source;
 			}
 
-			_keyToSearchResult[type] = false;
+			_found = false;
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(Type type, in SerializableGuid guid)
 		{
-			if (_keyToSearchResult.ContainsKey(type) && !_keyToSearchResult[type])
-				return null;
-
 			if (ContentEditorCache.TryGetSource(type, in guid, out var source))
 			{
-				_keyToSearchResult[type] = true;
+				_found = true;
 				return source;
 			}
 
+			if (_found ?? false)
+				return null;
+
 			ContentEditorCache.Refresh();
-			if (ContentEditorCache.TryGetSource(type, in guid, out var refreshed))
+			if (ContentEditorCache.TryGetSource(type, in guid, out source))
 			{
-				_keyToSearchResult[type] = true;
-				return refreshed;
+				_found = true;
+				return source;
 			}
 
-			_keyToSearchResult[type] = false;
+			_found = false;
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(IContentReference reference)
 		{
-			var type = reference.GetType();
-			if (_keyToSearchResult.ContainsKey(type) && !_keyToSearchResult[type])
-				return null;
-
 			if (ContentEditorCache.TryGetSource(reference, out var source))
 			{
-				_keyToSearchResult[type] = true;
+				_found = true;
 				return source;
 			}
 
+			if (_found ?? false)
+				return null;
+
 			ContentEditorCache.Refresh();
-			if (ContentEditorCache.TryGetSource(reference, out var refreshedSource))
+			if (ContentEditorCache.TryGetSource(reference, out source))
 			{
-				_keyToSearchResult[type] = true;
-				return refreshedSource;
+				_found = true;
+				return source;
 			}
 
-			_keyToSearchResult[type] = false;
+			_found = false;
 			return null;
 		}
 	}

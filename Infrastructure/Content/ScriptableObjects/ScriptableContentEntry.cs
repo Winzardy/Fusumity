@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Content.ScriptableObjects
 {
-	[Serializable]
+	[Serializable, ClientOnly]
 	internal sealed partial class ScriptableContentEntry<T> : UniqueContentEntry<T>, IScriptableContentEntry<T>, IIdentifiable
 	{
 		public ContentScriptableObject scriptableObject;

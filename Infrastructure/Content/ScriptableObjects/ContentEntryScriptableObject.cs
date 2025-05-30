@@ -78,13 +78,13 @@ namespace Content.ScriptableObjects
 #if UNITY_EDITOR
 			if (NeedSync())
 			{
-				ContentDebug.LogError("Need sync!", this);
+				ContentDebug.LogWarning("Need sync!", this);
 				return false;
 			}
 #endif
 			if (Id.IsNullOrEmpty())
 			{
-				ContentDebug.LogError("Empty id!", this);
+				ContentDebug.LogWarning("Empty id!", this);
 				return false;
 			}
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Content.ScriptableObjects
@@ -14,15 +15,22 @@ namespace Content.ScriptableObjects
 			return entries;
 		}
 
-		public static void Fill(this ContentDatabaseScriptableObject database, List<IContentEntry> list, bool clone = false)
+		public static void Fill(this ContentDatabaseScriptableObject database, List<IContentEntry> list, bool clone = false,
+			Func<IContentEntry, bool> predicate = null)
 		{
 			if (TryImport(database, clone, out var entry))
-				list.Add(entry);
+			{
+				if (predicate?.Invoke(entry) ?? true)
+					list.Add(entry);
+			}
 
 			foreach (var scriptableObject in database.scriptableObjects)
 			{
 				if (TryImport(scriptableObject, clone, out entry))
-					list.Add(entry);
+				{
+					if (predicate?.Invoke(entry) ?? true)
+						list.Add(entry);
+				}
 			}
 		}
 

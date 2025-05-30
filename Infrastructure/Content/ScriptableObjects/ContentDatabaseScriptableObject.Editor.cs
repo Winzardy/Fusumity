@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-
 namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentDatabaseScriptableObject<T>

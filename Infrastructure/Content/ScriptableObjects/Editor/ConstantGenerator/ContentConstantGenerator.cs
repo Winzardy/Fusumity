@@ -75,6 +75,11 @@ namespace Content.ScriptableObjects.Editor
 						""noEngineReferences"": true
 					}}";
 
+				var directory = Path.GetDirectoryName(constantsAsmdefPath);
+
+				if (!Directory.Exists(directory))
+					Directory.CreateDirectory(directory);
+
 				File.WriteAllText(constantsAsmdefPath, text);
 				AssetDatabase.ImportAsset(constantsAsmdefPath);
 				var asmdefAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(constantsAsmdefPath);

@@ -1,4 +1,5 @@
 ﻿using System;
+using Sapientia;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
@@ -33,6 +34,14 @@ namespace Content.ScriptableObjects
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
+		bool IValidatable.Validate()
+		{
+#if UNITY_EDITOR
+			if (NeedSync())
+				return false;
+#endif
+			return true;
+		}
 	}
 
 	public abstract class SingleContentEntryScriptableObject : ContentScriptableObject

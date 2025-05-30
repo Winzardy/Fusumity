@@ -2,7 +2,7 @@
 
 namespace Content.ScriptableObjects
 {
-	[Serializable]
+	[Serializable, ClientOnly]
 	internal sealed partial class ScriptableSingleContentEntry<T> : SingleContentEntry<T>, IScriptableContentEntry<T>
 	{
 		public ContentScriptableObject scriptableObject;

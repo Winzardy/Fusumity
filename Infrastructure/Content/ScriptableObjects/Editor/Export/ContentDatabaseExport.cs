@@ -4,23 +4,26 @@ using Fusumity.Attributes;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Content.ScriptableObjects.Editor
 {
 	public partial class ContentDatabaseExport
 	{
-		/// <see cref="ContentDatabaseExport._args"/>
-		public const string ARGS_FIELD_NAME = "_args";
+		public const string DISPLAY_PROGRESS_TITLE = "Export Content";
+		public const string ARGS_FIELD_NAME = nameof(_exportArgs);
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type = typeof(ContentDatabaseJsonFileExporter);
 
+		[FormerlySerializedAs("_args")]
 		[DarkCardBox]
 		[SerializeField, SerializeReference]
-		protected IContentDatabaseExporterArgs _args = new ContentDatabaseJsonFileExporter.Args();
+		protected IContentDatabaseExporterArgs _exportArgs = new ContentDatabaseJsonFileExporter.Args();
 
-		internal void Export() => Export(_args.ExporterType, _args);
+		internal void Export() => Export(_exportArgs.ExporterType, _exportArgs);
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)
 			where T : IContentDatabaseExporter
@@ -28,29 +31,42 @@ namespace Content.ScriptableObjects.Editor
 
 		private void Export(Type type, IContentDatabaseExporterArgs args)
 		{
-			if (type == null)
-				throw ContentDebug.Exception("Invalid exporter type!");
-
-			var exporter = type.CreateInstance<IContentDatabaseExporter>();
-			using (ListPool<ContentDatabaseScriptableObject>.Get(out var filtered))
+			try
 			{
-				foreach (var database in ContentDatabaseEditorUtility.Databases)
+				if (type == null)
+					throw ContentDebug.Exception("Invalid exporter type!");
+
+				var exporter = type.CreateInstance<IContentDatabaseExporter>();
+				using (ListPool<ContentDatabaseScriptableObject>.Get(out var filtered))
 				{
-					if (Asset.projectSettings.skipDatabases.Contains(database.name))
-						continue;
+					foreach (var database in ContentDatabaseEditorUtility.Databases)
+					{
+						if (Settings.contentFiltering.skipDatabases
+						   .Contains(database.name))
+							continue;
 
-					filtered.Add(database);
+						filtered.Add(database);
+					}
+
+					args ??= new DefaultExporterArgs();
+					args.Databases = filtered;
+
+					exporter.Export(Asset._exportArgs);
 				}
-
-				args ??= new DefaultExporterArgs();
-				args.Databases = filtered;
-				exporter.Export(Asset._args);
+			}
+			catch (Exception e)
+			{
+				ContentDebug.LogException(e);
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
 			}
 		}
 
 		private void OnTypeChanged()
 		{
-			_args = null;
+			_exportArgs = null;
 
 			var baseType = this.type?.BaseType;
 
@@ -63,10 +79,10 @@ namespace Content.ScriptableObjects.Editor
 				return;
 
 			var type = arguments[1];
-			_args = type.CreateInstance<IContentDatabaseExporterArgs>();
+			_exportArgs = type.CreateInstance<IContentDatabaseExporterArgs>();
 		}
 
-		internal static bool UseExportOnBuild => Asset.projectSettings.exportOnBuild;
+		internal static bool UseExportOnBuild => Settings.exportOnBuild;
 		internal static void DefaultExport() => Asset.Export();
 	}
 }

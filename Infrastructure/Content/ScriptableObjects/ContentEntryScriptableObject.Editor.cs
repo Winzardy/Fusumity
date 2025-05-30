@@ -67,6 +67,8 @@ namespace Content.ScriptableObjects
 			_entry.scriptableObject = this;
 			_entry.SetGuid(in guid);
 
+			ContentEditorCache.Refresh(this);
+
 			if (!forceSave)
 				return;
 

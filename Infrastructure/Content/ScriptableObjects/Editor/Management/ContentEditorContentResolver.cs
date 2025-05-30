@@ -11,10 +11,25 @@ namespace Content.Editor
 	{
 		private static readonly ContentEditorContentResolver _resolver = new();
 
-		static ContentEditorContentResolverAutoSetup() => SetEditorResolver();
+		static ContentEditorContentResolverAutoSetup()
+		{
+			SetEditorResolver();
+			EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+		}
 
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-		private static void SetEditorResolver() => ContentManager.editorResolver = _resolver;
+		private static void SetEditorResolver()
+		{
+			ContentManager.editorResolver = _resolver;
+		}
+
+		private static void OnPlayModeStateChanged(PlayModeStateChange state)
+		{
+			EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+
+			if (state == PlayModeStateChange.ExitingPlayMode)
+				ContentManager.Terminate();
+		}
 	}
 
 	public class ContentEditorContentResolver : IContentEditorResolver

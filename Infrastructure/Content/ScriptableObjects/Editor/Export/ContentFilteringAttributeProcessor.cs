@@ -7,7 +7,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public class ContentDatabaseExportProjectSettingsAttributeProcessor : OdinAttributeProcessor<ContentDatabaseExport.ProjectSettings>
+	public class ContentFilteringAttributeProcessor : OdinAttributeProcessor<ContentFiltering>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -15,8 +15,8 @@ namespace Content.ScriptableObjects.Editor
 
 			switch (member.Name)
 			{
-				case nameof(ContentDatabaseExport.ProjectSettings.skipDatabases):
-					var className = nameof(ContentDatabaseExportProjectSettingsAttributeProcessor);
+				case nameof(ContentFiltering.skipDatabases):
+					var className = nameof(ContentFilteringAttributeProcessor);
 					var dropdownAttribute = new ValueDropdownAttribute($"@{className}.{nameof(GetDatabases)}()")
 					{
 						IsUniqueList = true

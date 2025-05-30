@@ -2,26 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Content.Management;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Fusumity.Utility;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
+	public partial class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
 	{
 		private string ASSETS_FOLDER_NAME = "Assets";
+		private static readonly string SINGLE_KEY = IContentEntry.DEFAULT_SINGLE_ID.ToLower();
 
-		public class Args : IContentDatabaseExporterArgs
+		public partial class Args : IContentDatabaseExporterArgs
 		{
 			public List<ContentDatabaseScriptableObject> Databases { get; set; }
 			public Type ExporterType => typeof(ContentDatabaseJsonFileExporter);
@@ -32,46 +31,103 @@ namespace Content.ScriptableObjects.Editor
 				name = "Content"
 			};
 
+			[PropertySpace(2)]
 			public Formatting formatting = Formatting.None;
-
-			[Space]
-			[FolderPath]
-			public string[] onlyFolders;
 		}
 
 		protected override void OnExport(ref Args args)
 		{
-			try
+			var jsonObject = new Dictionary<string, Dictionary<string, Dictionary<string, object>>>();
+			var dbs = args.Databases;
+
+			var typeFiltering = ContentDatabaseExport.Settings.typeFiltering;
+			foreach (var (database, index) in dbs.WithIndex())
 			{
-				var jsonObject = new Dictionary<string, List<IContentEntry>>();
-				var dbs = args.Databases;
-				var displayProgressTitle = "Export Content";
+				var name = database.ToLabel();
+				EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, name, index / (float) dbs.Count);
+				var list = new List<IContentEntry>();
+				database.Fill(list, true, Filter);
 
-				foreach (var (database, index) in dbs.WithIndex())
+				using (ListPool<IContentEntry>.Get(out var nested))
 				{
-					var name = database.ToLabel();
-					EditorUtility.DisplayProgressBar(displayProgressTitle, name, index / (float) dbs.Count);
-					var list = new List<IContentEntry>();
-					database.Fill(list, true);
-
-					if (list.Count > 0)
-						jsonObject.Add(name, list);
+					database.Fill(nested, false, Filter);
+					for (int j = 0; j < nested.Count; j++)
+						if (nested[j].Nested != null)
+							foreach (var member in nested[j].Nested)
+							{
+								var uniqueContentEntry = member.Value.Resolve(nested[j]);
+								if (Filter(uniqueContentEntry))
+									list.Add(uniqueContentEntry);
+							}
 				}
 
-				EditorUtility.DisplayProgressBar(displayProgressTitle, "Json File", 0.9f);
+				var grouped = list
+				   .Where(Filter)
+				   .GroupBy(e => e.ValueType.FullName)
+				   .ToDictionary(
+						g => g.Key, // key: тип
+						g => g.ToDictionary(
+							e => e is IUniqueContentEntry unique
+								? unique.Guid.ToString()
+								: SINGLE_KEY,
+							e => e.RawValue
+						)
+					);
 
-				var settings = new JsonSerializerSettings(ContentNewtonsoftJsonImporter.Settings)
+				if (list.Count > 0)
+					jsonObject.Add(name, grouped);
+			}
+
+			EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, "Json File", 0.9f);
+
+			var settings = new JsonSerializerSettings(ContentNewtonsoftJsonImporter.Settings)
+			{
+				ContractResolver = new ContentNewtonsoftContractResolver(typeFiltering),
+				Formatting = args.formatting
+			};
+
+			var root = new JObject();
+			var serializer = JsonSerializer.Create(settings);
+
+			foreach (var (moduleName, typeMap) in jsonObject)
+			{
+				var moduleObject = new JObject();
+
+				foreach (var (typeName, entries) in typeMap)
 				{
-					ContractResolver = new ContentContractResolver(args.onlyFolders),
-					Formatting = args.formatting
-				};
-				var text = jsonObject.ToJson(settings);
+					var typeObject = new JObject();
+
+					foreach (var (key, rawValue) in entries)
+					{
+						if (rawValue != null)
+							typeObject[key] = JToken.FromObject(rawValue, serializer);
+						else
+							typeObject[key] = null;
+					}
+
+					moduleObject[typeName] = typeObject;
+				}
+
+				root[moduleName] = moduleObject;
+			}
+
+			using (StringBuilderPool.Get(out var sb))
+			{
+				using (var sw = new StringWriter(sb))
+				using (var writer = new JsonTextWriter(sw))
+				{
+					writer.Formatting = args.formatting;
+					serializer.Serialize(writer, root);
+				}
+
+				var text = sb.ToString();
 				var path = args.path;
 
 				var fullPath = Path.Combine(Application.dataPath.Remove(ASSETS_FOLDER_NAME), path);
-				var directory = Path.GetDirectoryName(fullPath);
-				if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-					Directory.CreateDirectory(directory);
+				var folderPath = Path.GetDirectoryName(fullPath);
+
+				if (!Directory.Exists(folderPath))
+					Directory.CreateDirectory(folderPath!);
 
 				var exists = File.Exists(fullPath);
 				var writing = true;
@@ -92,11 +148,12 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				var prefix = exists ? writing ? "Updated" : "Not changed" : "Created";
-				ContentDebug.Log($"{prefix} content json file by path: {fullPath}", textAsset);
+				ContentDebug.Log($"{prefix} content json file by path: {fullPath.UnderlineText()}", textAsset);
 			}
-			finally
+
+			bool Filter(IContentEntry e)
 			{
-				EditorUtility.ClearProgressBar();
+				return ContentNewtonsoftContractResolver.IsAllowedType(e.ValueType, typeFiltering);
 			}
 		}
 	}
@@ -117,156 +174,5 @@ namespace Content.ScriptableObjects.Editor
 
 		public static implicit operator string(in JsonFullPath path) => path.ToString();
 		public override string ToString() => Path.Combine(path, name + EXTENSION);
-	}
-
-	public class ContentContractResolver : DefaultContractResolver
-	{
-		private static string[] _onlyFolders;
-		private static Dictionary<Type, HashSet<string>> _typeToAllowedFieldNames;
-
-		public ContentContractResolver(string[] onlyFolders)
-		{
-			CreateMap(_onlyFolders != onlyFolders);
-			_onlyFolders = onlyFolders;
-		}
-
-		protected override JsonContract CreateContract(Type objectType)
-		{
-			if (typeof(IContentReference).IsAssignableFrom(objectType) ||
-			    typeof(IContentEntry).IsAssignableFrom(objectType))
-				return base.CreateContract(objectType);
-
-			if (objectType == typeof(SerializableGuid))
-				return base.CreateContract(objectType);
-
-			if (_typeToAllowedFieldNames != null && !_typeToAllowedFieldNames.ContainsKey(objectType))
-			{
-				var contract = base.CreateObjectContract(objectType);
-				contract.Properties.Clear();
-				return contract;
-			}
-
-			return base.CreateContract(objectType);
-		}
-		protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-		{
-			var props = new List<JsonProperty>();
-
-			if (_typeToAllowedFieldNames != null)
-			{
-				if (!_typeToAllowedFieldNames.ContainsKey(type))
-					return props;
-			}
-
-			var fields = type
-			   .GetFields(BindingFlags.Instance | BindingFlags.Public)
-			   .Where(f => !typeof(Object).IsAssignableFrom(f.FieldType))
-			   .Where(f => !f.Name.Contains("k__BackingField"))
-			   .Where(f => !f.IsDefined(typeof(NonSerializedAttribute), true));
-
-			if (_typeToAllowedFieldNames != null)
-			{
-				fields = fields
-				   .Where(f => _typeToAllowedFieldNames[type].Contains(f.Name));
-			}
-
-			foreach (var field in fields)
-			{
-				var prop = base.CreateProperty(field, memberSerialization);
-				prop.Readable = true;
-				prop.Writable = true;
-				props.Add(prop);
-			}
-
-			return props;
-		}
-
-		private void CreateMap(bool force = false)
-		{
-			// При Reloading Domain всеравно сброситься
-			if (_typeToAllowedFieldNames != null && !force)
-				return;
-
-			_typeToAllowedFieldNames = new();
-
-			if (_onlyFolders == null)
-				return;
-
-			var paths = _onlyFolders
-			   .SelectMany(unityPath => Directory.GetFiles(GetUnityFolderPath(unityPath), "*.cs", SearchOption.AllDirectories))
-			   .ToList();
-
-			foreach (var folderPath in paths)
-			{
-				var code = File.ReadAllText(folderPath);
-				var tree = CSharpSyntaxTree.ParseText(code);
-				var root = tree.GetCompilationUnitRoot();
-
-				var classes = root.DescendantNodes()
-				   .OfType<ClassDeclarationSyntax>();
-				foreach (var syntax in classes)
-				{
-					var fullName = GetFullTypeName(syntax);
-
-					if (string.IsNullOrEmpty(fullName))
-						continue;
-
-					var type = AppDomain.CurrentDomain
-					   .GetAssemblies()
-					   .SelectMany(SafeGetTypes)
-					   .FirstOrDefault(t => t.FullName == fullName);
-
-					if (type == null)
-						continue;
-
-					if (!_typeToAllowedFieldNames.TryGetValue(type, out var fieldSet))
-						fieldSet = _typeToAllowedFieldNames[type] = new HashSet<string>();
-
-					foreach (var fieldDecl in syntax.Members.OfType<FieldDeclarationSyntax>())
-					{
-						foreach (var v in fieldDecl.Declaration.Variables)
-						{
-							fieldSet.Add(v.Identifier.Text);
-						}
-					}
-				}
-			}
-		}
-
-		private static string GetUnityFolderPath(string unityPath)
-		{
-			return Path.Combine(Application.dataPath.Remove("/Assets"), unityPath);
-		}
-
-		private static string GetFullTypeName(ClassDeclarationSyntax syntax)
-		{
-			var names = new Stack<string>();
-			var current = syntax.Parent;
-
-			while (current is TypeDeclarationSyntax parentType)
-			{
-				names.Push(parentType.Identifier.Text);
-				current = current.Parent;
-			}
-
-			var ns = string.Empty;
-			if (current is NamespaceDeclarationSyntax nsDecl)
-				ns = nsDecl.Name + ".";
-
-			names.Push(syntax.Identifier.Text);
-			return ns + string.Join("+", names);
-		}
-
-		private static IEnumerable<Type> SafeGetTypes(Assembly assembly)
-		{
-			try
-			{
-				return assembly.GetTypes();
-			}
-			catch (ReflectionTypeLoadException e)
-			{
-				return e.Types.Where(t => t != null);
-			}
-		}
 	}
 }
