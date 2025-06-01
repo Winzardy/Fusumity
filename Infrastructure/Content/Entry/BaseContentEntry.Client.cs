@@ -46,8 +46,6 @@ namespace Content
 		// ReSharper disable once InconsistentNaming
 		[SerializeField, SerializeReference, ClientOnly]
 		private ISerializeReference<T> _serializeReference = null;
-
-		public object RawValue => Value;
 	}
 
 	public static class BaseContentEntryExtensions
@@ -62,10 +60,6 @@ namespace Content
 		}
 	}
 
-	public partial interface IContentEntry
-	{
-		object RawValue { get; }
-	}
 
 	public partial interface IContentEntry<T>
 	{
