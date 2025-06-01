@@ -11,23 +11,24 @@ namespace Audio
 
 		public bool IsPlaying => _player && _player.IsPlaying;
 
-		public AudioPlayback(AudioEventPlayerPool pool, Vector3 position) : this(pool) => _player.SetPosition(position);
-
-		public AudioPlayback(AudioEventPlayerPool pool, Transform transform) : this(pool) => _player.SetTarget(transform);
-
-		public bool IsDisposed => !_player;
+		public bool IsReleased => !_player;
 
 		/// <summary>
 		/// Можно считать это событие finish звука,
-		/// но чтобы не искажать смысл будет название Disposed вместо Finished!
+		/// но чтобы не искажать смысл будет название Released вместо Finished!
 		/// </summary>
-		public event Action<AudioPlayback> Disposed;
+		public event Action<AudioPlayback> Released;
+
 		/// <summary>
-		/// Событие отличается от Disposed тем что срабатывает сразу как вызывали Dispose.
-		/// а Disposed перед выгрузкой в пул, то есть Disposed учитывает возможный FadeOut звука,
-		/// а DisposeStarted нет!
+		/// Событие отличается от Released тем что срабатывает сразу как вызывали Release.
+		/// а Released перед выгрузкой в пул, то есть Released учитывает возможный FadeOut звука,
+		/// а BeforeRelease нет!
 		/// </summary>
-		public event Action<AudioPlayback> DisposeStarted;
+		public event Action<AudioPlayback> BeforeRelease;
+
+		public AudioPlayback(AudioEventPlayerPool pool, Vector3 position) : this(pool) => _player.SetPosition(position);
+
+		public AudioPlayback(AudioEventPlayerPool pool, Transform transform) : this(pool) => _player.SetTarget(transform);
 
 		private AudioPlayback(AudioEventPlayerPool pool)
 		{
@@ -49,7 +50,7 @@ namespace Audio
 
 		public void Play()
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return;
 			_player.Play();
 		}
@@ -59,7 +60,7 @@ namespace Audio
 		/// </summary>
 		public void Pause()
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return;
 			_player.Pause();
 		}
@@ -69,14 +70,14 @@ namespace Audio
 		/// </summary>
 		public void Stop()
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return;
 			_player.Stop();
 		}
 
 		public AudioPlayback SetPosition(Vector3 position)
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return this;
 
 			_player.SetPosition(position);
@@ -85,7 +86,7 @@ namespace Audio
 
 		public AudioPlayback SetTarget(Transform target)
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return this;
 
 			_player.SetTarget(target);
@@ -96,10 +97,10 @@ namespace Audio
 
 		private void Release(bool force = false)
 		{
-			if (IsDisposed)
+			if (IsReleased)
 				return;
 
-			DisposeStarted?.Invoke(this);
+			BeforeRelease?.Invoke(this);
 			var player = _player;
 
 			player.Finished -= OnFinished;
@@ -115,7 +116,7 @@ namespace Audio
 
 			void OnRelease()
 			{
-				Disposed?.Invoke(this);
+				Released?.Invoke(this);
 				_pool.Release(player);
 			}
 		}
