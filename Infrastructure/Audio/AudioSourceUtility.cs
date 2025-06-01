@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace Audio
 {
-	public static class AudioSourceExt
+	public static class AudioSourceUtility
 	{
 		public static Tween Play(this AudioSource source, AudioTrackEntry track,
-			AudioEventArgs args,
+			AudioEventDefinition definition,
 			bool editor = false) =>
-			Play(source, track, args.fadeIn, args.volume, args.pitch, editor);
+			Play(source, track, definition.fadeIn, definition.volume, definition.pitch, editor);
 
 		public static Tween Play(this AudioSource source, AudioTrackEntry track,
 			float? fade = null,

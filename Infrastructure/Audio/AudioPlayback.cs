@@ -40,9 +40,9 @@ namespace Audio
 		public void Dispose(bool force) => Release(force);
 		public void Dispose() => Release();
 
-		public void Setup(in AudioEventArgs args, bool autoPlay = false)
+		public void Setup(in AudioEventDefinition definition, bool autoPlay = false)
 		{
-			_player.Setup(in args);
+			_player.Setup(in definition);
 
 			if (autoPlay)
 				Play();

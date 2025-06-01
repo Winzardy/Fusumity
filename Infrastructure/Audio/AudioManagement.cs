@@ -91,96 +91,96 @@ namespace Audio
 				SetVolume(id, LoadMixerVolume(id));
 		}
 
-		internal AudioPlayback Play(ref AudioEventArgs args)
+		internal AudioPlayback Play(ref AudioEventDefinition definition)
 		{
-			if (args.id.IsNullOrEmpty())
-				throw new ArgumentException("Id can't be null or empty", nameof(args.id));
+			if (definition.id.IsNullOrEmpty())
+				throw new ArgumentException("Id can't be null or empty", nameof(definition.id));
 
-			if (!TryPrepareArgs(ref args, out var code))
+			if (!TryPrepareArgs(ref definition, out var code))
 			{
-				AudioDebug.LogError($"Error on prepare audio event args by id [ {args.id} ] (code: {code})");
+				AudioDebug.LogError($"Error on prepare audio event definition by id [ {definition.id} ] (code: {code})");
 				return null;
 			}
 
-			if (!IsAudibleBySpatial(in args))
+			if (!IsAudibleBySpatial(in definition))
 				return null;
 
-			var isSpatial = args.isSpatial ?? false;
-			var playback = isSpatial && args.transform
-				? new AudioPlayback(_pool, args.transform)
-				: new AudioPlayback(_pool, args.position ?? Vector3.zero);
-			playback.Setup(in args, true);
+			var isSpatial = definition.isSpatial ?? false;
+			var playback = isSpatial && definition.transform
+				? new AudioPlayback(_pool, definition.transform)
+				: new AudioPlayback(_pool, definition.position ?? Vector3.zero);
+			playback.Setup(in definition, true);
 			return playback;
 		}
 
-		private bool TryPrepareArgs(ref AudioEventArgs args, out PlayErrorCode errorCode)
+		private bool TryPrepareArgs(ref AudioEventDefinition definition, out PlayErrorCode errorCode)
 		{
 			errorCode = PlayErrorCode.None;
 
-			if (args.playlist.IsNullOrEmpty())
+			if (definition.playlist.IsNullOrEmpty())
 			{
-				if (args.entry == null)
+				if (definition.entry == null)
 				{
-					if (!ContentManager.Contains<AudioEventEntry>(args.id))
+					if (!ContentManager.Contains<AudioEventEntry>(definition.id))
 					{
 						errorCode = PlayErrorCode.NotEventEntry;
 						return false;
 					}
 
-					args.entry = ContentManager.Get<AudioEventEntry>(args.id);
+					definition.entry = ContentManager.Get<AudioEventEntry>(definition.id);
 				}
 
-				args.RollPlaylist();
+				definition.RollPlaylist();
 			}
 
-			if (args.playlist.IsNullOrEmpty())
+			if (definition.playlist.IsNullOrEmpty())
 			{
 				errorCode = PlayErrorCode.EmptyPlaylist;
 				return false;
 			}
 
-			if (args.mixer.IsNullOrEmpty())
-				args.mixer = args.entry != null
-					? args.entry.mixer.IsNullOrEmpty() ? _masterMixer.id : args.entry.mixer
+			if (definition.mixer.IsNullOrEmpty())
+				definition.mixer = definition.entry != null
+					? definition.entry.mixer.IsNullOrEmpty() ? _masterMixer.id : definition.entry.mixer
 					: _masterMixer.id;
 
-			if (!TryGetAudioMixerGroup(args.mixer, out var mixerGroup))
+			if (!TryGetAudioMixerGroup(definition.mixer, out var mixerGroup))
 			{
 				errorCode = PlayErrorCode.NotFoundMixerGroup;
-				AudioDebug.LogError($"Not found audio mixer group by id [ {args.mixer} ]");
+				AudioDebug.LogError($"Not found audio mixer group by id [ {definition.mixer} ]");
 				return false;
 			}
 
-			var rolloffMode = args.entry?.spatial.rolloffMode ?? AudioRolloffMode.Linear;
-			var customRolloffCurve = rolloffMode == AudioRolloffMode.Custom ? args.entry?.spatial.customRolloffCurve : null;
+			var rolloffMode = definition.entry?.spatial.rolloffMode ?? AudioRolloffMode.Linear;
+			var customRolloffCurve = rolloffMode == AudioRolloffMode.Custom ? definition.entry?.spatial.customRolloffCurve : null;
 
 			var audioSourceSettings = new AudioSourceSettings(
 				mixerGroup,
 				rolloffMode: rolloffMode,
 				customRolloffCurve: customRolloffCurve,
-				timeScaledPitch: args.entry?.timeScaledPitch ?? false);
+				timeScaledPitch: definition.entry?.timeScaledPitch ?? false);
 
-			if (!args.isSpatial.HasValue)
+			if (!definition.isSpatial.HasValue)
 			{
-				if (args.entry != null)
-					args.isSpatial = args.entry.isSpatial;
+				if (definition.entry != null)
+					definition.isSpatial = definition.entry.isSpatial;
 			}
 
-			if (args.transform || args.position.HasValue)
+			if (definition.transform || definition.position.HasValue)
 			{
-				if (args.isSpatial.HasValue && args.isSpatial.Value)
+				if (definition.isSpatial.HasValue && definition.isSpatial.Value)
 				{
-					audioSourceSettings.priority = args.priority ?? (args.entry?.priority ?? AudioEventEntry.DEFAULT_PRIORITY);
+					audioSourceSettings.priority = definition.priority ?? (definition.entry?.priority ?? AudioEventEntry.DEFAULT_PRIORITY);
 					audioSourceSettings.spatialBlend =
-						args.spatialBlend ?? (args.entry?.spatial.spatialBlend ?? AudioSpatialEntry.DEFAULT_SPATIAL_BLEND);
+						definition.spatialBlend ?? (definition.entry?.spatial.spatialBlend ?? AudioSpatialEntry.DEFAULT_SPATIAL_BLEND);
 					audioSourceSettings.dopplerLevel =
-						args.dopplerLevel ?? (args.entry?.spatial.dopplerLevel ?? AudioSpatialEntry.DEFAULT_DOPPLER_LEVEL);
-					audioSourceSettings.spread = args.spread ?? (args.entry?.spatial.spread ?? AudioSpatialEntry.DEFAULT_SPREAD);
+						definition.dopplerLevel ?? (definition.entry?.spatial.dopplerLevel ?? AudioSpatialEntry.DEFAULT_DOPPLER_LEVEL);
+					audioSourceSettings.spread = definition.spread ?? (definition.entry?.spatial.spread ?? AudioSpatialEntry.DEFAULT_SPREAD);
 					audioSourceSettings.minDistance =
-						args.distance?.min ?? (args.entry?.spatial.distance.min ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN);
+						definition.distance?.min ?? (definition.entry?.spatial.distance.min ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN);
 					audioSourceSettings.maxDistance =
-						args.distance?.max ?? (args.entry?.spatial.distance.max ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MAX);
-					audioSourceSettings.stereoPan = args.stereoPan ?? (args.entry?.stereoPan ?? AudioEventEntry.DEFAULT_STEREO_PAN);
+						definition.distance?.max ?? (definition.entry?.spatial.distance.max ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MAX);
+					audioSourceSettings.stereoPan = definition.stereoPan ?? (definition.entry?.stereoPan ?? AudioEventEntry.DEFAULT_STEREO_PAN);
 				}
 				else
 				{
@@ -189,26 +189,26 @@ namespace Audio
 			}
 			else
 			{
-				if (args is {disableSpatialWarning: false, isSpatial: not null})
+				if (definition is {disableSpatialWarning: false, isSpatial: not null})
 					AudioDebug.LogWarning("Audio source without position or transform is can't be spatial.");
 
 				audioSourceSettings.spatialBlend = 0;
 			}
 
-			args.settings = audioSourceSettings;
-			args.mode = args.entry?.playMode ?? AudioPlayMode.SameTime;
+			definition.settings = audioSourceSettings;
+			definition.mode = definition.entry?.playMode ?? AudioPlayMode.SameTime;
 			return true;
 		}
 
-		private bool IsAudibleBySpatial(in AudioEventArgs args)
+		private bool IsAudibleBySpatial(in AudioEventDefinition definition)
 		{
-			if (!args.isSpatial.HasValue)
+			if (!definition.isSpatial.HasValue)
 				return true;
 
-			if (!args.isSpatial.Value)
+			if (!definition.isSpatial.Value)
 				return true;
 
-			if (args.repeat != 1)
+			if (definition.repeat != 1)
 				return true;
 
 			var listener = GetListener();
@@ -216,10 +216,10 @@ namespace Audio
 			if (listener == null)
 				return false;
 
-			var sourcePosition = args.transform ? args.transform.position : args.position ?? Vector3.zero;
+			var sourcePosition = definition.transform ? definition.transform.position : definition.position ?? Vector3.zero;
 
 			return Vector3.SqrMagnitude(sourcePosition - listener.transform.position) <
-				args.settings.maxDistance * args.settings.maxDistance;
+				definition.settings.maxDistance * definition.settings.maxDistance;
 		}
 
 		internal AudioListener GetListener() => _listenerLocator.Get();

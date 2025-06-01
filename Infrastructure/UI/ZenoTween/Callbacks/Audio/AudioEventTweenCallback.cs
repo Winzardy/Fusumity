@@ -14,7 +14,7 @@ namespace ZenoTween.Participant.Callbacks.Audio
 	public class AudioEventTweenCallback : AnimationTweenCallback
 	{
 		[HideLabel]
-		public AudioEventTriggerArgs audioEvent;
+		public AudioEventRequest audioEvent;
 
 		[Tooltip("Для позиционирования звука!")]
 		public Transform transform;

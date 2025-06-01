@@ -18,7 +18,7 @@ namespace Audio
 	public class AudioEventPlayer : MonoBehaviour
 	{
 		[ShowInInspector, ReadOnly]
-		private AudioEventArgs _current;
+		private AudioEventDefinition _current;
 
 		private RectTransform _rectTransform;
 
@@ -53,12 +53,12 @@ namespace Audio
 			_loadingTracks?.ReleaseToStaticPool();
 		}
 
-		public void Setup(in AudioEventArgs args)
+		public void Setup(in AudioEventDefinition definition)
 		{
 			_cleared = false;
 			_finished = false;
 			_playCount = 0;
-			_current = args;
+			_current = definition;
 
 			if (transform is RectTransform rectTransform)
 				_rectTransform = rectTransform;
@@ -412,7 +412,16 @@ namespace Audio
 
 			_loadingTracks ??= HashSetPool<AudioTrackEntry>.Get();
 			_loadingTracks.Add(track);
-			track.clip = await track.clipReference.LoadAsync();
+			var clip = await track.clipReference.LoadAsync();
+
+			if (clip.loadState != AudioDataLoadState.Loaded)
+			{
+				clip.LoadAudioData();
+				while (clip.loadState != AudioDataLoadState.Loaded)
+					await UniTask.NextFrame();
+			}
+
+			track.clip = clip;
 			_loadingTracks.Remove(track);
 
 			TryPlay();

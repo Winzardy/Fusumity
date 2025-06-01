@@ -28,7 +28,7 @@ namespace Audio
 		/// <returns>Instance для управления звуком ответственного за его вызов (особо важно если звук зациклен)</returns>
 		public static AudioPlayback Play(string eventId)
 		{
-			var args = new AudioEventArgs(eventId);
+			var args = new AudioEventDefinition(eventId);
 			return Play(ref args);
 		}
 
@@ -36,7 +36,7 @@ namespace Audio
 		/// Воспроизвести звук в позиции, в случае если звук "пространственный"
 		/// </summary>
 		/// <returns>Instance для управления звуком ответственного за его вызов (особо важно если звук зациклен)</returns>
-		public static AudioPlayback Play(ref AudioEventArgs args) => management.Play(ref args);
+		public static AudioPlayback Play(ref AudioEventDefinition definition) => management.Play(ref definition);
 
 		public static AudioListener GetListener() => management.GetListener();
 

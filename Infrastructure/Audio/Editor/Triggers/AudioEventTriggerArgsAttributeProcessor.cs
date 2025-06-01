@@ -10,25 +10,25 @@ using UnityEngine;
 
 namespace Audio.Editor
 {
-	public class AudioEventTriggerArgsAttributeProcessor : OdinAttributeProcessor<AudioEventTriggerArgs>
+	public class AudioEventTriggerArgsAttributeProcessor : OdinAttributeProcessor<AudioEventRequest>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			if (parentProperty.Attributes.HasAttribute<AudioEventTriggerSupportAttribute>())
+			if (parentProperty.Attributes.HasAttribute<AllowLoopAttribute>())
 			{
-				var attribute = parentProperty.Attributes.GetAttribute<AudioEventTriggerSupportAttribute>();
+				var attribute = parentProperty.Attributes.GetAttribute<AllowLoopAttribute>();
 
 				if (attribute.Loop)
 				{
-					if (member.Name == nameof(AudioEventTriggerArgs.repeat))
-						attributes.Add(new HideIfAttribute(nameof(AudioEventTriggerArgs.loop)));
+					if (member.Name == nameof(AudioEventRequest.repeat))
+						attributes.Add(new HideIfAttribute(nameof(AudioEventRequest.loop)));
 				}
 			}
 			else
 			{
-				if (member.Name == nameof(AudioEventTriggerArgs.loop))
+				if (member.Name == nameof(AudioEventRequest.loop))
 				{
 					attributes.Add(new HideInInspector());
 				}
@@ -36,21 +36,21 @@ namespace Audio.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AudioEventTriggerArgs.id):
+				case nameof(AudioEventRequest.id):
 					attributes.Add(new ContentReferenceAttribute(typeof(AudioEventEntry), foldout: false));
 					break;
 
-				case nameof(AudioEventTriggerArgs.repeat):
+				case nameof(AudioEventRequest.repeat):
 					attributes.Add(new MinimumAttribute(1));
 					break;
 
-				case nameof(AudioEventTriggerArgs.rerollOnRepeat):
+				case nameof(AudioEventRequest.rerollOnRepeat):
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventTriggerArgsAttributeProcessor)}." +
 						$"{nameof(ShowRerollOnRepeat)}($property)"));
 					break;
 
-				case nameof(AudioEventTriggerArgs.fadeIn):
-				case nameof(AudioEventTriggerArgs.fadeOut):
+				case nameof(AudioEventRequest.fadeIn):
+				case nameof(AudioEventRequest.fadeOut):
 					attributes.Add(new UnitParentAttribute(Units.Second));
 					attributes.Add(new MinimumAttribute(0));
 					break;
@@ -66,7 +66,7 @@ namespace Audio.Editor
 
 		public static bool ShowRerollOnRepeat(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventTriggerArgs args)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventRequest args)
 				return args.repeat > 1 || args.loop;
 
 			return true;

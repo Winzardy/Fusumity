@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Audio
 {
-	public struct AudioEventArgs
+	public struct AudioEventDefinition
 	{
 		/// <summary>
 		/// Идентификатор аудио события
@@ -57,7 +57,7 @@ namespace Audio
 		public int? priority;
 		public float? stereoPan;
 
-		public AudioEventArgs(string id, bool loop = false) : this()
+		public AudioEventDefinition(string id, bool loop = false) : this()
 		{
 			this.id = id;
 			repeat = loop ? 0 : 1;

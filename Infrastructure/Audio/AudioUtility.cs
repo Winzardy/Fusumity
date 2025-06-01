@@ -6,7 +6,7 @@ namespace Audio
 	/// <summary>
 	/// AudioUtility
 	/// </summary>
-	public static class AudioExt
+	public static class AudioUtility
 	{
 		public static Vector3 GetAudioSpatialPosition(this PointerEventData eventData, float? minDistance = null) =>
 			GetAudioSpatialPosition(eventData.position, minDistance);
