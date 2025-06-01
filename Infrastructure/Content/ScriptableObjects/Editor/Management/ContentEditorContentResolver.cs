@@ -117,8 +117,8 @@ namespace Content.Editor
 				{
 					var entry = GetEntry<T>();
 					return detailed
-						? $"{IContentEntry.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
-						: $"{IContentEntry.DEFAULT_SINGLE_ID}";
+						? $"{ContentConstants.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
+						: $"{ContentConstants.DEFAULT_SINGLE_ID}";
 				}
 			}
 			else if (Contains<T>(in guid))

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Content.Management;
 using Fusumity.Utility;
 using Newtonsoft.Json;
@@ -15,12 +14,11 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public partial class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
+	public class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
 	{
 		private string ASSETS_FOLDER_NAME = "Assets";
-		private static readonly string SINGLE_KEY = IContentEntry.DEFAULT_SINGLE_ID.ToLower();
 
-		public partial class Args : IContentDatabaseExporterArgs
+		public class Args : IContentDatabaseExporterArgs
 		{
 			public List<ContentDatabaseScriptableObject> Databases { get; set; }
 			public Type ExporterType => typeof(ContentDatabaseJsonFileExporter);
@@ -31,21 +29,31 @@ namespace Content.ScriptableObjects.Editor
 				name = "Content"
 			};
 
-			[PropertySpace(2)]
+			[PropertySpace(2, 10)]
 			public Formatting formatting = Formatting.None;
+
+			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
+			public bool useDeserializeTesting;
+
+			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
+			[ShowInInspector, LabelText("Result")]
+			[SerializeReference, ReadOnly]
+			public List<IContentEntry> deserializeResult;
 		}
 
 		protected override void OnExport(ref Args args)
 		{
-			var jsonObject = new Dictionary<string, Dictionary<string, Dictionary<string, object>>>();
+			var json = new ContentJsonFormat();
 			var dbs = args.Databases;
 
 			var typeFiltering = ContentDatabaseExport.Settings.typeFiltering;
 			foreach (var (database, index) in dbs.WithIndex())
 			{
-				var name = database.ToLabel();
-				EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, name, index / (float) dbs.Count);
+				var moduleName = database.ToLabel();
 				var list = new List<IContentEntry>();
+
+				EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, moduleName, index / (float) dbs.Count);
+
 				database.Fill(list, true, Filter);
 
 				using (ListPool<IContentEntry>.Get(out var nested))
@@ -61,26 +69,13 @@ namespace Content.ScriptableObjects.Editor
 							}
 				}
 
-				var grouped = list
-				   .Where(Filter)
-				   .GroupBy(e => e.ValueType.FullName)
-				   .ToDictionary(
-						g => g.Key, // key: тип
-						g => g.ToDictionary(
-							e => e is IUniqueContentEntry unique
-								? unique.Guid.ToString()
-								: SINGLE_KEY,
-							e => e.RawValue
-						)
-					);
-
 				if (list.Count > 0)
-					jsonObject.Add(name, grouped);
+					json.Add(moduleName, list);
 			}
 
 			EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, "Json File", 0.9f);
 
-			var settings = new JsonSerializerSettings(ContentNewtonsoftJsonImporter.Settings)
+			var settings = new JsonSerializerSettings(ContentJsonImporter.serializerSettings)
 			{
 				ContractResolver = new ContentNewtonsoftContractResolver(typeFiltering),
 				Formatting = args.formatting
@@ -89,7 +84,7 @@ namespace Content.ScriptableObjects.Editor
 			var root = new JObject();
 			var serializer = JsonSerializer.Create(settings);
 
-			foreach (var (moduleName, typeMap) in jsonObject)
+			foreach (var (moduleName, typeMap) in json)
 			{
 				var moduleObject = new JObject();
 
@@ -149,6 +144,18 @@ namespace Content.ScriptableObjects.Editor
 
 				var prefix = exists ? writing ? "Updated" : "Not changed" : "Created";
 				ContentDebug.Log($"{prefix} content json file by path: {fullPath.UnderlineText()}", textAsset);
+
+				if (args.useDeserializeTesting)
+				{
+					var testJson = text.FromJson<ContentJsonFormat>(settings);
+					var list = new List<IContentEntry>();
+					testJson.Fill(list);
+					args.deserializeResult = list.Count > 0 ? list : null;
+				}
+				else
+				{
+					args.deserializeResult = null;
+				}
 			}
 
 			bool Filter(IContentEntry e)

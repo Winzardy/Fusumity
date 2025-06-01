@@ -41,11 +41,11 @@ namespace Content.Editor
 
 			switch (member.Name)
 			{
-				case IContentEntry.VALUE_FIELD_NAME:
+				case ContentConstants.VALUE_FIELD_NAME:
 
 					//TODO: Добавить свой AssetSelector...
-					//if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
-						//attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
+					if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
+						attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
 
 					if (contentEntry.ValueType.IsSerializeReference())
 					{
@@ -79,13 +79,13 @@ namespace Content.Editor
 
 					break;
 
-				case IContentEntry.UNITY_VALUE_FIELD_NAME:
-				case IUniqueContentEntry.GUID_FIELD_NAME:
+				case ContentConstants.UNITY_VALUE_FIELD_NAME:
+				case ContentConstants.GUID_FIELD_NAME:
 					attributes.Add(new HideInInspector());
 
 					break;
 
-				case IContentEntry.CUSTOM_VALUE_FIELD_NAME:
+				case ContentConstants.CUSTOM_VALUE_FIELD_NAME:
 					if (!contentEntry.ValueType.IsSerializeReference())
 					{
 						attributes.Add(new HideInInspector());

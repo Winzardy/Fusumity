@@ -7,11 +7,10 @@ using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
 using UnityEditor;
-using Object = UnityEngine.Object;
 
 namespace Content.Editor
 {
-	using UnityObject = Object;
+	using UnityObject =  UnityEngine.Object;
 
 	public static partial class ContentEntryEditorUtility
 	{
@@ -170,9 +169,9 @@ namespace Content.Editor
 		{
 			for (int i = 0; i < reference.steps.Length; i++)
 			{
-				if (reference.steps[i].name == IContentEntry.UNITY_VALUE_FIELD_NAME ||
-				    reference.steps[i].name == IContentEntry.CUSTOM_VALUE_FIELD_NAME)
-					reference.steps[i].name = IContentEntry.VALUE_FIELD_NAME;
+				if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME ||
+				    reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
+					reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
 			}
 
 			return reference;

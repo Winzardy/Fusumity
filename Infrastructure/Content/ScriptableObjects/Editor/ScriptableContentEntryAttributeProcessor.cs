@@ -38,12 +38,11 @@ namespace Content.ScriptableObjects.Editor
 
 			switch (member.Name)
 			{
-				case IContentEntry.VALUE_FIELD_NAME:
+				case ContentConstants.VALUE_FIELD_NAME:
 
 					//TODO: Добавить свой AssetSelector...
-					//if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
-
-						//attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
+					if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
+						attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
 
 					if (contentEntry.ValueType.IsSerializeReference())
 					{
@@ -69,7 +68,7 @@ namespace Content.ScriptableObjects.Editor
 
 					break;
 
-				case IContentEntry.CUSTOM_VALUE_FIELD_NAME:
+				case ContentConstants.CUSTOM_VALUE_FIELD_NAME:
 					if (!contentEntry.ValueType.IsSerializeReference())
 					{
 						attributes.Add(new HideInInspector());
@@ -84,14 +83,14 @@ namespace Content.ScriptableObjects.Editor
 
 					break;
 
-				case IScriptableContentEntry.SCRIPTABLEOBJECT_FIELD_NAME:
-				case IScriptableContentEntry.ID_FIELD_NAME:
-				case IContentEntry.GUID_FIELD_NAME:
-				case IContentEntry.UNITY_VALUE_FIELD_NAME:
+				case ScriptableContentConstants.SCRIPTABLEOBJECT_FIELD_NAME:
+				case ScriptableContentConstants.ID_FIELD_NAME:
+				case ContentConstants.GUID_FIELD_NAME:
+				case ContentConstants.UNITY_VALUE_FIELD_NAME:
 					attributes.Add(new HideInInspector());
 					break;
 
-				case IScriptableContentEntry.NESTED_FIELD_NAME:
+				case ScriptableContentConstants.NESTED_FIELD_NAME:
 
 					var color = Color.Lerp(ContentDebug.COLOR, Color.white, 0.8f);
 					attributes.Add(new GUIColorAttribute(

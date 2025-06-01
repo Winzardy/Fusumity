@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Fusumity.Collections;
 using Sapientia.Reflection;
 
@@ -18,19 +17,7 @@ namespace Content.ScriptableObjects
 
 	public partial interface IScriptableContentEntry
 	{
-		/// <summary>
-		/// <see cref="ScriptableContentEntry{T}.nested"/>
-		/// </summary>
-		public const string NESTED_FIELD_NAME = "nested";
-
 		public bool RegisterNestedEntry(in SerializableGuid nestedGuid, MemberReflectionReference<IUniqueContentEntry> reference);
 		public void ClearNestedCollection();
-	}
-
-	[Serializable]
-	public struct NestedPair
-	{
-		public SerializableGuid guid;
-		public MemberReflectionReference<IUniqueContentEntry> reference;
 	}
 }
