@@ -412,16 +412,21 @@ namespace Audio
 
 			_loadingTracks ??= HashSetPool<AudioTrackEntry>.Get();
 			_loadingTracks.Add(track);
-			var clip = await track.clipReference.LoadAsync();
 
-			if (clip.loadState != AudioDataLoadState.Loaded)
+			track.clip = await track.clipReference.LoadAsync();
+
+			if (track.clip.loadState != AudioDataLoadState.Loaded)
 			{
-				clip.LoadAudioData();
-				while (clip.loadState != AudioDataLoadState.Loaded)
-					await UniTask.NextFrame();
+				track.clip.LoadAudioData();
+
+				if (track.clip.loadType != AudioClipLoadType.Streaming)
+					while (track.clip.loadState == AudioDataLoadState.Loading)
+						await UniTask.NextFrame();
 			}
 
-			track.clip = clip;
+			if (track.clip.loadType == AudioClipLoadType.Streaming)
+				await UniTask.NextFrame();
+
 			_loadingTracks.Remove(track);
 
 			TryPlay();

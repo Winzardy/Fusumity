@@ -5,7 +5,7 @@ namespace UI
 {
 	public partial class UIGroup<TWidget, TWidgetLayout, TWidgetArgs> : IEnumerable<TWidget>
 	{
-		public IEnumerator<TWidget> GetEnumerator() => _widgets.GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => _widgets.GetEnumerator();
+		public IEnumerator<TWidget> GetEnumerator() => _used.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => _used.GetEnumerator();
 	}
 }

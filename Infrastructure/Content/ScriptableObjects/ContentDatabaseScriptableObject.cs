@@ -39,8 +39,17 @@ namespace Content.ScriptableObjects
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
+			{
+				ContentDebug.LogWarning("Need sync!", this);
 				return false;
+			}
 #endif
+			if (Value is IValidatable validatable && !validatable.Validate())
+			{
+				ContentDebug.LogError("Value is not valid!", this);
+				return false;
+			}
+
 			return true;
 		}
 	}

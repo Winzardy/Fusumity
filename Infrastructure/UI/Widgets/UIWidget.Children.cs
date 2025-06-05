@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Sapientia.Pooling;
 using UnityEngine;
 
@@ -271,6 +272,7 @@ namespace UI
 			where TLayout : UIBaseLayout
 		{
 			RegisterChildWidget(widget);
+			widget.SetActiveInHierarchy(_activeInHierarchy);
 
 			if (autoActivation)
 				widget.SetActive(true, immediateActivation);
@@ -296,6 +298,7 @@ namespace UI
 				return;
 			}
 
+			widget.SetActiveInHierarchyForChildren(_activeInHierarchy);
 			OnChildWidgetRegistered(widget);
 		}
 

@@ -15,16 +15,6 @@ namespace Trading.Editor
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			//Общие
-			switch (member.Name)
-			{
-				case nameof(TradeEntry.reward):
-				case nameof(TradeEntry.cost):
-					attributes.Add(new HideLabelAttribute());
-					break;
-			}
-
-			//Уникальные
 			switch (member.Name)
 			{
 				case nameof(TradeEntry.reward):
@@ -33,6 +23,14 @@ namespace Trading.Editor
 
 				case nameof(TradeEntry.cost):
 					attributes.Add(new TitleGroupAttribute("Cost", "Что отдаем за сделку", alignment: TitleAlignments.Split));
+					break;
+			}
+
+			switch (member.Name)
+			{
+				case nameof(TradeEntry.reward):
+				case nameof(TradeEntry.cost):
+					attributes.Add(new HideLabelAttribute());
 					break;
 			}
 		}

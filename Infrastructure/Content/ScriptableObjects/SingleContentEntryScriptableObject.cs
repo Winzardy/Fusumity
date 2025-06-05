@@ -34,12 +34,22 @@ namespace Content.ScriptableObjects
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
+
 		bool IValidatable.Validate()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
+			{
+				ContentDebug.LogWarning("Need sync!", this);
 				return false;
+			}
 #endif
+			if (Value is IValidatable validatable && !validatable.Validate())
+			{
+				ContentDebug.LogError("Value is not valid!", this);
+				return false;
+			}
+
 			return true;
 		}
 	}

@@ -4,19 +4,14 @@ using System.Collections;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Fusumity.Collections
+namespace Fusumity.JsonConverters
 {
 	public class SerializableDictionaryJsonConverter : JsonConverter
 	{
-		public override bool CanConvert(Type objectType)
-		{
-			return objectType.Name.StartsWith("SerializableDictionary");
-		}
-
+		public override bool CanConvert(Type objectType) => objectType.Name.StartsWith("SerializableDictionary");
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			// сериализуем как обычный Dictionary
 			var dict = value as IDictionary;
 			if (dict == null)
 			{
@@ -30,6 +25,7 @@ namespace Fusumity.Collections
 				writer.WritePropertyName(entry.Key?.ToString());
 				serializer.Serialize(writer, entry.Value);
 			}
+
 			writer.WriteEndObject();
 		}
 

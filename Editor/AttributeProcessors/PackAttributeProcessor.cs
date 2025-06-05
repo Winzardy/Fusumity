@@ -33,10 +33,10 @@ namespace Fusumity.Editor
 				case TARGET_FIELD_NAME:
 					attributes.Add(new HorizontalGroupAttribute());
 					attributes.Add(new HideLabelAttribute());
+					attributes.Add(new SuffixLabelAttribute("\u2715"));
 					break;
 				case AMOUNT_FIELD_NAME:
-					attributes.Add(new HorizontalGroupAttribute(width: 0.35f));
-					attributes.Add(new PropertyOrderAttribute(-1));
+					attributes.Add(new HorizontalGroupAttribute(width: 0.3f));
 					attributes.Add(new HideLabelAttribute());
 					foreach (var parentAttribute in parentProperty.Attributes)
 						if (parentAttribute is ParentAttribute attribute)

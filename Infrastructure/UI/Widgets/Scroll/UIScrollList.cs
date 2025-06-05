@@ -237,15 +237,15 @@ namespace UI.Scroll
 
 		protected sealed override void OnCellVisibilityChanged(UIScrollItemLayout cell)
 		{
-			if (_cells.TryGetValue((TItemLayout) cell, out var item))
-			{
-				item.SetActive(cell.Active);
+			if (!_cells.TryGetValue((TItemLayout) cell, out var item))
+				return;
 
-				OnCellVisibilityChanged(item);
+			item.SetActive(cell.Active);
 
-				if (!cell.Active)
-					item.Reset();
-			}
+			OnCellVisibilityChanged(item);
+
+			if (!cell.Active)
+				item.Reset();
 		}
 
 		protected TItem FindCellAtDataIndex(int dataIndex)

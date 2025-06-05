@@ -15,6 +15,8 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		private ScriptableContentEntry<T> _entry;
 
+		protected ref readonly T Value => ref _entry.Value;
+
 		public IScriptableContentEntry<T> ScriptableContentEntry => _entry;
 
 		ScriptableContentEntry<T> IIdentifierSource<ScriptableContentEntry<T>>.Source => _entry;
@@ -73,7 +75,7 @@ namespace Content.ScriptableObjects
 
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
-		public virtual bool Validate()
+		bool IValidatable.Validate()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
@@ -84,7 +86,13 @@ namespace Content.ScriptableObjects
 #endif
 			if (Id.IsNullOrEmpty())
 			{
-				ContentDebug.LogWarning("Empty id!", this);
+				ContentDebug.LogError("Empty id!", this);
+				return false;
+			}
+
+			if (Value is IValidatable validatable && !validatable.Validate())
+			{
+				ContentDebug.LogError("Value is not valid!", this);
 				return false;
 			}
 

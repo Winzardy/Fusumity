@@ -67,12 +67,12 @@ namespace UI
 		private bool _active;
 		protected bool _immediate;
 
-		public static implicit operator bool(UIWidget widget) => widget != null;
-
 		/// <inheritdoc cref="IWidget{TLayout}.Active"/>
 		public bool Active => _active;
+
 		/// <inheritdoc cref="IWidget{TLayout}.Visible"/>
 		public virtual bool Visible => Active;
+
 		/// <inheritdoc cref="IWidget{TLayout}.Visible"/>
 		public virtual bool Open => Active;
 
@@ -201,5 +201,7 @@ namespace UI
 
 		/// <inheritdoc cref="IWidget{TLayout}.Open"/>
 		public bool IsOpen() => Open;
+
+		public static implicit operator bool(UIWidget widget) => widget != null;
 	}
 }

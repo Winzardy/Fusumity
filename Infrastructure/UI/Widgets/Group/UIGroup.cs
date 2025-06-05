@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
+using Sapientia.Pooling;
+using UnityEngine;
 
 namespace UI
 {
@@ -10,19 +12,16 @@ namespace UI
 		where TWidgetLayout : UIBaseLayout
 		where TWidgetArgs : struct
 	{
-		private bool _immediate;
-
 		protected SimpleList<TWidgetArgs> _args;
 
 		private UIPool<TWidget, TWidgetLayout> _pool;
-
-		private SimpleList<TWidget> _widgets = new();
+		private SimpleList<TWidget> _used = new();
 
 		public event Action<TWidget> Registered;
 		public event Action<TWidget> Unregistered;
 
-		public TWidget this[int index] => _widgets[index];
-		public int this[TWidget widget] => _widgets.IndexOf(widget);
+		public TWidget this[int index] => _used[index];
+		public int this[TWidget widget] => _used.IndexOf(widget);
 
 		protected override void OnLayoutInstalled()
 		{
@@ -39,66 +38,29 @@ namespace UI
 
 		protected override void OnLayoutCleared()
 		{
-			TryClearWidgets();
-			TryDisposePool();
-		}
-
-		private bool TryDisposePool()
-		{
-			if (_pool == null)
-				return false;
-
-			_pool?.Dispose();
-			_pool = null;
-
-			return true;
+			ReleaseAll();
+			DisposePool();
 		}
 
 		protected override void OnDispose()
 		{
-			TryDisposePool();
+			DisposePool();
 		}
 
 		public bool TryGet(int index, out TWidget widget)
 		{
 			widget = null;
 
-			if (_widgets.IsNullOrEmpty())
+			if (_used.IsNullOrEmpty())
 				return false;
 
-			if (index >= 0 && index < _widgets.Count)
-				widget = _widgets[index];
+			if (index >= 0 && index < _used.Count)
+				widget = _used[index];
 
 			return widget != null;
 		}
 
 		#region Show/Hide
-
-		public void Update(IEnumerable<TWidgetArgs> items, bool immediate = true) //, bool equals = true)
-		{
-			// //Зачем обновлять если там одно и тоже
-			// if (equals && Equals(items))
-			// 	return;
-
-			_immediate = immediate;
-
-			var cacheActive = Active;
-
-			if (cacheActive)
-				SetActive(false, immediate);
-
-			if (_args == null)
-				_args = new SimpleList<TWidgetArgs>();
-			else
-				_args.Clear();
-
-			if (!items.IsNullOrEmpty())
-				foreach (var item in items)
-					_args.Add(item);
-
-			if (cacheActive)
-				SetActive(true, immediate);
-		}
 
 		// private bool Equals(IEnumerable<TWidgetArgs> items)
 		// {
@@ -179,7 +141,7 @@ namespace UI
 		{
 			if (_args.IsNullOrEmpty())
 			{
-				TryClearWidgets();
+				ReleaseAll();
 				return;
 			}
 
@@ -191,7 +153,7 @@ namespace UI
 				widget.Show(in _args[i], _immediate);
 			}
 
-			var usedWidgetAmount = _widgets.Count;
+			var usedWidgetAmount = _used.Count;
 			var count = usedWidgetAmount - _args.Count;
 
 			for (int i = 0; i < count; i++)
@@ -201,28 +163,53 @@ namespace UI
 				ForceRebuildLayout();
 		}
 
+		public void Update(IEnumerable<TWidgetArgs> items, bool immediate = true) //, bool equals = true)
+		{
+			// //Зачем обновлять если там одно и тоже
+			// if (equals && Equals(items))
+			// 	return;
+
+			_immediate = immediate;
+
+			var cacheActive = Active;
+
+			if (cacheActive)
+				SetActive(false, immediate);
+
+			if (_args == null)
+				_args = new SimpleList<TWidgetArgs>();
+			else
+				_args.Clear();
+
+			if (!items.IsNullOrEmpty())
+				foreach (var item in items)
+					_args.Add(item);
+
+			if (cacheActive)
+				SetActive(true, immediate);
+		}
+
 		#endregion
 
 		protected virtual void OnRegisteredElement(TWidget widget)
 		{
 		}
 
-		private void Unregister(int index, bool remove = true)
+		private void Unregister(int index, bool release = true)
 		{
-			var widget = _widgets[index];
-			Unregister(widget, remove);
+			var widget = _used[index];
+			Unregister(widget, release);
 		}
 
-		private void Unregister(TWidget widget, bool remove = true)
+		/// <param name="release">Отпустить в пул, если <c>false</c> то вероятно полностью очищаем</param>
+		private void Unregister(TWidget widget, bool release = true)
 		{
 			Unregistered?.Invoke(widget);
 			OnUnregisteredElement(widget);
 
-			widget.SetActive(false, _immediate);
-
-			if (remove)
+			if (release)
 			{
-				_widgets.Remove(widget);
+				_used.Remove(widget);
 				_pool.Release(widget);
 			}
 		}
@@ -231,15 +218,24 @@ namespace UI
 		{
 		}
 
-		private void TryClearWidgets()
+		private void DisposePool()
 		{
-			if (_widgets.IsNullOrEmpty())
+			if (_pool == null)
 				return;
 
-			foreach (var widget in _widgets)
+			_pool?.Dispose();
+			_pool = null;
+		}
+
+		private void ReleaseAll()
+		{
+			if (_used.IsNullOrEmpty())
+				return;
+
+			foreach (var widget in _used)
 				Unregister(widget, false);
 
-			_widgets.Clear();
+			_used.ReleaseAndClear(_pool);
 		}
 
 		public override void Reset(bool deactivate = true)
@@ -248,7 +244,7 @@ namespace UI
 				SetActive(false, true);
 
 			_args?.Clear();
-			TryClearWidgets();
+			ReleaseAll();
 
 			base.Reset(deactivate);
 		}
@@ -262,9 +258,9 @@ namespace UI
 
 		private void Register(TWidget widget)
 		{
-			_widgets.Add(widget);
+			_used.Add(widget);
 
-			widget.SetSiblingIndex(_widgets.Count);
+			widget.SetSiblingIndex(_used.Count);
 
 			OnRegisteredElement(widget);
 			Registered?.Invoke(widget);
