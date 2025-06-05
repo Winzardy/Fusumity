@@ -108,6 +108,14 @@ namespace UI
 			{
 				await SetupTemplateAndActivateAsync(immediate, _loadTemplateCts.Token);
 			}
+			catch (OperationCanceledException)
+			{
+				GUIDebug.LogWarning($"{GetType()} layout (template) loading was canceled");
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogException(e);
+			}
 			finally
 			{
 				CancellationTokenSourceUtility.Release(ref _loadTemplateCts);
