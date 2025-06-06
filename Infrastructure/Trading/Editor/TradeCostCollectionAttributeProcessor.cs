@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -20,9 +21,23 @@ namespace Trading.Editor
 						FilterTypesFunction = nameof(TradeCostCollection.Filter)
 					};
 					attributes.Add(typeSelectorSettingsAttribute);
-					attributes.Add(new IndentAttribute(-1));
+					if (!IsInsideCollection(parentProperty))
+						attributes.Add(new IndentAttribute(-1));
 					break;
 			}
+		}
+
+		private bool IsInsideCollection(InspectorProperty? property)
+		{
+			while (property != null)
+			{
+				if (property.Parent?.ChildResolver is IOrderedCollectionResolver)
+					return true;
+
+				property = property.Parent;
+			}
+
+			return false;
 		}
 	}
 

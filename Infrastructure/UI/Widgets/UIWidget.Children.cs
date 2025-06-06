@@ -272,7 +272,6 @@ namespace UI
 			where TLayout : UIBaseLayout
 		{
 			RegisterChildWidget(widget);
-			widget.SetActiveInHierarchy(_activeInHierarchy);
 
 			if (autoActivation)
 				widget.SetActive(true, immediateActivation);
@@ -287,7 +286,7 @@ namespace UI
 		/// и удорожает простую очистку верстки, лучше просто дольше держать активной ту верстку которая нужна по логике.
 		/// (подробнее в <see cref="LayoutEntry"/>)
 		/// </summary>
-		protected internal void RegisterChildWidget(UIWidget widget, bool soft = false)
+		private void RegisterChildWidget(UIWidget widget, bool soft = false)
 		{
 			_children ??= HashSetPool<UIWidget>.Get();
 
@@ -298,7 +297,9 @@ namespace UI
 				return;
 			}
 
+			widget.SetActiveInHierarchy(_activeInHierarchy);
 			widget.SetActiveInHierarchyForChildren(_activeInHierarchy);
+
 			OnChildWidgetRegistered(widget);
 		}
 

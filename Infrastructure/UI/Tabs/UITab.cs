@@ -11,7 +11,7 @@ namespace UI.Tabs
 		public void Initialize(UITabEntry entry, ITabGroup group);
 		public void Show(bool immediate = false);
 		public void Hide(bool immediate = false);
-		public string GetEntryId();
+		public string Id { get; }
 	}
 
 	public interface ITabGroup : ISelectedGroup<ITab>
@@ -39,7 +39,7 @@ namespace UI.Tabs
 		protected override RectTransform RectTransform =>
 			_group.TryGetRoot(out var parent) ? parent : _layout.rectTransform.parent as RectTransform;
 
-		public abstract string GetEntryId();
+		public abstract string Id { get; }
 
 		protected override string LayoutPrefixName => "[Tab] ";
 

@@ -711,40 +711,39 @@ namespace UI.Scroll
 			_initialized = true;
 		}
 
-		private void TryUpdatePaddingByMode()
+		private void UpdatePaddingByMode()
 		{
 			if (paddingMode == PaddingMode.None)
 				return;
 
-			var isHorizontal = _scrollDirection == ScrollDirectionEnum.Horizontal;
+			var halfViewport = ViewportSize * 0.5f;
 
-			float offset = 0;
-
-			if (!_cellSizeArray.IsNullOrEmpty())
+			var offset = paddingMode switch
 			{
-				switch (paddingMode)
-				{
-					case PaddingMode.Center:
-						offset = !_cellSizeArray.IsNullOrEmpty() ? _cellSizeArray[0] / 2 : 0;
-						break;
-					case PaddingMode.CenterByContent:
-						offset = ScrollSize / 2;
-						break;
-				}
-			}
+				PaddingMode.Center => _cellSizeArray.FirstOrDefault(),
+				PaddingMode.CenterByContent => _cellOffsetArray.LastOrDefault(),
+				_ => 0f
+			};
 
-			var halfViewportSize = ViewportSize / 2;
-			offset = Mathf.Clamp(offset, 0, halfViewportSize);
+			offset *= 0.5f;
 
-			var value = (int) (halfViewportSize - offset);
+			offset = Mathf.Clamp(offset, 0, halfViewport);
+			var newVal = Mathf.RoundToInt(halfViewport - offset);
 
-			if (value <= 0)
-				value = isHorizontal ? _defaultPadding.left : _defaultPadding.top;
+			var isHorizontalDirection = _scrollDirection == ScrollDirectionEnum.Horizontal;
 
-			if (isHorizontal)
-				padding.left = value;
+			if (newVal <= 0)
+				newVal = isHorizontalDirection ? _defaultPadding.left : _defaultPadding.top;
+
+			padding.left = _defaultPadding.left;
+			padding.top = _defaultPadding.top;
+			padding.right = _defaultPadding.right;
+			padding.bottom = _defaultPadding.bottom;
+
+			if (isHorizontalDirection)
+				padding.left = newVal;
 			else
-				padding.top = value;
+				padding.top = newVal;
 
 			_layoutGroup.padding = padding;
 		}
@@ -1270,8 +1269,8 @@ namespace UI.Scroll
 		/// </summary>
 		public int GetMiddleCellDataIndex()
 		{
-			float pos = ScrollPosition + (ScrollRectSize * 0.5f);
-			int cellIndex = GetCellIndexAtPosition(pos);
+			var pos = ScrollPosition + (ScrollRectSize * 0.5f);
+			var cellIndex = GetCellIndexAtPosition(pos);
 			return cellIndex % NumberOfItems;
 		}
 
@@ -1280,7 +1279,7 @@ namespace UI.Scroll
 		/// </summary>
 		public void ExecuteOnVieweditems<T>(Action<T> action) where T : UIScrollItemLayout
 		{
-			for (int i = StartDataIndex; i <= EndDataIndex; i++)
+			for (var i = StartDataIndex; i <= EndDataIndex; i++)
 			{
 				var item = GetCellAtDataIndex(i) as T;
 				if (item != null)
@@ -1314,7 +1313,7 @@ namespace UI.Scroll
 					if (insertPosition == CellPositionEnum.Before)
 					{
 						// return the previous cell's offset + the spacing between cells
-						float offset = clamp
+						var offset = clamp
 							? Mathf.Clamp(_cellOffsetArray[cellIndex - 1], 0, ActiveCellsSize)
 							: _cellOffsetArray[cellIndex - 1];
 
@@ -1324,7 +1323,7 @@ namespace UI.Scroll
 					else
 					{
 						// return the offset of the cell (offset is after the cell)
-						float offset = clamp
+						var offset = clamp
 							? Mathf.Clamp(_cellOffsetArray[cellIndex], 0, ActiveCellsSize)
 							: _cellOffsetArray[cellIndex];
 
@@ -1636,7 +1635,7 @@ namespace UI.Scroll
 				// make some more size entries to fill it up
 				if (offset < ScrollRectSize)
 				{
-					int additionalRounds = Mathf.CeilToInt((float) Mathf.CeilToInt(ScrollRectSize / offset) / 2.0f) * 2;
+					var additionalRounds = Mathf.CeilToInt((float) Mathf.CeilToInt(ScrollRectSize / offset) / 2.0f) * 2;
 					_DuplicateCellSizes(additionalRounds, cellCount);
 					_loopFirstCellIndex = cellCount * (1 + (additionalRounds / 2));
 				}
@@ -1653,6 +1652,8 @@ namespace UI.Scroll
 
 			// calculate the offsets of each cell
 			_CalculateCellOffsets();
+
+			UpdatePaddingByMode();
 
 			// set the size of the active cell container based on the number of cells there are and each of their sizes
 			if (_scrollDirection == ScrollDirectionEnum.Vertical)
@@ -1697,8 +1698,6 @@ namespace UI.Scroll
 
 			// set up the visibility of the scrollbar
 			ScrollbarVisibility = _scrollbarVisibility;
-
-			TryUpdatePaddingByMode();
 		}
 
 		/// <summary>
@@ -2703,7 +2702,7 @@ namespace UI.Scroll
 		private static float easeInBounce(float start, float end, float val)
 		{
 			end -= start;
-			float d = 1f;
+			var d = 1f;
 			return end - easeOutBounce(0, end, d - val) + start;
 		}
 
@@ -2735,7 +2734,7 @@ namespace UI.Scroll
 		private static float easeInOutBounce(float start, float end, float val)
 		{
 			end -= start;
-			float d = 1f;
+			var d = 1f;
 			if (val < d / 2) return easeInBounce(0, end, val * 2) * 0.5f + start;
 			else return easeOutBounce(0, end, val * 2 - d) * 0.5f + end * 0.5f + start;
 		}
@@ -2744,13 +2743,13 @@ namespace UI.Scroll
 		{
 			end -= start;
 			val /= 1;
-			float s = 1.70158f;
+			var s = 1.70158f;
 			return end * (val) * val * ((s + 1) * val - s) + start;
 		}
 
 		private static float easeOutBack(float start, float end, float val)
 		{
-			float s = 1.70158f;
+			var s = 1.70158f;
 			end -= start;
 			val = (val / 1) - 1;
 			return end * ((val) * val * ((s + 1) * val + s) + 1) + start;
@@ -2758,7 +2757,7 @@ namespace UI.Scroll
 
 		private static float easeInOutBack(float start, float end, float val)
 		{
-			float s = 1.70158f;
+			var s = 1.70158f;
 			end -= start;
 			val /= .5f;
 			if ((val) < 1)
@@ -2776,8 +2775,8 @@ namespace UI.Scroll
 		{
 			end -= start;
 
-			float d = 1f;
-			float p = d * .3f;
+			var d = 1f;
+			var p = d * .3f;
 			float s = 0;
 			float a = 0;
 
@@ -2803,8 +2802,8 @@ namespace UI.Scroll
 		{
 			end -= start;
 
-			float d = 1f;
-			float p = d * .3f;
+			var d = 1f;
+			var p = d * .3f;
 			float s = 0;
 			float a = 0;
 
@@ -2830,8 +2829,8 @@ namespace UI.Scroll
 		{
 			end -= start;
 
-			float d = 1f;
-			float p = d * .3f;
+			var d = 1f;
+			var p = d * .3f;
 			float s = 0;
 			float a = 0;
 
@@ -2944,3 +2943,4 @@ namespace UI.Scroll
 
 	#endregion
 }
+
