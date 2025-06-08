@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using Sapientia.Extensions;
-using Object = UnityEngine.Object;
+using Sapientia.Utility;
 
 namespace AssetManagement
 {
+	using UnityObject = UnityEngine.Object;
+
 	//Данное решение для редких кейсов!!!
 	public partial class AssetManagement
 	{
@@ -25,7 +26,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
 		public async UniTask<T> LoadResourceAsync<T>(IResourceReferenceEntry entry, CancellationToken cancellationToken = default)
-			where T : Object
+			where T : UnityObject
 		{
 			return await LoadResourceAsync<T>(entry.Path, cancellationToken);
 		}
@@ -37,7 +38,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
 		public async UniTask<T> LoadResourceAsync<T>(string path, CancellationToken cancellationToken)
-			where T : Object
+			where T : UnityObject
 		{
 			var usedAsset = await FindOrWaitUsedResourceByPathAsync<T>(path, cancellationToken);
 
@@ -105,7 +106,7 @@ namespace AssetManagement
 		}
 
 		private async UniTask<T> FindOrWaitUsedResourceByPathAsync<T>(string path, CancellationToken cancellationToken)
-			where T : Object
+			where T : UnityObject
 		{
 			if (_keyToResourceContainer.TryGetValue(path, out var container))
 				return await container.GetResourceAsync<T>(cancellationToken);
@@ -158,17 +159,17 @@ namespace AssetManagement
 			}
 
 			public async UniTask<T> GetResourceAsync<T>(CancellationToken cancellationToken)
-				where T : Object
+				where T : UnityObject
 			{
 				_usages++;
 
-				if (CancellationTokenSourceUtility.AnyCancellation(cancellationToken, _cts.Token))
+				if (AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
 				{
 					Release();
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 
-				CancellationTokenSourceUtility.Trigger(ref _disposeCts);
+				AsyncUtility.Trigger(ref _disposeCts);
 
 				if (_request == null)
 					SetRequestInternal(Resources.LoadAsync<T>(_path));
@@ -196,7 +197,7 @@ namespace AssetManagement
 
 				UnloadAsset();
 
-				CancellationTokenSourceUtility.Trigger(ref _disposeCts);
+				AsyncUtility.Trigger(ref _disposeCts);
 			}
 
 			private void UnloadAsset()
@@ -207,7 +208,7 @@ namespace AssetManagement
 					Resources.UnloadAsset(_request.asset);
 
 				_request = null;
-				CancellationTokenSourceUtility.Trigger(ref _cts);
+				AsyncUtility.Trigger(ref _cts);
 			}
 
 			private void SetRequestInternal(ResourceRequest request)

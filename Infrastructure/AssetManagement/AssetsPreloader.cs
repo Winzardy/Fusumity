@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 
 namespace AssetManagement
 {
@@ -21,8 +21,7 @@ namespace AssetManagement
 
 		public void TryRelease()
 		{
-			_cts?.Trigger();
-			_cts = null;
+			AsyncUtility.Trigger(ref _cts);
 
 			if (!_preloaded)
 				return;

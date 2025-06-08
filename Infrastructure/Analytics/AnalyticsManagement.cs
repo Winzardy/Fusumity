@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 
@@ -46,7 +47,7 @@ namespace Analytics
 
 		public void Dispose()
 		{
-			CancellationTokenSourceUtility.Trigger(ref _cts);
+			AsyncUtility.Trigger(ref _cts);
 
 			if (_integrations.IsNullOrEmpty())
 				return;

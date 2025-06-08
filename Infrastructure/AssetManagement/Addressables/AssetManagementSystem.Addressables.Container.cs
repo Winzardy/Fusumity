@@ -4,7 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 
 namespace AssetManagement
 {
@@ -21,7 +21,7 @@ namespace AssetManagement
 			{
 				_usages++;
 
-				if (CancellationTokenSourceUtility.AnyCancellation(cancellationToken, _cts.Token))
+				if (AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
 				{
 					Release();
 					cancellationToken.ThrowIfCancellationRequested();

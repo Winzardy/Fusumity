@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 
 namespace UI
 {
@@ -20,9 +20,7 @@ namespace UI
 
 		protected internal override void OnBeganClosingInternal()
 		{
-			_closableCts.Trigger();
-			_closableCts = null;
-
+			AsyncUtility.Trigger(ref _closableCts);
 			base.OnBeganClosingInternal();
 		}
 

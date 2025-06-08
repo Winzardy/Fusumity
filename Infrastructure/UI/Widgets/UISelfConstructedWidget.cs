@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using AssetManagement;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 using UnityEngine;
 
 namespace UI
@@ -118,12 +118,12 @@ namespace UI
 			}
 			finally
 			{
-				CancellationTokenSourceUtility.Release(ref _loadTemplateCts);
+				AsyncUtility.Release(ref _loadTemplateCts);
 			}
 		}
 
 		private void TryStopAutoDestroy()
-			=> CancellationTokenSourceUtility.Trigger(ref _autoDestroyCts);
+			=> AsyncUtility.Trigger(ref _autoDestroyCts);
 
 		private async UniTaskVoid WaitBeforeDestroyAsync()
 		{
@@ -147,7 +147,7 @@ namespace UI
 			}
 			finally
 			{
-				CancellationTokenSourceUtility.Release(ref _autoDestroyCts);
+				AsyncUtility.Release(ref _autoDestroyCts);
 
 				if (_layout)
 					_layout.name = originalName;
@@ -198,7 +198,7 @@ namespace UI
 		}
 
 		private void TryCancelCreateLayout()
-			=> CancellationTokenSourceUtility.Trigger(ref _loadTemplateCts);
+			=> AsyncUtility.Trigger(ref _loadTemplateCts);
 
 		#region Prepare
 

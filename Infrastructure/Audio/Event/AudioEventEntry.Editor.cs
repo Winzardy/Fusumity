@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sapientia.Pooling;
 
 namespace Audio
@@ -83,7 +83,7 @@ namespace Audio
 			}
 		}
 
-		public void StopEditor() => CancellationTokenSourceUtility.Trigger(ref _playCts);
+		public void StopEditor() => AsyncUtility.Trigger(ref _playCts);
 	}
 #endif
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 using UnityEditor;
 
 namespace Content.ScriptableObjects.Editor
@@ -40,13 +40,13 @@ namespace Content.ScriptableObjects.Editor
 				ContentDatabaseEditorUtility.TryRunRegenerateConstantsByAuto();
 			}
 
-			CancellationTokenSourceUtility.Trigger(ref _cts);
+			AsyncUtility.Trigger(ref _cts);
 		}
 
 		public static void Invoke(Type type)
 		{
 			EditorApplication.delayCall += OnDelayCall;
-			CancellationTokenSourceUtility.Trigger(ref _cts);
+			AsyncUtility.Trigger(ref _cts);
 
 			void OnDelayCall()
 			{
@@ -57,7 +57,7 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void ForceInvokeWithDelay(Type type)
 		{
-			CancellationTokenSourceUtility.Trigger(ref _cts);
+			AsyncUtility.Trigger(ref _cts);
 			_cts ??= new CancellationTokenSource();
 			InvokeDelayAsync(type, _cts.Token).Forget();
 		}

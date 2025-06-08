@@ -4,7 +4,7 @@ using ZenoTween;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Utility;
 using UnityEngine;
 
 namespace UI

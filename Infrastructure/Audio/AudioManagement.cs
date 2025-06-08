@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 using Game.App;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEngine;
@@ -62,7 +63,7 @@ namespace Audio
 
 			_idToMixerGroup = null;
 
-			CancellationTokenSourceUtility.Trigger(ref _cts);
+			AsyncUtility.Trigger(ref _cts);
 
 			foreach (var player in _audioPlayers)
 			{
