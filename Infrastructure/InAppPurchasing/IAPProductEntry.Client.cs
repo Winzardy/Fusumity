@@ -1,4 +1,6 @@
 using Content;
+using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace InAppPurchasing
 {
@@ -8,5 +10,7 @@ namespace InAppPurchasing
 		public string titleLocKey;
 		[ClientOnly]
 		public string descriptionLocKey;
+		[ClientOnly, Tooltip("Используется в основном для фейка"), PropertySpace(0, 10)]
+		public string price;
 	}
 }

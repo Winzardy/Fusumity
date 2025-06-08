@@ -1,3 +1,5 @@
+using TMPro;
+
 namespace UI
 {
 	public class UIPriceWidgetLayout : UIBaseLayout
@@ -17,5 +19,7 @@ namespace UI
 		public UIGroupLayout miniGroup;
 
 		public UILocalizedTextLayout badge;
+
+		public TMP_Text label;
 	}
 }

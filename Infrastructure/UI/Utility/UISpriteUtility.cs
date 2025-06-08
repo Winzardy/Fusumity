@@ -19,7 +19,7 @@ namespace UI
 
 			if (!reference.IsEmpty())
 			{
-				assigner.SetSprite(placeholder, reference);
+				assigner.SetSprite(placeholder, reference, callback);
 			}
 			else
 			{

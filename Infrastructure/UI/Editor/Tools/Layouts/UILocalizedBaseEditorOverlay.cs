@@ -4,6 +4,7 @@ using Localizations;
 using Sapientia.Collections;
 using UnityEditor;
 using UnityEditor.Overlays;
+using UnityEngine;
 
 namespace UI.Editor
 {
@@ -16,6 +17,9 @@ namespace UI.Editor
 
 		public override void OnGUI()
 		{
+			if (Application.isPlaying)
+				return;
+
 			OnSelectionChanged();
 
 			if (!_target)
@@ -47,6 +51,9 @@ namespace UI.Editor
 
 		private void OnSelectionChanged()
 		{
+			if (Application.isPlaying)
+				return;
+
 			_target = null;
 
 			if (Selection.activeGameObject == null)

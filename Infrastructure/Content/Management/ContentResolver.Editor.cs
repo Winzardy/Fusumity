@@ -89,7 +89,7 @@ namespace Content.Management
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		string IContentEditorResolver.ToLabel<T>(in SerializableGuid guid, bool detailed) => ToLabel<T>(in guid, detailed);
+		string IContentEditorResolver.ToLabel<T>(in SerializableGuid guid, bool verbose) => ToLabel<T>(in guid, verbose);
 	}
 
 	public interface IContentEditorResolver
@@ -175,7 +175,7 @@ namespace Content.Management
 		public int ToIndex<T>(string id);
 
 		/// <inheritdoc cref="ContentResolver.ToLabel{T}(in SerializableGuid, bool)"/>
-		public string ToLabel<T>(in SerializableGuid guid, bool detailed = false);
+		public string ToLabel<T>(in SerializableGuid guid, bool verbose = false);
 	}
 }
 #endif

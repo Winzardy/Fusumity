@@ -27,11 +27,6 @@ namespace Fusumity.Reactive
 		public static bool ApplicationQuitting => _instance._applicationQuitting;
 		public static bool ApplicationPause => _instance._pause;
 
-		private void OnDestroy()
-		{
-			OnDestroyEvent.ImmediatelyInvoke();
-		}
-
 		private void Update()
 		{
 			UpdateEvent.ImmediatelyInvoke();
@@ -56,6 +51,11 @@ namespace Fusumity.Reactive
 			var events = LateExecuteOnceEvent;
 			LateExecuteOnceEvent = null;
 			events?.Invoke();
+		}
+
+		private void OnDestroy()
+		{
+			OnDestroyEvent.ImmediatelyInvoke();
 		}
 
 		private void UpdateTimeEvents(bool isUnscaled)

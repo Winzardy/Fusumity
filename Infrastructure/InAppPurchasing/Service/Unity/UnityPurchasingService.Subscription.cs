@@ -6,22 +6,23 @@ namespace InAppPurchasing.Unity
 {
 	using UnitySubscriptionInfo = UnityEngine.Purchasing.SubscriptionInfo;
 
+
 	public partial class UnityPurchasingService
 	{
-		private const int DELAY_MS = 10000; //10 secs
-		private static readonly long DELAY_TICKS = DELAY_MS.ToTicks();
+		private const int DELAY_UPDATING_SUBSCRIPTION_CACHE_MS = 10000; // 10 secs
+		private static readonly long DELAY_UPDATING_SUBSCRIPTION_CACHE_TICKS = DELAY_UPDATING_SUBSCRIPTION_CACHE_MS.ToTicks();
 
 		private Dictionary<IAPProductEntry, SubscriptionCache> _subscriptionToCache;
 
-		public bool CanPurchaseSubscription(IAPProductEntry product, out IAPPurchaseError? error)
+		public bool CanPurchaseSubscription(IAPProductEntry entry, out IAPPurchaseError? error)
 		{
-			if (product.Type != IAPProductType.Subscription)
+			if (entry.Type != IAPProductType.Subscription)
 			{
 				error = IAPPurchaseErrorCode.InvalidProductType;
 				return false;
 			}
 
-			var cache = GetSubscriptionCache(product, out var failureReason, false);
+			var cache = GetSubscriptionCache(entry, out var failureReason, false);
 
 			switch (failureReason)
 			{
@@ -42,24 +43,31 @@ namespace InAppPurchasing.Unity
 				return false;
 			}
 
-			return CanPurchase(product, out error);
+			return CanPurchase(entry, out error);
 		}
 
 		/// <returns>Возвращает успешность запроса на покупку, а не статус покупки</returns>
-		public bool RequestPurchaseSubscription(IAPProductEntry product)
+		public bool RequestPurchaseSubscription(IAPProductEntry entry)
 		{
-			if (!CanPurchaseSubscription(product, out _))
+			if (!CanPurchaseSubscription(entry, out _))
 				return false;
 
-			return RequestPurchase(product);
+			return RequestPurchase(entry);
 		}
 
+		#region Subscription Info
+
 		/// <summary>
-		/// Собирает данные о подписке (Runtime). Важно что это метод именно собирает актуальные данные с платформы.
-		/// Он не выдает кеш или что-то в этом роде!
+		/// Получить актуальную информацию о подписке с платформы
 		/// </summary>
-		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool force = false)
-			=> ref GetSubscriptionCache(subscription, out _, force).info;
+		/// <param name="forceUpdateCache">при <c>true</c> форсит обновление кеша</param>
+		/// <remarks>
+		/// От частых запросов к платформе, возвращает кэшированную информацию,
+		/// можно зафорсировать обновление кеша.
+		/// Кеш хранится <c>10 секунд</c> (<see cref="DELAY_MS"/>)
+		/// </remarks>
+		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false)
+			=> ref GetSubscriptionCache(subscription, out _, forceUpdateCache).info;
 
 		private SubscriptionCache GetSubscriptionCache(IAPProductEntry product, out SubscriptionUpdateFailureReason failureReason,
 			bool force)
@@ -70,7 +78,7 @@ namespace InAppPurchasing.Unity
 
 			if (_subscriptionToCache.TryGetValue(product, out var cache))
 			{
-				if (!force && DateTime.Now.Ticks - cache.timeTicks < DELAY_TICKS)
+				if (!force && DateTime.Now.Ticks - cache.timeTicks < DELAY_UPDATING_SUBSCRIPTION_CACHE_TICKS)
 					return cache;
 			}
 			else
@@ -78,9 +86,9 @@ namespace InAppPurchasing.Unity
 				_subscriptionToCache[product] = new();
 			}
 
-			if (!UpdateInfo(product, out var reason))
+			if (!UpdateInfo(product, out failureReason))
 			{
-				IAPDebug.LogError("Failed to collect subscription info: " + reason);
+				IAPDebug.LogError("Failed to collect subscription info: " + failureReason);
 			}
 
 			return _subscriptionToCache[product];
@@ -109,6 +117,8 @@ namespace InAppPurchasing.Unity
 
 			return true;
 		}
+
+		#endregion
 	}
 
 	internal enum SubscriptionUpdateFailureReason

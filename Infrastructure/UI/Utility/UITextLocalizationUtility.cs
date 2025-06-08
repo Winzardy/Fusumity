@@ -47,7 +47,6 @@ namespace UI
 			string label)
 		{
 			assigner.SetTextOrDeactivate(placeholder, args, label);
-
 			return assigner;
 		}
 
@@ -67,7 +66,6 @@ namespace UI
 			else if (!label.IsNullOrEmpty())
 			{
 				active = true;
-
 				placeholder.text = label;
 			}
 

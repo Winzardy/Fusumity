@@ -1,11 +1,13 @@
 using System;
 using Sapientia.Extensions;
 using UnityEngine.Purchasing;
-using UnitySubscriptionInfo = UnityEngine.Purchasing.SubscriptionInfo;
 
 namespace InAppPurchasing.Unity
 {
-	internal static class UnityPurchasingServiceExt
+	using UnitySubscriptionInfo = UnityEngine.Purchasing.SubscriptionInfo;
+	using UnityProduct = UnityEngine.Purchasing.Product;
+
+	internal static class UnityPurchasingUtility
 	{
 		//Костыль чтобы не тянуть его через всю цепочку
 		internal static IAppleExtensions appleExtensions;
@@ -19,9 +21,9 @@ namespace InAppPurchasing.Unity
 				_ => throw new ArgumentOutOfRangeException()
 			};
 
-		internal static bool IsPurchased(this Product product) => IsPurchased(product, out _);
+		internal static bool IsPurchased(this UnityProduct product) => IsPurchased(product, out _);
 
-		internal static bool IsPurchased(this Product product, out object rawData)
+		internal static bool IsPurchased(this UnityProduct product, out object rawData)
 		{
 			rawData = null;
 			if (product.definition.type == ProductType.Consumable)
@@ -45,7 +47,7 @@ namespace InAppPurchasing.Unity
 		public static bool IsActive(this SubscriptionInfo subscriptionInfo)
 			=> subscriptionInfo is {isSubscribed: true, isExpired: false};
 
-		internal static bool TryGetUnitySubscriptionInfo(this Product product, out UnityEngine.Purchasing.SubscriptionInfo info,
+		internal static bool TryGetUnitySubscriptionInfo(this UnityProduct product, out UnityEngine.Purchasing.SubscriptionInfo info,
 			bool debug = false)
 		{
 			const string PREFIX_DEBUG = "Couldn't get subscription info:";
@@ -74,7 +76,7 @@ namespace InAppPurchasing.Unity
 			return true;
 		}
 
-		private static bool TryGetSubscriptionIntroJson(Product product, out string json)
+		private static bool TryGetSubscriptionIntroJson(UnityProduct product, out string json)
 		{
 			json = null;
 
@@ -126,6 +128,15 @@ namespace InAppPurchasing.Unity
 				unityInfo.getIntroductoryPrice(),
 				unityInfo.getIntroductoryPricePeriod(),
 				unityInfo.getIntroductoryPricePeriodCycles()
+			);
+		}
+		internal static ProductInfo Convert(this UnityProduct product)
+		{
+			return new ProductInfo
+			(
+				product.definition.id,
+				product.definition.type.ToProductType(),
+				product.metadata.localizedPriceString
 			);
 		}
 	}

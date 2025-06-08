@@ -17,7 +17,7 @@ namespace Fusumity.Editor
 		public const string TARGET_FIELD_NAME = "target";
 
 		/// <summary>
-		/// <see cref="Pack{T}.amount"/>
+		/// <see cref="Pack{T}.count"/>
 		/// </summary>
 		public const string AMOUNT_FIELD_NAME = "amount";
 

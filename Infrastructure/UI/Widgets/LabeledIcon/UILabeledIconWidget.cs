@@ -41,8 +41,20 @@ namespace UI
 
 		protected override void OnShow(ref Args args)
 		{
-			_layout.icon.TrySetSprite(_spriteAssigner, args.iconReference, args.icon, _defaultIconSprite);
-			_layout.label.SetTextSafe(_localizationAssigner, args.labelLocArgs, args.label, _defaultLabelText);
+			_layout.icon.TrySetSprite
+			(
+				_spriteAssigner,
+				args.iconReference,
+				args.icon,
+				_defaultIconSprite
+			);
+			_layout.label.SetTextSafe
+			(
+				_localizationAssigner,
+				args.labelLocArgs,
+				args.label,
+				_defaultLabelText
+			);
 		}
 	}
 }

@@ -231,7 +231,7 @@ namespace InAppPurchasing.Unity
 				case IAPPlatformType.APP_STORE:
 					_appleExtension = _extensions.GetExtension<IAppleExtensions>();
 
-					UnityPurchasingServiceExt.appleExtensions = _appleExtension;
+					UnityPurchasingUtility.appleExtensions = _appleExtension;
 
 					if (_appleExtension != null)
 					{
@@ -340,21 +340,21 @@ namespace InAppPurchasing.Unity
 			=> CanPurchase(product, out error);
 
 		/// <returns>Возвращает успешность запроса на покупку, а не статус покупки</returns>
-		public bool RequestPurchaseConsumable(IAPProductEntry product)
+		public bool RequestPurchaseConsumable(IAPProductEntry entry)
 		{
-			if (!CanPurchaseConsumable(product, out _))
+			if (!CanPurchaseConsumable(entry, out _))
 				return false;
 
-			return RequestPurchase(product);
+			return RequestPurchase(entry);
 		}
 
 		#endregion
 
 		#region Non-Consumable
 
-		public bool CanPurchaseNonConsumable(IAPProductEntry product, out IAPPurchaseError? error)
+		public bool CanPurchaseNonConsumable(IAPProductEntry entry, out IAPPurchaseError? error)
 		{
-			if (!TryGetUnityProduct(product, out UnityProduct unityProduct))
+			if (!TryGetUnityProduct(entry, out UnityProduct unityProduct))
 			{
 				error = IAPPurchaseErrorCode.ProductNotFoundInService;
 				return false;
@@ -366,16 +366,16 @@ namespace InAppPurchasing.Unity
 				return false;
 			}
 
-			return CanPurchase(product, out error);
+			return CanPurchase(entry, out error);
 		}
 
 		/// <returns>Возвращает успешность запроса на покупку, а не статус покупки</returns>
-		public bool RequestPurchaseNonConsumable(IAPProductEntry product)
+		public bool RequestPurchaseNonConsumable(IAPProductEntry entry)
 		{
-			if (!CanPurchaseNonConsumable(product, out _))
+			if (!CanPurchaseNonConsumable(entry, out _))
 				return false;
 
-			return RequestPurchase(product);
+			return RequestPurchase(entry);
 		}
 
 		#endregion

@@ -109,14 +109,16 @@ namespace Content.Editor
 
 			return ref SerializableGuid.Empty;
 		}
-		public string ToLabel<T>(in SerializableGuid guid, bool detailed = false)
+
+		/// <see cref="ContentResolver.ToLabel{T}(in SerializableGuid, bool)"/>
+		public string ToLabel<T>(in SerializableGuid guid, bool verbose = false)
 		{
 			if (guid == IContentReference.SINGLE_GUID)
 			{
 				if (Contains<T>())
 				{
 					var entry = GetEntry<T>();
-					return detailed
+					return verbose
 						? $"{ContentConstants.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
 						: $"{ContentConstants.DEFAULT_SINGLE_ID}";
 				}
@@ -124,12 +126,14 @@ namespace Content.Editor
 			else if (Contains<T>(in guid))
 			{
 				var entry = GetEntry<T>(in guid);
-				return detailed
+				return verbose
 					? $"{entry.Id} (type:{entry.ValueType.Name}, guid: {guid})"
 					: $"{entry.Id}";
 			}
 
-			return $"[{typeof(T).Name}] {guid}";
+			return verbose
+				? $"[{typeof(T).Name}] {guid}"
+				: guid.ToString();
 		}
 
 		public ref readonly SerializableGuid ToGuid<T>(int index) =>
