@@ -19,7 +19,7 @@ namespace Fusumity.Editor
 		/// <summary>
 		/// <see cref="Pack{T}.count"/>
 		/// </summary>
-		public const string AMOUNT_FIELD_NAME = "amount";
+		public const string COUNT_FIELD_NAME = "count";
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -35,7 +35,7 @@ namespace Fusumity.Editor
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new SuffixLabelAttribute("\u2715"));
 					break;
-				case AMOUNT_FIELD_NAME:
+				case COUNT_FIELD_NAME:
 					attributes.Add(new HorizontalGroupAttribute(width: 0.3f));
 					attributes.Add(new HideLabelAttribute());
 					foreach (var parentAttribute in parentProperty.Attributes)

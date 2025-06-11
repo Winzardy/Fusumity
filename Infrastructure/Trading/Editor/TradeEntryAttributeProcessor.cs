@@ -52,10 +52,6 @@ namespace Trading.Editor
 		protected override Color Color => TradeCost.COLOR;
 	}
 
-	public class TradeCostAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<TradeCost>
-	{
-	}
-
 	public class TradeRewardAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<TradeReward>
 	{
 	}

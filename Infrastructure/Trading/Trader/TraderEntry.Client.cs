@@ -5,7 +5,7 @@ namespace Trading
 {
 	public partial struct TraderEntry
 	{
-		public string name;
+		//public LocKey name;
 		[PropertySpace(0,10)]
 		public Sprite icon;
 	}

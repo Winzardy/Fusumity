@@ -492,7 +492,7 @@ namespace InAppPurchasing.Unity
 				_pending.Remove(storeProductId);
 				_storeController.ConfirmPendingPurchase(args.purchasedProduct);
 
-				//Сохраняем транзакцию локально, чтобы избежать повторов
+				// Сохраняем транзакцию локально, чтобы избежать повторов
 				LocalSave.Save(transactionId, info);
 			}
 			catch (Exception e)

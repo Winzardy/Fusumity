@@ -2,12 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 
 namespace Trading.Editor
 {
-	public class TradeCostCollectionAttributeProcessor : OdinAttributeProcessor<TradeCostCollection>
+	public class TradeCostCollectionAttributeProcessor : TradeCostAttributeProcessor<TradeCostCollection>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -18,13 +19,24 @@ namespace Trading.Editor
 				case nameof(TradeCostCollection.items):
 					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 					{
-						FilterTypesFunction = nameof(TradeCostCollection.Filter)
+						FilterTypesFunction = $"@{nameof(TradeCostCollectionAttributeProcessor)}.{nameof(Filter)}($type, $property)"
 					};
+
 					attributes.Add(typeSelectorSettingsAttribute);
+
 					if (!IsInsideCollection(parentProperty))
 						attributes.Add(new IndentAttribute(-1));
 					break;
 			}
+		}
+
+		public static bool Filter(Type type, InspectorProperty property)
+		{
+			if (!TradeCostAttributeProcessor.Filter(type, property.Parent))
+				return false;
+
+			return !typeof(IEnumerable<TradeCost>)
+			   .IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
 		}
 
 		private bool IsInsideCollection(InspectorProperty? property)
@@ -40,5 +52,4 @@ namespace Trading.Editor
 			return false;
 		}
 	}
-
 }
