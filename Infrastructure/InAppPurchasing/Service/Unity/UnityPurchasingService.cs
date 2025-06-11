@@ -481,7 +481,8 @@ namespace InAppPurchasing.Unity
 			{
 				var info = new PurchaseReceipt
 				{
-					product = entry,
+					productType = entry.Type,
+					productId = entry.Id,
 					transactionId = transactionId,
 					receipt = product.receipt,
 					isRestored = isRestored

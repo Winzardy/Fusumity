@@ -111,7 +111,8 @@ namespace InAppPurchasing.Fake
 
 			PurchaseCompleted?.Invoke(new PurchaseReceipt
 			{
-				product = entry,
+				productType = entry.Type,
+				productId = entry.Id,
 				receipt = product.receipt,
 				transactionId = product.transactionId
 			});
