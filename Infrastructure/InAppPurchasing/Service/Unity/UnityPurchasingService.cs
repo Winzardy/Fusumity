@@ -483,8 +483,12 @@ namespace InAppPurchasing.Unity
 				{
 					productType = entry.Type,
 					productId = entry.Id,
+					
+					platform = _platform,
+
 					transactionId = transactionId,
 					receipt = product.receipt,
+
 					isRestored = isRestored
 				};
 

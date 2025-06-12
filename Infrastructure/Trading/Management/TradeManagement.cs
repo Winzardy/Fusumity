@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Sapientia.Extensions;
@@ -26,9 +27,9 @@ namespace Game.App.BootTask
 
 			foreach (var t in cost)
 			{
-				if (t is ITradePreparable preparable)
+				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
 				{
-					if (!preparable.CanPrepare(tradeboard, out error))
+					if (!tradeCostWithReceipt.CanFetch(tradeboard, out error))
 						return false;
 				}
 				else
@@ -51,13 +52,13 @@ namespace Game.App.BootTask
 			{
 				foreach (var t in cost)
 				{
-					if (t is not ITradePreparable preparable)
+					if (t is not ITradeCostWithReceipt tradeCostWithReceipt)
 						continue;
 
 					if (cancellationToken.IsCancellationRequested)
 						return new TradePayError(); //TODO: остановка
 
-					var receipt = await preparable.PrepareAsync(tradeboard, cancellationToken);
+					var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
 
 					if (cancellationToken.IsCancellationRequested)
 						return new TradePayError(); //TODO: остановка
@@ -85,7 +86,7 @@ namespace Game.App.BootTask
 			if (_verification != null)
 				return null;
 
-			tradeboard.Register<ITradeRegistry>(new DummyTradeRegistry());
+			tradeboard.Register<ITradingModel>(new DummyTradingRepository());
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Pay(cost, tradeboard))
@@ -95,18 +96,8 @@ namespace Game.App.BootTask
 		}
 	}
 
-	public class DummyTradeRegistry : ITradeRegistry
+	public class DummyTradingRepository : ITradingModel
 	{
-		public void Registry(ITradeReceipt receipt)
-		{
-		}
-
-		public bool CanIssue<T>(Tradeboard board, string key)
-			where T : ITradeReceipt
-			=> true;
-
-		public bool Issue<T>(Tradeboard board, string key)
-			where T : ITradeReceipt
-			=> true;
+		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt => null;
 	}
 }
