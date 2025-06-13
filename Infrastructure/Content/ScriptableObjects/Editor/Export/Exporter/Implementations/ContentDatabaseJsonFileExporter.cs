@@ -5,7 +5,6 @@ using Content.Management;
 using Fusumity.Utility;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
@@ -41,7 +40,7 @@ namespace Content.ScriptableObjects.Editor
 			[SerializeReference, ReadOnly]
 			public List<IContentEntry> deserializeResult;
 
-			[CanBeNull] public string BuildOutputPath { get; set; }
+			public string BuildOutputPath { get; set; }
 		}
 
 		protected override void OnExport(ref Args args)
