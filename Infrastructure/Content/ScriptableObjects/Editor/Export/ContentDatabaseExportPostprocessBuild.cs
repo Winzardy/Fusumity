@@ -7,6 +7,9 @@ namespace Content.ScriptableObjects.Editor
 	{
 		public int callbackOrder => 0;
 
-		public void OnPostprocessBuild(BuildReport _) => ContentDatabaseExport.OnBuild();
+		public void OnPostprocessBuild(BuildReport report)
+		{
+			ContentDatabaseExport.OnBuild(report.summary.outputPath);
+		}
 	}
 }

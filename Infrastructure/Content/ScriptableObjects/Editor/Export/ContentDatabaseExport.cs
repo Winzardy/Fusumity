@@ -23,7 +23,17 @@ namespace Content.ScriptableObjects.Editor
 		[SerializeField, SerializeReference]
 		protected IContentDatabaseExporterArgs _exportArgs = new ContentDatabaseJsonFileExporter.Args();
 
-		internal void Export() => Export(_exportArgs.ExporterType, _exportArgs);
+		internal void Export()
+		{
+			_exportArgs.BuildOutputPath = null;
+			Export(_exportArgs.ExporterType, _exportArgs);
+		}
+
+		internal void Export(string buildOutputPath)
+		{
+			_exportArgs.BuildOutputPath = buildOutputPath;
+			Export(_exportArgs.ExporterType, _exportArgs);
+		}
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)
 			where T : IContentDatabaseExporter
@@ -83,6 +93,6 @@ namespace Content.ScriptableObjects.Editor
 		}
 
 		internal static bool UseExportOnBuild => Settings.exportOnBuild;
-		internal static void DefaultExport() => Asset.Export();
+		internal static void DefaultExport(string buildOutputPath = null) => Asset.Export(buildOutputPath);
 	}
 }

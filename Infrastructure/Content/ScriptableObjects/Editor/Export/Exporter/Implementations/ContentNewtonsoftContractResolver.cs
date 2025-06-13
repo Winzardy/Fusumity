@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Content.Management;
 using Fusumity.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -25,21 +24,19 @@ namespace Content.ScriptableObjects.Editor
 
 		protected override JsonContract CreateContract(Type objectType)
 		{
-			if (!IsAllowedType(objectType, _filtering))
+			var contract = base.CreateContract(objectType);
+			if (!IsAllowedType(objectType, _filtering) && contract is JsonObjectContract objContract)
 			{
-				var contract = base.CreateObjectContract(objectType);
-				contract.Properties.Clear();
-				contract.ItemNullValueHandling = NullValueHandling.Ignore;
-				return contract;
+				objContract.ItemNullValueHandling = NullValueHandling.Ignore;
+				objContract.Properties.Clear();
 			}
 
-			return base.CreateContract(objectType);
+			return contract;
 		}
 
 		protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
 		{
 			var props = new List<JsonProperty>();
-
 			if (!IsAllowedType(type, _filtering))
 				return props;
 
@@ -98,7 +95,7 @@ namespace Content.ScriptableObjects.Editor
 
 			foreach (var tag in filtering.skipNameTags)
 			{
-				if(type?.FullName?.Contains(tag) ?? false)
+				if (type?.FullName?.Contains(tag) ?? false)
 					return false;
 			}
 

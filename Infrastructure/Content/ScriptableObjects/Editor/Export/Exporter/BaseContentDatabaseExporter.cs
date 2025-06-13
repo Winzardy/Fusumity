@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -36,11 +37,14 @@ namespace Content.ScriptableObjects.Editor
 		public List<ContentDatabaseScriptableObject> Databases { get; set; }
 
 		public Type ExporterType { get; }
+
+		[CanBeNull] public string BuildOutputPath { get; set; }
 	}
 
 	public struct DefaultExporterArgs : IContentDatabaseExporterArgs
 	{
 		public List<ContentDatabaseScriptableObject> Databases { get; set; }
 		public Type ExporterType => null;
+		public string BuildOutputPath { get; set; }
 	}
 }

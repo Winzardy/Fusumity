@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Content.Management;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Sapientia.Collections;
@@ -25,7 +26,7 @@ namespace Content.ScriptableObjects.Editor
 
 			public JsonFullPath path = new()
 			{
-				path = "Builds/", //TODO: Перенести Builder в Fusumity и брать константу Builder.FOLDER
+				path = "Builds/",
 				name = "Content"
 			};
 
@@ -39,6 +40,8 @@ namespace Content.ScriptableObjects.Editor
 			[ShowInInspector, LabelText("Result")]
 			[SerializeReference, ReadOnly]
 			public List<IContentEntry> deserializeResult;
+
+			[CanBeNull] public string BuildOutputPath { get; set; }
 		}
 
 		protected override void OnExport(ref Args args)
@@ -58,12 +61,12 @@ namespace Content.ScriptableObjects.Editor
 
 				using (ListPool<IContentEntry>.Get(out var nested))
 				{
-					database.Fill(nested, false, Filter);
+					database.Fill(nested);
 					for (int j = 0; j < nested.Count; j++)
-						if (nested[j].Nested != null)
-							foreach (var member in nested[j].Nested)
+						if (!nested[j].Nested.IsNullOrEmpty())
+							foreach (var (_, member) in nested[j].Nested)
 							{
-								var uniqueContentEntry = member.Value.Resolve(nested[j]);
+								var uniqueContentEntry = member.Resolve(nested[j]);
 								if (Filter(uniqueContentEntry))
 									list.Add(uniqueContentEntry);
 							}
@@ -81,30 +84,8 @@ namespace Content.ScriptableObjects.Editor
 				Formatting = args.formatting
 			};
 
-			var root = new JObject();
 			var serializer = JsonSerializer.Create(settings);
-
-			foreach (var (moduleName, typeMap) in json)
-			{
-				var moduleObject = new JObject();
-
-				foreach (var (typeName, entries) in typeMap)
-				{
-					var typeObject = new JObject();
-
-					foreach (var (key, rawValue) in entries)
-					{
-						if (rawValue != null)
-							typeObject[key] = JToken.FromObject(rawValue, serializer);
-						else
-							typeObject[key] = null;
-					}
-
-					moduleObject[typeName] = typeObject;
-				}
-
-				root[moduleName] = moduleObject;
-			}
+			var root = json.ToJObject(serializer);
 
 			using (StringBuilderPool.Get(out var sb))
 			{
@@ -116,10 +97,23 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				var text = sb.ToString();
-				var path = args.path;
 
-				var fullPath = Path.Combine(Application.dataPath.Remove(ASSETS_FOLDER_NAME), path);
-				var folderPath = Path.GetDirectoryName(fullPath);
+				string path;
+				string fullPath;
+				string folderPath;
+				if (args.BuildOutputPath.IsNullOrEmpty())
+				{
+					path = args.path;
+					fullPath = Path.Combine(Application.dataPath.Remove(ASSETS_FOLDER_NAME), path);
+					folderPath = Path.GetDirectoryName(fullPath);
+				}
+				else
+				{
+					folderPath = Path.GetDirectoryName(args.BuildOutputPath);
+					var jsonFileName = args.path.name + JsonFullPath.EXTENSION;
+					fullPath = Path.Combine(folderPath!, jsonFileName);
+					path = null;
+				}
 
 				if (!Directory.Exists(folderPath))
 					Directory.CreateDirectory(folderPath!);
@@ -136,9 +130,9 @@ namespace Content.ScriptableObjects.Editor
 					File.WriteAllText(fullPath, text);
 
 				TextAsset textAsset = null;
-				if (fullPath.Contains(ASSETS_FOLDER_NAME))
+				if (fullPath.Contains(ASSETS_FOLDER_NAME) && path != null)
 				{
-					AssetDatabase.ImportAsset(fullPath);
+					AssetDatabase.ImportAsset(path);
 					textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
 				}
 
@@ -158,10 +152,7 @@ namespace Content.ScriptableObjects.Editor
 				}
 			}
 
-			bool Filter(IContentEntry e)
-			{
-				return ContentNewtonsoftContractResolver.IsAllowedType(e.ValueType, typeFiltering);
-			}
+			bool Filter(IContentEntry e) => ContentNewtonsoftContractResolver.IsAllowedType(e.ValueType, typeFiltering);
 		}
 	}
 
@@ -169,7 +160,7 @@ namespace Content.ScriptableObjects.Editor
 	[Serializable]
 	public struct JsonFullPath
 	{
-		private const string EXTENSION = ".json";
+		public const string EXTENSION = ".json";
 
 		[HorizontalGroup]
 		[HideLabel, FolderPath]
