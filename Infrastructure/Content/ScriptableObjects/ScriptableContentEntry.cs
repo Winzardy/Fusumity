@@ -9,10 +9,6 @@ namespace Content.ScriptableObjects
 	{
 		public ContentScriptableObject scriptableObject;
 
-		public string id;
-
-		public override string Id => id.IsNullOrEmpty() ? base.Id : id;
-
 		public override bool IsValid() => Guid != SerializableGuid.Empty;
 		public ContentScriptableObject ScriptableObject => scriptableObject;
 		public override object Context => scriptableObject;
@@ -45,5 +41,4 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		public ContentScriptableObject ScriptableObject { get; }
 	}
-
 }

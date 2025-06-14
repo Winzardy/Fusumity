@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Content;
 using Sapientia;
 
 namespace Trading
@@ -11,6 +10,10 @@ namespace Trading
 		public bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error);
 
 		public Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard, CancellationToken cancellationToken = default);
+
+		public bool CanExecute(in TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error);
+
+		public Task<TradeExecuteError?> ExecuteAsync(TradeEntry trade, Tradeboard tradeboard, CancellationToken cancellationToken = default);
 	}
 
 	public class TradeManager : StaticProvider<ITradeManagement>
@@ -35,5 +38,14 @@ namespace Trading
 		internal static Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default) =>
 			management.PayAsync(cost, tradeboard, cancellationToken);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CanExecute(in TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error) =>
+			management.CanExecute(in trade, tradeboard, out error);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static Task<TradeExecuteError?> ExecuteAsync(in TradeEntry trade, Tradeboard tradeboard,
+			CancellationToken cancellationToken = default) =>
+			management.ExecuteAsync(trade, tradeboard, cancellationToken);
 	}
 }

@@ -3,12 +3,18 @@ using System;
 using System.Collections;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sapientia.Reflection;
 
-namespace Fusumity.JsonConverters
+namespace Fusumity.Collections
 {
-	public class SerializableDictionaryJsonConverter : JsonConverter
+	[JsonConverter(typeof(SerializableDictionaryJsonConverter))]
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue>
 	{
-		public override bool CanConvert(Type objectType) => objectType.Name.StartsWith("SerializableDictionary");
+	}
+
+	internal class SerializableDictionaryJsonConverter : JsonConverter
+	{
+		public override bool CanConvert(Type objectType) => true;
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
@@ -34,7 +40,7 @@ namespace Fusumity.JsonConverters
 			var keyType = objectType.GetGenericArguments()[0];
 			var valueType = objectType.GetGenericArguments()[1];
 
-			var result = (IDictionary) Activator.CreateInstance(objectType);
+			var result = objectType.CreateInstance<IDictionary>();
 
 			var jObject = JObject.Load(reader);
 			foreach (var prop in jObject.Properties())

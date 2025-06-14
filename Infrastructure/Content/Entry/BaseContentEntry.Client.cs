@@ -13,7 +13,7 @@ namespace Content
 		[SerializeField, FormerlySerializedAs("_value")]
 		protected T value;
 
-		public virtual ref readonly T Value => ref ContentEditValue;
+		public ref readonly T Value => ref ContentEditValue;
 		ref T IContentEntry<T>.EditValue => ref ContentEditValue;
 
 		protected ref T ContentEditValue
@@ -59,7 +59,6 @@ namespace Content
 			return type.IsPolymorphic() && !type.IsSubclassOf(typeof(UnityObject));
 		}
 	}
-
 
 	public partial interface IContentEntry<T>
 	{

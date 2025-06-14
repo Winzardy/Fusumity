@@ -82,7 +82,7 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public abstract class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 		where TKeyValue : struct, IKeyValue<TKey, TValue>
 	{
 #if NEWTONSOFT

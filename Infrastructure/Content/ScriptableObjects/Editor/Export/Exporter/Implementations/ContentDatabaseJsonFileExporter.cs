@@ -5,6 +5,7 @@ using Content.Management;
 using Fusumity.Utility;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
@@ -60,7 +61,7 @@ namespace Content.ScriptableObjects.Editor
 
 				using (ListPool<IContentEntry>.Get(out var nested))
 				{
-					database.Fill(nested);
+					database.Fill(nested); // TODO: вернуть Filter, убрал на время пока
 					for (int j = 0; j < nested.Count; j++)
 						if (!nested[j].Nested.IsNullOrEmpty())
 							foreach (var (_, member) in nested[j].Nested)
@@ -84,7 +85,7 @@ namespace Content.ScriptableObjects.Editor
 			};
 
 			var serializer = JsonSerializer.Create(settings);
-			var root = json.ToJObject(serializer);
+			var root = JObject.FromObject(json, serializer);
 
 			using (StringBuilderPool.Get(out var sb))
 			{

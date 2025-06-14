@@ -5,6 +5,7 @@
 #if DEBUG
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace InAppPurchasing.Fake
 {
@@ -127,8 +128,8 @@ namespace InAppPurchasing.Fake
 			public DateTime lastPurchaseTime;
 
 			public TimeSpan subscriptionExpirationTime;
-			public string receipt => $"Product: {info.id}, time: {lastPurchaseTime}";
-			public string transactionId => lastPurchaseTime.Ticks.ToString();
+			public string receipt => $"Fake Receipt: Product: {info.id}, time: {lastPurchaseTime.ToString(CultureInfo.InvariantCulture)}";
+			public string transactionId => lastPurchaseTime.ToString(CultureInfo.InvariantCulture);
 
 			public FakeProduct(IAPProductEntry entry)
 			{

@@ -19,8 +19,8 @@ namespace InAppPurchasing.Unity.Editor
 			if (member.TryGetSummary(out var summary))
 				attributes.Add(new TooltipAttribute(summary));
 
-			var appStoreGroup = IAPPlatformExtensions.GetLabel(IAPPlatformType.APP_STORE);
-			var googlePlayGroup = IAPPlatformExtensions.GetLabel(IAPPlatformType.GOOGLE_PLAY);
+			var appStoreGroup = IAPPlatformUtility.GetLabel(IAPPlatformType.APP_STORE);
+			var googlePlayGroup = IAPPlatformUtility.GetLabel(IAPPlatformType.GOOGLE_PLAY);
 
 			switch (member.Name)
 			{
