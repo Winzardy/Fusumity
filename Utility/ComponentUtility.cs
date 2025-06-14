@@ -317,5 +317,11 @@ namespace Fusumity.Utility
 				component = gameObject.AddComponent<T>();
 			}
 		}
+
+		public static GameObjectUtility.DisableGameObjectScope BeginDisableScope<T>(this T component)
+			where T : Component
+		{
+			return component.gameObject.BeginDisableScope();
+		}
 	}
 }

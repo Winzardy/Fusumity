@@ -243,6 +243,12 @@ namespace Audio
 					{
 						if (_current.fadeIn.HasValue)
 							sequence ??= DOTween.Sequence();
+						if (index >= _current.playlist.Length)
+						{
+							// TASK-1964 workaround for crashlytics exception. Need more research
+							AudioDebug.LogError($"TASK-1964 index = {index}, len = {_current.playlist.Length}");
+							break;
+						}
 						var track = _current.playlist[index];
 
 						var tween = source.Play(track, _current);

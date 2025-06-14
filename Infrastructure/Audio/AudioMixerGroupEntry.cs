@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Audio
 {
+	[Constants]
 	[Serializable]
 	[Documentation("https://www.notion.so/winzardy/Audio-Mixer-Group-13f1c74f154380d5b2cec9b4e2f6128b?pvs=4")]
 	public class AudioMixerGroupEntry

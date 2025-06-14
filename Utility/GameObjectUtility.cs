@@ -7,6 +7,11 @@ namespace Fusumity.Utility
 {
 	public static class GameObjectUtility
 	{
+		public static DisableGameObjectScope BeginDisableScope(this GameObject gameObject)
+		{
+			return new DisableGameObjectScope(gameObject);
+		}
+
 		public static void SetActive(this IEnumerable<GameObject> gameObjects, bool active)
 		{
 			foreach (var gameObject in gameObjects)
@@ -33,5 +38,26 @@ namespace Fusumity.Utility
 
 		public static bool IsActive(this GameObject go)
 			=> go.activeSelf && go.activeInHierarchy;
+
+		public readonly ref struct DisableGameObjectScope
+		{
+			public readonly GameObject gameObject;
+			public readonly bool isActive;
+
+			public DisableGameObjectScope(GameObject gameObject)
+			{
+				this.gameObject = gameObject;
+				isActive = gameObject.activeSelf;
+
+				if (isActive)
+					gameObject.SetActive(false);
+			}
+
+			public void Dispose()
+			{
+				if (isActive)
+					gameObject.SetActive(true);
+			}
+		}
 	}
 }
