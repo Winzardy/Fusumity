@@ -1,17 +1,23 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Content;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Trading;
 
 namespace Game.App.BootTask
 {
+	using TraderReference = ContentReference<TraderEntry>;
+	using TradeReference = ContentReference<TradeEntry>;
+
 	public interface ITradingBackend
 	{
 		/// <summary>
 		/// Отправить детали сделки в backend
 		/// </summary>
 		public void PushReceipts(Tradeboard tradeboard);
+
+		public bool PushTrade(in TraderReference trader, in TradeReference trade);
 	}
 
 	public class TradeManagement : ITradeManagement
