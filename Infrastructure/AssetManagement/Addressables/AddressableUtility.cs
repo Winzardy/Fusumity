@@ -2,11 +2,11 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace Fusumity.AddressableAssets
+namespace AssetManagement.AddressableAssets
 {
 	using UnityObject = Object;
 
-	public static class AddressableAssetsUtility
+	public static class AssetManagementUtility
 	{
 		public static void ReleaseSafe(this ref AsyncOperationHandle handle)
 		{

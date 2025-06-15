@@ -35,6 +35,7 @@ namespace Fusumity.Editor.Utility
 				}
 				GUI.enabled = originEnabled;
 			}
+
 			SirenixEditorGUI.EndFadeGroup();
 		}
 
@@ -69,7 +70,8 @@ namespace Fusumity.Editor.Utility
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-			attributes.Add(new ShowMonoScriptForReferenceAttribute());
+			if (!attributes.HasAttribute<ShowMonoScriptForReferenceAttribute>())
+				attributes.Add(new ShowMonoScriptForReferenceAttribute());
 		}
 	}
 }

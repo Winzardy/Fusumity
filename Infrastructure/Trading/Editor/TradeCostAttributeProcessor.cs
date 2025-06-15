@@ -31,7 +31,7 @@ namespace Trading.Editor
 		}
 	}
 
-	public class TradeCostAttributeProcessor<T> : ShowMonoScriptForReferenceAttributeProcessor<T>
+	public abstract class TradeCostAttributeProcessor<T> : ShowMonoScriptForReferenceAttributeProcessor<T>
 		where T : TradeCost
 	{
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
-using Fusumity.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Sapientia.Utility;
 

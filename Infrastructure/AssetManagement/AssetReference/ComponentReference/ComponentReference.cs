@@ -2,13 +2,15 @@
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Object = UnityEngine.Object;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace AssetManagement
 {
+	using UnityObject = UnityEngine.Object;
+
 	/// <summary>
 	/// Creates an AssetReference that is restricted to having a specific Component.
 	/// - This is the class that inherits from AssetReference.  It is generic and does not specify which Components it might care about.  A concrete child of this class is required for serialization to work.* At edit-time it validates that the asset set on it is a GameObject with the required Component.
@@ -47,7 +49,7 @@ namespace AssetManagement
 			return Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
 		}
 
-		public override bool ValidateAsset(Object obj)
+		public override bool ValidateAsset(UnityObject obj)
 		{
 			var go = obj as GameObject;
 			return go != null && go.GetComponent<T>() != null;
