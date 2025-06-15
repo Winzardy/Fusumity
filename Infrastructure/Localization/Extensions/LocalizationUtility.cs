@@ -2,7 +2,7 @@
 
 namespace Localizations
 {
-	public static class LocalizationExt
+	public static partial class LocalizationUtility
 	{
 		public static string ToLocalize(this string key)
 		{

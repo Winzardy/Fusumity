@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Editor;
-using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
@@ -50,9 +49,5 @@ namespace Trading.Editor
 	public class ColorTintDealPayableDrawer : ColorTintDrawer<TradeCost>
 	{
 		protected override Color Color => TradeCost.COLOR;
-	}
-
-	public class TradeRewardAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<TradeReward>
-	{
 	}
 }

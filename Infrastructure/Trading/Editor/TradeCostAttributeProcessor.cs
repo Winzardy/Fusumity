@@ -40,7 +40,7 @@ namespace Trading.Editor
 
 			var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 			{
-				FilterTypesFunction = GetFilterFunction()
+				FilterTypesFunction = GetFilterFunction(),
 			};
 
 			attributes.Add(typeSelectorSettingsAttribute);

@@ -5,7 +5,9 @@
         "Content",
         "Trading",
         "Sapientia",
-        "Fusumity.Editor"
+        "Fusumity.Editor",
+        "AssetManagement",
+        "Localization"
     ],
     "includePlatforms": [
         "Editor"
