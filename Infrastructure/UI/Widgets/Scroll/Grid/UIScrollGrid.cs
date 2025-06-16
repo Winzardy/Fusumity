@@ -25,17 +25,6 @@ namespace UI.Scroll
 		where TItemLayout : UIScrollItemLayout
 		where TItem : UIWidget<TItemLayout, TItemArgs>, IScrollItem<TItemLayout>
 	{
-		public struct Args : IScrollGridItemArgs<TItemArgs>
-		{
-			public int Index { get; private set; }
-
-			void IScrollGridItemArgs<TItemArgs>.SetIndex(int index) => Index = index;
-
-			public ArraySection<TItemArgs> Items { get; private set; }
-
-			void IScrollGridItemArgs<TItemArgs>.SetItems(in ArraySection<TItemArgs> items) =>
-				Items = items;
-		}
 	}
 
 	//Дикое обобщение, кто смотрит сюда не суди строга :D это для сложных кейсов когда нужно контролировать все

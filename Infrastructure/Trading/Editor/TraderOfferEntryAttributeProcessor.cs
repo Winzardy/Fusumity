@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Trading.Editor
 {
-	public class TradeOfferEntryAttributeProcessor : OdinAttributeProcessor<TraderOfferEntry>
+	public class TraderOfferEntryAttributeProcessor : OdinAttributeProcessor<TraderOfferEntry>
 	{
 		private const int ICON_SIZE = 64;
 
@@ -31,6 +31,7 @@ namespace Trading.Editor
 
 				case nameof(TraderOfferEntry.icon):
 				case nameof(TraderOfferEntry.name):
+				case nameof(TraderOfferEntry.label):
 					attributes.Add(new VerticalGroupAttribute("row/right"));
 					break;
 			}

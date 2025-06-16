@@ -20,15 +20,6 @@ namespace UI
 		private (Image placeholder, IAssetReferenceEntry entry) _single;
 		private Dictionary<Image, IAssetReferenceEntry> _placeholderToEntry;
 
-		public UISpriteAssigner() : this(null)
-		{
-		}
-
-		public UISpriteAssigner(ISpinner spinner)
-		{
-			_spinner = spinner;
-		}
-
 		public void Dispose()
 		{
 			_single.entry?.Release();
@@ -93,6 +84,11 @@ namespace UI
 			}
 
 			return false;
+		}
+
+		public void SetSpinner(ISpinner spinner)
+		{
+			_spinner = spinner;
 		}
 
 		public void TryCancelOrClear(Image placeholder)

@@ -48,6 +48,9 @@ namespace Localizations
 		public const string CONTEXTDIALOG_SURRENDER_DESCRIPTION = "surrender_decriprion";
 		public const string CONTEXTDIALOG_SURRENDER_CONFIRM = "confirm_surrender";
 
+		public const string CONTEXTDIALOG_PURCHASE_TITLE = "contextdialog_purchase_title";
+		public const string CONTEXTDIALOG_PURCHASE_MESSAGE = "contextdialog_purchase_message";
+
 		public const string WINDOW_LEVEL_UP_CHOOSE_NEW_SPELL = "window_level_up_title_choose_spell";
 		public const string WINDOW_LEVEL_UP_CHOOSE_UPGRADE = "window_level_up_title_choose_uprade";
 		public const string WINDOW_LEVEL_UP_CHOOSE_SPELL_PROPERTY = "window_level_up_title_choose_spell_property";

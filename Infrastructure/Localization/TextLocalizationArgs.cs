@@ -6,7 +6,9 @@ using Sapientia.Pooling;
 
 namespace Localizations
 {
-	//Cделал классом чтобы в dictionary не боксился
+	// Cделал классом чтобы в dictionary не боксился
+	// TODO: переделать в struct так как появился HashMap (аля Dictionary для struct) для работы со структурами
+	// или пулить?
 	public partial class TextLocalizationArgs
 	{
 		/// <summary>
@@ -47,6 +49,17 @@ namespace Localizations
 		public string defaultValue;
 
 		public CompositeTextLocalizationArgs composite;
+
+		public TextLocalizationArgs()
+		{
+		}
+
+		public TextLocalizationArgs(string key, string tag, object value)
+		{
+			this.key = key;
+			tags = DictionaryPool<string, object>.Get();
+			tags[tag] = value;
+		}
 
 		public override string ToString()
 		{

@@ -36,8 +36,8 @@ namespace UI.Scroll
 		public TItemArgs[] Data => _data;
 		public IEnumerable<TItem> Cells => _cells.Values;
 
-		//Диспоузится как и все Children виджета, потому что является чилдом)
-		private IScrollPagination<TItemArgs> _pagination;
+		// Диспоузится как и все Children виджета, потому что является чилдом)
+		protected IScrollPagination<TItemArgs> _pagination;
 
 		public event Action<TItemArgs[], float> Updated;
 
@@ -292,8 +292,7 @@ namespace UI.Scroll
 				return;
 
 			//Дефолтная реализация
-			SetPagination<
-				UIScrollPagination<UIScrollPage<UIScrollPageLayout, TItemArgs>, UIScrollPageLayout, TItemArgs>>();
+			SetPagination<UIScrollPagination<UIScrollPage<UIScrollPageLayout, TItemArgs>, UIScrollPageLayout, TItemArgs>>();
 		}
 
 		/// <summary>

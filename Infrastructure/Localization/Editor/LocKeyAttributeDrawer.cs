@@ -4,6 +4,7 @@ using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Fusumity.Utility;
 using I2.Loc;
+using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -18,6 +19,7 @@ namespace Localizations.Editor
 	public class LocKeyAttributeDrawer : OdinAttributeDrawer<LocKeyAttribute, string>
 	{
 		private const string INDENT_SPACE = "    ";
+
 		private static readonly string LABEL = CultureInfo.InstalledUICulture.TwoLetterISOLanguageName == "ru"
 			? "Перевод"
 			: "Translation";
@@ -105,7 +107,12 @@ namespace Localizations.Editor
 			}
 
 			var originalColor = GUI.color;
-			GUI.color = contains ? originalColor : SirenixGUIStyles.YellowWarningColor;
+			var canBeEmpty = Property.GetAttribute<CanBeNullAttribute>() != null;
+			GUI.color = contains
+				? originalColor
+				: !canBeEmpty
+					? SirenixGUIStyles.YellowWarningColor
+					: originalColor;
 
 			var originalTooltip = label.tooltip;
 			if (contains)
@@ -229,7 +236,7 @@ namespace Localizations.Editor
 
 				if (!EditorGUIUtility.hierarchyMode)
 				{
-					if(!label.text.Contains(INDENT_SPACE))
+					if (!label.text.Contains(INDENT_SPACE))
 						label.text = INDENT_SPACE + label.text;
 
 					// var offset = SirenixEditorGUI.FoldoutWidth + 3;

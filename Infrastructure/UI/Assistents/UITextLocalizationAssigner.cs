@@ -114,6 +114,8 @@ namespace UI
 				key = key,
 			};
 
+			// TODO: не понимаю где возвращение в пул... не критично, но надо будет проследить и пофиксить.
+			// Утечки нет так как пулл отдает объект и не хранит его, но все же
 			args.tagsWithFunc ??= DictionaryPool<string, Func<object>>.Get();
 
 			foreach (var info in tags)

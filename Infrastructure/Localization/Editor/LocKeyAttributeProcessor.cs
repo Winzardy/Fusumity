@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -44,6 +45,9 @@ namespace Localizations.Editor
 
 					if (!content.tooltip.IsNullOrEmpty())
 						attributes.Add(new TooltipAttribute(content.tooltip));
+
+					if (parentProperty.GetAttribute<CanBeNullAttribute>() != null)
+						attributes.Add(new CanBeNullAttribute());
 				}
 				else
 					attributes.Add(new HideLabelAttribute());
