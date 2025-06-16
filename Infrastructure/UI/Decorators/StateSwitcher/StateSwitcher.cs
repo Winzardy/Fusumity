@@ -8,19 +8,20 @@ namespace UI
 	{
 		[HideInInspector]
 		[SerializeField]
-		private TState current;
+		protected TState current;
 
 		[ShowInInspector, PropertyOrder(-1), DelayedProperty]
-		public TState Current
-		{
-			get => current;
-			set => Switch(value);
-		}
+		public TState Current { get => current; set => Switch(value); }
 
 		protected abstract void OnStateSwitched(TState state);
 
+		protected virtual bool UseEquals => false;
+
 		public void Switch(TState value)
 		{
+			if (UseEquals && current.Equals(value))
+				return;
+
 			current = value;
 			OnStateSwitched(current);
 		}

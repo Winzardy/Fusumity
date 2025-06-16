@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AssetManagement;
 using Cysharp.Threading.Tasks;
+using Fusumity.Utility;
 using Sapientia.Collections;
 using UnityEngine;
 using UnityEngine.UI;

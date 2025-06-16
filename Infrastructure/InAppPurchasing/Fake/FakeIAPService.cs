@@ -105,17 +105,21 @@ namespace InAppPurchasing.Fake
 			PurchaseRequested?.Invoke(entry);
 
 			if (!_dictionary.TryGetValue(entry, out var product))
-				product = new FakeProduct(entry);
+				_dictionary[entry] = product = new FakeProduct(entry);
 
 			product.purchaseCount++;
 			product.lastPurchaseTime = DateTime.Now;
+
+			var transactionId = product.lastPurchaseTime.ToString(CultureInfo.InvariantCulture)
+				+ ", p:"
+				+ product.purchaseCount;
 
 			PurchaseCompleted?.Invoke(new PurchaseReceipt
 			{
 				productType = entry.Type,
 				productId = entry.Id,
 				receipt = product.receipt,
-				transactionId = product.transactionId
+				transactionId = transactionId
 			});
 			return true;
 		}
@@ -129,7 +133,6 @@ namespace InAppPurchasing.Fake
 
 			public TimeSpan subscriptionExpirationTime;
 			public string receipt => $"Fake Receipt: Product: {info.id}, time: {lastPurchaseTime.ToString(CultureInfo.InvariantCulture)}";
-			public string transactionId => lastPurchaseTime.ToString(CultureInfo.InvariantCulture);
 
 			public FakeProduct(IAPProductEntry entry)
 			{
