@@ -25,6 +25,11 @@ namespace Trading
 		[ClientOnly, CanBeNull]
 		public LocKey label;
 
+		[ClientOnly, HideInInspector]
+		public bool disableConfirmation;
+
+		public bool UseConfirmation { get => !disableConfirmation; set => disableConfirmation = !value; }
+
 		public Sprite Preview => icon.editorAsset;
 	}
 }

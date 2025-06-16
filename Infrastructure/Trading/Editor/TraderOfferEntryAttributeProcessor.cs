@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Content;
 using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Trading.Inventory;
 using UnityEngine;
 
 namespace Trading.Editor
@@ -34,6 +36,13 @@ namespace Trading.Editor
 				case nameof(TraderOfferEntry.label):
 					attributes.Add(new VerticalGroupAttribute("row/right"));
 					break;
+				case nameof(TraderOfferEntry.UseConfirmation):
+					attributes.Add(new VerticalGroupAttribute("row/right"));
+					attributes.Add(new ShowInInspectorAttribute());
+					attributes.Add(new ShowIfAttribute("@TraderOfferEntryAttributeProcessor.ShowIfConfirmation($property)"));
+					attributes.Add(new TooltipAttribute("Показывать окно подтверждения перед сделкой\n" +
+						"\nP.S Для рекламы и IAP не используется окно подтверждения"));
+					break;
 			}
 
 			/*
@@ -45,6 +54,17 @@ namespace Trading.Editor
 			    [VerticalGroup("row/right")]
 			    public LocKey nameLocKey;
 			 */
+		}
+
+		public static bool ShowIfConfirmation(InspectorProperty property)
+		{
+			if (property?.ParentValueProperty.ValueEntry.WeakSmartValue is TraderOfferEntry entry)
+			{
+				if (entry.trade.Read().cost is ItemTradeCost _)
+					return true;
+			}
+
+			return false;
 		}
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)

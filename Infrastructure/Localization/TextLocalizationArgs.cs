@@ -61,6 +61,14 @@ namespace Localizations
 			tags[tag] = value;
 		}
 
+		public TextLocalizationArgs(string key, params (string tag, object value)[] tags)
+		{
+			this.key = key;
+			this.tags = DictionaryPool<string, object>.Get();
+			foreach (var (tag, value) in tags)
+				this.tags[tag] = value;
+		}
+
 		public override string ToString()
 		{
 			if (composite)

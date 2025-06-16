@@ -10,5 +10,7 @@ namespace Localizations
 		public const string REQUIRED = "{required}";
 		public const string NEXT = "{next}";
 		public const string TOTAL = "{total}";
+		public const string REWARD = "{reward}";
+		public const string COST = "{cost}";
 	}
 }
