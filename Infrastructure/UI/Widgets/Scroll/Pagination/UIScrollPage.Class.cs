@@ -1,4 +1,5 @@
-﻿using Sapientia.Collections;
+﻿using JetBrains.Annotations;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 
 namespace UI.Scroll.Pagination
@@ -9,6 +10,12 @@ namespace UI.Scroll.Pagination
 	{
 		protected sealed override void OnShow(in ArrayReference<UIScrollGridItemArgs<ScrollListItemСArgs<TValue>>> reference)
 		{
+			if (reference.IsEmpty)
+			{
+				OnShow(null);
+				return;
+			}
+
 			using (ListPool<TValue>.Get(out var list))
 			{
 				foreach (var index in reference.Value.Items)
@@ -23,6 +30,12 @@ namespace UI.Scroll.Pagination
 
 		protected sealed override void OnHide(in ArrayReference<UIScrollGridItemArgs<ScrollListItemСArgs<TValue>>> reference)
 		{
+			if (reference.IsEmpty)
+			{
+				OnHide(null);
+				return;
+			}
+
 			using (ListPool<TValue>.Get(out var list))
 			{
 				foreach (var index in reference.Value.Items)
@@ -35,9 +48,9 @@ namespace UI.Scroll.Pagination
 			}
 		}
 
-		protected abstract void OnShow(TValue[] items);
+		protected abstract void OnShow([CanBeNull] TValue[] items);
 
-		protected virtual void OnHide(TValue[] items)
+		protected virtual void OnHide([CanBeNull] TValue[] items)
 		{
 		}
 	}
