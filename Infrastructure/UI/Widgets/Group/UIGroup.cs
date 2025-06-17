@@ -207,11 +207,11 @@ namespace UI
 			Unregistered?.Invoke(widget);
 			OnUnregisteredElement(widget);
 
-			if (release)
-			{
-				_used.Remove(widget);
+			if (!release)
+				return;
+
+			if (_used.Remove(widget))
 				_pool.Release(widget);
-			}
 		}
 
 		protected virtual void OnUnregisteredElement(TWidget widget)
