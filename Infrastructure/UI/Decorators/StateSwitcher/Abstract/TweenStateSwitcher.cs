@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Fusumity.Collections;
 using Fusumity.Utility;
@@ -23,23 +22,36 @@ namespace UI
 		[SerializeField]
 		private SerializableDictionary<TState, AnimationSequence> _dictionary;
 
-		[NonSerialized]
-		private Tween _tween;
-
 		protected override bool UseEquals => true;
+
+		private void Start() => Clear();
 		private void OnDestroy() => Clear();
 
 		protected override void OnStateSwitched(TState state)
 		{
+			// Твин ломается если его создавать при неактивном объекте
+			if (!gameObject.IsActive())
+			{
+				var t = _dictionary.GetValueOrDefault(state, _default)
+				   .ToTween()
+				   .SetAutoKill(true);
+
+				t.Complete(true);
+				return;
+			}
+
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
+			{
 				_cached[state] = tween = _dictionary.GetValueOrDefault(state, _default)
 				   .ToTween()
 				   .SetAutoKill(false);
+			}
 
 			if (tween.playedOnce)
 				tween.Restart();
 			else
 				tween.Play();
+
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
@@ -51,7 +63,7 @@ namespace UI
 
 			void EditorPreviewUpdate()
 			{
-				if (tween.IsPlaying())
+				if (tween.IsPlaying() && !Application.isPlaying)
 					UnityEditor.EditorUtility.SetDirty(this);
 				else
 					DG.DOTweenEditor.DOTweenEditorPreview.Stop();
@@ -70,8 +82,6 @@ namespace UI
 				tween?.KillSafe();
 
 			_cached.Clear();
-			_tween?.KillSafe();
-			_tween = null;
 		}
 	}
 }

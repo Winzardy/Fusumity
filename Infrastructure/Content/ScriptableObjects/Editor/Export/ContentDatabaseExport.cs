@@ -25,14 +25,16 @@ namespace Content.ScriptableObjects.Editor
 
 		internal void Export()
 		{
-			_exportArgs.BuildOutputPath = null;
-			Export(_exportArgs.ExporterType, _exportArgs);
+			if (_exportArgs != null)
+				_exportArgs.BuildOutputPath = null;
+			Export(type, _exportArgs);
 		}
 
 		internal void Export(string buildOutputPath)
 		{
+			_exportArgs ??= CreateArgsByType();
 			_exportArgs.BuildOutputPath = buildOutputPath;
-			Export(_exportArgs.ExporterType, _exportArgs);
+			Export(type, _exportArgs);
 		}
 
 		public void Export<T>(IContentDatabaseExporterArgs args = null)
@@ -61,7 +63,7 @@ namespace Content.ScriptableObjects.Editor
 					args ??= new DefaultExporterArgs();
 					args.Databases = filtered;
 
-					exporter.Export(Asset._exportArgs);
+					exporter.Export(args);
 				}
 			}
 			catch (Exception e)
@@ -76,20 +78,23 @@ namespace Content.ScriptableObjects.Editor
 
 		private void OnTypeChanged()
 		{
-			_exportArgs = null;
+			_exportArgs = CreateArgsByType();
+		}
 
-			var baseType = this.type?.BaseType;
+		private IContentDatabaseExporterArgs CreateArgsByType()
+		{
+			var baseType = type?.BaseType;
 
 			if (baseType is not {IsGenericType: true})
-				return;
+				return null;
 
-			var arguments = baseType.GetGenericArguments();
+			var genericParams = baseType.GetGenericArguments();
 
-			if (arguments.Length < 2)
-				return;
+			if (genericParams.Length < 2)
+				return null;
 
-			var type = arguments[1];
-			_exportArgs = type.CreateInstance<IContentDatabaseExporterArgs>();
+			var firstGenericParam = genericParams[1];
+			return firstGenericParam.CreateInstance<IContentDatabaseExporterArgs>();
 		}
 
 		internal static bool UseExportOnBuild => Settings.exportOnBuild;

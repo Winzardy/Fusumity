@@ -41,7 +41,7 @@ namespace Content.ScriptableObjects.Editor
 		[CanBeNull] public string BuildOutputPath { get; set; }
 	}
 
-	public struct DefaultExporterArgs : IContentDatabaseExporterArgs
+	public class DefaultExporterArgs : IContentDatabaseExporterArgs
 	{
 		public List<ContentDatabaseScriptableObject> Databases { get; set; }
 		public Type ExporterType => null;
