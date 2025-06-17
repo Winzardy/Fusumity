@@ -385,7 +385,7 @@ namespace InAppPurchasing.Unity
 
 		private bool TryGetUnityProduct(string storeProductId, out UnityProduct product)
 		{
-			product = _storeController.products.WithID(storeProductId);
+			product = _storeController?.products.WithID(storeProductId);
 			return product != null;
 		}
 
@@ -483,7 +483,7 @@ namespace InAppPurchasing.Unity
 				{
 					productType = entry.Type,
 					productId = entry.Id,
-					
+
 					platform = _platform,
 
 					transactionId = transactionId,

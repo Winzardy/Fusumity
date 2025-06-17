@@ -11,7 +11,7 @@ namespace InAppPurchasing.Unity
 		private const int DELAY_UPDATING_PRODUCT_CACHE_MS = 10000; // 10 secs
 		private static readonly long DELAY_UPDATING_PRODUCT_CACHE_TICKS = DELAY_UPDATING_PRODUCT_CACHE_MS.ToTicks();
 
-		private Dictionary<IAPProductEntry, ProductCache> _productToCache;
+		private readonly Dictionary<IAPProductEntry, ProductCache> _productToCache = new();
 
 		/// <summary>
 		/// Получить актуальную информацию о продукте с платформы
@@ -44,7 +44,7 @@ namespace InAppPurchasing.Unity
 
 			if (!UpdateInfo(product, out failureReason))
 			{
-				IAPDebug.LogError("Failed to collect subscription info: " + failureReason);
+				IAPDebug.LogWarning("Failed to collect subscription info: " + failureReason);
 			}
 
 			return _productToCache[product];
