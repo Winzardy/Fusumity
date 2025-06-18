@@ -6,7 +6,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace InAppPurchasing.Editor
 {
-	public class IAPPlatformEntryAttributeProcessor : OdinAttributeProcessor<IAPPlatformEntry>
+	public class IAPPlatformEntryAttributeProcessor : OdinAttributeProcessor<IAPBillingEntry>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,7 +14,7 @@ namespace InAppPurchasing.Editor
 
 			switch (member.Name)
 			{
-				case nameof(IAPPlatformEntry.platform):
+				case nameof(IAPBillingEntry.platform):
 					attributes.Add(new IAPPlatformDropdownAttribute());
 					attributes.Add(new HideLabelAttribute());
 					break;

@@ -12,13 +12,13 @@ namespace Content.ScriptableObjects.InAppPurchasing
 	public class UnityPurchasingSettingsScriptableObject : SingleContentEntryScriptableObject<UnityPurchasingSettings>
 	{
 		[Space, DictionaryDrawerSettings(KeyLabel = "Store", ValueLabel = "Country To Platform")]
-		public SerializableDictionary<StorePlatformEntry, SerializableDictionary<CountryEntry, IAPPlatformEntry>> storeToCountryToPlatform;
+		public SerializableDictionary<DistributionEntry, SerializableDictionary<CountryEntry, IAPBillingEntry>> storeToCountryToPlatform;
 
 		protected override void OnImport(ref UnityPurchasingSettings settings)
 		{
-			settings.storeToCountryToPlatform = new();
+			settings.storeToCountryToBilling = new();
 			foreach (var (store, dictionary) in storeToCountryToPlatform)
-				settings.storeToCountryToPlatform[store] = dictionary;
+				settings.storeToCountryToBilling[store] = dictionary;
 		}
 	}
 }

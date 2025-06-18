@@ -69,7 +69,7 @@ namespace InAppPurchasing.Unity
 
 		#endregion
 
-		public Dictionary<StorePlatformEntry, Dictionary<CountryEntry, IAPPlatformEntry>> storeToCountryToPlatform;
+		public Dictionary<DistributionEntry, Dictionary<CountryEntry, IAPBillingEntry>> storeToCountryToBilling;
 	}
 
 	public partial class UnityPurchasingService : IInAppPurchasingService, IDetailedStoreListener
@@ -77,10 +77,10 @@ namespace InAppPurchasing.Unity
 		public string Name => "UnityPurchasing";
 
 		private UnityPurchasingSettings _settings;
-		private StorePlatformEntry _distributionPlatform;
+		private DistributionEntry _distributionPlatform;
 		private string _appIdentifier;
 
-		private IAPPlatformEntry _platform;
+		private IAPBillingEntry _billing;
 
 		private IStoreController _storeController;
 		private IExtensionProvider _extensions;
@@ -139,7 +139,7 @@ namespace InAppPurchasing.Unity
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 
 		public UnityPurchasingService(in UnityPurchasingSettings settings,
-			in StorePlatformEntry distributionPlatform,
+			in DistributionEntry distributionPlatform,
 			string appIdentifier,
 			UniTaskCompletionSource storePromotionalCompletionSource = null)
 		{
@@ -156,27 +156,27 @@ namespace InAppPurchasing.Unity
 			if (!success)
 				return UnityPurchasingInitializationFailureReason.UnityServices;
 
-			var autoSetDefaultPlatform = true;
+			var autoSetDefaultBilling = true;
 
-			if (_settings.storeToCountryToPlatform.TryGetValue(_distributionPlatform, out var countryToPlatform))
+			if (_settings.storeToCountryToBilling.TryGetValue(_distributionPlatform, out var countryToBilling))
 			{
 				var country = await UserLocator.GetCountryAsync(cancellationToken);
 
 				if (country == UserLocator.UNDEFINED)
 					return UnityPurchasingInitializationFailureReason.UnknownCountry;
 
-				if (countryToPlatform.TryGetValue(country, out var platform))
+				if (countryToBilling.TryGetValue(country, out var billing))
 				{
-					_platform = platform;
-					autoSetDefaultPlatform = false;
+					_billing = billing;
+					autoSetDefaultBilling = false;
 				}
 			}
 
-			if (autoSetDefaultPlatform)
-				_platform = GetDefaultPlatform(_distributionPlatform);
+			if (autoSetDefaultBilling)
+				_billing = GetDefaultBilling(_distributionPlatform);
 
 #if !UNITY_EDITOR
-			if (_platform == IAPPlatformType.UNDEFINED)
+			if (_billing == IAPBillingType.UNDEFINED)
 				return UnityPurchasingInitializationFailureReason.UnknownPlatform;
 #endif
 
@@ -189,13 +189,13 @@ namespace InAppPurchasing.Unity
 			AddProductsToBuilder<IAPNonConsumableProductEntry>(builder);
 			AddProductsToBuilder<IAPSubscriptionProductEntry>(builder);
 
-			if (_platform == IAPPlatformType.GOOGLE_PLAY)
+			if (_billing == IAPBillingType.GOOGLE_PLAY)
 			{
 				var configuration = builder.Configure<IGooglePlayConfiguration>();
 				configuration.SetDeferredPurchaseListener(OnDeferredPurchase);
 			}
 
-			if (_platform == IAPPlatformType.APP_STORE)
+			if (_billing == IAPBillingType.APP_STORE)
 			{
 				var configuration = builder.Configure<IAppleConfiguration>();
 				_appleCanMakePayments = configuration.canMakePayments;
@@ -208,8 +208,9 @@ namespace InAppPurchasing.Unity
 
 			_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
 
-			var productsStr = builder.products.GetCompositeString(true, definition => definition.storeSpecificId);
-			IAPDebug.Log($"Platform: {_platform}, products:{productsStr}");
+			var productsStr = builder.products
+			   .GetCompositeString(true, definition => definition.storeSpecificId);
+			IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
 
 			UnityPurchasing.Initialize(this, builder);
 			return await _initializationCompletionSource.Task;
@@ -217,8 +218,10 @@ namespace InAppPurchasing.Unity
 
 		void IStoreListener.OnInitialized(IStoreController controller, IExtensionProvider extensions)
 		{
-			IAPDebug.Log(
-				$"UnityPurchasing successfully initialized: products [ {controller.products.set.GetCompositeString(false, product => product.definition.id, separator: ",")} ]");
+			var productsStr = controller.products
+			   .set
+			   .GetCompositeString(true, product => product.definition.storeSpecificId);
+			IAPDebug.Log($"UnityPurchasing successfully initialized, billing: {_billing}, products:{productsStr}");
 
 			_pending = new(2);
 
@@ -227,13 +230,13 @@ namespace InAppPurchasing.Unity
 			_storeController = controller;
 			_extensions = extensions;
 
-			switch (_platform)
+			switch (_billing)
 			{
-				case IAPPlatformType.GOOGLE_PLAY:
+				case IAPBillingType.GOOGLE_PLAY:
 					_googlePlayExtension = extensions.GetExtension<IGooglePlayStoreExtensions>();
 					break;
 
-				case IAPPlatformType.APP_STORE:
+				case IAPBillingType.APP_STORE:
 					_appleExtension = _extensions.GetExtension<IAppleExtensions>();
 
 					UnityPurchasingUtility.appleExtensions = _appleExtension;
@@ -246,7 +249,7 @@ namespace InAppPurchasing.Unity
 
 					break;
 
-				case IAPPlatformType.AMAZON:
+				case IAPBillingType.AMAZON:
 					_amazonExtension = _extensions.GetExtension<IAmazonExtensions>();
 					break;
 			}
@@ -267,7 +270,7 @@ namespace InAppPurchasing.Unity
 				return true;
 			}
 
-			var storeProductId = product.GetId(in _platform);
+			var storeProductId = product.GetId(in _billing);
 
 			if (_pending.Contains(storeProductId))
 			{
@@ -275,7 +278,7 @@ namespace InAppPurchasing.Unity
 				return true;
 			}
 
-			if (_distributionPlatform == StorePlatformType.APP_STORE)
+			if (_distributionPlatform == DistributionType.APP_STORE)
 			{
 				if (!_appleCanMakePayments)
 				{
@@ -386,7 +389,7 @@ namespace InAppPurchasing.Unity
 		#endregion
 
 		private bool TryGetUnityProduct(IAPProductEntry product, out UnityProduct unityProduct)
-			=> TryGetUnityProduct(product.GetId(in _platform), out unityProduct);
+			=> TryGetUnityProduct(product.GetId(in _billing), out unityProduct);
 
 		private bool TryGetUnityProduct(string storeProductId, out UnityProduct product)
 		{
@@ -404,7 +407,7 @@ namespace InAppPurchasing.Unity
 				return false;
 			}
 
-			var storeProductId = product.GetId(in _platform);
+			var storeProductId = product.GetId(in _billing);
 			if (_pending.Contains(storeProductId))
 			{
 				error = IAPPurchaseErrorCode.InProgress;
@@ -416,7 +419,7 @@ namespace InAppPurchasing.Unity
 
 		private bool RequestPurchase(IAPProductEntry product)
 		{
-			var storeProductId = product.GetId(in _platform);
+			var storeProductId = product.GetId(in _billing);
 
 			if (!_pending.Add(storeProductId))
 				return false;
@@ -489,7 +492,7 @@ namespace InAppPurchasing.Unity
 					productType = entry.Type,
 					productId = entry.Id,
 
-					platform = _platform,
+					billing = _billing,
 
 					transactionId = transactionId,
 					receipt = product.receipt,
@@ -643,7 +646,7 @@ namespace InAppPurchasing.Unity
 			foreach (var entry in ContentManager.GetAll<TProduct>())
 			{
 				ref readonly var product = ref entry.Value;
-				var id = product.GetId(in _platform);
+				var id = product.GetId(in _billing);
 				_storeProductIdToEntry[id] = product;
 				builder.AddProduct(id, product.ToUnityProductType());
 			}
@@ -658,7 +661,7 @@ namespace InAppPurchasing.Unity
 			byte[] appleData = null;
 
 #if APP_GOOGLE_PLAY
-			if (_platform == StorePlatformType.GOOGLE_PLAY)
+			if (_platform == DistributionType.GOOGLE_PLAY)
 			{
 				if (_settings.googlePlayDisableValidationRecipe)
 					return;
@@ -668,7 +671,7 @@ namespace InAppPurchasing.Unity
 #endif
 
 #if APP_STORE
-			if (_platform == StorePlatformType.APP_STORE)
+			if (_platform == DistributionType.APP_STORE)
 			{
 				if (_settings.appleDisableValidationRecipe)
 					return;
@@ -682,16 +685,16 @@ namespace InAppPurchasing.Unity
 			_validator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
 		}
 
-		private IAPPlatformEntry GetDefaultPlatform(in StorePlatformEntry platform)
+		private IAPBillingEntry GetDefaultBilling(in DistributionEntry platform)
 		{
 			switch (platform)
 			{
-				case StorePlatformType.APP_STORE:
-					return IAPPlatformType.APP_STORE;
-				case StorePlatformType.GOOGLE_PLAY:
-					return IAPPlatformType.GOOGLE_PLAY;
+				case DistributionType.APP_STORE:
+					return IAPBillingType.APP_STORE;
+				case DistributionType.GOOGLE_PLAY:
+					return IAPBillingType.GOOGLE_PLAY;
 				default:
-					return IAPPlatformType.UNDEFINED;
+					return IAPBillingType.UNDEFINED;
 			}
 		}
 

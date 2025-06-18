@@ -65,8 +65,11 @@ namespace Fusumity.Editor.Utility
 				if (script.GetClass() == type)
 				{
 					_typeToScript[type] = script;
-					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
+
 					var scriptPath = script.GetAssetPath();
+
+					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
+
 					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
 					_scriptToTypes[scriptPath].Add(type);
 					return script;
@@ -100,8 +103,10 @@ namespace Fusumity.Editor.Utility
 				{
 					_typeToScript[type] = script;
 					var scriptPath = script.GetAssetPath();
+					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
 					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
 					_scriptToTypes[scriptPath].Add(type);
+
 					return script;
 				}
 			}

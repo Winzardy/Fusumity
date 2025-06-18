@@ -6,7 +6,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace Targeting.Editor
 {
-	public class StorePlatformEntryAttributeProcessor : OdinAttributeProcessor<StorePlatformEntry>
+	public class StorePlatformEntryAttributeProcessor : OdinAttributeProcessor<DistributionEntry>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,7 +14,7 @@ namespace Targeting.Editor
 
 			switch (member.Name)
 			{
-				case nameof(StorePlatformEntry.store):
+				case nameof(DistributionEntry.name):
 					attributes.Add(new StorePlatformDropdownAttribute());
 					attributes.Add(new HideLabelAttribute());
 					break;
