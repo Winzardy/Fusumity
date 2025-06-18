@@ -661,7 +661,7 @@ namespace InAppPurchasing.Unity
 			byte[] appleData = null;
 
 #if APP_GOOGLE_PLAY
-			if (_platform == DistributionType.GOOGLE_PLAY)
+			if (_billing == DistributionType.GOOGLE_PLAY)
 			{
 				if (_settings.googlePlayDisableValidationRecipe)
 					return;
@@ -671,7 +671,7 @@ namespace InAppPurchasing.Unity
 #endif
 
 #if APP_STORE
-			if (_platform == DistributionType.APP_STORE)
+			if (_billing == DistributionType.APP_STORE)
 			{
 				if (_settings.appleDisableValidationRecipe)
 					return;
