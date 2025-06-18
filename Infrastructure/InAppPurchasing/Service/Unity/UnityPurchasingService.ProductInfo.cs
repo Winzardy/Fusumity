@@ -11,7 +11,7 @@ namespace InAppPurchasing.Unity
 		private const int DELAY_UPDATING_PRODUCT_CACHE_MS = 10000; // 10 secs
 		private static readonly long DELAY_UPDATING_PRODUCT_CACHE_TICKS = DELAY_UPDATING_PRODUCT_CACHE_MS.ToTicks();
 
-		private readonly Dictionary<IAPProductEntry, ProductCache> _productToCache = new();
+		private Dictionary<IAPProductEntry, UnityProductCache> _productToCache;
 
 		/// <summary>
 		/// Получить актуальную информацию о продукте с платформы
@@ -25,12 +25,12 @@ namespace InAppPurchasing.Unity
 		public ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false)
 			=> ref GetProductCache(entry, out _, forceUpdateCache).info;
 
-		private ProductCache GetProductCache(IAPProductEntry product, out ProductUpdateFailureReason failureReason,
+		private UnityProductCache GetProductCache(IAPProductEntry product, out ProductUpdateFailureReason failureReason,
 			bool force)
 		{
 			failureReason = ProductUpdateFailureReason.None;
 
-			_subscriptionToCache ??= new Dictionary<IAPProductEntry, SubscriptionCache>(2);
+			_productToCache ??= new Dictionary<IAPProductEntry, UnityProductCache>(2);
 
 			if (_productToCache.TryGetValue(product, out var cache))
 			{
@@ -43,9 +43,7 @@ namespace InAppPurchasing.Unity
 			}
 
 			if (!UpdateInfo(product, out failureReason))
-			{
-				IAPDebug.LogWarning("Failed to collect subscription info: " + failureReason);
-			}
+				IAPDebug.LogWarning($"Failed to collect product by id [ {product.Id} ] with reason [ {failureReason} ]");
 
 			return _productToCache[product];
 		}
@@ -62,7 +60,7 @@ namespace InAppPurchasing.Unity
 
 			var cache = _productToCache[product];
 			cache.timeTicks = DateTime.Now.Ticks;
-			cache.info = unityProduct.Convert();
+			cache.info = unityProduct.Convert(product.price);
 			cache.rawInfo = unityProduct;
 
 			return true;
@@ -73,11 +71,10 @@ namespace InAppPurchasing.Unity
 	{
 		None,
 
-		UnityProductNotFound,
-		CannotRetrieveUnitySubscriptionInfo
+		UnityProductNotFound
 	}
 
-	internal class ProductCache
+	internal class UnityProductCache
 	{
 		public long timeTicks;
 		public ProductInfo info;

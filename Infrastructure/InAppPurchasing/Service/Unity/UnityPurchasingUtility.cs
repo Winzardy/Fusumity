@@ -9,6 +9,8 @@ namespace InAppPurchasing.Unity
 
 	internal static class UnityPurchasingUtility
 	{
+		private const string FAKE_UNITY_PRICE = "$0.01";
+
 		//Костыль чтобы не тянуть его через всю цепочку
 		internal static IAppleExtensions appleExtensions;
 
@@ -130,13 +132,19 @@ namespace InAppPurchasing.Unity
 				unityInfo.getIntroductoryPricePeriodCycles()
 			);
 		}
-		internal static ProductInfo Convert(this UnityProduct product)
+
+		internal static ProductInfo Convert(this UnityProduct product, string fakePrice = null)
 		{
+			var price = product.metadata.localizedPriceString;
+
+			if (fakePrice != null && price == FAKE_UNITY_PRICE)
+				price = fakePrice;
+
 			return new ProductInfo
 			(
 				product.definition.id,
 				product.definition.type.ToProductType(),
-				product.metadata.localizedPriceString
+				price
 			);
 		}
 	}

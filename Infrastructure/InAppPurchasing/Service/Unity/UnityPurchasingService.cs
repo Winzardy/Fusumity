@@ -175,8 +175,10 @@ namespace InAppPurchasing.Unity
 			if (autoSetDefaultPlatform)
 				_platform = GetDefaultPlatform(_distributionPlatform);
 
+#if !UNITY_EDITOR
 			if (_platform == IAPPlatformType.UNDEFINED)
 				return UnityPurchasingInitializationFailureReason.UnknownPlatform;
+#endif
 
 			var module = StandardPurchasingModule.Instance();
 			var builder = ConfigurationBuilder.Instance(module);
@@ -200,11 +202,14 @@ namespace InAppPurchasing.Unity
 				_appleAppReceipt = configuration.appReceipt;
 				configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
 
-				//Данный метод может обрабатывать отозванный продукты (family share)
+				// Данный метод может обрабатывать отозванный продукты (family share)
 				//configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
 			}
 
 			_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
+
+			var productsStr = builder.products.GetCompositeString(true, definition => definition.storeSpecificId);
+			IAPDebug.Log($"Platform: {_platform}, products:{productsStr}");
 
 			UnityPurchasing.Initialize(this, builder);
 			return await _initializationCompletionSource.Task;
@@ -677,9 +682,9 @@ namespace InAppPurchasing.Unity
 			_validator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
 		}
 
-		private IAPPlatformEntry GetDefaultPlatform(in StorePlatformEntry store)
+		private IAPPlatformEntry GetDefaultPlatform(in StorePlatformEntry platform)
 		{
-			switch (store)
+			switch (platform)
 			{
 				case StorePlatformType.APP_STORE:
 					return IAPPlatformType.APP_STORE;
