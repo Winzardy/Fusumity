@@ -27,14 +27,14 @@ namespace Fusumity.Utility
 	public class UnityRandomizerInt32 : IRandomizer<int>
 	{
 		public int Next() => UnityRandom.Range(int.MinValue, int.MaxValue);
-		public int Next(int max) => UnityRandom.Range(0, max);
-		public int Next(int min, int max) => UnityRandom.Range(min, max);
+		public int Next(int maxExclusive) => UnityRandom.Range(0, maxExclusive);
+		public int Next(int minInclusive, int maxExclusive) => UnityRandom.Range(minInclusive, maxExclusive);
 	}
 
 	public class UnityRandomizerFloat : IRandomizer<float>
 	{
 		public float Next() => UnityRandom.Range(float.MinValue, float.MaxValue);
-		public float Next(float max) => UnityRandom.Range(0, max);
-		public float Next(float min, float max) => UnityRandom.Range(min, max);
+		public float Next(float maxExclusive) => UnityRandom.Range(0, maxExclusive);
+		public float Next(float minInclusive, float maxExclusive) => UnityRandom.Range(minInclusive, maxExclusive);
 	}
 }

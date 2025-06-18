@@ -81,7 +81,7 @@ namespace Game.App.BootTask
 				return false;
 			}
 
-			if (!trade.reward.CanReceive(tradeboard, out var receiveError))
+			if (!trade.reward.CanExecute(tradeboard, out var receiveError))
 			{
 				error = new TradeExecuteError(payError, receiveError);
 				return false;
