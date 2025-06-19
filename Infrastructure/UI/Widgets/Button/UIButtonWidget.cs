@@ -83,11 +83,10 @@ namespace UI
 		protected internal sealed override void OnLayoutInstalledInternal()
 		{
 			Create(out _spriteAssigner);
-			Create(out _localizationAssigner);
+			Create(out _localizationAssigner)
+			   .Updated += OnPlaceholderUpdated;
 
 			_localizationAssigner.SetTextSafe(_layout);
-
-			_localizationAssigner.Updated += OnPlaceholderUpdated;
 
 			if (!_layout.disableDefaultIcon && _layout.icon)
 				_defaultIconSprite = _layout.icon.sprite;
@@ -104,7 +103,6 @@ namespace UI
 		{
 			_spriteAssigner.Dispose();
 			_localizationAssigner.Dispose();
-
 			_localizationAssigner.Updated -= OnPlaceholderUpdated;
 
 			_layout.Unsubscribe(OnClicked);
@@ -130,7 +128,7 @@ namespace UI
 			SetStyle(style, prefix);
 
 			void UpdateIconGroup() => _layout.iconGroup.SetActiveSafe(_layout.icon.sprite);
-			void UpdateLabelGroup() => _layout.labelGroup.SetActiveSafe(_layout.label.text.IsNullOrWhiteSpace());
+			void UpdateLabelGroup() => _layout.labelGroup.SetActiveSafe(!_layout.label.text.IsNullOrWhiteSpace());
 		}
 
 		//Если вопрос почему internal? разная подсветка Extensions и обычных методов :P

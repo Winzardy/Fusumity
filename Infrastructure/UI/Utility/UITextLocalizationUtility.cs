@@ -38,7 +38,7 @@ namespace UI
 				layout.Placeholder.text = label;
 			}
 
-			layout.SetActive(active);
+			layout.Placeholder.SetActive(active);
 
 			return assigner;
 		}

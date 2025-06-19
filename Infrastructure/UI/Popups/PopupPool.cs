@@ -1,5 +1,6 @@
 ﻿using System;
 using Sapientia.Pooling;
+using UnityEngine;
 
 namespace UI.Popups
 {
@@ -15,14 +16,11 @@ namespace UI.Popups
 		{
 		}
 
-		void IPopupPool.Release(IPopup popup)
-		{
-			Release((T) popup);
-		}
+		void IPopupPool.Release(IPopup popup) => Release((T) popup);
 
 		private class Policy : IObjectPoolPolicy<T>
 		{
-			private UIPopupFactory _factory;
+			private readonly UIPopupFactory _factory;
 
 			public Policy(UIPopupFactory factory)
 			{
@@ -31,9 +29,7 @@ namespace UI.Popups
 
 			public T Create()
 			{
-				var popup = _factory.Create<T>();
-
-				return popup;
+				return _factory.Create<T>();
 			}
 
 			public void OnGet(T obj)

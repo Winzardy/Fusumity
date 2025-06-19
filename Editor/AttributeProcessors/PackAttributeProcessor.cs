@@ -26,7 +26,7 @@ namespace Fusumity.Editor
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
 			var type = member.GetReturnType();
-			var isHolder = typeof(IHolder).IsAssignableFrom(type);
+			var isHolder = typeof(IContainer).IsAssignableFrom(type);
 
 			switch (member.Name)
 			{

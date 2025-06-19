@@ -34,6 +34,7 @@ namespace Trading.Editor
 				case nameof(TraderOfferEntry.icon):
 				case nameof(TraderOfferEntry.name):
 				case nameof(TraderOfferEntry.label):
+				case nameof(TraderOfferEntry.costLabel):
 					attributes.Add(new VerticalGroupAttribute("row/right"));
 					break;
 				case nameof(TraderOfferEntry.UseConfirmation):

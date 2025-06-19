@@ -5,10 +5,10 @@ namespace UI.Popups
 {
 	public class PopupsPool : IDisposable
 	{
-		private UIPopupFactory _factory;
+		private readonly UIPopupFactory _factory;
 		private int _maxSize;
 
-		private Dictionary<Type, IPopupPool> _pools = new(8);
+		private Dictionary<Type, IPopupPool> _pools = new(4);
 
 		public PopupsPool(UIPopupFactory factory)
 		{
@@ -18,9 +18,7 @@ namespace UI.Popups
 		public void Dispose()
 		{
 			foreach (var pool in _pools.Values)
-			{
 				pool.Dispose();
-			}
 
 			_pools = null;
 		}
@@ -28,35 +26,25 @@ namespace UI.Popups
 		public T Get<T>()
 			where T : UIWidget, IPopup
 		{
-			if (TryGetPool<T>(out var pool))
-				return pool.Get();
-
-			pool = new PopupPool<T>(_factory);
-			_pools[typeof(T)] = pool;
-
+			var pool = GetOrCreatePool<T>();
 			return pool.Get();
 		}
 
 		public void Release(IPopup popup)
 		{
-			if (_pools.TryGetValue(popup.GetType(), out var pool))
-			{
-				pool.Release(popup);
-			}
+			var pool = _pools[popup.GetType()];
+			pool.Release(popup);
 		}
 
-		private bool TryGetPool<T>(out PopupPool<T> pool)
+		private PopupPool<T> GetOrCreatePool<T>()
 			where T : UIWidget, IPopup
 		{
-			pool = default;
+			if (_pools.TryGetValue(typeof(T), out var rawPool))
+				return (PopupPool<T>) rawPool;
 
-			if (_pools.TryGetValue(typeof(T), out var value))
-			{
-				pool = (PopupPool<T>) value;
-				return true;
-			}
-
-			return false;
+			var pool = new PopupPool<T>(_factory);
+			_pools[typeof(T)] = pool;
+			return pool;
 		}
 	}
 }

@@ -72,6 +72,7 @@ namespace UI.Popups
 		private bool? _resetting;
 
 		protected TArgs _args;
+		private object _context;
 
 		string IIdentifiable.Id => Id;
 

@@ -30,7 +30,7 @@ namespace Trading
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<TradeExecuteError?> ExecuteAsync(this ContentReference<TradeEntry> reference, Tradeboard tradeboard,
+		public static Task<TradeExecuteError?> ExecuteAsync(this in ContentReference<TradeEntry> reference, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
 			tradeboard.Bind(in reference.Read());

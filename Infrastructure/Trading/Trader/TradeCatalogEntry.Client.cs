@@ -25,6 +25,9 @@ namespace Trading
 		[ClientOnly, CanBeNull]
 		public LocKey label;
 
+		[ClientOnly, CanBeNull]
+		public LocKey costLabel;
+
 		[ClientOnly, HideInInspector]
 		public bool disableConfirmation;
 

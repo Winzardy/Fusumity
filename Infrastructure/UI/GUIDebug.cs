@@ -1,29 +1,41 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UI
 {
-	using ILogger = Sapientia.ILogger;
-
 	public static class GUIDebug
 	{
-		public static ILogger logger;
+		public static Sapientia.ILogger logger;
 
 		[HideInCallstack]
-		public static void Log(object msg, object context = null) => logger?.Log(msg, context);
+		public static void Log(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.Log(msg, context, memberName, sourceLineNumber);
 
 		[HideInCallstack]
-		public static void LogWarning(object msg, object context = null) => logger?.LogWarning(msg, context);
+		public static void LogWarning(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogWarning(msg, context, memberName, sourceLineNumber);
 
 		[HideInCallstack]
-		public static void LogError(object msg, object context = null) => logger?.LogError(msg, context);
+		public static void LogError(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogError(msg, context, memberName, sourceLineNumber);
 
 		[HideInCallstack]
-		public static void LogException(Exception exception, object context = null) => logger?.LogException(exception, context);
+		public static void LogException(Exception exception, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogException(exception, context, memberName, sourceLineNumber);
 
-		public static Exception NullException(object msg) => logger?.NullReferenceException(msg) ?? new NullReferenceException(msg.ToString());
+		public static Exception NullException(object msg) =>
+			logger?.NullReferenceException(msg) ?? new NullReferenceException(msg.ToString());
+
 		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
-
 		public static Color COLOR = new(0.5f, 0.0f, 0.5f);
 
 		public static class Logging

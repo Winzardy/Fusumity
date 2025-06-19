@@ -36,7 +36,7 @@ namespace Fusumity.Editor
 					attributes.Add(new EnableIfAttribute(ENABLE_FIELD_NAME));
 
 					var type = member.GetReturnType();
-					var isHolder = typeof(IHolder).IsAssignableFrom(type);
+					var isHolder = typeof(IContainer).IsAssignableFrom(type);
 
 					foreach (var parentAttribute in parentProperty.Attributes)
 						if (parentAttribute is ParentAttribute attribute)

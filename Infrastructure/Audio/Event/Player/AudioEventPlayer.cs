@@ -49,12 +49,20 @@ namespace Audio
 
 		public void Dispose()
 		{
+			Clear();
+
 			_audioSources?.ReleaseToStaticPool();
 			_loadingTracks?.ReleaseToStaticPool();
 		}
 
 		public void Setup(in AudioEventDefinition definition)
 		{
+			if (!_cleared)
+			{
+				AudioDebug.LogWarning("AudioEventPlayer not cleared?", this);
+				Clear();
+			}
+
 			_cleared = false;
 			_finished = false;
 			_playCount = 0;
@@ -249,6 +257,7 @@ namespace Audio
 							AudioDebug.LogError($"TASK-1964 index = {index}, len = {_current.playlist.Length}");
 							break;
 						}
+
 						var track = _current.playlist[index];
 
 						var tween = source.Play(track, _current);

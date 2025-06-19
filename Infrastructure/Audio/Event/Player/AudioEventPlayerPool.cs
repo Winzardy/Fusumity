@@ -1,11 +1,12 @@
-﻿using Fusumity.Utility;
+﻿using System;
+using Fusumity.Utility;
 using Sapientia.Pooling;
 
 namespace Audio
 {
 	public class AudioEventPlayerPool : ObjectPool<AudioEventPlayer>
 	{
-		public AudioEventPlayerPool(AudioFactory factory) : base(new Policy(factory))
+		public AudioEventPlayerPool(AudioFactory factory) : base(new Policy(factory), DEFAULT_CAPACITY * 3)
 		{
 		}
 
@@ -34,7 +35,6 @@ namespace Audio
 
 			public void OnRelease(AudioEventPlayer player)
 			{
-
 				player.SetActive(false);
 				player.Clear();
 			}
