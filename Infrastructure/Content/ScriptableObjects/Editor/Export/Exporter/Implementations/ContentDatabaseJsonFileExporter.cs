@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Content.Management;
 using Fusumity.Utility;
 using JetBrains.Annotations;
@@ -46,7 +47,7 @@ namespace Content.ScriptableObjects.Editor
 
 		protected override void OnExport(ref Args args)
 		{
-			var json = new ContentJsonFormat();
+			var contentJsonObject = new ContentJsonFormat();
 			var dbs = args.Databases;
 
 			var typeFiltering = ContentDatabaseExport.Settings.typeFiltering;
@@ -73,7 +74,7 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				if (list.Count > 0)
-					json.Add(moduleName, list);
+					contentJsonObject.Add(moduleName, list);
 			}
 
 			EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, "Json File", 0.9f);
@@ -85,7 +86,7 @@ namespace Content.ScriptableObjects.Editor
 			};
 
 			var serializer = JsonSerializer.Create(settings);
-			var root = JObject.FromObject(json, serializer);
+			var root = JObject.FromObject(contentJsonObject, serializer);
 
 			using (StringBuilderPool.Get(out var sb))
 			{
