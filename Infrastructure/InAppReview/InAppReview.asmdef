@@ -1,0 +1,19 @@
+{
+    "name": "InAppReview",
+    "rootNamespace": "",
+    "references": [
+        "Sapientia",
+        "Distribution",
+        "Targeting",
+        "Messaging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

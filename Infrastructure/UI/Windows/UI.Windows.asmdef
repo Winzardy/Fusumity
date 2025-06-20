@@ -1,0 +1,23 @@
+{
+    "name": "UI.Windows",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "AssetManagement",
+        "Content",
+        "Sapientia",
+        "Generic",
+        "GUID:a0100c03f96b4df0b1333cdbca10eeb9",
+        "Content.Constants",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

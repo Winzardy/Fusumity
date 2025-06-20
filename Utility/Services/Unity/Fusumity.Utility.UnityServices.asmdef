@@ -1,0 +1,17 @@
+{
+    "name": "Fusumity.Utility.UnityServices",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Unity.Services.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

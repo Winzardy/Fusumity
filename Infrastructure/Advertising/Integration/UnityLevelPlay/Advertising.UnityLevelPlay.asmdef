@@ -1,0 +1,22 @@
+{
+    "name": "Advertising.UnityLevelPlay",
+    "rootNamespace": "",
+    "references": [
+        "Advertising",
+        "Fusumity",
+        "Sapientia",
+        "Content",
+        "Unity.LevelPlay",
+        "Distribution",
+        "Targeting"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

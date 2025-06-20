@@ -1,0 +1,19 @@
+{
+    "name": "UI.Coffee",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "Fusumity",
+        "Coffee.UIEffect",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

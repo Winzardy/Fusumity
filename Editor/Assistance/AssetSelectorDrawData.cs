@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Fusumity.Editor.Extensions;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;

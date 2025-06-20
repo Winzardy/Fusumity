@@ -1,0 +1,23 @@
+{
+    "name": "Content.ScriptableObjects.UI",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "UI.Popups",
+        "UI.Windows",
+        "Content",
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
+        "UI.Screens",
+        "UI.Tabs"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

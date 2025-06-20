@@ -1,0 +1,22 @@
+{
+    "name": "UI.Popups.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "UI.Editor",
+        "UI.Popups",
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

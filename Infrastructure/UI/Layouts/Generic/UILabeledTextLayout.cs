@@ -1,0 +1,23 @@
+using TMPro;
+using WLog;
+
+namespace UI
+{
+	public class UILabeledTextLayout : UILocalizedBaseLayout
+	{
+		public TMP_Text label;
+		public TMP_Text text;
+
+		public override TMP_Text Placeholder => label;
+
+		public void SetLabel(string value)
+		{
+			if (locInfo.enable)
+				this.LogError($"The layout uses built-in localization, text [ {value} ] will be overwritten", this);
+
+			label.text = value;
+		}
+
+		public void SetText(string value) => text.text = value;
+	}
+}

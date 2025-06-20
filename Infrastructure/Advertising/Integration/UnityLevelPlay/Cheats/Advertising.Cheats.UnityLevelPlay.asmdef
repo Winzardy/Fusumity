@@ -1,0 +1,19 @@
+{
+    "name": "Advertising.Cheats.UnityLevelPlay",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f2cffbbafa7154e19914457a548a6cc1",
+        "GUID:760a4c7888534400e882b82c5b3fba06",
+        "GUID:6dec8a5bf86841e59bcb2c2957cbac16",
+        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

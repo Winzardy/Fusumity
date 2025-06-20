@@ -1,0 +1,21 @@
+{
+    "name": "Content.ScriptableObjects.InAppPurchasing",
+    "rootNamespace": "",
+    "references": [
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
+        "InAppPurchasing",
+        "Fusumity",
+        "Content",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

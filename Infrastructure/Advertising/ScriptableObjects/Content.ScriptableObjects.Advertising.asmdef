@@ -1,0 +1,23 @@
+{
+    "name": "Content.ScriptableObjects.Advertising",
+    "rootNamespace": "",
+    "references": [
+        "Advertising",
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
+        "Distribution",
+        "Fusumity",
+        "Content",
+        "Sapientia",
+        "Targeting"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

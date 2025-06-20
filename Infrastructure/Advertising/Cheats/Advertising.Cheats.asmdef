@@ -1,0 +1,21 @@
+{
+    "name": "Advertising.Cheats",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:6dec8a5bf86841e59bcb2c2957cbac16",
+        "GUID:f2cffbbafa7154e19914457a548a6cc1",
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+        "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
+        "GUID:21296ea491f541e2afae785519fcad92"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

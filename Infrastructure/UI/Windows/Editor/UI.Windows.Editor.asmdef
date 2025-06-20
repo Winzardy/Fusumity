@@ -1,0 +1,22 @@
+{
+    "name": "UI.Windows.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "UI.Editor",
+        "UI.Windows",
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

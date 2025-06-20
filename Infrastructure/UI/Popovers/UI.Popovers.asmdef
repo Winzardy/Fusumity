@@ -1,0 +1,24 @@
+{
+    "name": "UI.Popovers",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "AssetManagement",
+        "UniTask",
+        "Content",
+        "DOTween.Modules",
+        "Sapientia",
+        "Generic",
+        "GUID:370ed20472484151a20120c2a4896416",
+        "Content.Constants"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

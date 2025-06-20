@@ -1,0 +1,22 @@
+{
+    "name": "Localization.Editor",
+    "rootNamespace": "",
+    "references": [
+        "I2Loc",
+        "Localization",
+        "Sapientia",
+        "Fusumity",
+        "Fusumity.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

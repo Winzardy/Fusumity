@@ -1,0 +1,24 @@
+{
+    "name": "UI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "Unity.TextMeshPro",
+        "Localization",
+        "Sapientia",
+        "Fusumity",
+        "ZenoTween",
+        "Fusumity.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

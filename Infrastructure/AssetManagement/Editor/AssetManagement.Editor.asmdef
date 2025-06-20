@@ -1,0 +1,24 @@
+{
+    "name": "AssetManagement.Editor",
+    "rootNamespace": "",
+    "references": [
+        "AssetManagement",
+        "Generic",
+        "Generic.Editor",
+        "AssetManagement.Addressables.Editor",
+        "Unity.Addressables",
+        "Fusumity.Editor",
+        "Fusumity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,28 @@
+{
+    "name": "Audio",
+    "rootNamespace": "",
+    "references": [
+        "AssetManagement",
+        "UniTask",
+        "Sapientia",
+        "DOTween.Modules",
+        "Game.App.LocalSave",
+        "WLog",
+        "GUID:370ed20472484151a20120c2a4896416",
+        "Content",
+        "Content.Attributes",
+        "Generic.Editor",
+        "GUID:17eb6086fb1b4f13b640ba906df3d2b7",
+        "Fusumity",
+        "ZenoTween"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
