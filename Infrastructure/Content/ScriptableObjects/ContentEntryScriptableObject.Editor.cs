@@ -20,16 +20,16 @@ namespace Content.ScriptableObjects
 		private Toggle<string> _customId
 		{
 			get => new
-				(useCustomId ? _entry.id : Id, useCustomId);
+				(useCustomId ? _entry.Id : Id, useCustomId);
 			set
 			{
 				if (value.enable && !useCustomId)
-					value.value = _entry.id;
+					value.value = _entry.Id;
 
 				useCustomId = value.enable;
 
 				if (useCustomId)
-					_entry.id = value;
+					_entry.SetId(value);
 			}
 		}
 

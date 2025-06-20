@@ -23,6 +23,12 @@ namespace Content.ScriptableObjects.Editor
 		[SerializeField, SerializeReference]
 		protected IContentDatabaseExporterArgs _exportArgs = new ContentDatabaseJsonFileExporter.Args();
 
+		private void OnValidate()
+		{
+			type ??= typeof(ContentDatabaseJsonFileExporter);
+			_exportArgs ??= new ContentDatabaseJsonFileExporter.Args();
+		}
+
 		internal void Export()
 		{
 			if (_exportArgs != null)

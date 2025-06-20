@@ -36,7 +36,7 @@ namespace Content.ScriptableObjects
 				}
 #endif
 
-				return useCustomId ? _entry.id : name;
+				return useCustomId ? _entry.Id : name;
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace Content.ScriptableObjects
 			get
 			{
 				if (!useCustomId)
-					_entry.id = Id;
+					_entry.SetId(Id);
 
 				return _entry;
 			}

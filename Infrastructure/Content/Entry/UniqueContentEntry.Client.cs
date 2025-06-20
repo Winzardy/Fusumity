@@ -6,7 +6,7 @@ namespace Content
 
 		public void SetGuid(in SerializableGuid newGuid) => guid = newGuid;
 
-		public UniqueContentEntry<T> Clone() => new(in Value, in Guid, id);
+		public UniqueContentEntry<T> Clone() => new(in Value, in Guid, Id);
 
 		IUniqueContentEntry IUniqueContentEntry.Clone() => Clone();
 	}
