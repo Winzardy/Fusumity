@@ -12,6 +12,9 @@ namespace UI
 			public Sprite icon;
 			public TextLocalizationArgs labelLocArgs;
 			public string label;
+
+			// TODO: убрать как вернусь из отпуска
+			public bool? state;
 		}
 
 		private Sprite _defaultIconSprite;
@@ -55,6 +58,9 @@ namespace UI
 				args.label,
 				_defaultLabelText
 			);
+
+			// TODO: убрать как вернусь из отпуска
+			_layout.stateSwitcher?.Switch(args.state ?? false);
 		}
 	}
 }

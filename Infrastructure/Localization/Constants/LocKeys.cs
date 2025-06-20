@@ -59,5 +59,7 @@ namespace Localizations
 		/// Новый уровень
 		/// </summary>
 		public const string NEW_LEVEL = "new_level";
+
+		public const string ADVERTISING_TOKEN = "advertising_token";
 	}
 }

@@ -136,7 +136,10 @@ namespace Game.App.BootTask
 						return TradePayError.NotImplemented; //TODO: остановка
 
 					if (receipt != null)
-						receipts.Add(receipt);
+					{
+						if (receipt.NeedPush())
+							receipts.Add(receipt);
+					}
 					else
 						return TradePayError.NotImplemented; //TODO: ошибка получения чека
 				}
@@ -154,7 +157,7 @@ namespace Game.App.BootTask
 			}
 
 			if (_backend != null || !full)
-				return null;
+				return !TradeAccess.CanPay(cost, tradeboard, out error) ? error : null;
 
 			tradeboard.Register<ITradingModel>(new DummyTradingModel());
 

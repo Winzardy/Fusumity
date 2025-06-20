@@ -61,7 +61,10 @@ namespace Trading.Editor
 		{
 			if (property?.ParentValueProperty.ValueEntry.WeakSmartValue is TraderOfferEntry entry)
 			{
-				if (entry.trade.Read().cost is ItemTradeCost _)
+				if (entry.trade.IsEmpty())
+					return false;
+
+				if (entry.trade.Read()?.cost is ItemTradeCost _)
 					return true;
 			}
 
