@@ -107,7 +107,7 @@ namespace UI
 
 		protected override void OnBeganOpening()
 		{
-			_gameLateUpdateMessageToken = Messenger.Subscribe<WorldStatePart.LateUpdateMessage>(OnGameLateUpdate);
+			_gameLateUpdateMessageToken = Messenger.Subscribe<WorldState.LateUpdateMessage>(OnGameLateUpdate);
 		}
 
 		protected override void OnEndedOpening() =>
@@ -123,7 +123,7 @@ namespace UI
 			_gameLateUpdateMessageToken?.Dispose();
 		}
 
-		private void OnGameLateUpdate(in WorldStatePart.LateUpdateMessage message) => TryCalculateAndUpdatePosition();
+		private void OnGameLateUpdate(in WorldState.LateUpdateMessage message) => TryCalculateAndUpdatePosition();
 
 		private void TryCalculateAndUpdatePosition(bool animation = true, bool force = false)
 		{
