@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
-using Unity.Burst;
 using Unity.Mathematics;
 
 namespace Fusumity.Utility
@@ -10,39 +9,69 @@ namespace Fusumity.Utility
 	/// </summary>
 	public static class Int2MathUtility
 	{
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int2 DivRem(this in int2 v, int2 divider, out int2 remainder)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Abs(this int2 v)
+		{
+			return new int2(v.x.Abs(), v.y.Abs());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Sign(this int2 v)
+		{
+			return new int2(v.x.Sign(), v.y.Sign());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 DivRem(this int2 v, int2 divider, out int2 remainder)
 		{
 			remainder = v % divider;
 			return v / divider;
 		}
 
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int2 Clamp(this in int2 v, int2 min, int2 max)
-		{
-			return new int2(v.x.Clamp(min.x, max.x), v.y.Clamp(min.y, max.y));
-		}
-
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int2 Clamp(this in int2 v, int min, int max)
-		{
-			return new int2(v.x.Clamp(min, max), v.y.Clamp(min, max));
-		}
-
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Mul(this in int2 v)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Mul(this int2 v)
 		{
 			return v.x * v.y;
 		}
 
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int2 Rotate_90(this in int2 v)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Min(this int2 a, int2 b)
+		{
+			return new int2(a.x.Min(b.x), a.y.Min(b.y));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Max(this int2 v)
+		{
+			return v.x.Max(v.y);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Max(this int2 a, int2 b)
+		{
+			return new int2(a.x.Max(b.x), a.y.Max(b.y));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Clamp(this int2 v, int2 min, int2 max)
+		{
+			return new int2(v.x.Clamp(min.x, max.x), v.y.Clamp(min.y, max.y));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Clamp(this int2 v, int min, int max)
+		{
+			return new int2(v.x.Clamp(min, max), v.y.Clamp(min, max));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Rotate_90(this int2 v)
 		{
 			return new int2(-v.y, v.x);
 		}
 
-		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int2 Rotate_90(this in int2 v, int count)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Rotate_90(this int2 v, int count)
 		{
 			switch (count)
 			{
@@ -57,6 +86,12 @@ namespace Fusumity.Utility
 				default:
 					return Rotate_90(v, count % 4);
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float Atan(this int2 v)
+		{
+			return ((float2)v).Atan();
 		}
 	}
 }

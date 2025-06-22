@@ -15,7 +15,8 @@
         "Unity.RenderPipelines.Universal.Runtime",
         "Fusumity.Utility.Camera",
         "ZenoTween",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
