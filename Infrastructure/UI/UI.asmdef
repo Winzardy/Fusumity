@@ -16,7 +16,9 @@
         "Fusumity.Utility.Camera",
         "ZenoTween",
         "DOTween.Modules",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Sapientia.MemoryAllocator",
+        "Messaging"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using Fusumity.Reactive;
 using Fusumity.Utility;
+using Messaging;
 using Sapientia;
+using Sapientia.MemoryAllocator.State;
 using UnityEngine;
 
 namespace UI
@@ -89,6 +91,8 @@ namespace UI
 		private IEnumerator _moveRoutine;
 		private bool? _cacheOffscreen;
 
+		private IMessageSubscriptionToken? _gameLateUpdateMessageToken;
+
 		public bool Enable => _enable;
 
 		protected override void OnSetupDefaultAnimator() => SetAnimator<DefaultMarkerAnimator<TArgs>>();
@@ -103,7 +107,7 @@ namespace UI
 
 		protected override void OnBeganOpening()
 		{
-			UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
+			_gameLateUpdateMessageToken = Messenger.Subscribe<WorldStatePart.LateUpdateMessage>(OnGameLateUpdate);
 		}
 
 		protected override void OnEndedOpening() =>
@@ -115,10 +119,11 @@ namespace UI
 			_cacheWorldPosition = null;
 
 			TryClearMoveRoutine();
-			UnityLifecycle.LateUpdateEvent.UnSubscribe(OnLateUpdate);
+
+			_gameLateUpdateMessageToken?.Dispose();
 		}
 
-		private void OnLateUpdate() => TryCalculateAndUpdatePosition();
+		private void OnGameLateUpdate(in WorldStatePart.LateUpdateMessage message) => TryCalculateAndUpdatePosition();
 
 		private void TryCalculateAndUpdatePosition(bool animation = true, bool force = false)
 		{
@@ -205,7 +210,7 @@ namespace UI
 			}
 		}
 
-		private bool TryGetWorldPosition(out Vector3 position)
+		public bool TryGetWorldPosition(out Vector3 position)
 		{
 			if (_args.target)
 			{
