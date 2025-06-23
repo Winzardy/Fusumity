@@ -34,8 +34,10 @@ namespace UI
 		{
 			Create(out _localizationAssigner);
 
-			CreateWidget(out _banner, _layout.banner);
-			CreateWidget(out _single, _layout.item);
+			TryCreateWidget(ref _banner, _layout.banner);
+			TryCreateWidget(ref _single, _layout.item);
+			TryCreateWidget(ref _miniGroup, _layout.miniGroup);
+			TryCreateWidget(ref _group, _layout.group);
 		}
 
 		protected override void OnLayoutCleared()
@@ -49,36 +51,30 @@ namespace UI
 			{
 				if (args.items.Length > 1)
 				{
-					_single.Hide(immediate: true);
-					TryCreateWidget(ref _group, _layout.group);
+					_single?.Hide(immediate: true);
 					_group?.Show(args.items, _immediate);
 				}
 				else
 				{
-					_single.Show(args.items.First(), _immediate);
+					_single?.Show(args.items.First(), _immediate);
 					_group?.Hide(immediate: true);
 				}
 			}
 			else
 			{
-				_single.Hide(immediate: true);
+				_single?.Hide(immediate: true);
 				_group?.Hide(immediate: true);
 			}
 
 			if (!args.miniItems.IsNullOrEmpty())
-			{
-				TryCreateWidget(ref _miniGroup, _layout.miniGroup);
-				_miniGroup?.Show(args.items, _immediate);
-			}
+				_miniGroup?.Show(args.miniItems, _immediate);
 			else
-			{
 				_miniGroup?.Hide(immediate: true);
-			}
 
 			if (args.banner.HasValue)
 				_banner.Show(args.banner.Value, _immediate);
 			else
-				_banner.Hide(immediate: true);
+				_banner?.Hide(immediate: true);
 
 			_layout.label.TrySetTextOrDeactivate(_localizationAssigner, args.labelLocArgs, args.label);
 			_layout.badge.TrySetTextOrDeactivate(_localizationAssigner, args.badgeLocArgs, args.badge);
