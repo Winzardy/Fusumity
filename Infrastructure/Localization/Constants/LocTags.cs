@@ -12,5 +12,6 @@ namespace Localizations
 		public const string TOTAL = "{total}";
 		public const string REWARD = "{reward}";
 		public const string COST = "{cost}";
+		public const string MISSION_TITLE = "{missionTitle}";
 	}
 }
