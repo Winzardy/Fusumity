@@ -6,6 +6,10 @@ namespace Localizations
 	//Пример
 	public class LocKeys
 	{
+		public const string OK = "OK";
+		public const string YES = "yes";
+		public const string NO = "no";
+
 		/// <summary>
 		/// Версия {version}-{platform}
 		/// </summary>
@@ -61,5 +65,7 @@ namespace Localizations
 		public const string NEW_LEVEL = "new_level";
 
 		public const string ADVERTISING_TOKEN = "advertising_token";
+
+		public const string AUTH_REMOTE_USER_EXIST = "auth_remote_user_exist";
 	}
 }
