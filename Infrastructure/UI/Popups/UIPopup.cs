@@ -73,7 +73,6 @@ namespace UI.Popups
 
 		protected TArgs _args;
 		private object _context;
-		private bool _closing;
 
 		string IIdentifiable.Id => Id;
 
@@ -107,7 +106,6 @@ namespace UI.Popups
 
 		void IPopup.Show(IPopupArgs boxedArgs)
 		{
-			_closing = false;
 			var force = false;
 
 			if (boxedArgs != null)
@@ -162,14 +160,7 @@ namespace UI.Popups
 
 		private protected virtual IPopupArgs GetArgs() => _args;
 
-		public override void RequestClose()
-		{
-			if(_closing)
-				return;
-
-			_closing = true;
-			RequestedClose?.Invoke(this);
-		}
+		public override void RequestClose() => RequestedClose?.Invoke(this);
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 
