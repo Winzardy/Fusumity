@@ -24,7 +24,8 @@ namespace UI
 
 		protected override bool UseEquals => true;
 
-		private void Start() => Clear();
+		private void Awake() => Clear();
+
 		private void OnDestroy() => Clear();
 
 		protected override void OnStateSwitched(TState state)
@@ -32,13 +33,13 @@ namespace UI
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
-				var t = _dictionary.GetValueOrDefault(state, _default)
+				_dictionary.GetValueOrDefault(state, _default)
 				   .ToTween()
-				   .SetAutoKill(true);
+				   .Kill(true);
 
-				t.Complete(true);
 				return;
 			}
+
 
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
