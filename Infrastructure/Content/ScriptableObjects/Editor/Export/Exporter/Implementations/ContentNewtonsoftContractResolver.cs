@@ -47,7 +47,7 @@ namespace Content.ScriptableObjects.Editor
 			   .Where(f => !typeof(Object).IsAssignableFrom(f.FieldType))
 			   .Where(f => !f.Name.Contains("k__BackingField"))
 			   .Where(f => !f.IsDefined(typeof(NonSerializedAttribute), true))
-			   .Where(f => _filtering.client || !f.IsDefined(typeof(ClientOnlyAttribute), true));
+			   .Where(f => !_filtering.skipTypesWithClientOnlyAttribute || !f.IsDefined(typeof(ClientOnlyAttribute), true));
 
 			foreach (var field in fields)
 			{
@@ -89,19 +89,22 @@ namespace Content.ScriptableObjects.Editor
 		{
 			foreach (var skipName in filtering.skipNamespaces)
 			{
-				if (IsNamespace(skipName))
+				if (ShouldSkipNamespace(type, skipName))
 					return false;
 			}
 
-			foreach (var tag in filtering.skipNameTags)
+			foreach (var tag in filtering.skipClassNameTags)
 			{
+				if (tag.IsNullOrWhiteSpace())
+					continue;
+
 				if (type?.FullName?.Contains(tag) ?? false)
 					return false;
 			}
 
-			if (!filtering.client)
+			if (filtering.skipTypesWithClientOnlyAttribute)
 			{
-				if (IsNamespace(CLIENT_NAMESPACE))
+				if (ShouldSkipNamespace(type, CLIENT_NAMESPACE))
 					return false;
 
 				return !type.HasAttribute<ClientOnlyAttribute>();
@@ -109,7 +112,7 @@ namespace Content.ScriptableObjects.Editor
 
 			return true;
 
-			bool IsNamespace(string @namespace)
+			static bool ShouldSkipNamespace(Type type, string @namespace)
 			{
 				if (type == null)
 					return true;

@@ -34,11 +34,14 @@ namespace Content.ScriptableObjects.Editor
 	[Serializable]
 	public class ContentTypeFiltering
 	{
-		[Tooltip("Используем ли типы с [ClientOnly] аттрибутом")]
-		public bool client;
+		[FormerlySerializedAs("client")]
+		[Tooltip("Пропустить типы с [ClientOnly] аттрибутом")]
+		public bool skipTypesWithClientOnlyAttribute;
 
 		[Space(5)]
 		public string[] skipNamespaces;
-		public string[] skipNameTags;
+		[FormerlySerializedAs("skipNameTags")]
+		[Tooltip("Может содержать не полное имя класса, а также его часть")]
+		public string[] skipClassNameTags;
 	}
 }
