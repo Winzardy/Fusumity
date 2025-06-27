@@ -1,4 +1,6 @@
-﻿using Sapientia.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 
 namespace UI.Scroll
@@ -29,6 +31,8 @@ namespace UI.Scroll
 
 		void IScrollGridItemArgs<TArgs>.SetItems(in ArraySection<TArgs> items) =>
 			Items = items;
+
+		public IEnumerator<int> GetEnumerator() => Items.GetEnumerator();
 	}
 
 	public class UIScrollGridItem<TItem, TItemLayout, TItemArgs> : UIScrollGridItem
@@ -102,5 +106,7 @@ namespace UI.Scroll
 			for (int i = 0; i < _items.Length; i++)
 				_items[i].Hide(true, true);
 		}
+
+		public IEnumerator<TItem> GetEnumerator() => _items.GetEnumerator();
 	}
 }

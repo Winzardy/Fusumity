@@ -17,9 +17,9 @@ namespace UI
 
 		protected virtual bool UseEquals => false;
 
-		public void Switch(TState value)
+		public void Switch(TState value, bool force = false)
 		{
-			if (UseEquals && current.Equals(value))
+			if (UseEquals && current.Equals(value) && !force)
 				return;
 
 			current = value;
