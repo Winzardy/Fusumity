@@ -151,6 +151,8 @@ namespace UI
 					widget = Add();
 
 				widget.Show(in _args[i], _immediate);
+
+				widget.OnPostShow(i, _args.Count);
 			}
 
 			var usedWidgetAmount = _used.Count;

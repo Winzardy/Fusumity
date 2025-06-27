@@ -127,5 +127,9 @@ namespace UI
 		protected virtual void OnSetupDefaultAnimator()
 		{
 		}
+
+		public virtual void OnPostShow(int index, int count)
+		{
+		}
 	}
 }
