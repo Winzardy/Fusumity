@@ -51,10 +51,10 @@ namespace Fusumity.Editor
 			ReserializeAssets<ScriptableObject>();
 		}
 
-		private static void ReserializeAssets<T>(string folderPath = "/Assets") where T : UnityObject
+		private static void ReserializeAssets<T>(string folderPath = "Assets") where T : UnityObject
 			=> ReserializeAssets(typeof(T), folderPath);
 
-		private static void ReserializeAssets(Type type = null, string folderPath = "/Assets")
+		private static void ReserializeAssets(Type type = null, string folderPath = "Assets")
 		{
 			try
 			{
