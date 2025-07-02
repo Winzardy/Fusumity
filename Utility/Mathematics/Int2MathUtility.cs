@@ -34,6 +34,22 @@ namespace Fusumity.Utility
 			return v.x * v.y;
 		}
 
+		/// <summary>
+		/// Use Dot for finding scaled cos of angle between a and b (Scaled means `dot = cos(a, b) * a.magnitude * b.magnitude`).
+		/// Use Dot for finding squared magnitude of vector sending it as a and b.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Dot(this int2 a, int2 b)
+		{
+			return a.x * b.x + a.y * b.y;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int SqrMagnitude(this int2 v)
+		{
+			return v.Dot(v);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int2 Min(this int2 a, int2 b)
 		{
