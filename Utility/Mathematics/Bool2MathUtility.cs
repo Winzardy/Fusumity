@@ -9,6 +9,12 @@ namespace Generic.Extensions
 	public static class Bool2MathUtility
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool None(this in bool2 v)
+		{
+			return v is { x: false, y: false };
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool All(this in bool2 v)
 		{
 			return v is { x: true, y: true };
