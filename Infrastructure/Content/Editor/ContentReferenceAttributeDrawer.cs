@@ -529,14 +529,13 @@ namespace Content.Editor
 						_ => Property.ValueEntry.WeakSmartValue
 					};
 				}
-
 				else
 				{
 					Property.ValueEntry.WeakSmartValue = _mode switch
 					{
-						ContentDrawerMode.String => string.Empty,
+						ContentDrawerMode.String => null,
 						ContentDrawerMode.Guid or ContentDrawerMode.Reference => SerializableGuid.Empty,
-						_ => default
+						_ => null
 					};
 				}
 			}
