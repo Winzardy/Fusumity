@@ -67,5 +67,8 @@ namespace Localizations
 		public const string ADVERTISING_TOKEN = "advertising_token";
 
 		public const string AUTH_REMOTE_USER_EXIST = "auth_remote_user_exist";
+
+		public const string NO_SERVER_CONNECTION = "no_server_connection";
+		public const string APP_UPDATE_REQUIRED = "app_update_required";
 	}
 }
