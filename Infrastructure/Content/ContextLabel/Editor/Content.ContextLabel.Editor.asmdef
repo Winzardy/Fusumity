@@ -1,0 +1,10 @@
+{
+  "name": "Content.ContextLabel.Editor",
+  "references": [
+    "Fusumity",
+    "Fusumity.Editor",
+    "Content",
+    "Content.ScriptableObjects",
+    "Sapientia"
+  ]
+}

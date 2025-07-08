@@ -21,7 +21,6 @@ namespace ZenoTween.Editor
 
 		private GUIPopupSelector<SequenceParticipantByKey> _selector;
 
-		private bool _hideDetailedMessage;
 		private bool? _showedSelectorBeforeClick;
 
 		private IPropertyValueEntry ParentEntry => Property.ParentValueProperty.ValueEntry;
@@ -101,11 +100,6 @@ namespace ZenoTween.Editor
 			var originalTooltip = label.tooltip;
 
 			ValueEntry.SmartValue = SirenixEditorFields.TextField(textFieldPosition, label, ValueEntry.SmartValue);
-
-			var style = new GUIStyle(EditorStyles.miniLabel);
-			style.normal.textColor = Color.gray;
-			style.hover.textColor = Color.gray;
-			style.alignment = TextAnchor.MiddleRight;
 
 			label.tooltip = originalTooltip;
 			GUI.color = originalColor;

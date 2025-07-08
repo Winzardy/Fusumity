@@ -1,0 +1,19 @@
+{
+    "name": "Content.ScriptableObjects.ContextLabel",
+    "rootNamespace": "",
+    "references": [
+        "Content",
+        "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

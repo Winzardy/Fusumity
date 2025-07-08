@@ -151,7 +151,7 @@ namespace Game.App.BootTask
 					_backend?.PushReceipts(tradeboard);
 
 					var compositeString = receipts.GetCompositeString(false, getter:
-						receipt => receipt.ToString());
+						receipt => receipt.ToString(), numerate: receipts.Count > 1);
 					TradingDebug.Log($"{tradeboard.Id}, receipts: {compositeString}");
 				}
 			}

@@ -383,21 +383,15 @@ namespace Fusumity.Editor
 			var value = (T) item.Value;
 
 			if (!_values.Contains(value))
-			{
 				return false;
-			}
 
 			var rawSearchTerm = GetSearchTerm();
 
-			if (string.IsNullOrEmpty(rawSearchTerm))
-			{
+			if (rawSearchTerm.IsNullOrEmpty())
 				return false;
-			}
 
 			var searchTerm = rawSearchTerm.ToLower();
-
 			var target = item.GetFullPath().ToLower();
-
 			var contains = target.Contains(searchTerm);
 
 			return contains;

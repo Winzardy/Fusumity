@@ -20,12 +20,12 @@ namespace Content.ScriptableObjects.Editor
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
 
-		internal static void Generate(Type type, List<IUniqueContentEntryScriptableObject> collection)
+		internal static void Generate(Type type, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
 		{
 			if (collection == null || collection.Count == 0)
 				return;
 
-			var attribute = type.GetCustomAttribute<ConstantsAttribute>();
+			attribute ??= type.GetCustomAttribute<ConstantsAttribute>();
 
 			if (attribute == null)
 				return;
