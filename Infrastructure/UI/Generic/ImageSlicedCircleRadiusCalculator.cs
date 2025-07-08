@@ -1,9 +1,12 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI
 {
+	// TODO: Починить
+	[Obsolete("Обманывает, надо починить")]
 	[RequireComponent(typeof(Image))]
 	public class ImageSlicedCircleRadiusCalculator : MonoBehaviour
 	{

@@ -6,6 +6,9 @@ namespace Localizations
 	//Пример
 	public class LocKeys
 	{
+		public const string REWARD = "reward";
+		public const string RECEIVE = "receive";
+
 		public const string OK = "OK";
 		public const string YES = "yes";
 		public const string NO = "no";
