@@ -1,10 +1,22 @@
 {
-  "name": "Content.ContextLabel.Editor",
-  "references": [
-    "Fusumity",
-    "Fusumity.Editor",
-    "Content",
-    "Content.ScriptableObjects",
-    "Sapientia"
-  ]
+    "name": "Content.ContextLabel.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Fusumity",
+        "Fusumity.Editor",
+        "Content",
+        "Content.ScriptableObjects",
+        "Sapientia"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
