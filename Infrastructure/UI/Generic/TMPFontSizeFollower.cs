@@ -1,4 +1,3 @@
-using System;
 using Fusumity.Reactive;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -54,7 +53,6 @@ namespace UI
 		{
 			_self = GetComponent<TMP_Text>();
 		}
-
 #if UNITY_EDITOR
 		private void Update()
 		{

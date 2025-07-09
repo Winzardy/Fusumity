@@ -44,7 +44,7 @@ namespace UI
 
 		protected override void OnShow(ref Args args)
 		{
-			_layout.icon.TrySetSprite
+			_layout.icon.SetSpriteSafe
 			(
 				_spriteAssigner,
 				args.iconReference,

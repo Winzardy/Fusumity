@@ -115,7 +115,7 @@ namespace UI
 
 		protected override void OnShow(ref TArgs args)
 		{
-			_layout.icon.TrySetSprite(_spriteAssigner, args.IconReference, args.Icon, _defaultIconSprite, UpdateIconGroup);
+			_layout.icon.SetSpriteSafe(_spriteAssigner, args.IconReference, args.Icon, _defaultIconSprite, UpdateIconGroup);
 			_layout.label.SetTextSafe(_localizationAssigner, args.LabelLocArgs, args.Label, _defaultLabelText, UpdateLabelGroup);
 
 			SetInteractable(args.Interactable ?? true);

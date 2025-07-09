@@ -313,7 +313,7 @@ namespace UI.Scroll
 			set
 			{
 				_delegate = value;
-				_reloadData = true;
+				_reloadDataRequest = true;
 			}
 		}
 
@@ -746,6 +746,7 @@ namespace UI.Scroll
 				padding.top = newVal;
 
 			_layoutGroup.padding = padding;
+			_reloadDataRequest = true;
 		}
 
 		public void Resize(bool keepPosition = true)
@@ -805,7 +806,7 @@ namespace UI.Scroll
 		/// <param name="scrollPositionFactor">The percentage of the Scroll to start at between 0 and 1, 0 being the start of the Scroll</param>
 		public void ReloadData(float scrollPositionFactor = 0)
 		{
-			_reloadData = false;
+			_reloadDataRequest = false;
 
 			// recycle all the active items so
 			// that we are sure to get fresh views
@@ -1428,7 +1429,7 @@ namespace UI.Scroll
 		/// <summary>
 		/// Flag to tell the Scroll to reload the data
 		/// </summary>
-		private bool _reloadData;
+		private bool _reloadDataRequest;
 
 		/// <summary>
 		/// Flag to tell the Scroll to refresh the active list of cells
@@ -2132,10 +2133,10 @@ namespace UI.Scroll
 			if (_updateSpacing)
 			{
 				UpdateSpacing(spacing);
-				_reloadData = false;
+				_reloadDataRequest = false;
 			}
 
-			if (_reloadData)
+			if (_reloadDataRequest)
 			{
 				// if the reload flag is true, then reload the data
 				ReloadData();
@@ -2943,4 +2944,3 @@ namespace UI.Scroll
 
 	#endregion
 }
-
