@@ -745,6 +745,9 @@ namespace UI.Scroll
 			else
 				padding.top = newVal;
 
+			if (_layoutGroup.padding == padding)
+				return;
+
 			_layoutGroup.padding = padding;
 			_reloadDataRequest = true;
 		}
