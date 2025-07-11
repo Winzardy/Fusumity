@@ -7,7 +7,7 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 
-namespace Localizations.Editor
+namespace Localization.Editor
 {
 	public class LocKeyAttributeProcessor : OdinAttributeProcessor<LocKey>
 	{

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Localizations;
+using Localization;
 using Sapientia.Collections;
 using UnityEditor;
 using UnityEditor.Overlays;
@@ -64,10 +64,10 @@ namespace UI.Editor
 
 		private IEnumerable<(string label, string language)> GetAllLanguages()
 		{
-			foreach (var language in Localization.GetAllLanguagesEditor())
+			foreach (var language in LocManager.GetAllLanguages())
 			{
 				var label = language;
-				if (Localization.CurrentLanguageEditor == language)
+				if (LocManager.CurrentLanguage == language)
 					label += " (Default)";
 				yield return (label, language);
 			}

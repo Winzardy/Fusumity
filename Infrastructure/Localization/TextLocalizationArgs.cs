@@ -4,7 +4,7 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 
-namespace Localizations
+namespace Localization
 {
 	// Cделал классом чтобы в dictionary не боксился
 	// TODO: переделать в struct так как появился HashMap (аля Dictionary для struct) для работы со структурами
@@ -74,7 +74,7 @@ namespace Localizations
 			if (composite)
 				return composite.ToString();
 
-			var text = Localization.Get(key, defaultValue);
+			var text = LocManager.Get(key, defaultValue);
 
 			if (text.IsNullOrEmpty())
 				return text;

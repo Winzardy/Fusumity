@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Localizations
+namespace Localization
 {
 	public static class LocalizationDebug
 	{

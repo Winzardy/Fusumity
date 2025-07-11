@@ -1,7 +1,7 @@
 ﻿using System;
 using AssetManagement;
 using Fusumity.Utility;
-using Localizations;
+using Localization;
 using Sapientia.Extensions;
 using TMPro;
 using UnityEngine;

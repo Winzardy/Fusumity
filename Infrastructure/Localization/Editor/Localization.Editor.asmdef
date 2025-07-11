@@ -7,7 +7,9 @@
         "Sapientia",
         "Fusumity",
         "Fusumity.Editor",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.Localization",
+        "Unity.Localization.Editor"
     ],
     "includePlatforms": [
         "Editor"

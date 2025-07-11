@@ -1,4 +1,4 @@
-using Localizations;
+using Localization;
 using Sapientia.Collections;
 
 namespace UI

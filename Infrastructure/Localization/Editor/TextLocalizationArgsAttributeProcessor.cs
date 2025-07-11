@@ -4,7 +4,7 @@ using System.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 
-namespace Localizations.Editor
+namespace Localization.Editor
 {
 	public class TextLocalizationArgsAttributeProcessor : OdinAttributeProcessor<TextLocalizationArgs>
 	{

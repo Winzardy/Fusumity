@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Fusumity.Attributes;
 
-namespace Localizations
+namespace Localization
 {
 	[Conditional("UNITY_EDITOR")]
 	public class LocKeyParentAttribute : ParentAttribute

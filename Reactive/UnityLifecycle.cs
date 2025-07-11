@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Sapientia.Data;
 using UnityEngine;
 
@@ -26,6 +27,8 @@ namespace Fusumity.Reactive
 		public static float DeltaTime => Time.deltaTime;
 		public static bool ApplicationQuitting => _instance._applicationQuitting;
 		public static bool ApplicationPause => _instance._pause;
+
+		public static CancellationToken ApplicationCancellationToken => _instance.destroyCancellationToken;
 
 		private void Update()
 		{

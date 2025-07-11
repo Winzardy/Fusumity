@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Localizations.Editor
+namespace Localization.Editor
 {
 	//TODO: доделать как будет время, нужно генерировать LocKeys и LocTags, LocTags генерировать аддитивно, без перезаписи
 	//TODO: можеть сделать какой-то ConstantsGenerator, пока не знаю

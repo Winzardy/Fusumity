@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Localizations
+namespace Localization
 {
 	[AttributeUsage(AttributeTargets.Field)]
 	public class LocKeyAttribute : Attribute

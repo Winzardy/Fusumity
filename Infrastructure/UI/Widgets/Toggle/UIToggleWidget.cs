@@ -1,6 +1,6 @@
 ﻿using System;
 using AssetManagement;
-using Localizations;
+using Localization;
 using UnityEngine;
 
 namespace UI

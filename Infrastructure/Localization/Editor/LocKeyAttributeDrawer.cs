@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Fusumity.Utility;
-using I2.Loc;
 using JetBrains.Annotations;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
@@ -12,9 +12,9 @@ using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
-using Loc = I2.Loc.LocalizationManager;
+using UnityEngine.Localization.Settings;
 
-namespace Localizations.Editor
+namespace Localization.Editor
 {
 	public class LocKeyAttributeDrawer : OdinAttributeDrawer<LocKeyAttribute, string>
 	{
@@ -42,7 +42,7 @@ namespace Localizations.Editor
 
 		protected override void Initialize()
 		{
-			allKeys = Localization.GetAllKeysEditor();
+			allKeys = LocManager.GetAllKeysEditor().ToList();
 			var selectedKey = ValueEntry.SmartValue;
 			CreateSelector(selectedKey);
 		}
@@ -56,9 +56,10 @@ namespace Localizations.Editor
 
 			var contains = allKeys.Contains(selectedKey);
 
-			if (Loc.GetTermsList().Count != allKeys.Count)
+			var keys = LocManager.GetAllKeysEditor();
+			if (allKeys.Count != keys.Count())
 			{
-				allKeys = Loc.GetTermsList();
+				allKeys = keys.ToList();
 				CreateSelector(selectedKey);
 			}
 			else
@@ -66,6 +67,7 @@ namespace Localizations.Editor
 				if (_selector.selectedValue != selectedKey)
 					_selector.SetSelection(selectedKey);
 			}
+
 
 			var fieldName = Attribute.FieldName;
 			var valueByFieldName = Property.ParentValueProperty.ValueEntry.WeakSmartValue.GetReflectionValue(fieldName);
@@ -75,7 +77,7 @@ namespace Localizations.Editor
 
 			EditorGUILayout.GetControlRect();
 
-			var translation = Localization.GetEditor(selectedKey, _language) ?? string.Empty;
+			var translation = LocManager.GetEditor(selectedKey, _language) ?? string.Empty;
 
 			var rect = GUILayoutUtility.GetLastRect();
 
@@ -292,13 +294,13 @@ namespace Localizations.Editor
 
 		private void SelectAsset()
 		{
-			var asset = AssetDatabaseUtility.GetAsset<LanguageSourceAsset>();
+			var asset = AssetDatabaseUtility.GetAsset<LocalizationSettings>();
 			EditorGUIUtility.PingObject(asset);
 		}
 
 		private string PathEvaluator(string key)
 		{
-			var translate = key.IsNullOrWhitespace() ? string.Empty : Localization.GetEditor(key, _language);
+			var translate = key.IsNullOrWhitespace() ? string.Empty : LocManager.GetEditor(key, _language);
 
 			if (!translate.IsNullOrWhiteSpace())
 			{

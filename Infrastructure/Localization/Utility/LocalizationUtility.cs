@@ -1,33 +1,33 @@
 ﻿using Sapientia.Pooling;
 
-namespace Localizations
+namespace Localization
 {
 	public static partial class LocalizationUtility
 	{
 		public static string ToLocalize(this string key)
 		{
-			if (!Localization.IsInitialized)
+			if (!LocManager.IsInitialized)
 			{
 #if UNITY_EDITOR
-				return Localization.GetEditor(key);
+				return LocManager.GetEditor(key);
 #endif
 				return key;
 			}
 
-			return Localization.Get(key);
+			return LocManager.Get(key);
 		}
 
 		public static bool HasLocalize(this string key)
 		{
-			if (!Localization.IsInitialized)
+			if (!LocManager.IsInitialized)
 				return false;
 
-			return Localization.Contains(key);
+			return LocManager.Has(key);
 		}
 
 		public static string ToLocalize(this string key, params object[] args)
 		{
-			if (!Localization.IsInitialized)
+			if (!LocManager.IsInitialized)
 				return key;
 
 			return new TextLocalizationArgs
@@ -39,7 +39,7 @@ namespace Localizations
 
 		public static string ToLocalize(this string key, string tag, string value)
 		{
-			if (!Localization.IsInitialized)
+			if (!LocManager.IsInitialized)
 				return key;
 
 			var args = new TextLocalizationArgs
@@ -56,7 +56,7 @@ namespace Localizations
 
 		public static string ToLocalize(this string key, params (string tag, string value)[] tags)
 		{
-			if (!Localization.IsInitialized)
+			if (!LocManager.IsInitialized)
 				return key;
 
 			var args = new TextLocalizationArgs

@@ -1,4 +1,4 @@
-namespace Localizations
+namespace Localization
 {
 	public static partial class LocalizationUtility
 	{

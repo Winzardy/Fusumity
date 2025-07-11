@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Fusumity.Utility;
-using Localizations;
+using Localization;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using TMPro;
@@ -34,12 +34,12 @@ namespace UI
 
 		public UITextLocalizationAssigner()
 		{
-			Localization.CurrentLanguageUpdated += OnCurrentLanguageUpdated;
+			LocManager.CurrentLocaleCodeUpdated += OnCurrentLocaleCodeUpdated;
 		}
 
 		public void Dispose()
 		{
-			Localization.CurrentLanguageUpdated -= OnCurrentLanguageUpdated;
+			LocManager.CurrentLocaleCodeUpdated -= OnCurrentLocaleCodeUpdated;
 
 			if (!_placeholderToArgs.IsNullOrEmpty())
 			{
@@ -250,7 +250,7 @@ namespace UI
 			_placeholderToArgs.Remove(placeholder);
 		}
 
-		private void OnCurrentLanguageUpdated(string _)
+		private void OnCurrentLocaleCodeUpdated(string _)
 		{
 			if (_single.placeholder)
 				ForceUpdateInternal(_single.placeholder);

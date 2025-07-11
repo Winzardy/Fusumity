@@ -1,6 +1,6 @@
 ﻿using System;
 using Content;
-using Localizations;
+using Localization;
 using UnityEngine;
 
 namespace Notifications

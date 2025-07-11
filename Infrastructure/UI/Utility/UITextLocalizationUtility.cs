@@ -1,6 +1,6 @@
 ﻿using System;
 using Fusumity.Utility;
-using Localizations;
+using Localization;
 using Sapientia.Extensions;
 using TMPro;
 

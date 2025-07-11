@@ -1,6 +1,6 @@
 ﻿using System;
 using Content;
-using Localizations;
+using Localization;
 using Notifications.Android.Entry;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -145,8 +145,8 @@ namespace Notifications.Android
 					continue;
 
 				AndroidNotificationChannelEntry entry = contentEntry;
-				var name = entry.nameLocKey.IsNullOrEmpty() ? id : Localization.Get(entry.nameLocKey);
-				var description = entry.descriptionLocKey.IsNullOrEmpty() ? name : Localization.Get(entry.descriptionLocKey);
+				var name = entry.nameLocKey.IsNullOrEmpty() ? id : LocManager.Get(entry.nameLocKey);
+				var description = entry.descriptionLocKey.IsNullOrEmpty() ? name : LocManager.Get(entry.descriptionLocKey);
 				var channel = new AndroidNotificationChannel()
 				{
 					Id = id,
