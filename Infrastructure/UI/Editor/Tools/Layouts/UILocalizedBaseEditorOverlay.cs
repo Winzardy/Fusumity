@@ -64,12 +64,12 @@ namespace UI.Editor
 
 		private IEnumerable<(string label, string language)> GetAllLanguages()
 		{
-			foreach (var language in LocManager.GetAllLanguages())
+			foreach (var code in LocManager.GetAllLocalCodesEditor())
 			{
-				var label = language;
-				if (LocManager.CurrentLanguage == language)
+				var label = LocManager.GetLanguageEditor(code);
+				if (LocManager.CurrentLocaleCodeEditor == label)
 					label += " (Default)";
-				yield return (label, language);
+				yield return (label, code);
 			}
 		}
 	}

@@ -12,27 +12,27 @@ namespace Localization
 
 		internal static string GetEditor(string key, string localeCode = null)
 		{
-			var collection = LocalizationEditorSettings.GetStringTableCollection(DEFAULT_TABLE_NAME);
+			foreach (var collection in LocalizationEditorSettings.GetStringTableCollections())
+			{
+				var locale = localeCode != null
+					? LocalizationEditorSettings.GetLocale(localeCode)
+					: LocalizationEditorSettings.GetLocale(DEFAULT_LOCALE_CODE);
 
-			if (!collection)
-				return null;
+				if (!locale)
+					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetSelectedLocale();
 
-			var locale = localeCode != null
-				? LocalizationEditorSettings.GetLocale(localeCode)
-				: LocalizationEditorSettings.GetLocale(DEFAULT_LOCALE_CODE);
+				if (!locale)
+					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
 
-			if (!locale)
-				locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetSelectedLocale();
+				if (!locale)
+					return null;
 
-			if (!locale)
-				locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
+				var table = collection.GetTable(locale.Identifier) as StringTable;
 
-			if (!locale)
-				return null;
+				return table ? table.GetEntry(key)?.Value : null;
+			}
 
-			var table = collection.GetTable(locale.Identifier) as StringTable;
-
-			return table ? table.GetEntry(key)?.Value : null;
+			return null;
 		}
 
 		internal static string CurrentLocaleCodeEditor
@@ -54,15 +54,8 @@ namespace Localization
 			=> LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.Select(x => x.Identifier.Code);
 
 		internal static IEnumerable<string> GetAllKeysEditor()
-		{
-			var tableCollection = LocalizationEditorSettings.GetStringTableCollection(DEFAULT_TABLE_NAME);
-
-			if (!tableCollection)
-				yield break;
-
-			foreach (var entry in tableCollection.SharedData.Entries)
-				yield return entry.Key;
-		}
+			=> from collection in LocalizationEditorSettings.GetStringTableCollections()
+			from entry in collection.SharedData.Entries select entry.Key;
 	}
 }
 #endif

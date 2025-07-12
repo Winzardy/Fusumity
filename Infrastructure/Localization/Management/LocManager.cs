@@ -22,8 +22,10 @@ namespace Localization
 
 		public static string CurrentLocaleCode => Resolver.CurrentLocaleCode;
 
+		/// <inheritdoc cref="LocalizationResolver.CurrentLanguage"/>
 		public static string CurrentLanguage => Resolver.CurrentLanguage;
 
+		// Нет обработки нулевого LocalizationResolver, так как такой нужны явно нет
 		public static event Action<string> CurrentLocaleCodeUpdated
 		{
 			add => Resolver.CurrentLocaleCodeUpdated += value;

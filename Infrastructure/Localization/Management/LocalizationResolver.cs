@@ -6,26 +6,39 @@ using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using UnityEngine.Localization;
+using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Localization
 {
+	/// <remarks>
+	/// ⚠️ Важно: Нет поддержки работы с несколькими Table. Текущие потребности проекта и не требует. Будет в будущем
+	/// </remarks>
 	public partial class LocalizationResolver : IDisposable
 	{
-		private const string DEFAULT_TABLE_NAME = "Default";
+		private LocTableReference _tableReference;
 
 		private StringTable _table;
-		private Locale _locale;
+		private Locale _currentLocale;
 		private AsyncOperationHandle<StringTable> _handle;
 
-		public string CurrentLocaleCode => _locale.Identifier.Code;
-		public string CurrentLanguage => _locale.LocaleName;
+		public string CurrentLocaleCode => _currentLocale.Identifier.Code;
+
+		/// <summary>
+		/// Display Name, то что мы показываем пользователю
+		/// </summary>
+		public string CurrentLanguage => GetDisplayName();
 
 		public event Action<string> CurrentLocaleCodeUpdated;
 
-		public async UniTask InitializeAsync(CancellationToken token, params string[] tableNames)
+		public LocalizationResolver(in LocTableReference tableReference)
+		{
+			_tableReference = tableReference;
+		}
+
+		public async UniTask InitializeAsync(CancellationToken token = default)
 		{
 			await LocalizationSettings.InitializationOperation
 			   .WithCancellation(token);
@@ -76,7 +89,7 @@ namespace Localization
 
 		private async UniTask SetLocale(Locale locale, CancellationToken token = default)
 		{
-			var handle = LocalizationSettings.StringDatabase.GetTableAsync(DEFAULT_TABLE_NAME, locale);
+			var handle = LocalizationSettings.StringDatabase.GetTableAsync(_tableReference.id, locale);
 
 			await handle
 			   .WithCancellation(token);
@@ -93,10 +106,25 @@ namespace Localization
 			_table = handle.Result;
 
 			if (!_table)
-				LocalizationDebug.LogError($"Not found table by name [ {DEFAULT_TABLE_NAME} ] for locale [ {_locale.LocaleName} ]", this);
+				LocalizationDebug.LogError($"Not found table by name [ {_tableReference} ] for locale [ {_currentLocale.LocaleName} ]",
+					this);
 
-			_locale = locale;
-			CurrentLocaleCodeUpdated?.Invoke(locale.Identifier.Code);
+			_currentLocale = LocalizationSettings.SelectedLocale;
+			CurrentLocaleCodeUpdated?.Invoke(_currentLocale.Identifier.Code);
 		}
+
+		private string GetDisplayName()
+		{
+			return _currentLocale.Metadata.HasMetadata<DisplayName>()
+				? _currentLocale.Metadata.GetMetadata<DisplayName>().name
+				: _currentLocale.LocaleName;
+		}
+	}
+
+	[Serializable]
+	[Metadata(AllowedTypes = MetadataType.Locale, AllowMultiple = false, MenuItem = "Display Name")]
+	public class DisplayName : IMetadata
+	{
+		public string name;
 	}
 }

@@ -28,7 +28,8 @@ namespace Fusumity.Reactive
 		public static bool ApplicationQuitting => _instance._applicationQuitting;
 		public static bool ApplicationPause => _instance._pause;
 
-		public static CancellationToken ApplicationCancellationToken => _instance.destroyCancellationToken;
+		public static CancellationToken ApplicationCancellationToken
+			=> _instance?.destroyCancellationToken ?? CancellationToken.None;
 
 		private void Update()
 		{

@@ -8,6 +8,9 @@ namespace UI.Tabs
 		private const float OPENING_TIME = 0.4f;
 		private const float CLOSING_TIME = 0.5f;
 
+		private readonly Ease _easeIn = Ease.Linear;
+		private readonly Ease _easeOut = Ease.OutSine;
+
 		protected override void OnCreateOpeningSequence(ref Sequence sequence)
 		{
 			sequence ??= DOTween.Sequence();
@@ -22,7 +25,7 @@ namespace UI.Tabs
 				sequence.Join(_layout.container
 				   .DOAnchorPos(Vector2.zero, OPENING_TIME)
 				   .From(new Vector2(_layout.container.rect.width, 0))
-				   .SetEase(Ease.OutCubic));
+				   .SetEase(_easeIn));
 			}
 			else if (tabIndex < prevIndex)
 			{
@@ -31,7 +34,7 @@ namespace UI.Tabs
 				sequence.Join(_layout.container
 				   .DOAnchorPos(Vector2.zero, OPENING_TIME)
 				   .From(new Vector2(-_layout.container.rect.width, 0))
-				   .SetEase(Ease.OutCubic));
+				   .SetEase(_easeIn));
 			}
 			else if (tabIndex == prevIndex)
 			{
@@ -48,7 +51,7 @@ namespace UI.Tabs
 					sequence.Join(_layout.container
 					   .DOAnchorPosY(0f, OPENING_TIME * 0.7f)
 					   .From(GetPosByAlignment())
-					   .SetEase(Ease.OutBack));
+					   .SetEase(_easeIn));
 				}
 
 				Vector2 GetPosByAlignment()
@@ -80,7 +83,7 @@ namespace UI.Tabs
 				sequence.Join(_layout.container
 				   .DOAnchorPos(new Vector2(_layout.container.rect.width, 0), CLOSING_TIME)
 				   .From(Vector2.zero)
-				   .SetEase(Ease.OutCubic));
+				   .SetEase(_easeOut));
 			}
 			else if (tabIndex < nextIndex)
 			{
@@ -89,7 +92,7 @@ namespace UI.Tabs
 				sequence.Join(_layout.container
 				   .DOAnchorPos(new Vector2(-_layout.container.rect.width, 0), CLOSING_TIME)
 				   .From(Vector2.zero)
-				   .SetEase(Ease.OutCubic));
+				   .SetEase(_easeOut));
 			}
 			else if (tabIndex == nextIndex)
 			{
@@ -106,7 +109,7 @@ namespace UI.Tabs
 					sequence.Join(_layout.container
 					   .DOAnchorPos(GetPosByAlignment(), CLOSING_TIME * .7f)
 					   .From(Vector2.zero)
-					   .SetEase(Ease.OutCubic));
+					   .SetEase(_easeOut));
 				}
 
 				Vector2 GetPosByAlignment()
