@@ -4,6 +4,15 @@ using UnityEditor;
 
 namespace Content.ScriptableObjects.Editor
 {
+	public static class ContentConstantsMenu
+	{
+		[MenuItem(ContentMenuConstants.CONSTANTS_MENU + "Settings", priority = 90)]
+		private static void OpenGenerateSettings()
+		{
+			SettingsService.OpenProjectSettings(ContentConstantGeneratorSettings.SETTINGS_PROVIDER_PATH);
+		}
+	}
+
 	[InitializeOnLoad]
 	public static class ContentAutoConstantsGeneratorMenu
 	{

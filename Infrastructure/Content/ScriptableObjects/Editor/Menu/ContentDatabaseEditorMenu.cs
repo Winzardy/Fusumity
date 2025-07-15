@@ -21,7 +21,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
-		[MenuItem(ContentMenuConstants.DATABASE_MENU + "/Export", priority = PRIORITY + 40)]
+		[MenuItem(ContentMenuConstants.DATABASE_MENU + "Export", priority = PRIORITY + 40)]
 		public static void Export() => ContentDatabaseExport.DefaultExport();
 	}
 
