@@ -7,6 +7,12 @@ namespace Content.ScriptableObjects.Editor
 {
 	public partial class ContentConstantGeneratorSettings
 	{
+		[MenuItem(ContentMenuConstants.CONSTANTS_MENU + "Settings", priority = 99)]
+		private static void OpenGenerateSettings()
+		{
+			SettingsService.OpenProjectSettings(SETTINGS_PROVIDER_PATH);
+		}
+
 		private const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Content/";
 		private const string SETTINGS_PROVIDER_LABEL = "Constant Generator";
 		public const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;

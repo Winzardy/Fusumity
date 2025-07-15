@@ -42,7 +42,8 @@ namespace Localization.Editor
 
 		protected override void Initialize()
 		{
-			allKeys = LocManager.GetAllKeysEditor().ToList();
+			allKeys = LocManager.GetAllKeysEditor()
+			   .ToList();
 			var selectedKey = ValueEntry.SmartValue;
 			CreateSelector(selectedKey);
 		}
@@ -281,7 +282,8 @@ namespace Localization.Editor
 			);
 			_selector.AddToolbarFunctionButtons(new FunctionButtonInfo
 			{
-				action = SelectAsset, icon = EditorIcons.List
+				action = SelectAsset,
+				icon = EditorIcons.List
 			});
 		}
 

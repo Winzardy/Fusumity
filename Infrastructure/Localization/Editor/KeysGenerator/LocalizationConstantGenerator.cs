@@ -65,7 +65,9 @@ namespace Localization.Editor
 			if (!Directory.Exists(folderPath))
 				Directory.CreateDirectory(folderPath);
 
-			var fileName = $"{className}.{projectSettings.scriptFileNamePostfix}.cs";
+			var fileName = !projectSettings.scriptFileNamePostfix.IsNullOrEmpty()
+				? $"{className}.{projectSettings.scriptFileNamePostfix}.cs"
+				: $"{className}.cs";
 			var path = Path.Combine(folderPath, fileName);
 
 			var existingData = File.Exists(path) ? File.ReadAllText(path) : null;
@@ -81,6 +83,9 @@ namespace Localization.Editor
 				}
 
 				if (Enumerable.Any(projectSettings.skipTags, tag => key.Contains(tag)))
+					continue;
+
+				if (Enumerable.Any(projectSettings.skipPrefixes, x => key.StartsWith(x)))
 					continue;
 
 				var parts = key.Split(projectSettings.keySeparator);
@@ -197,11 +202,11 @@ namespace Localization.Editor
 								var translation = LocManager.GetEditor(child.fullPath, locale)?.Replace("\n", "\n		/// ");
 
 								if (translation != null)
-									translation = FixXmlTags(translation) + "</c>";
+									translation = FixXmlTags(translation);
 								else
 									LocalizationDebug.LogError(
 										$"Empty translation for key [ {child.fullPath} ] in locale by code [ {locale} ]");
-								comment += translation;
+								comment += translation + "</c>";
 								builder.Append(comment);
 
 								string FixXmlTags(string text)

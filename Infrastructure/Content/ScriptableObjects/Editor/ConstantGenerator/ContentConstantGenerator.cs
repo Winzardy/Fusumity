@@ -92,7 +92,9 @@ namespace Content.ScriptableObjects.Editor
 			if (!Directory.Exists(fullPath))
 				Directory.CreateDirectory(fullPath);
 
-			var fileName = $"{className}.{projectSettings.scriptFileNamePostfix}.cs";
+			var fileName = !projectSettings.scriptFileNamePostfix.IsNullOrEmpty()
+				? $"{className}.{projectSettings.scriptFileNamePostfix}.cs"
+				: $"{className}.cs";
 			var path = Path.Combine(fullPath, fileName);
 
 			var existingData = File.Exists(path) ? File.ReadAllText(path) : null;
