@@ -10,10 +10,10 @@ namespace Localization.Editor
 		[MenuItem(LocalizationConstantsGeneratorMenu.CONSTANTS_MENU_PATH + "Settings", priority = 60)]
 		private static void OpenGenerateSettings()
 		{
-			SettingsService.OpenProjectSettings(LocalizationConstantGeneratorSettings.SETTINGS_PROVIDER_PATH);
+			SettingsService.OpenProjectSettings(SETTINGS_PROVIDER_PATH);
 		}
 
-		private const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Localization/";
+		internal const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Localization/";
 		private const string SETTINGS_PROVIDER_LABEL = "Constant Generator";
 		public const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;
 

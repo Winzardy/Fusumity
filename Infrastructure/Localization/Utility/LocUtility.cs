@@ -2,7 +2,7 @@
 
 namespace Localization
 {
-	public static partial class LocalizationUtility
+	public static partial class LocUtility
 	{
 		public static string ToLocalize(this string key)
 		{
@@ -76,5 +76,11 @@ namespace Localization
 
 		internal static bool IsEmpty(string key) =>
 			string.IsNullOrWhiteSpace(key);
+
+		/// <returns>Строка в формате "{0}", "{1}" и т.д. ({<paramref name="i"/>})</returns>
+		public static string ToStringFormatArgument(this int i) => $"{{{i}}}";
+
+		/// <returns>Строка в формате "{0}", "{1}" и т.д. ({<paramref name="i"/>})</returns>
+		public static string ToNumberTag(this string tag, int i) => tag[..^2] + i + "}";
 	}
 }

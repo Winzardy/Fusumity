@@ -1,6 +1,6 @@
 namespace Localization
 {
-	public static partial class LocalizationUtility
+	public static partial class LocUtility
 	{
 		public static bool HasLocalize(this in LocKey key)
 			=> key.value.HasLocalize();
@@ -18,6 +18,6 @@ namespace Localization
 			=> key.value.ToLocalize(tags);
 
 		public static bool IsEmpty(this in LocKey key)
-			=> LocalizationUtility.IsEmpty(key.value);
+			=> LocUtility.IsEmpty(key.value);
 	}
 }

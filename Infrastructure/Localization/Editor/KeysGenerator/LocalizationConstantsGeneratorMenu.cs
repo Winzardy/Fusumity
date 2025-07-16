@@ -17,8 +17,14 @@ namespace Localization.Editor
 		[MenuItem(TOOLS_MENU_PATH + "\ud83d\uddc2\ufe0f Documentation", priority = 0)]
 		public static void OpenDocumentation() => Application.OpenURL(DOC_URL);
 
-		[MenuItem(TOOLS_MENU_PATH + "Google Sheets/Open", priority = 80)]
-		private static void Open()
+		[MenuItem(TOOLS_MENU_PATH + "Settings", priority = 40)]
+		private static void OpenGenerateSettings()
+		{
+			SettingsService.OpenProjectSettings(LocalizationConstantGeneratorSettings.SETTINGS_PROVIDER_ROOT_PATH);
+		}
+
+		[MenuItem(TOOLS_MENU_PATH + "Google Sheets/Open in Browser", priority = 80)]
+		private static void OpenInBrowser()
 		{
 			foreach (var table in LocalizationEditorSettings.GetStringTableCollections())
 			{
@@ -39,7 +45,7 @@ namespace Localization.Editor
 			LocalizationDebug.LogError("Google Sheets Import is not configured");
 		}
 
-		[MenuItem(TOOLS_MENU_PATH + "Google Sheets/Pull", priority = 80)]
+		[MenuItem(TOOLS_MENU_PATH + "Google Sheets/Pull", priority = 100)]
 		private static void Pull()
 		{
 			foreach (var table in LocalizationEditorSettings.GetStringTableCollections())
@@ -50,6 +56,7 @@ namespace Localization.Editor
 						PullIntoStringTableCollection(table, googleExt);
 				}
 			}
+
 			void PullIntoStringTableCollection(StringTableCollection table, GoogleSheetsExtension googleExt)
 			{
 				var sheets = new GoogleSheets(googleExt.SheetsServiceProvider)
