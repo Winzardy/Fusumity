@@ -12,6 +12,8 @@ namespace UI
 			public Sprite icon;
 			public TextLocalizationArgs labelLocArgs;
 			public string label;
+			public TextLocalizationArgs additionLabelLocArgs;
+			public string additionLabel;
 
 			// TODO: убрать как вернусь из отпуска
 			public bool? state;
@@ -19,6 +21,7 @@ namespace UI
 
 		private Sprite _defaultIconSprite;
 		private string _defaultLabelText;
+		private string _additionLabelText;
 
 		private UITextLocalizationAssigner _localizationAssigner;
 		private UISpriteAssigner _spriteAssigner;
@@ -34,6 +37,8 @@ namespace UI
 				_defaultIconSprite = _layout.icon.sprite;
 			if (_layout.label)
 				_defaultLabelText = _layout.label.text;
+			if(_layout.additionLabel)
+				_additionLabelText = _layout.additionLabel.text;
 		}
 
 		protected override void OnLayoutCleared()
@@ -56,6 +61,13 @@ namespace UI
 				_localizationAssigner,
 				args.labelLocArgs,
 				args.label,
+				_defaultLabelText
+			);
+			_layout.additionLabel.SetTextSafe
+			(
+				_localizationAssigner,
+				args.additionLabelLocArgs,
+				args.additionLabel,
 				_defaultLabelText
 			);
 

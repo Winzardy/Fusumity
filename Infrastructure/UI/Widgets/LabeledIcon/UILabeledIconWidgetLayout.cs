@@ -8,7 +8,7 @@ namespace UI
 		public bool useLayoutAnimations;
 		public Image icon;
 		public TMP_Text label;
-
+		public TMP_Text additionLabel;
 
 		// TODO: убрать как вернусь из отпуска
 		public StateSwitcher<bool> stateSwitcher;
