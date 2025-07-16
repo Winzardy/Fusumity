@@ -80,7 +80,9 @@ namespace Localization
 		/// <returns>Строка в формате "{0}", "{1}" и т.д. ({<paramref name="i"/>})</returns>
 		public static string ToStringFormatArgument(this int i) => $"{{{i}}}";
 
-		/// <returns>Строка в формате "{0}", "{1}" и т.д. ({<paramref name="i"/>})</returns>
-		public static string ToNumberTag(this string tag, int i) => tag[..^2] + i + "}";
+		/// <returns>Строка в формате "{tag_{i}}"</returns>
+		public static string ToNumberTag(this string tag, int i, bool increment = true) => i > 0
+				? tag[..^1] + "_" + (increment ? i + 1 : i) + "}"
+				: tag;
 	}
 }
