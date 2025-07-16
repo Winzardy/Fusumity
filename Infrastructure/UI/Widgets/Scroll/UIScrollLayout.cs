@@ -247,6 +247,8 @@ namespace UI.Scroll
 
 		public float lookAheadAfter { get => _lookAheadAfter; set => _lookAheadAfter = Mathf.Abs(value); }
 
+		private bool _forceUpdatePaddingRequest = false;
+
 		/// <summary>
 		/// This delegate is called when a cell is hidden or shown
 		/// </summary>
@@ -744,6 +746,12 @@ namespace UI.Scroll
 				padding.left = newVal;
 			else
 				padding.top = newVal;
+
+			if (!_forceUpdatePaddingRequest && _layoutGroup.padding == padding)
+				return;
+
+			// Хак, чтобы обновить на OnEnable
+			_forceUpdatePaddingRequest = false;
 
 			_layoutGroup.padding = padding;
 			_reloadDataRequest = true;
@@ -1714,8 +1722,8 @@ namespace UI.Scroll
 			{
 				// add the size of this cell based on what the delegate tells us to use. Also add spacing if this cell isn't the first one
 				_cellSizeArray.Add(_delegate.GetCellSize(this, i) + (i == 0 ? 0 : _layoutGroup.spacing));
-				_singleLoopGroupSize += _cellSizeArray[_cellSizeArray.Count - 1];
-				offset += _cellSizeArray[_cellSizeArray.Count - 1];
+				_singleLoopGroupSize += _cellSizeArray[^1];
+				offset += _cellSizeArray[^1];
 			}
 
 			return offset;
@@ -2226,6 +2234,8 @@ namespace UI.Scroll
 		protected override void OnEnable()
 		{
 			base.OnEnable();
+
+			_forceUpdatePaddingRequest = true;
 
 			// when the Scroll is enabled, add a listener to the onValueChanged handler
 			_scrollRect.onValueChanged.AddListener(_ScrollRect_OnValueChanged);

@@ -49,7 +49,7 @@ namespace AssetManagement
 
 			if (request == null)
 			{
-				AssetManagementDebug.LogError($"Failed to load resource: {path} is invalid.");
+				AssetManagementDebug.LogError($"Failed to load resource: {path} is invalid");
 				throw new OperationCanceledException("Failed to load asset");
 			}
 
@@ -68,6 +68,7 @@ namespace AssetManagement
 			if (isCanceled)
 			{
 				ReleaseResource(path);
+				AssetManagementDebug.LogWarning($"Cancelled to load resource by path [ {path} ]");
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 

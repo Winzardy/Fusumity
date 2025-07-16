@@ -1,3 +1,4 @@
+#if DebugLog
 using System;
 using Cysharp.Threading.Tasks;
 using InAppPurchasing.Fake;
@@ -109,3 +110,4 @@ namespace InAppPurchasing.Cheats
 		}
 	}
 }
+#endif

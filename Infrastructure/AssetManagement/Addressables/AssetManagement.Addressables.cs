@@ -129,6 +129,12 @@ namespace AssetManagement
 			if (isCanceled)
 			{
 				ReleaseAssetByKey(key);
+				AssetManagementDebug.LogWarning($"Cancelled to load asset for key [ {key} ]" +
+					"\nAddressable:" +
+					$"\n	Exception: {handle.OperationException}" +
+					$"\n	Status: {handle.Status}" +
+					$"\n	Debug: {handle.DebugName}"
+				);
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
