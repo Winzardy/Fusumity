@@ -132,6 +132,9 @@ namespace Content.Editor
 		/// </summary>
 		public static IEnumerable<IContentEntry<T>> GetAllSourceByValueType<T>()
 		{
+			if (!EditorContentEntryMap<T>.Any())
+				Refresh<T>();
+
 			if (EditorSingleContentEntryShortcut<T>.Contains())
 				yield return EditorSingleContentEntryShortcut<T>.Get().ContentEntry;
 
