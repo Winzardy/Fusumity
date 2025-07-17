@@ -8,11 +8,12 @@ using TMPro;
 
 namespace UI
 {
-	//TODO: мини проблема, что в выключенных виджетах при изменений языка дергается так же обновление placeholders,
-	//хотя на самом деле это не нужно, потому что возможно верстка удалится вообще и данное действие было лишним
-	//сжиранием ресурсом (байтоебство)
-	//Нужно эти Assigner присоединять к виджетам как ребенка. Чтобы у них были такие же дефолтные методы OnShow/OnHide
-	//Только хочется убрать у них возможность иметь своих детей (children) и всю эту локику, как у виджета
+	// TODO: добавить пуллинг TextLocalizationArgsPool...
+	// TODO: мини проблема, что в выключенных виджетах при изменений языка дергается так же обновление placeholders,
+	// хотя на самом деле это не нужно, потому что возможно верстка удалится вообще и данное действие было лишним
+	// сжиранием ресурсом (байтоебство)
+	// Нужно эти Assigner присоединять к виджетам как ребенка. Чтобы у них были такие же дефолтные методы OnShow/OnHide
+	// Только хочется убрать у них возможность иметь своих детей (children) и всю эту локику, как у виджета
 
 	/// <summary>
 	/// Отдельный контроллер, который занимается доставкой перевода из локализации в 'placeholder'
@@ -24,6 +25,7 @@ namespace UI
 	///
 	/// _assigner.SetText(placeholder, locKey)
 	/// </summary>
+	/// <remarks>Важно! любые tags, tagsWithFunc (Dictionary) которые попадают в аргументы сами улетают в статический пул!</remarks>
 	public class UITextLocalizationAssigner : IDisposable
 	{
 		//Чтобы для случаев с одиночным переводом на аллоцировать целый Dictionary
@@ -41,22 +43,18 @@ namespace UI
 		{
 			LocManager.CurrentLocaleCodeUpdated -= OnCurrentLocaleCodeUpdated;
 
+			ClearSafe(ref _single.args);
 			if (!_placeholderToArgs.IsNullOrEmpty())
 			{
 				foreach (var args in _placeholderToArgs.Values)
 				{
-					args.tagsWithFunc?.ReleaseToStaticPool();
-					args.tagsWithFunc = null;
-
-					args.tags?.ReleaseToStaticPool();
-					args.tags = null;
-
+					Clear(args);
 					args.args = null;
 				}
-			}
 
-			_placeholderToArgs?.ReleaseToStaticPool();
-			_placeholderToArgs = null;
+				_placeholderToArgs.ReleaseToStaticPool();
+				_placeholderToArgs = null;
+			}
 		}
 
 		public void SetText(TMP_Text placeholder, string key)
@@ -161,7 +159,7 @@ namespace UI
 			{
 				if (_single.placeholder == placeholder)
 				{
-					TryClear(ref _single.args);
+					ClearSafe(ref _single.args);
 
 					_single.args = args;
 					ForceUpdateInternal(placeholder);
@@ -287,14 +285,13 @@ namespace UI
 			Updated?.Invoke(placeholder);
 		}
 
-		private void TryClear(ref TextLocalizationArgs args)
+		private void ClearSafe(ref TextLocalizationArgs args)
 		{
 			if (args == null)
 				return;
 
 			Clear(args);
 
-			//TODO: переделать на пул
 			args = null;
 		}
 
