@@ -8,18 +8,18 @@ namespace UI
 {
 	public static class UITextLocalizationUtility
 	{
-		public static void SetTextSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, TextLocalizationArgs args,
+		public static void SetTextSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, LocText args,
 			string label,
 			string defaultText = "", Action callback = null) =>
-			assigner.SetText(placeholder, args, label, defaultText, callback);
+			assigner.SetTextSafe(placeholder, args, label, defaultText, callback);
 
-		public static void TrySetTextOrDeactivate(this UILocalizedBaseLayout layout, UITextLocalizationAssigner assigner,
-			TextLocalizationArgs args,
+		public static void SetTextOrDeactivateSafe(this UILocalizedBaseLayout layout, UITextLocalizationAssigner assigner,
+			LocText args,
 			string label = null) =>
-			assigner.TrySetTextOrDeactivate(layout, args, label);
+			assigner.SetTextOrDeactivateSafe(layout, args, label);
 
-		public static UITextLocalizationAssigner TrySetTextOrDeactivate(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
-			TextLocalizationArgs args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
+			LocText args,
 			string label = null)
 		{
 			if (!layout)
@@ -27,10 +27,10 @@ namespace UI
 
 			var active = false;
 			assigner.TryClear(layout.Placeholder);
-			if (!args.IsNullOrEmpty())
+			if (!args.IsEmpty())
 			{
 				active = true;
-				assigner.SetText(layout.Placeholder, args);
+				assigner.Assign(layout.Placeholder, args);
 			}
 			else if (!label.IsNullOrEmpty())
 			{
@@ -43,14 +43,14 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner TrySetTextOrDeactivate(this TMP_Text placeholder, UITextLocalizationAssigner assigner, TextLocalizationArgs args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, LocText args,
 			string label)
 		{
-			assigner.SetTextOrDeactivate(placeholder, args, label);
+			assigner.SetTextOrDeactivateSafe(placeholder, args, label);
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextOrDeactivate(this UITextLocalizationAssigner assigner, TMP_Text placeholder, TextLocalizationArgs args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder, LocText args,
 			string label = "")
 		{
 			if (!placeholder)
@@ -58,10 +58,10 @@ namespace UI
 
 			assigner.TryClear(placeholder);
 			var active = false;
-			if (!args.IsNullOrEmpty())
+			if (!args.IsEmpty())
 			{
 				active = true;
-				assigner.SetText(placeholder, args);
+				assigner.Assign(placeholder, args);
 			}
 			else if (!label.IsNullOrEmpty())
 			{
@@ -74,16 +74,16 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, TextLocalizationArgs args,
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder, LocText args,
 			string label = "",
 			string defaultText = "", Action callback = null)
 		{
 			if (!placeholder)
 				return assigner;
 
-			if (!args.IsNullOrEmpty())
+			if (!args.IsEmpty())
 			{
-				assigner.SetText(placeholder, args);
+				assigner.Assign(placeholder, args);
 			}
 			else
 			{
@@ -171,6 +171,7 @@ namespace UI
 		{
 			if (layout)
 				SetText(assigner, layout, tag, func);
+
 			return assigner;
 		}
 
@@ -187,6 +188,7 @@ namespace UI
 		{
 			if (layout)
 				SetText(assigner, layout, tags);
+
 			return assigner;
 		}
 

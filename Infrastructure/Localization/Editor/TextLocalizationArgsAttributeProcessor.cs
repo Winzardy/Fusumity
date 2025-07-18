@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Localization.Editor
 {
-	public class TextLocalizationArgsAttributeProcessor : OdinAttributeProcessor<TextLocalizationArgs>
+	public class TextLocalizationArgsAttributeProcessor : OdinAttributeProcessor<LocText>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -14,13 +14,12 @@ namespace Localization.Editor
 
 			switch (member.Name)
 			{
-				case nameof(TextLocalizationArgs.key):
+				case nameof(LocText.key):
 					attributes.Add(new LocKeyAttribute());
 					break;
-				case nameof(TextLocalizationArgs.composite):
-				case nameof(TextLocalizationArgs.tagsWithFunc):
-				case nameof(TextLocalizationArgs.autoReturnToPool):
-				case nameof(TextLocalizationArgs.defaultValue):
+				case nameof(LocText.composite):
+				case nameof(LocText.tagToFunc):
+				case nameof(LocText.defaultValue):
 					attributes.Add(new HideInInspector());
 					break;
 

@@ -6,7 +6,7 @@ using Sapientia.Pooling;
 
 namespace Localization
 {
-	public partial class TextLocalizationArgs
+	public struct LocText
 	{
 		/// <summary>
 		/// Ключ локали
@@ -23,7 +23,7 @@ namespace Localization
 		/// Вы получили предмет {name}!
 		/// {name} - тег
 		/// </summary>
-		public Dictionary<string, object> tags;
+		public Dictionary<string, object> tagToValue;
 
 		/// <summary>
 		/// Когда в переводе есть теги, например:
@@ -32,9 +32,7 @@ namespace Localization
 		/// Тут используется функция, решает кейс когда значение тоже переведено
 		/// и его нужно перевести при изменении языка
 		/// </summary>
-		public Dictionary<string, Func<object>> tagsWithFunc;
-
-		public bool autoReturnToPool;
+		public Dictionary<string, Func<object>> tagToFunc;
 
 		public bool trim;
 
@@ -45,26 +43,42 @@ namespace Localization
 
 		public string defaultValue;
 
-		public CompositeTextLocalizationArgs composite;
+		public CompositeLocText composite;
 
-		public TextLocalizationArgs()
-		{
-		}
-
-		public TextLocalizationArgs(string key, string tag, object value)
+		public LocText(string key) : this()
 		{
 			this.key = key;
-			tags = DictionaryPool<string, object>.Get();
-			tags[tag] = value;
 		}
 
-		public TextLocalizationArgs(string key, params (string tag, object value)[] tags)
+		public LocText(string key, string tag, object value) : this(key)
 		{
 			this.key = key;
-			this.tags = DictionaryPool<string, object>.Get();
-			foreach (var (tag, value) in tags)
-				this.tags[tag] = value;
+			tagToValue = DictionaryPool<string, object>.Get();
+			tagToValue[tag] = value;
 		}
+
+		public LocText(string key, params (string tag, object value)[] tagToValue) : this(key)
+		{
+			this.tagToValue = DictionaryPool<string, object>.Get();
+			foreach (var (tag, value) in tagToValue)
+				this.tagToValue[tag] = value;
+		}
+
+		public LocText(string key, string tag, Func<object> func) : this(key)
+		{
+			this.key = key;
+			tagToFunc = DictionaryPool<string, Func<object>>.Get();
+			tagToFunc[tag] = func;
+		}
+
+		public LocText(string key, params (string tag, Func<object>)[] tagToFunc) : this(key)
+		{
+			this.tagToFunc = DictionaryPool<string, Func<object>>.Get();
+			foreach (var (tag, value) in tagToFunc)
+				this.tagToFunc[tag] = value;
+		}
+
+		public readonly bool IsEmpty() => LocUtility.IsEmptyKey(key);
 
 		public override string ToString()
 		{
@@ -74,11 +88,11 @@ namespace Localization
 			var text = LocManager.Get(key, defaultValue);
 
 			if (text.IsNullOrEmpty())
-				return text;
+				return string.Empty;
 
 			if (args.IsNullOrEmpty() &&
-			    tags.IsNullOrEmpty() &&
-			    tagsWithFunc.IsNullOrEmpty())
+			    tagToValue.IsNullOrEmpty() &&
+			    tagToFunc.IsNullOrEmpty())
 				return upperCase ? text.ToUpper() : text;
 
 			using (StringBuilderPool.Get(out var builder))
@@ -88,22 +102,16 @@ namespace Localization
 				else
 					builder.Append(text);
 
-				if (!tags.IsNullOrEmpty())
+				if (!tagToValue.IsNullOrEmpty())
 				{
-					foreach (var pair in tags)
+					foreach (var pair in tagToValue)
 						builder.Replace(pair.Key, pair.Value.ToString());
-
-					if (autoReturnToPool)
-						tags.ReleaseToStaticPool();
 				}
 
-				if (!tagsWithFunc.IsNullOrEmpty())
+				if (!tagToFunc.IsNullOrEmpty())
 				{
-					foreach (var pair in tagsWithFunc)
+					foreach (var pair in tagToFunc)
 						builder.Replace(pair.Key, pair.Value?.Invoke().ToString());
-
-					if (autoReturnToPool)
-						tagsWithFunc.ReleaseToStaticPool();
 				}
 
 				var str = builder.ToString();
@@ -118,15 +126,17 @@ namespace Localization
 			}
 		}
 
-		public static implicit operator TextLocalizationArgs(string key) => new() {key = key};
+		public static implicit operator LocText(string key) => new(key);
+		public static implicit operator LocText(LocKey key) => new(key);
+		public static implicit operator bool(in LocText args) => args.IsEmpty();
 	}
 
-	public class CompositeTextLocalizationArgs
+	public class CompositeLocText
 	{
 		public string separator;
 		public string format;
 
-		public TextLocalizationArgs[] args;
+		public LocText[] args;
 
 		public override string ToString()
 		{
@@ -151,9 +161,9 @@ namespace Localization
 			}
 		}
 
-		public static implicit operator bool(CompositeTextLocalizationArgs args) => args != null;
+		public static implicit operator bool(CompositeLocText args) => args != null;
 
-		public static implicit operator TextLocalizationArgs(CompositeTextLocalizationArgs args) => new()
+		public static implicit operator LocText(CompositeLocText args) => new(string.Empty)
 		{
 			composite = args
 		};

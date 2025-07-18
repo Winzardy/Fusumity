@@ -18,6 +18,6 @@ namespace Localization
 			=> key.value.ToLocalize(tags);
 
 		public static bool IsEmpty(this in LocKey key)
-			=> LocUtility.IsEmpty(key.value);
+			=> LocUtility.IsEmptyKey(key.value);
 	}
 }

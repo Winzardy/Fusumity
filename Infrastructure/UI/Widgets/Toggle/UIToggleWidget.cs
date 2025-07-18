@@ -18,7 +18,7 @@ namespace UI
 
 			public Sprite Icon { get; set; }
 
-			public TextLocalizationArgs LabelLocArgs { get; set; }
+			public LocText LocLabel { get; set; }
 
 			public string Label { get; set; }
 
