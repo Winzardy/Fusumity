@@ -3,17 +3,17 @@ using Fusumity.Utility;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 
-namespace Content.ScriptableObjects.Editor
+namespace Localization.Editor
 {
-	public partial class ContentConstantGeneratorSettings
+	public partial class LocalizationConstantGeneratorSettings
 	{
-		[MenuItem(ContentMenuConstants.CONSTANTS_MENU + "Settings", priority = 99)]
+		[MenuItem(LocalizationConstantsGeneratorMenu.CONSTANTS_MENU_PATH + "Settings", priority = 60)]
 		private static void OpenGenerateSettings()
 		{
 			SettingsService.OpenProjectSettings(SETTINGS_PROVIDER_PATH);
 		}
 
-		private const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Content/";
+		internal const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Localization/";
 		private const string SETTINGS_PROVIDER_LABEL = "Constant Generator";
 		public const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;
 

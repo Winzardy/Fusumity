@@ -1,7 +1,7 @@
 using AssetManagement;
 using Content;
 using JetBrains.Annotations;
-using Localizations;
+using Localization;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

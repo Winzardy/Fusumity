@@ -1,5 +1,5 @@
 ﻿using AssetManagement;
-using Localizations;
+using Localization;
 using UnityEngine;
 
 namespace UI
@@ -10,7 +10,8 @@ namespace UI
 		{
 			public AssetReferenceEntry<Sprite> iconReference;
 			public Sprite icon;
-			public TextLocalizationArgs labelLocArgs;
+
+			public LocText locLabel;
 			public string label;
 
 			// TODO: убрать как вернусь из отпуска
@@ -54,7 +55,7 @@ namespace UI
 			_layout.label.SetTextSafe
 			(
 				_localizationAssigner,
-				args.labelLocArgs,
+				args.locLabel,
 				args.label,
 				_defaultLabelText
 			);

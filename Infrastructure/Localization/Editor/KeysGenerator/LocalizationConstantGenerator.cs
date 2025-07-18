@@ -1,58 +1,34 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Sapientia.Collections;
-using Sapientia.Extensions;
 using Sapientia.Pooling;
-using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 
-namespace Content.ScriptableObjects.Editor
+namespace Localization.Editor
 {
-	public static partial class ContentConstantGenerator
+	public static partial class LocalizationConstantGenerator
 	{
+		private const string CLASS_NAME = "LocKeys";
+
 		private const string ROOT_NODE = "ROOT";
 		private const string CONSTANTS_NAME = "Constants";
-		private const string NEW_LINE_TAG = "{NEW_LINE}";
 
-		internal static void Generate(Type type, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
+		internal static void Generate(IEnumerable<string> keys)
 		{
-			if (collection == null || collection.Count == 0)
+			if (keys == null || !keys.Any())
 				return;
 
-			attribute ??= type.GetCustomAttribute<ConstantsAttribute>();
-
-			if (attribute == null)
-				return;
-
-			var name = type.Name;
-			var className = name;
-			for (int i = 0; i < projectSettings.removeEndings.Length; i++)
-			{
-				var ending = projectSettings.removeEndings[i];
-				if (name.EndsWith(ending))
-				{
-					className = name[..^ending.Length];
-					break;
-				}
-			}
-
-			if (attribute is {ReplaceForClassName: not null})
-			{
-				var from = attribute.ReplaceForClassName.Value.from;
-				var to = attribute.ReplaceForClassName.Value.to;
-				className = className.Replace(from, to);
-			}
-
-			className += projectSettings.classNameEnding;
+			var className = CLASS_NAME;
 
 			var folderPath = projectSettings.folderPath;
-			var rootName = nameof(Content);
+			var rootName = "Localization";
 			var asmdefName = $"{rootName}.{CONSTANTS_NAME}.asmdef";
 			var asmdefFilePath = Path.Combine(folderPath, asmdefName);
 			var asmdefFileInfo = new FileInfo(asmdefFilePath);
@@ -83,36 +59,38 @@ namespace Content.ScriptableObjects.Editor
 				File.WriteAllText(constantsAsmdefPath, text);
 				AssetDatabase.ImportAsset(constantsAsmdefPath);
 				var asmdefAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(constantsAsmdefPath);
-				ContentDebug.Log($"Generated .asmdef: {constantsAsmdefPath}", asmdefAsset);
+				LocalizationDebug.Log($"Generated .asmdef: {constantsAsmdefPath}", asmdefAsset);
 			}
 
-			var folder = type.Namespace?.Replace(".", "/") ?? string.Empty;
-			var fullPath = Path.Combine(folderPath, folder);
-
-			if (!Directory.Exists(fullPath))
-				Directory.CreateDirectory(fullPath);
+			if (!Directory.Exists(folderPath))
+				Directory.CreateDirectory(folderPath);
 
 			var fileName = !projectSettings.scriptFileNamePostfix.IsNullOrEmpty()
 				? $"{className}.{projectSettings.scriptFileNamePostfix}.cs"
 				: $"{className}.cs";
-			var path = Path.Combine(fullPath, fileName);
+			var path = Path.Combine(folderPath, fileName);
 
 			var existingData = File.Exists(path) ? File.ReadAllText(path) : null;
 
 			var root = new GeneratorConstantsNode {name = ROOT_NODE};
 
-			foreach (var source in collection)
+			foreach (var key in keys)
 			{
-				if (!source.UseCustomId)
+				if (key.Contains("\n"))
+				{
+					LocalizationDebug.LogError($"Key [ {key} ] contains new line...");
+					continue;
+				}
+
+				if (Enumerable.Any(projectSettings.skipTags, tag => key.Contains(tag)))
 					continue;
 
-				var id = source.Id;
-
-				if (attribute?.FilterOut != null && Enumerable.Any(attribute.FilterOut, target => id.Contains(target)))
+				if (Enumerable.Any(projectSettings.skipPrefixes, x => key.StartsWith(x)))
 					continue;
 
-				var parts = id.Split('/');
+				var parts = key.Split(projectSettings.keySeparator);
 				var current = root;
+
 				foreach (var part in parts)
 				{
 					if (!current.children.ContainsKey(part))
@@ -120,14 +98,12 @@ namespace Content.ScriptableObjects.Editor
 					current = current.children[part];
 				}
 
-				current.fullPath = id;
+				current.fullPath = key;
 			}
 
 			var compilationUnit = SyntaxFactory.CompilationUnit();
 
-			var namespaceName = !string.IsNullOrEmpty(type.Namespace)
-				? $"{rootName}.{CONSTANTS_NAME}.{type.Namespace}"
-				: $"{rootName}.{CONSTANTS_NAME}";
+			var namespaceName = $"{rootName}.{CONSTANTS_NAME}";
 
 			var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
 			   .NormalizeWhitespace()
@@ -137,12 +113,12 @@ namespace Content.ScriptableObjects.Editor
 			   .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
 			var needSpace = false;
-			TryAddCustomConstants(ref needSpace);
 			AddConstants(root, new List<string>(), ref needSpace);
 
 			namespaceDeclaration = namespaceDeclaration.AddMembers(classDeclaration);
 			compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
 
+			const string NEW_LINE_TAG = "{NEW_LINE}";
 			var code = compilationUnit
 			   .NormalizeWhitespace(indentation: "	", eol: "\n")
 			   .ToFullString();
@@ -163,68 +139,13 @@ namespace Content.ScriptableObjects.Editor
 
 			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
 			var prefix = existingData == null ? "Generated" : "Updated";
-			ContentDebug.Log($"{prefix} constants: {unityPath}", textAsset);
-
-			bool TryAddCustomConstants(ref bool space)
-			{
-				if (attribute != null && !attribute.CustomConstants.IsNullOrEmpty())
-				{
-					var commented = false;
-					var comment = "Custom";
-
-					foreach (var (constant, index) in attribute.CustomConstants.WithIndex())
-					{
-						var split = constant.Split(ConstantsAttribute.CUSTOM_CONSTANT_SEPARATOR);
-
-						var id = split[^1];
-						var customName = split.Length > 1;
-						var name = customName ? split[0] : id;
-
-						var fieldDeclaration = SyntaxFactory.FieldDeclaration(
-								SyntaxFactory.VariableDeclaration(
-										SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
-								   .AddVariables(
-										SyntaxFactory.VariableDeclarator(name)
-										   .WithInitializer(
-												SyntaxFactory.EqualsValueClause(
-													SyntaxFactory.LiteralExpression(
-														SyntaxKind.StringLiteralExpression,
-														SyntaxFactory.Literal(id))))))
-						   .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
-
-						using (ListPool<SyntaxTrivia>.Get(out var trivia))
-						{
-							if (!commented && !string.IsNullOrEmpty(comment))
-							{
-								if (space)
-									trivia.Add(SyntaxFactory.Comment(NEW_LINE_TAG));
-
-								trivia.Add(SyntaxFactory.Comment($"// {comment}"));
-
-								space = false;
-								commented = true;
-							}
-
-							fieldDeclaration = fieldDeclaration.WithLeadingTrivia(trivia);
-						}
-
-						classDeclaration = classDeclaration.AddMembers(fieldDeclaration);
-					}
-
-					space = true;
-					return true;
-				}
-
-				return false;
-			}
+			LocalizationDebug.Log($"{prefix} constants: {unityPath}", textAsset);
 
 			void AddConstants(GeneratorConstantsNode node, List<string> pathSegments, ref bool space)
 			{
 				var hasAnyLeaves = node.children.Values.Any(HasLeaf);
 
 				var currentPath = new List<string>(pathSegments) {node.name};
-				var comment = string.Join(" -> ", currentPath.Skip(1));
-
 				var handled = false;
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
@@ -252,11 +173,56 @@ namespace Content.ScriptableObjects.Editor
 							if (space)
 								trivia.Add(SyntaxFactory.Comment(NEW_LINE_TAG));
 
-							if (!comment.IsNullOrEmpty())
-								trivia.Add(SyntaxFactory.Comment($"// {comment}"));
-
 							space = false;
 							handled = true;
+						}
+
+						using (StringBuilderPool.Get(out var builder))
+						{
+							builder.Append("/// <summary>");
+							builder.Append("\n");
+							var several = projectSettings.locales.Length > 1;
+							if (several)
+							{
+								builder.Append("		/// Translations:");
+								builder.Append(" <br/>\n");
+							}
+
+							foreach (var (locale, index) in projectSettings.locales.WithIndex())
+							{
+								var comment = string.Empty;
+
+								if (index != 0)
+									comment += " <br/>\n";
+
+								comment += "		/// <c>";
+								if (several)
+									comment += $"[{locale}]	";
+
+								var translation = LocManager.GetEditor(child.fullPath, locale)?.Replace("\n", "\n		/// ");
+
+								if (translation != null)
+									translation = FixXmlTags(translation);
+								else
+									LocalizationDebug.LogError(
+										$"Empty translation for key [ {child.fullPath} ] in locale by code [ {locale} ]");
+								comment += translation + "</c>";
+								builder.Append(comment);
+
+								string FixXmlTags(string text)
+								{
+									return Regex.Replace(
+										text,
+										@"<(/?)(?!/?(para|see|c|b)\b)[^>]*>",
+										m => SecurityElement.Escape(m.Value) // &lt;...&gt;
+									);
+								}
+							}
+
+							builder.Append("\n");
+							builder.Append("		/// </summary>");
+							var syntaxTriviaComment = SyntaxFactory.Comment(builder.ToString());
+							trivia.Add(syntaxTriviaComment);
 						}
 
 						fieldDeclaration = fieldDeclaration.WithLeadingTrivia(trivia);
@@ -288,17 +254,6 @@ namespace Content.ScriptableObjects.Editor
 					return string.Empty;
 
 				var sb = new StringBuilder();
-
-				foreach (var prefix in projectSettings.abbreviations)
-				{
-					if (input.StartsWith(prefix) && input.Length > prefix.Length && char.IsUpper(input[prefix.Length]))
-					{
-						sb.Append(prefix);
-						sb.Append('_');
-						input = input[prefix.Length..];
-						break;
-					}
-				}
 
 				for (int i = 0; i < input.Length; i++)
 				{

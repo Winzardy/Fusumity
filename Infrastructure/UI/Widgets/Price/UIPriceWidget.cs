@@ -1,4 +1,4 @@
-using Localizations;
+using Localization;
 using Sapientia.Collections;
 
 namespace UI
@@ -15,10 +15,10 @@ namespace UI
 			/// </summary>
 			public UILabeledIconWidget.Args[] miniItems;
 
-			public TextLocalizationArgs badgeLocArgs;
+			public LocText locBadge;
 			public string badge;
 
-			public TextLocalizationArgs labelLocArgs;
+			public LocText locLabel;
 			public string label;
 		}
 
@@ -76,8 +76,8 @@ namespace UI
 			else
 				_banner?.Hide(immediate: true);
 
-			_layout.label.TrySetTextOrDeactivate(_localizationAssigner, args.labelLocArgs, args.label);
-			_layout.badge.TrySetTextOrDeactivate(_localizationAssigner, args.badgeLocArgs, args.badge);
+			_layout.label.SetTextOrDeactivateSafe(_localizationAssigner, args.locLabel, args.label);
+			_layout.badge.SetTextOrDeactivateSafe(_localizationAssigner, args.locBadge, args.badge);
 		}
 	}
 }

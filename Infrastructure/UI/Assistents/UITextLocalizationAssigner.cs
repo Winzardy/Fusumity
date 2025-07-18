@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using Fusumity.Utility;
-using Localizations;
+using Localization;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using TMPro;
 
 namespace UI
 {
-	//TODO: мини проблема, что в выключенных виджетах при изменений языка дергается так же обновление placeholders,
-	//хотя на самом деле это не нужно, потому что возможно верстка удалится вообще и данное действие было лишним
-	//сжиранием ресурсом (байтоебство)
-	//Нужно эти Assigner присоединять к виджетам как ребенка. Чтобы у них были такие же дефолтные методы OnShow/OnHide
-	//Только хочется убрать у них возможность иметь своих детей (children) и всю эту локику, как у виджета
+	// TODO: добавить пуллинг TextLocalizationArgsPool...
+	// TODO: мини проблема, что в выключенных виджетах при изменений языка дергается так же обновление placeholders,
+	// хотя на самом деле это не нужно, потому что возможно верстка удалится вообще и данное действие было лишним
+	// сжиранием ресурсом (байтоебство)
+	// Нужно эти Assigner присоединять к виджетам как ребенка. Чтобы у них были такие же дефолтные методы OnShow/OnHide
+	// Только хочется убрать у них возможность иметь своих детей (children) и всю эту локику, как у виджета
 
 	/// <summary>
 	/// Отдельный контроллер, который занимается доставкой перевода из локализации в 'placeholder'
@@ -22,128 +23,43 @@ namespace UI
 	///
 	/// Так же, обновит перевод для 'placeholder' если язык поменяли!
 	///
-	/// _assigner.SetText(placeholder, locKey)
+	/// _assigner.Place(placeholder, locKey)
 	/// </summary>
+	/// <remarks>Важно! любые tags, tagsWithFunc (Dictionary) которые попадают в аргументы сами улетают в статический пул!</remarks>
 	public class UITextLocalizationAssigner : IDisposable
 	{
 		//Чтобы для случаев с одиночным переводом на аллоцировать целый Dictionary
-		private (TMP_Text placeholder, TextLocalizationArgs args) _single;
-		private Dictionary<TMP_Text, TextLocalizationArgs> _placeholderToArgs;
+		private (TMP_Text placeholder, LocText args) _single;
+		private HashMap<TMP_Text, LocText> _placeholderToArgs;
 
 		public event Action<TMP_Text> Updated;
 
 		public UITextLocalizationAssigner()
 		{
-			Localization.CurrentLanguageUpdated += OnCurrentLanguageUpdated;
+			LocManager.CurrentLocaleCodeUpdated += OnCurrentLocaleCodeUpdated;
 		}
 
 		public void Dispose()
 		{
-			Localization.CurrentLanguageUpdated -= OnCurrentLanguageUpdated;
+			LocManager.CurrentLocaleCodeUpdated -= OnCurrentLocaleCodeUpdated;
 
-			if (!_placeholderToArgs.IsNullOrEmpty())
+			if (_single.placeholder)
 			{
-				foreach (var args in _placeholderToArgs.Values)
-				{
-					args.tagsWithFunc?.ReleaseToStaticPool();
-					args.tagsWithFunc = null;
-
-					args.tags?.ReleaseToStaticPool();
-					args.tags = null;
-
-					args.args = null;
-				}
+				Release(ref _single.args);
+				_single = default;
 			}
 
-			_placeholderToArgs?.ReleaseToStaticPool();
+			if (_placeholderToArgs.IsNullOrEmpty())
+				return;
+
+			foreach (var args in _placeholderToArgs.Keys)
+				Release(ref _placeholderToArgs[args]);
+
+			_placeholderToArgs.ReleaseToStaticPool();
 			_placeholderToArgs = null;
 		}
 
-		public void SetText(TMP_Text placeholder, string key)
-		{
-			SetText(placeholder, new TextLocalizationArgs
-			{
-				key = key
-			});
-		}
-
-		public void SetCompositeText(TMP_Text placeholder, CompositeTextLocalizationArgs args)
-		{
-			SetText(placeholder, args);
-		}
-
-		public void SetFormatText(TMP_Text placeholder, string key, params object[] args)
-		{
-			SetText(placeholder, new TextLocalizationArgs
-			{
-				key = key, args = args,
-			});
-		}
-
-		public void SetText(TMP_Text placeholder, string key, string tag, Func<object> value)
-		{
-			var dictionary = DictionaryPool<string, Func<object>>.Get();
-
-			dictionary[tag] = value;
-
-			var args = new TextLocalizationArgs
-			{
-				key = key, tagsWithFunc = dictionary
-			};
-
-			SetText(placeholder, args);
-		}
-
-		public void SetText(TMP_Text placeholder, string key, string tag, object value)
-		{
-			var dictionary = DictionaryPool<string, object>.Get();
-			dictionary[tag] = value;
-
-			var args = new TextLocalizationArgs
-			{
-				key = key, tags = dictionary
-			};
-
-			SetText(placeholder, args);
-		}
-
-		public void SetText(TMP_Text placeholder, string key, params (string name, Func<object> value)[] tags)
-		{
-			var args = new TextLocalizationArgs
-			{
-				key = key,
-			};
-
-			// TODO: не понимаю где возвращение в пул... не критично, но надо будет проследить и пофиксить.
-			// Утечки нет так как пулл отдает объект и не хранит его, но все же
-			args.tagsWithFunc ??= DictionaryPool<string, Func<object>>.Get();
-
-			foreach (var info in tags)
-			{
-				args.tagsWithFunc[info.name] = info.value;
-			}
-
-			SetText(placeholder, args);
-		}
-
-		public void SetText(TMP_Text placeholder, string key, params (string name, object value)[] tags)
-		{
-			var args = new TextLocalizationArgs
-			{
-				key = key,
-			};
-
-			args.tags ??= DictionaryPool<string, object>.Get();
-
-			foreach (var info in tags)
-			{
-				args.tags[info.name] = info.value;
-			}
-
-			SetText(placeholder, args);
-		}
-
-		public void SetText(TMP_Text placeholder, TextLocalizationArgs args)
+		public void Assign(TMP_Text placeholder, in LocText text)
 		{
 			if (!placeholder)
 			{
@@ -151,39 +67,33 @@ namespace UI
 				return;
 			}
 
-			if (args == null)
-			{
-				GUIDebug.LogError($"{DEBUG_PREFIX} LocalizationArgs is null!", placeholder);
-				return;
-			}
-
 			if (_single.placeholder != null)
 			{
 				if (_single.placeholder == placeholder)
 				{
-					TryClear(ref _single.args);
+					Release(ref _single.args);
 
-					_single.args = args;
+					_single.args = text;
 					ForceUpdateInternal(placeholder);
 					return;
 				}
 			}
 			else
 			{
-				_single = (placeholder, args);
+				_single = (placeholder, text);
 				ForceUpdateInternal(placeholder);
 				return;
 			}
 
-			_placeholderToArgs ??= DictionaryPool<TMP_Text, TextLocalizationArgs>.Get();
+			_placeholderToArgs ??= HashMapPool<TMP_Text, LocText>.Get();
 
-			if (_placeholderToArgs.TryGetValue(placeholder, out var prevArgs))
-				Clear(prevArgs);
+			if (_placeholderToArgs.Contains(placeholder))
+				Release(ref _placeholderToArgs[placeholder]);
 
-			_placeholderToArgs[placeholder] = args;
+			_placeholderToArgs.SetOrAdd(placeholder, in text);
 
 			ForceUpdateInternal(placeholder);
-			placeholder.text = args.ToString();
+			placeholder.text = text.ToString();
 		}
 
 		public void ForceUpdate(TMP_Text placeholder)
@@ -197,7 +107,7 @@ namespace UI
 			if (_placeholderToArgs == null)
 				return;
 
-			if (!_placeholderToArgs.TryGetValue(placeholder, out var args))
+			if (!_placeholderToArgs.Contains(placeholder))
 			{
 				GUIDebug.LogWarning($"{DEBUG_PREFIX} Not found arguments for placeholder!", placeholder);
 				return;
@@ -211,7 +121,7 @@ namespace UI
 			if (_single.placeholder == placeholder)
 			{
 				var sArgs = _single.args;
-				sArgs.tags[tag] = value;
+				sArgs.tagToValue[tag] = value;
 				ForceUpdateInternal(placeholder);
 				return;
 			}
@@ -219,13 +129,14 @@ namespace UI
 			if (_placeholderToArgs == null)
 				return;
 
-			if (!_placeholderToArgs.TryGetValue(placeholder, out var args))
+			if (!_placeholderToArgs.Contains(placeholder))
 			{
 				GUIDebug.LogWarning($"{DEBUG_PREFIX}Not found arguments for placeholder!", placeholder);
 				return;
 			}
 
-			args.tags[tag] = value;
+			_placeholderToArgs[placeholder]
+			   .tagToValue[tag] = value;
 			ForceUpdateInternal(placeholder);
 		}
 
@@ -250,7 +161,7 @@ namespace UI
 			_placeholderToArgs.Remove(placeholder);
 		}
 
-		private void OnCurrentLanguageUpdated(string _)
+		private void OnCurrentLocaleCodeUpdated(string _)
 		{
 			if (_single.placeholder)
 				ForceUpdateInternal(_single.placeholder);
@@ -268,45 +179,78 @@ namespace UI
 		{
 			if (_single.placeholder == placeholder)
 			{
-				SetTextInternal(_single.placeholder, _single.args);
+				AssignInternal(_single.placeholder, _single.args);
 				return;
 			}
 
-			if (!_placeholderToArgs.TryGetValue(placeholder, out var args))
+			if (!_placeholderToArgs.Contains(placeholder))
 			{
 				GUIDebug.LogWarning("Not found arguments for placeholder!", placeholder);
 				return;
 			}
 
-			SetTextInternal(placeholder, args);
+			AssignInternal(placeholder, in _placeholderToArgs[placeholder]);
 		}
 
-		private void SetTextInternal(TMP_Text placeholder, TextLocalizationArgs args)
+		private void AssignInternal(TMP_Text placeholder, in LocText text)
 		{
-			placeholder.text = args.ToString();
+			placeholder.text = text.ToString();
 			Updated?.Invoke(placeholder);
 		}
 
-		private void TryClear(ref TextLocalizationArgs args)
+		private void Release(ref LocText args)
 		{
-			if (args == null)
-				return;
+			args.tagToFunc?.ReleaseToStaticPool();
+			args.tagToFunc = null;
 
-			Clear(args);
-
-			//TODO: переделать на пул
-			args = null;
-		}
-
-		private void Clear(TextLocalizationArgs args)
-		{
-			args.tagsWithFunc?.ReleaseToStaticPool();
-			args.tagsWithFunc = null;
-
-			args.tags?.ReleaseToStaticPool();
-			args.tags = null;
+			args.tagToValue?.ReleaseToStaticPool();
+			args.tagToValue = null;
 		}
 
 		private static readonly string DEBUG_PREFIX = $"[ {nameof(UITextLocalizationAssigner)} ]";
+	}
+
+	public static class UITextLocalizationAssignerExtensions
+	{
+		public static void SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key)
+		{
+			assigner.Assign(placeholder, new LocText(key));
+		}
+
+		public static void SetCompositeText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, CompositeLocText args)
+		{
+			assigner.Assign(placeholder, args);
+		}
+
+		public static void SetFormatText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key, params object[] args)
+		{
+			assigner.Assign(placeholder, new LocText(key)
+			{
+				args = args
+			});
+		}
+
+		public static void SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key, string tag,
+			Func<object> value)
+		{
+			assigner.Assign(placeholder, new LocText(key, tag, value));
+		}
+
+		public static void SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key, string tag, object value)
+		{
+			assigner.Assign(placeholder, new LocText(key, tag, value));
+		}
+
+		public static void SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key,
+			params (string name, Func<object> value)[] tags)
+		{
+			assigner.Assign(placeholder, new LocText(key, tags));
+		}
+
+		public static void SetText(this UITextLocalizationAssigner assigner, TMP_Text placeholder, string key,
+			params (string name, object value)[] tags)
+		{
+			assigner.Assign(placeholder, new LocText(key, tags));
+		}
 	}
 }

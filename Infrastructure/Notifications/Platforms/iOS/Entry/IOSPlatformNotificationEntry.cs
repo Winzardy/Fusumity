@@ -1,4 +1,4 @@
-using Localizations;
+using Localization;
 
 namespace Notifications.iOS
 {

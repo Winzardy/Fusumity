@@ -2,7 +2,7 @@ using System;
 using Sirenix.OdinInspector;
 using UnityEngine.Serialization;
 
-namespace Localizations
+namespace Localization
 {
 	[Serializable]
 	public struct LocKey

@@ -1,5 +1,5 @@
 ﻿#if UNITY_EDITOR || UNITY_ANDROID
-using Localizations;
+using Localization;
 using Sirenix.OdinInspector;
 using Unity.Notifications.Android;
 #endif

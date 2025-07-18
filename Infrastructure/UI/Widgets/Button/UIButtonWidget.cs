@@ -1,7 +1,7 @@
 ﻿using System;
 using AssetManagement;
 using Fusumity.Utility;
-using Localizations;
+using Localization;
 using Sapientia.Extensions;
 using TMPro;
 using UnityEngine;
@@ -19,7 +19,7 @@ namespace UI
 
 			public Sprite Icon { get; set; }
 
-			public TextLocalizationArgs LabelLocArgs { get; set; }
+			public LocText LocLabel { get; set; }
 
 			public string Label { get; set; }
 
@@ -44,7 +44,7 @@ namespace UI
 		//Лучше использовать ассет референс
 		public Sprite Icon { get; }
 
-		public TextLocalizationArgs LabelLocArgs { get; }
+		public LocText LocLabel { get; }
 
 		public string Label { get; }
 
@@ -116,7 +116,7 @@ namespace UI
 		protected override void OnShow(ref TArgs args)
 		{
 			_layout.icon.SetSpriteSafe(_spriteAssigner, args.IconReference, args.Icon, _defaultIconSprite, UpdateIconGroup);
-			_layout.label.SetTextSafe(_localizationAssigner, args.LabelLocArgs, args.Label, _defaultLabelText, UpdateLabelGroup);
+			_layout.label.SetTextSafe(_localizationAssigner, args.LocLabel, args.Label, _defaultLabelText, UpdateLabelGroup);
 
 			SetInteractable(args.Interactable ?? true);
 

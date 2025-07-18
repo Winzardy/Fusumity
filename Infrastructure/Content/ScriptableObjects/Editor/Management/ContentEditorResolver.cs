@@ -9,7 +9,7 @@ namespace Content.Editor
 	[InitializeOnLoad]
 	public static class ContentEditorContentResolverAutoSetup
 	{
-		private static readonly ContentEditorContentResolver _resolver = new();
+		private static readonly ContentEditorResolver _resolver = new();
 
 		static ContentEditorContentResolverAutoSetup()
 		{
@@ -32,7 +32,7 @@ namespace Content.Editor
 		}
 	}
 
-	public class ContentEditorContentResolver : IContentEditorResolver
+	public class ContentEditorResolver : IContentEditorResolver
 	{
 		public bool Any<T>() => ContentEditorCache.AnyByValueType<T>();
 

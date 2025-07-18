@@ -2,10 +2,13 @@
     "name": "Localization",
     "rootNamespace": "",
     "references": [
-        "I2Loc",
-        "Sapientia",
         "UniTask",
-        "Fusumity"
+        "Unity.Localization",
+        "Unity.Localization.Editor",
+        "Unity.ResourceManager",
+        "Sapientia",
+        "Fusumity",
+        "AssetManagement"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
