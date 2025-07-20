@@ -116,7 +116,11 @@ namespace UI
 		protected override void OnShow(ref TArgs args)
 		{
 			_layout.icon.SetSpriteSafe(_spriteAssigner, args.IconReference, args.Icon, _defaultIconSprite, UpdateIconGroup);
-			_layout.label.SetTextSafe(_localizationAssigner, args.LocLabel, args.Label, _defaultLabelText, UpdateLabelGroup);
+
+			var locLabel = args.LocLabel.IsEmpty() && _layout.locInfo
+					? _layout.locInfo.value
+					: args.LocLabel;
+			_layout.label.SetTextSafe(_localizationAssigner, locLabel, args.Label, _defaultLabelText, UpdateLabelGroup);
 
 			SetInteractable(args.Interactable ?? true);
 
