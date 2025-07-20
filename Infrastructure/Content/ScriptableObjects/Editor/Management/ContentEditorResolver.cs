@@ -65,6 +65,49 @@ namespace Content.Editor
 			throw ContentDebug.NullException($"Could not find single value of type [ {typeof(T).Name} ]");
 		}
 
+		//
+		public bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+			if (ContentEditorCache.TryGetSource(typeof(T), in guid, out var source) &&
+			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+			{
+				entry = contentEntry;
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+			if (ContentEditorCache.TryGetSource(typeof(T), id, out var source) &&
+			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+			{
+				entry = contentEntry;
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry) =>
+			throw new NotImplementedException("Index can only be used at runtime");
+
+		public bool TryGetEntry<T>(out SingleContentEntry<T> entry)
+		{
+			entry = null;
+			if (ContentEditorCache.TryGetSource(typeof(T), out var source) &&
+			    source.ContentEntry is SingleContentEntry<T> singleContentEntry)
+			{
+				entry = singleContentEntry;
+				return true;
+			}
+
+			return false;
+		}
+
 		public ref readonly T Get<T>(in SerializableGuid guid) => ref GetEntry<T>(in guid).Value;
 
 		public ref readonly T Get<T>(string id) => ref GetEntry<T>(id).Value;
@@ -143,6 +186,5 @@ namespace Content.Editor
 			throw new NotImplementedException("Index can only be used at runtime");
 
 		public int ToIndex<T>(string id) => throw new NotImplementedException("Index can only be used at runtime");
-
 	}
 }

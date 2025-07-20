@@ -45,6 +45,25 @@ namespace Content.Management
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IContentEditorResolver.TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry)
+			=> TryGetEntry(in guid, out entry);
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IContentEditorResolver.TryGetEntry<T>(string id, out UniqueContentEntry<T> entry)
+			=> TryGetEntry(id, out entry);
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IContentEditorResolver.TryGetEntry<T>(int index, out UniqueContentEntry<T> entry)
+			=> TryGetEntry(index, out entry);
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IContentEditorResolver.TryGetEntry<T>(out SingleContentEntry<T> entry)
+			=> TryGetEntry(out entry);
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		ref readonly T IContentEditorResolver.Get<T>(in SerializableGuid guid) => ref Get<T>(in guid);
 
 		/// <inheritdoc/>
@@ -129,6 +148,22 @@ namespace Content.Management
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SingleContentEntry<T> GetEntry<T>();
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(in SerializableGuid, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(string, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(int, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(out SingleContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetEntry<T>(out SingleContentEntry<T> entry);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
