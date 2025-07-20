@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Localization.Editor
 {
-	public class TextLocalizationArgsAttributeProcessor : OdinAttributeProcessor<LocText>
+	public class LocTextAttributeProcessor : OdinAttributeProcessor<LocText>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

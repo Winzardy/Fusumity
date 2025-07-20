@@ -65,7 +65,6 @@ namespace Content.Editor
 			throw ContentDebug.NullException($"Could not find single value of type [ {typeof(T).Name} ]");
 		}
 
-		//
 		public bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry)
 		{
 			entry = null;
