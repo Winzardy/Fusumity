@@ -15,7 +15,7 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		private ScriptableContentEntry<T> _entry;
 
-		protected ref readonly T Value => ref _entry.Value;
+		public ref readonly T Value => ref _entry.Value;
 
 		public IScriptableContentEntry<T> ScriptableContentEntry => _entry;
 
