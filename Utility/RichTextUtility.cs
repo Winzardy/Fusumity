@@ -26,7 +26,7 @@ namespace Fusumity.Utility
 		public static string ColorTextInEditorOnly(this string text, Color color)
 		{
 #if UNITY_EDITOR
-			return ColorText(text, color, !Application.isBatchMode);
+			return ColorText(text, color, Application.isEditor || !Application.isBatchMode);
 #endif
 			return text;
 		}

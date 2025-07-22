@@ -1,0 +1,23 @@
+{
+    "name": "Booting.UI",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Booting",
+        "UI",
+        "UI.Screens",
+        "UI.Windows",
+        "UI.Popups",
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

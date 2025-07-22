@@ -3,7 +3,7 @@ using UI.Popups;
 
 namespace UI
 {
-	public class UIPopupDispatcher : IDisposable
+	public class UIPopupDispatcher : IUIDispatcher, IDisposable
 	{
 		private UIPopupManager _manager;
 

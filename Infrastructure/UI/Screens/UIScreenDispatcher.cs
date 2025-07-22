@@ -2,7 +2,7 @@
 
 namespace UI.Screens
 {
-	public class UIScreenDispatcher : IDisposable
+	public class UIScreenDispatcher : IUIDispatcher, IDisposable
 	{
 		private readonly UIScreenManager _manager;
 

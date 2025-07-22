@@ -1,0 +1,19 @@
+{
+  "name": "Booting.Input",
+  "rootNamespace": "",
+  "references": [
+    "UniTask",
+    "Input",
+    "Booting",
+    "Sapientia"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,22 @@
+{
+    "name": "Booting.Analytics",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Booting",
+        "Content",
+        "Analytics",
+        "Messaging",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

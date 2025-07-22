@@ -1,0 +1,21 @@
+{
+    "name": "Booting",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Logging",
+        "Sapientia",
+        "Fusumity",
+        "WLog",
+        "Fusumity.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

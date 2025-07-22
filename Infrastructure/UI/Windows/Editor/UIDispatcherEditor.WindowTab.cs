@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
-using Fusumity.Utility;
 using Sapientia.Reflection;
-using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
@@ -10,7 +7,7 @@ namespace UI.Windows.Editor
 {
 	public class UIDispatcherEditorWindowTab : IUIDispatcherEditorTab
 	{
-		private UIWindowDispatcher _dispatcher => ServiceLocator<UIWindowDispatcher>.Instance;
+		private UIWindowDispatcher _dispatcher => UIDispatcher.Get<UIWindowDispatcher>();
 		int IUIDispatcherEditorTab.Order => 0;
 
 		public string Title => "Windows";
@@ -59,7 +56,7 @@ namespace UI.Windows.Editor
 			args = type.CreateInstance<IWindowArgs>();
 		}
 
-		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
+		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
 		[PropertySpace(10, 0)]
 		[Button("Hide Current")]
 		private void HideWindowEditor()

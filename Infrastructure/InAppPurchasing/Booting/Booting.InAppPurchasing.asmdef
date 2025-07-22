@@ -1,0 +1,24 @@
+{
+  "name": "Booting.InAppPurchasing",
+  "rootNamespace": "",
+  "references": [
+    "Booting",
+    "UniTask",
+    "Content",
+    "InAppPurchasing",
+    "InAppPurchasing.Unity",
+    "Targeting",
+    "UnityEngine.Purchasing",
+    "Fusumity",
+    "Sapientia"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -7,11 +7,11 @@ using UnityEngine;
 
 namespace AssetManagement
 {
-	public partial class AssetManagement : IDisposable
+	public partial class AssetProvider : IDisposable
 	{
 		private bool _initialized;
 
-		public AssetManagement() => _initialized = true;
+		public AssetProvider() => _initialized = true;
 
 		public void Dispose()
 		{

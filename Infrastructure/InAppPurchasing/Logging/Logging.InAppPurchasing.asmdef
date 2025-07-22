@@ -1,0 +1,24 @@
+{
+    "name": "Logging.InAppPurchasing",
+    "rootNamespace": "",
+    "references": [
+        "Booting",
+        "InAppPurchasing.Unity",
+        "InAppPurchasing",
+        "UnityEngine.Purchasing",
+        "Targeting",
+        "InAppPurchasing.Fake",
+        "Logging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "IAP"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -7,7 +7,6 @@ using Fusumity.Utility;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using UI.Editor;
 
 namespace UI.Popups.Editor
 {

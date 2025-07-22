@@ -1,0 +1,20 @@
+{
+    "name": "Logging.Advertising",
+    "rootNamespace": "",
+    "references": [
+        "Logging",
+        "Advertising",
+        "Ashary"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ADVERTISING"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

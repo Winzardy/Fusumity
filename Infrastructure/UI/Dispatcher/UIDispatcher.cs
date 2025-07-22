@@ -1,14 +1,24 @@
 ﻿using System.Runtime.CompilerServices;
 using Sapientia;
 
-namespace UI.Layers
+namespace UI
 {
-	public class UILayers : StaticProvider<UILayersManagement>
+	public partial class UIDispatcher : StaticProvider<UIManagement>
 	{
-		private static UILayersManagement management
+		private static UIManagement management
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
+		}
+
+		public static T Get<T>()
+			where T : IUIDispatcher
+			=> management.Get<T>();
+
+		public static void Get<T>(out T dispatcher)
+			where T : IUIDispatcher
+		{
+			dispatcher = Get<T>();
 		}
 
 		/// <summary>

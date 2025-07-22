@@ -1,0 +1,9 @@
+{
+  "name": "Fusumity.LocalSave",
+  "references": [
+    "Fusumity",
+    "UnityEditor.UI",
+    "UnityEngine.UI",
+    "Sapientia"
+  ]
+}

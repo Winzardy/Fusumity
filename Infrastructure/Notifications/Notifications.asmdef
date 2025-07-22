@@ -6,7 +6,8 @@
         "Localization",
         "Content",
         "Fusumity",
-        "Messaging"
+        "Messaging",
+        "WLog"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

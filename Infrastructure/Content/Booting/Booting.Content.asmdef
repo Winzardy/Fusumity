@@ -1,0 +1,22 @@
+{
+    "name": "Booting.Content",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Content",
+        "Content.ScriptableObjects.Importer",
+        "Content.ScriptableObjects.Importer.Editor",
+        "Booting",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,7 @@
+{
+  "name": "WLog",
+  "references": [
+    "Fusumity",
+    "Sapientia"
+  ]
+}

@@ -173,4 +173,9 @@ namespace Game.App.BootTask
 	{
 		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt => null;
 	}
+
+	public interface ITradingBackendFactory
+	{
+		ITradingBackend Create();
+	}
 }

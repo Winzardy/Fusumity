@@ -8,9 +8,9 @@ using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
-	public partial class AssetLoader : StaticProvider<AssetManagement>
+	public partial class AssetLoader : StaticProvider<AssetProvider>
 	{
-		private static AssetManagement management
+		private static AssetProvider Provider
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
@@ -29,7 +29,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(IAssetReferenceEntry entry,
 			CancellationToken cancellationToken = default)
-			=> await management.LoadAssetAsync<T>(entry, cancellationToken);
+			=> await Provider.LoadAssetAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -39,7 +39,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(ComponentReferenceEntry entry,
 			CancellationToken cancellationToken = default)
-			where T : Component => await management.LoadComponentAsync<T>(entry, cancellationToken);
+			where T : Component => await Provider.LoadComponentAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -49,7 +49,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(IAssetReferenceEntry entry,
 			CancellationToken cancellationToken = default)
-			where T : Component => await management.LoadComponentAsync<T>(entry, cancellationToken);
+			where T : Component => await Provider.LoadComponentAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить ассет в память по пути (текстура, геймобж, текст и т.д).
@@ -57,7 +57,7 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken = default)
-			where T : Object => await management.LoadAssetAsync<T>(path, cancellationToken);
+			where T : Object => await Provider.LoadAssetAsync<T>(path, cancellationToken);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -66,7 +66,7 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken = default)
-			where T : Component => await management.LoadComponentAsync<T>(path, cancellationToken);
+			where T : Component => await Provider.LoadComponentAsync<T>(path, cancellationToken);
 
 		/// <summary>
 		/// Загрузить все ассеты по лейблу (Label у Addressable). <br/>
@@ -75,7 +75,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReferenceEntry entry,
 			CancellationToken cancellationToken = default) =>
-			await management.LoadAssetsAsync<T>(entry, cancellationToken);
+			await Provider.LoadAssetsAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
@@ -84,7 +84,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(string tag,
 			CancellationToken cancellationToken = default) =>
-			await management.LoadAssetsAsync<T>(tag, cancellationToken);
+			await Provider.LoadAssetsAsync<T>(tag, cancellationToken);
 
 		/// <summary>
 		/// Отпустить ассет из памяти
@@ -93,21 +93,21 @@ namespace AssetManagement
 		/// больше не нужен чтобы выгрузить, поэтому нужно сообщить системе чтобы она отпустила
 		/// </summary>
 		// TODO: добавить Release Mode (delay, trigger (например смена локации))
-		public static void Release(IAssetReferenceEntry entry, int? delayMs = 0) => management.Release(entry, delayMs);
+		public static void Release(IAssetReferenceEntry entry, int? delayMs = 0) => Provider.Release(entry, delayMs);
 
 		/// <summary>
 		/// Отпустить ассет из памяти по пути
 		/// </summary>
-		public static void Release(string path, int delayMs = 0) => management.Release(path, delayMs);
+		public static void Release(string path, int delayMs = 0) => Provider.Release(path, delayMs);
 
 		/// <summary>
 		/// Отпустить ассет из памяти
 		/// </summary>
-		public static void ReleaseAssets(AssetLabelReferenceEntry entry) => management.ReleaseAssets(entry);
+		public static void ReleaseAssets(AssetLabelReferenceEntry entry) => Provider.ReleaseAssets(entry);
 
 		/// <summary>
 		/// Отпустить ассет из памяти по тегу
 		/// </summary>
-		public static void ReleaseAssets(string tag) => management.ReleaseAssets(tag);
+		public static void ReleaseAssets(string tag) => Provider.ReleaseAssets(tag);
 	}
 }

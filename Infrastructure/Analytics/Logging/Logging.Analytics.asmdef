@@ -1,0 +1,19 @@
+{
+    "name": "Logging.Analytics",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Analytics",
+        "WLog",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "versionDefines": [],
+    "noEngineReferences": false
+}

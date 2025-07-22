@@ -1,0 +1,20 @@
+{
+    "name": "Logging.Notifications",
+    "rootNamespace": "",
+    "references": [
+        "Notifications",
+        "UnityEditor.UI",
+        "UnityEngine.UI",
+        "WLog",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "versionDefines": [],
+    "noEngineReferences": false
+}

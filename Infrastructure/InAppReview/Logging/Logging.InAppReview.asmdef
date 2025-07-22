@@ -1,0 +1,24 @@
+{
+  "name": "Logging.InAppReview",
+  "rootNamespace": "",
+  "references": [
+    "Booting",
+    "UniTask",
+    "InAppReview",
+    "InAppReview.GooglePlay",
+    "InAppReview.AppStore",
+    "UnityEditor.UI",
+    "UnityEngine.UI",
+    "WLog",
+    "Fusumity",
+    "Sapientia"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "versionDefines": [],
+  "noEngineReferences": false
+}

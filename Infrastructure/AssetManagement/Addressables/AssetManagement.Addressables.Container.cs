@@ -8,7 +8,7 @@ using Sapientia.Utility;
 
 namespace AssetManagement
 {
-	public partial class AssetManagement
+	public partial class AssetProvider
 	{
 		private class AssetContainer : Container
 		{

@@ -24,7 +24,7 @@ namespace AssetManagement
 	/// Проблема группировки ассетов, что создаются потенциальные условия для дубликатов...<br/>
 	/// К счастью при билде Addressables в конце выдается репорт и в репорте можно посмотреть какие ассеты дублируются
 	/// </summary>
-	public partial class AssetManagement
+	public partial class AssetProvider
 	{
 		//Активные ассеты
 		//object в виде ключя из-за Addressables...

@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using Fusumity.Utility;
-using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
@@ -9,7 +6,7 @@ namespace UI.Screens.Editor
 {
 	public class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
 	{
-		private UIScreenDispatcher _dispatcher => ServiceLocator<UIScreenDispatcher>.Instance;
+		private UIScreenDispatcher _dispatcher => UIDispatcher.Get<UIScreenDispatcher>();
 		public string Title => "Screens";
 
 		public Type type;

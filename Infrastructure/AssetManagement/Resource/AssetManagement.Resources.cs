@@ -10,7 +10,7 @@ namespace AssetManagement
 	using UnityObject = UnityEngine.Object;
 
 	//Данное решение для редких кейсов!!!
-	public partial class AssetManagement
+	public partial class AssetProvider
 	{
 		private const string ASSET_IS_NULL_MESSAGE = "Asset is null...";
 		private const int UNLOAD_UNUSED_ASSETS_THRESHOLD = 5;

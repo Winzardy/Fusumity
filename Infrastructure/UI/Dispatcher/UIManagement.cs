@@ -1,11 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Content;
 using Fusumity.Utility;
+using UI.Layers;
 
-namespace UI.Layers
+namespace UI
 {
-	public class UILayersManagement : IDisposable
+	internal class UIDispatcherLocator<T>
+	{
+		internal static T instance;
+	}
+
+	public class UIManagement : IDisposable
 	{
 		private const string NAME_FORMAT = "[Canvas] {0}";
 
@@ -13,12 +19,18 @@ namespace UI.Layers
 
 		public UILayerLayout this[string id] => _layers.TryGetValue(id, out var layer) ? layer : Create(id);
 
-		public void Dispose()
-		{
-			_layers = null;
-		}
-
 		public bool TryGet(string id, out UILayerLayout layer) => _layers.TryGetValue(id, out layer);
+
+		public T Get<T>() where T : IUIDispatcher
+			=> UIDispatcherLocator<T>.instance;
+
+		public void Register<T>(T dispatcher)
+			where T : IUIDispatcher
+			=> UIDispatcherLocator<T>.instance = dispatcher;
+
+		public void Unregister<T>()
+			where T : IUIDispatcher
+			=> UIDispatcherLocator<T>.instance = default;
 
 		private UILayerLayout Create(string id)
 		{
@@ -32,6 +44,11 @@ namespace UI.Layers
 			_layers[id] = layout;
 
 			return layout;
+		}
+
+		public void Dispose()
+		{
+			_layers = null;
 		}
 	}
 }

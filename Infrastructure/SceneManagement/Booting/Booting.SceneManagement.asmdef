@@ -1,0 +1,20 @@
+{
+  "name": "Booting.SceneManagement",
+  "rootNamespace": "",
+  "references": [
+    "Booting",
+    "UniTask",
+    "SceneManagement",
+    "Sapientia",
+    "Fusumity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

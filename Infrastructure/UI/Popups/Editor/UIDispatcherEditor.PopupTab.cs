@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
-using Fusumity.Utility;
 using Sapientia.Reflection;
-using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
@@ -10,7 +7,7 @@ namespace UI.Popups.Editor
 {
 	public class UIDispatcherEditorPopupTab : IUIDispatcherEditorTab
 	{
-		private UIPopupDispatcher _dispatcher => ServiceLocator<UIPopupDispatcher>.Instance;
+		private UIPopupDispatcher _dispatcher => UIDispatcher.Get<UIPopupDispatcher>();
 		int IUIDispatcherEditorTab.Order => 2;
 		public string Title => "Popups";
 

@@ -1,0 +1,23 @@
+{
+  "name": "Booting.Targeting",
+  "rootNamespace": "",
+  "references": [
+    "Booting",
+    "Ashary",
+    "Unary",
+    "UniTask",
+    "Targeting",
+    "Content",
+    "Sapientia",
+    "Fusumity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

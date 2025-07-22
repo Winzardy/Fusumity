@@ -1,0 +1,28 @@
+{
+    "name": "Booting.Advertising",
+    "rootNamespace": "",
+    "references": [
+        "Booting",
+        "UniTask",
+        "Advertising",
+        "Advertising.UnityLevelPlay",
+        "Advertising.Fake",
+        "Ashary",
+        "Unary",
+        "Targeting",
+        "Content",
+        "Fusumity",
+        "Game.App.BootTask.Advertising",
+        "Sapientia",
+        "Messaging"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -5,7 +5,7 @@ using AssetManagement;
 using Audio.Player;
 using Content;
 using Cysharp.Threading.Tasks;
-using Game.App;
+using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Utility;

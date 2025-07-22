@@ -1,0 +1,22 @@
+{
+    "name": "Booting.InAppReview",
+    "rootNamespace": "",
+    "references": [
+        "Booting",
+        "UniTask",
+        "InAppReview",
+        "InAppReview.GooglePlay",
+        "InAppReview.AppStore",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

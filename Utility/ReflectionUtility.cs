@@ -29,7 +29,8 @@ namespace Fusumity.Utility
 			"InputManagement",
 			"Localization",
 			"Notifications",
-			"Trading"
+			"Trading",
+			"Booting"
 		};
 
 		private static readonly string _editorAssemblyTag = "Editor";

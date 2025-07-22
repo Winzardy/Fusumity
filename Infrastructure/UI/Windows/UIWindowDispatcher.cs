@@ -2,7 +2,7 @@
 
 namespace UI.Windows
 {
-	public class UIWindowDispatcher : IDisposable
+	public class UIWindowDispatcher : IUIDispatcher, IDisposable
 	{
 		private readonly UIWindowManager _manager;
 
