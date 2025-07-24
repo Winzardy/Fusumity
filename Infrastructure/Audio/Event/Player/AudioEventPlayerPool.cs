@@ -36,7 +36,7 @@ namespace Audio
 			public void OnRelease(AudioEventPlayer player)
 			{
 				player.SetActive(false);
-				player.Clear();
+				player.Release();
 			}
 
 			public void OnDispose(AudioEventPlayer player)

@@ -49,7 +49,7 @@ namespace Audio
 
 		public void Dispose()
 		{
-			Clear();
+			Release();
 
 			_audioSources?.ReleaseToStaticPool();
 			_loadingTracks?.ReleaseToStaticPool();
@@ -60,7 +60,7 @@ namespace Audio
 			if (!_cleared)
 			{
 				AudioDebug.LogWarning("AudioEventPlayer not cleared?", this);
-				Clear();
+				Release();
 			}
 
 			_cleared = false;
@@ -73,7 +73,7 @@ namespace Audio
 			else
 				_rectTransform = null;
 
-			if (_current.mode == AudioPlayMode.Sequence && _current.playlist.Length > 1)
+			if (_current.mode == AudioPlayMode.Sequence && _current.entry.tracks.Length > 1)
 				AudioManager.Subscribe(EventsType.Update, OnSequenceUpdate);
 
 			AudioManager.Subscribe(EventsType.LateUpdate, OnLateUpdate);
@@ -89,6 +89,10 @@ namespace Audio
 		{
 			_initialPlay = false;
 			_playCount++;
+
+			if (!_audioSources.IsNullOrEmpty())
+				foreach (var source in _audioSources)
+					Disable(source);
 
 			switch (_current.mode)
 			{
@@ -129,7 +133,7 @@ namespace Audio
 				LoadTrackAndTryPlayAsync(track).Forget();
 		}
 
-		public void Clear()
+		public void Release()
 		{
 			if (_cleared)
 				return;
@@ -139,15 +143,15 @@ namespace Audio
 			_current.ReleasePlaylist();
 
 			if (_singleAudioSource)
-				Clear(_singleAudioSource);
+				Disable(_singleAudioSource);
 
 			if (!_audioSources.IsNullOrEmpty())
 			{
 				foreach (var source in _audioSources)
-					Clear(source);
+					Disable(source);
 			}
 
-			if (_current.mode == AudioPlayMode.Sequence && _current.playlist.Length > 1)
+			if (_current.mode == AudioPlayMode.Sequence && _current.entry.tracks.Length > 1)
 				AudioManager.Unsubscribe(EventsType.Update, OnSequenceUpdate);
 
 			AudioManager.Unsubscribe(EventsType.LateUpdate, OnLateUpdate);
@@ -247,16 +251,22 @@ namespace Audio
 				case AudioPlayMode.SameTime:
 
 					Sequence sequence = null;
-					foreach (var (source, index) in GetUsedSources().WithIndexSafe())
+
+#if DebugLog
+					var sourceCount = GetUsedSources()
+					   .Count();
+					if (sourceCount != _current.playlist.Length)
+						AudioDebug.LogError(
+							$"[ TASK-1964 ] AudioSource count != playlist length (count: {sourceCount}, lenght: {_current.playlist.Length})");
+#endif
+					foreach (var (source, index) in GetUsedSources()
+						        .WithIndexSafe())
 					{
 						if (_current.fadeIn.HasValue)
 							sequence ??= DOTween.Sequence();
+
 						if (index >= _current.playlist.Length)
-						{
-							// TASK-1964 workaround for crashlytics exception. Need more research
-							AudioDebug.LogError($"TASK-1964 index = {index}, len = {_current.playlist.Length}");
 							break;
-						}
 
 						var track = _current.playlist[index];
 
@@ -343,7 +353,7 @@ namespace Audio
 
 		public void SetTarget(Transform target) => _current.transform = target;
 
-		private void Clear(AudioSource source)
+		private void Disable(AudioSource source)
 		{
 			source.clip = null;
 			source.enabled = false;
@@ -382,7 +392,7 @@ namespace Audio
 				if (_current.repeat == 0 || _playCount < _current.repeat)
 				{
 					if (_current is {rerollOnRepeat: true, entry: not null})
-						Reroll();
+						RollPlaylist();
 
 					Restart();
 					return;
@@ -392,7 +402,7 @@ namespace Audio
 			}
 		}
 
-		private void Reroll()
+		private void RollPlaylist()
 		{
 			_current.ReleasePlaylist();
 			_current.RollPlaylist();
