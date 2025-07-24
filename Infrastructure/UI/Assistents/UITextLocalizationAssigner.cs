@@ -29,8 +29,8 @@ namespace UI
 	public class UITextLocalizationAssigner : IDisposable
 	{
 		//Чтобы для случаев с одиночным переводом на аллоцировать целый Dictionary
-		private (TMP_Text placeholder, LocText args) _single;
-		private HashMap<TMP_Text, LocText> _placeholderToArgs;
+		private (TMP_Text placeholder, LocText text) _single;
+		private HashMap<TMP_Text, LocText> _placeholderToText;
 
 		public event Action<TMP_Text> Updated;
 
@@ -45,18 +45,18 @@ namespace UI
 
 			if (_single.placeholder)
 			{
-				Release(ref _single.args);
+				Release(ref _single.text);
 				_single = default;
 			}
 
-			if (_placeholderToArgs.IsNullOrEmpty())
+			if (_placeholderToText.IsNullOrEmpty())
 				return;
 
-			foreach (var args in _placeholderToArgs.Keys)
-				Release(ref _placeholderToArgs[args]);
+			foreach (var args in _placeholderToText.Keys)
+				Release(ref _placeholderToText[args]);
 
-			_placeholderToArgs.ReleaseToStaticPool();
-			_placeholderToArgs = null;
+			_placeholderToText.ReleaseToStaticPool();
+			_placeholderToText = null;
 		}
 
 		public void Assign(TMP_Text placeholder, in LocText text)
@@ -71,9 +71,9 @@ namespace UI
 			{
 				if (_single.placeholder == placeholder)
 				{
-					Release(ref _single.args);
+					Release(ref _single.text);
 
-					_single.args = text;
+					_single.text = text;
 					ForceUpdateInternal(placeholder);
 					return;
 				}
@@ -85,12 +85,12 @@ namespace UI
 				return;
 			}
 
-			_placeholderToArgs ??= HashMapPool<TMP_Text, LocText>.Get();
+			_placeholderToText ??= HashMapPool<TMP_Text, LocText>.Get();
 
-			if (_placeholderToArgs.Contains(placeholder))
-				Release(ref _placeholderToArgs[placeholder]);
+			if (_placeholderToText.Contains(placeholder))
+				Release(ref _placeholderToText[placeholder]);
 
-			_placeholderToArgs.SetOrAdd(placeholder, in text);
+			_placeholderToText.SetOrAdd(placeholder, in text);
 
 			ForceUpdateInternal(placeholder);
 			placeholder.text = text.ToString();
@@ -104,10 +104,10 @@ namespace UI
 				return;
 			}
 
-			if (_placeholderToArgs == null)
+			if (_placeholderToText == null)
 				return;
 
-			if (!_placeholderToArgs.Contains(placeholder))
+			if (!_placeholderToText.Contains(placeholder))
 			{
 				GUIDebug.LogWarning($"{DEBUG_PREFIX} Not found arguments for placeholder!", placeholder);
 				return;
@@ -120,22 +120,22 @@ namespace UI
 		{
 			if (_single.placeholder == placeholder)
 			{
-				var sArgs = _single.args;
+				var sArgs = _single.text;
 				sArgs.tagToValue[tag] = value;
 				ForceUpdateInternal(placeholder);
 				return;
 			}
 
-			if (_placeholderToArgs == null)
+			if (_placeholderToText == null)
 				return;
 
-			if (!_placeholderToArgs.Contains(placeholder))
+			if (!_placeholderToText.Contains(placeholder))
 			{
 				GUIDebug.LogWarning($"{DEBUG_PREFIX}Not found arguments for placeholder!", placeholder);
 				return;
 			}
 
-			_placeholderToArgs[placeholder]
+			_placeholderToText[placeholder]
 			   .tagToValue[tag] = value;
 			ForceUpdateInternal(placeholder);
 		}
@@ -151,14 +151,14 @@ namespace UI
 			if (_single.placeholder == placeholder)
 			{
 				_single.placeholder = null;
-				_single.args = null;
+				_single.text = null;
 				return;
 			}
 
-			if (_placeholderToArgs.IsNullOrEmpty())
+			if (_placeholderToText.IsNullOrEmpty())
 				return;
 
-			_placeholderToArgs.Remove(placeholder);
+			_placeholderToText.Remove(placeholder);
 		}
 
 		private void OnCurrentLocaleCodeUpdated(string _)
@@ -166,9 +166,9 @@ namespace UI
 			if (_single.placeholder)
 				ForceUpdateInternal(_single.placeholder);
 
-			if (!_placeholderToArgs.IsNullOrEmpty())
+			if (!_placeholderToText.IsNullOrEmpty())
 			{
-				foreach (var placeholder in _placeholderToArgs.Keys)
+				foreach (var placeholder in _placeholderToText.Keys)
 				{
 					ForceUpdateInternal(placeholder);
 				}
@@ -179,17 +179,17 @@ namespace UI
 		{
 			if (_single.placeholder == placeholder)
 			{
-				AssignInternal(_single.placeholder, _single.args);
+				AssignInternal(_single.placeholder, _single.text);
 				return;
 			}
 
-			if (!_placeholderToArgs.Contains(placeholder))
+			if (!_placeholderToText.Contains(placeholder))
 			{
 				GUIDebug.LogWarning("Not found arguments for placeholder!", placeholder);
 				return;
 			}
 
-			AssignInternal(placeholder, in _placeholderToArgs[placeholder]);
+			AssignInternal(placeholder, in _placeholderToText[placeholder]);
 		}
 
 		private void AssignInternal(TMP_Text placeholder, in LocText text)

@@ -8,18 +8,19 @@ namespace UI
 {
 	public static class UITextLocalizationUtility
 	{
-		public static void SetTextSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, LocText args,
+		public static void SetTextSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, in LocText args,
 			string label,
 			string defaultText = "", Action callback = null) =>
-			assigner.SetTextSafe(placeholder, args, label, defaultText, callback);
+			assigner.SetTextSafe(placeholder, in args, label, defaultText, callback);
 
 		public static void SetTextOrDeactivateSafe(this UILocalizedBaseLayout layout, UITextLocalizationAssigner assigner,
-			LocText args,
+			in LocText args,
 			string label = null) =>
-			assigner.SetTextOrDeactivateSafe(layout, args, label);
+			assigner.SetTextOrDeactivateSafe(layout, in args, label);
 
-		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
-			LocText args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner,
+			UILocalizedBaseLayout layout,
+			in LocText args,
 			string label = null)
 		{
 			if (!layout)
@@ -43,14 +44,16 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner, LocText args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner,
+			in LocText args,
 			string label)
 		{
-			assigner.SetTextOrDeactivateSafe(placeholder, args, label);
+			assigner.SetTextOrDeactivateSafe(placeholder, in args, label);
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder, LocText args,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder,
+			in LocText args,
 			string label = "")
 		{
 			if (!placeholder)
@@ -74,7 +77,8 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder, LocText args,
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder,
+			in LocText args,
 			string label = "",
 			string defaultText = "", Action callback = null)
 		{
@@ -83,7 +87,7 @@ namespace UI
 
 			if (!args.IsEmpty())
 			{
-				assigner.Assign(placeholder, args);
+				assigner.Assign(placeholder, in args);
 			}
 			else
 			{
@@ -166,7 +170,8 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
+			string tag,
 			Func<object> func)
 		{
 			if (layout)
@@ -175,7 +180,8 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
+			string tag,
 			object value)
 		{
 			if (layout)
