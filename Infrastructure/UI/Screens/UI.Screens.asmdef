@@ -8,7 +8,8 @@
         "Content.Constants",
         "Fusumity",
         "Sapientia",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "Game.Constants"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

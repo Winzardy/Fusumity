@@ -323,11 +323,12 @@ namespace UI
 		/// Лучше использовать <see cref="SetAnimator"/>.
 		/// </summary>
 		/// <typeparam name="T">Тип аниматора</typeparam>
-		protected void SetAnimator<T>()
+		protected T SetAnimator<T>()
 			where T : IWidgetAnimator<TLayout>, new()
 		{
 			var animator = new T();
 			SetAnimator(animator);
+			return animator;
 		}
 
 		/// <summary>

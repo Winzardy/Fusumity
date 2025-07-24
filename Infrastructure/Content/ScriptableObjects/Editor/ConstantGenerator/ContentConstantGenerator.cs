@@ -16,6 +16,7 @@ namespace Content.ScriptableObjects.Editor
 {
 	public static partial class ContentConstantGenerator
 	{
+		private const string NAMESPACE_SEPARATOR = ".";
 		private const string ROOT_NODE = "ROOT";
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
@@ -49,19 +50,45 @@ namespace Content.ScriptableObjects.Editor
 				className = className.Replace(from, to);
 			}
 
+			var rootName = nameof(Content);
+			var @namespace = type.Namespace;
+
 			className += projectSettings.classNameEnding;
 
-			var folderPath = projectSettings.folderPath;
-			var rootName = nameof(Content);
-			var asmdefName = $"{rootName}.{CONSTANTS_NAME}.asmdef";
-			var asmdefFilePath = Path.Combine(folderPath, asmdefName);
-			var asmdefFileInfo = new FileInfo(asmdefFilePath);
-			if (!asmdefFileInfo.Exists)
+			ConstantsOutput output = null;
+			var namespaceByOutput = @namespace;
+			if (!@namespace.IsNullOrEmpty()
+			    && !projectSettings.namespaceToOutput.TryGetValue(@namespace, out output))
 			{
-				var constantsAsmdefPath = asmdefFileInfo.FullName;
-				var text = $@"
+				string bestMatch = null;
+				foreach (var (t, tOutput) in projectSettings.namespaceToOutput)
+				{
+					if (!@namespace.StartsWith(t))
+						continue;
+					if (bestMatch != null && t.Length <= bestMatch.Length)
+						continue;
+					bestMatch = t;
+					output = tOutput;
+				}
+
+				namespaceByOutput = bestMatch;
+			}
+
+			output ??= projectSettings.output;
+
+			var folderPath = output.folderPath;
+
+			if (output.asmdef && !output.asmdef.value.IsNullOrEmpty())
+			{
+				var asmdefName = $"{output.asmdef.value}.asmdef";
+				var asmdefFilePath = Path.Combine(folderPath, asmdefName);
+				var asmdefFileInfo = new FileInfo(asmdefFilePath);
+				if (!asmdefFileInfo.Exists)
+				{
+					var constantsAsmdefPath = asmdefFileInfo.FullName;
+					var text = $@"
 					{{
-						""name"": ""{rootName}.{CONSTANTS_NAME}"",
+						""name"": ""{projectSettings.output.asmdef.value}.{CONSTANTS_NAME}"",
 						""rootNamespace"": """",
 						""references"": [],
 						""includePlatforms"": [],
@@ -69,24 +96,34 @@ namespace Content.ScriptableObjects.Editor
 						""allowUnsafeCode"": false,
 						""overrideReferences"": false,
 						""precompiledReferences"": [],
-						""autoReferenced"": true,
+						""autoReferenced"": false,
 						""defineConstraints"": [],
 						""versionDefines"": [],
 						""noEngineReferences"": true
 					}}";
 
-				var directory = Path.GetDirectoryName(constantsAsmdefPath);
+					var directory = Path.GetDirectoryName(constantsAsmdefPath);
 
-				if (!Directory.Exists(directory))
-					Directory.CreateDirectory(directory);
+					if (!Directory.Exists(directory))
+						Directory.CreateDirectory(directory);
 
-				File.WriteAllText(constantsAsmdefPath, text);
-				AssetDatabase.ImportAsset(constantsAsmdefPath);
-				var asmdefAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(constantsAsmdefPath);
-				ContentDebug.Log($"Generated .asmdef: {constantsAsmdefPath}", asmdefAsset);
+					File.WriteAllText(constantsAsmdefPath, text);
+					AssetDatabase.ImportAsset(constantsAsmdefPath);
+					var asmdefAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(constantsAsmdefPath);
+					ContentDebug.Log($"Generated .asmdef: {constantsAsmdefPath}", asmdefAsset);
+				}
 			}
 
-			var folder = type.Namespace?.Replace(".", "/") ?? string.Empty;
+			var generateFolderPath = @namespace;
+
+			if (!namespaceByOutput.IsNullOrEmpty() && output.trimGeneratePath)
+			{
+				generateFolderPath = generateFolderPath.Remove(namespaceByOutput)
+				   .Remove(NAMESPACE_SEPARATOR);
+			}
+
+			var folder = generateFolderPath?.Replace(NAMESPACE_SEPARATOR, "/") ?? string.Empty;
+
 			var fullPath = Path.Combine(folderPath, folder);
 
 			if (!Directory.Exists(fullPath))
@@ -125,11 +162,11 @@ namespace Content.ScriptableObjects.Editor
 
 			var compilationUnit = SyntaxFactory.CompilationUnit();
 
-			var namespaceName = !string.IsNullOrEmpty(type.Namespace)
-				? $"{rootName}.{CONSTANTS_NAME}.{type.Namespace}"
+			@namespace = !@namespace.IsNullOrEmpty()
+				? @namespace
 				: $"{rootName}.{CONSTANTS_NAME}";
 
-			var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
+			var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace))
 			   .NormalizeWhitespace()
 			   .WithLeadingTrivia(SyntaxFactory.Comment(projectSettings.scriptComment));
 

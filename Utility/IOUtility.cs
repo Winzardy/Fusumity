@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -30,5 +31,13 @@ namespace Fusumity.Utility
 			   .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
 			   .Where(s => exts.Contains(Path.GetExtension(s).TrimStart('.').ToLowerInvariant())).ToArray();
 		}
+	}
+
+	[Serializable]
+	public struct FolderPath
+	{
+		public string path;
+		public static implicit operator string(FolderPath folderPath) => folderPath.path;
+		public static implicit operator FolderPath(string path) => new() {path = path};
 	}
 }
