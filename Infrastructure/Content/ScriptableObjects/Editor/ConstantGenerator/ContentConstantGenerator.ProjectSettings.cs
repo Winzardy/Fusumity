@@ -51,6 +51,7 @@ namespace Content.ScriptableObjects.Editor
 
 		public Toggle<string> asmdef = "Content.Constants";
 
-		public bool trimNamespaceForGeneratePath;
+		[Tooltip("Убирает namespace из пути")]
+		public bool trimGeneratePath;
 	}
 }

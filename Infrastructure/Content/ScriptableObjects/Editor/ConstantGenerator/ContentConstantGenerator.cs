@@ -116,7 +116,7 @@ namespace Content.ScriptableObjects.Editor
 
 			var generateFolderPath = @namespace;
 
-			if (!namespaceByOutput.IsNullOrEmpty() && output.trimNamespaceForGeneratePath)
+			if (!namespaceByOutput.IsNullOrEmpty() && output.trimGeneratePath)
 			{
 				generateFolderPath = generateFolderPath.Remove(namespaceByOutput)
 				   .Remove(NAMESPACE_SEPARATOR);
