@@ -9,7 +9,8 @@
         "GUID:a0100c03f96b4df0b1333cdbca10eeb9",
         "Content.Constants",
         "DOTween.Modules",
-        "Sapientia"
+        "Sapientia",
+        "GUID:e9e22b205dc7344b0b03fed720f2f609"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

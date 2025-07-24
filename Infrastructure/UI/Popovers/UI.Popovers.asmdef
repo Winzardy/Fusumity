@@ -10,7 +10,8 @@
         "Sapientia",
         "Generic",
         "GUID:370ed20472484151a20120c2a4896416",
-        "Content.Constants"
+        "Content.Constants",
+        "GUID:e9e22b205dc7344b0b03fed720f2f609"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -92,7 +92,7 @@ namespace Audio
 
 			if (!_audioSources.IsNullOrEmpty())
 				foreach (var source in _audioSources)
-					Disable(source);
+					ClearAndDisableSource(source);
 
 			switch (_current.mode)
 			{
@@ -143,12 +143,12 @@ namespace Audio
 			_current.ReleasePlaylist();
 
 			if (_singleAudioSource)
-				Disable(_singleAudioSource);
+				ClearAndDisableSource(_singleAudioSource);
 
 			if (!_audioSources.IsNullOrEmpty())
 			{
 				foreach (var source in _audioSources)
-					Disable(source);
+					ClearAndDisableSource(source);
 			}
 
 			if (_current.mode == AudioPlayMode.Sequence && _current.entry.tracks.Length > 1)
@@ -353,7 +353,7 @@ namespace Audio
 
 		public void SetTarget(Transform target) => _current.transform = target;
 
-		private void Disable(AudioSource source)
+		private void ClearAndDisableSource(AudioSource source)
 		{
 			source.clip = null;
 			source.enabled = false;

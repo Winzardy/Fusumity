@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssetManagement;
-using Content.Constants.UI.Layers;
 using Sapientia;
 using Sapientia.Extensions;
+using UI.Layers;
 
 namespace UI.Popups
 {

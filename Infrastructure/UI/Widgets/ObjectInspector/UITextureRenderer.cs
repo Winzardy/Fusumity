@@ -8,7 +8,6 @@ using UnityEngine;
 namespace UI
 {
 	using UnityObject = UnityEngine.Object;
-	using CameraRenderType = Content.Constants.Fusumity.CameraRenderType;
 
 	public struct RenderTextureArgs
 	{
@@ -20,6 +19,7 @@ namespace UI
 
 	public struct UITextureRendererArgs
 	{
+		private const string DEFAULT_CAMERA_RENDER_ID = "UIObjectInspection";
 		private const string DEFAULT_LAYER_NAME = "UI_Avatar";
 		public static int DEFAULT_LAYER => LayerMask.NameToLayer(DEFAULT_LAYER_NAME);
 
@@ -30,7 +30,7 @@ namespace UI
 
 		public static UITextureRendererArgs GetDefault(int layer)
 		{
-			var cameraEntry = ContentManager.Get<CameraRenderEntry>(CameraRenderType.UI_OBJECT_INSPECTION);
+			var cameraEntry = ContentManager.Get<CameraRenderEntry>(DEFAULT_CAMERA_RENDER_ID);
 			cameraEntry.cullingMask |= 1 << layer;
 
 			return new()
