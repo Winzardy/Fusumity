@@ -1,6 +1,8 @@
-﻿namespace Audio.Player
+﻿using System;
+
+namespace Audio.Player
 {
-	public interface IAudioPlayer
+	public interface IAudioPlayer : IDisposable
 	{
 		public void Initialize();
 	}

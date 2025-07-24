@@ -31,8 +31,6 @@ namespace Presenters
 	{
 		public virtual bool IsDeferred => true;
 
-		public static void Initialize(IPresenter presenter) => presenter.Initialize();
-
 		public virtual void Initialize() => OnInitialize();
 
 		protected abstract void OnInitialize();

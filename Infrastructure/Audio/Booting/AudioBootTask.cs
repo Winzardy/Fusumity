@@ -57,8 +57,11 @@ namespace Booting.Audio
 		{
 			foreach (var type in ReflectionUtility.GetAllTypes<IAudioPlayer>(false))
 			{
-				if (AudioManager.TryRegisterAudioPlayer(type, out var audioPlayer))
-					audioPlayer.Initialize();
+				if (!AudioManager.TryRegisterAudioPlayer(type, out var audioPlayer))
+					continue;
+
+				AddDisposable(audioPlayer);
+				audioPlayer.Initialize();
 			}
 		}
 	}

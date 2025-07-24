@@ -37,6 +37,8 @@ namespace Booting.Presenters
 					presenter.Initialize();
 				else
 					_deferred.Add(presenter);
+
+				AddDisposable(presenter);
 			}
 
 			return UniTask.CompletedTask;

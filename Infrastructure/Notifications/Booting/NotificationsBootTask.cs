@@ -52,6 +52,7 @@ namespace Booting.Notifications
 				if (!NotificationsCenter.TryRegisterScheduler(type, out var scheduler))
 					continue;
 
+				AddDisposable(scheduler);
 				scheduler.Initialize();
 			}
 		}
