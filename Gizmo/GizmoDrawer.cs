@@ -6,7 +6,7 @@ namespace Game.Logic.Gizmo
 	{
 		private const int _framesToDetectDisabling = 1;
 
-		private int _lastDrawnFrame = Time.frameCount;
+		private int _lastDrawnFrame;
 
 		private void Update()
 		{
