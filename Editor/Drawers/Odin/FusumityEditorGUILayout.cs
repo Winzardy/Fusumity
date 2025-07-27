@@ -1,5 +1,6 @@
 using System;
 using Content;
+using Sapientia;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -287,6 +288,100 @@ namespace Fusumity.Editor
 
 			for (int i = 0; i < bottomFlexibleSpace; i++)
 				GUILayout.FlexibleSpace();
+		}
+
+		#region CardBox
+
+		private static readonly GUIStyle _style = new(SirenixGUIStyles.CardStyle)
+		{
+			padding = new RectOffset(5, 3, 2, 3),
+			margin = new RectOffset
+			(
+				SirenixGUIStyles.CardStyle.margin.left + 3,
+				SirenixGUIStyles.CardStyle.margin.right + 3,
+				SirenixGUIStyles.CardStyle.margin.top + 2,
+				SirenixGUIStyles.CardStyle.margin.bottom
+			)
+		};
+
+		public static void BeginCardBox(Color? color = null)
+		{
+			if (color.HasValue)
+				GUIHelper.PushColor(color.Value);
+			SirenixEditorGUI.BeginIndentedVertical(_style);
+			{
+				GUIHelper.PushHierarchyMode(false);
+				if (color.HasValue)
+					GUIHelper.PopColor();
+			}
+		}
+
+		public static void EndCardBox()
+		{
+			GUIHelper.PopHierarchyMode();
+			SirenixEditorGUI.EndIndentedVertical();
+		}
+
+		#endregion
+
+		public static void SuffixValue(GUIContent label, object value, string text)
+		{
+			var style = EditorStyles.textField;
+
+			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
+			var width = style.CalcWidth(value.ToString());
+			var offset = width;
+
+			if (!isEmptyLabel)
+				offset += GUIHelper.BetterLabelWidth;
+
+			style = new GUIStyle(EditorStyles.label)
+			{
+				fontSize = EditorStyles.textField.fontSize - 3,
+				normal =
+				{
+					textColor = Color.gray
+				},
+				hover =
+				{
+					textColor = Color.gray
+				}
+			};
+
+			width = style.CalcWidth(text);
+			var lastRect = GUILayoutUtility.GetLastRect();
+			var labelRect = lastRect.AlignLeft(width, offset);
+			GUI.Label(labelRect, text, style);
+		}
+
+		public static void SuffixLabel(string text)
+		{
+			var style = new GUIStyle(EditorStyles.label)
+			{
+				fontSize = EditorStyles.textField.fontSize - 3,
+				normal =
+				{
+					textColor = Color.gray
+				},
+				hover =
+				{
+					textColor = Color.gray
+				}
+			};
+
+			var lastRect = GUILayoutUtility.GetLastRect();
+			var labelRect = lastRect.AlignRight(style.CalcWidth(text), 4);
+			GUI.Label(labelRect, text, style);
+		}
+
+		public static T EnumPopup<T>(GUIContent label, T value)
+			where T : unmanaged, Enum
+		{
+			var enumType = typeof(T);
+			var names = Enum.GetNames(enumType);
+			var nameSelect = Enum.GetName(enumType, value);
+			var target = Array.IndexOf(names, nameSelect);
+			return SirenixEditorFields.Dropdown(label, target, names).ToEnum<T>();
 		}
 	}
 }

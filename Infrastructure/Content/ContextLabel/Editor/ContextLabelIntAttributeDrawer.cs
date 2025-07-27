@@ -58,7 +58,7 @@ namespace Content.ContextLabel.Editor
 
 			var selectorPopupRect = rect;
 			var textFieldPosition = rect;
-			var trianglePosition = AlignRight(rect, 9f, 5f);
+			var trianglePosition = rect.AlignRight(9f, 5f);
 
 			if (trianglePosition.Contains(Event.current.mousePosition))
 			{
@@ -105,7 +105,7 @@ namespace Content.ContextLabel.Editor
 				if (!label.text.IsNullOrEmpty())
 					offset += GUIHelper.BetterLabelWidth;
 
-				var labelRect = AlignLeft(textFieldPosition, width, offset);
+				var labelRect = textFieldPosition.AlignLeft(width, offset);
 				GUI.Label(labelRect, labelByKey, EditorStyles.label);
 			}
 
@@ -210,20 +210,6 @@ namespace Content.ContextLabel.Editor
 			}
 
 			ValueEntry.WeakSmartValue = key - 1;
-		}
-
-		private Rect AlignRight(Rect rect, float width, float offset = 0)
-		{
-			rect.x = rect.x + rect.width - width - offset;
-			rect.width = width;
-			return rect;
-		}
-
-		private Rect AlignLeft(Rect rect, float width, float offset = 0)
-		{
-			rect.x = offset;
-			rect.width = width;
-			return rect;
 		}
 	}
 }

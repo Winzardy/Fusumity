@@ -19,6 +19,10 @@ namespace Advertising.Editor
 
 			switch (member.Name)
 			{
+				case nameof(AdPlacementEntry.usageLimit):
+					attributes.Add(new SpaceAttribute());
+					break;
+
 				case nameof(AdPlacementEntry.integrationTrack):
 					attributes.Add(new SpaceAttribute());
 					attributes.Add(new PropertyOrderAttribute(100));

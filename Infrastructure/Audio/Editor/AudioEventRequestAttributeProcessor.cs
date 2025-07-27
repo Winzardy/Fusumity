@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Audio.Editor
 {
-	public class AudioEventTriggerArgsAttributeProcessor : OdinAttributeProcessor<AudioEventRequest>
+	public class AudioEventRequestAttributeProcessor : OdinAttributeProcessor<AudioEventRequest>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -45,7 +45,7 @@ namespace Audio.Editor
 					break;
 
 				case nameof(AudioEventRequest.rerollOnRepeat):
-					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventTriggerArgsAttributeProcessor)}." +
+					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventRequestAttributeProcessor)}." +
 						$"{nameof(ShowRerollOnRepeat)}($property)"));
 					break;
 
