@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Fusumity.Editor
 {
-	public class ResetScheduleAttributeProcessor : OdinAttributeProcessor<ResetSchedule>
+	public class ScheduleEntryAttributeProcessor : OdinAttributeProcessor<ScheduleEntry>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -22,7 +22,7 @@ namespace Fusumity.Editor
 
 			switch (member.Name)
 			{
-				case nameof(ResetSchedule.points):
+				case nameof(ScheduleEntry.points):
 
 					var parentLabelContent = parentProperty.Label;
 

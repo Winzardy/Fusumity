@@ -12,6 +12,7 @@ namespace Fusumity.Editor
 	public class SchedulePointCodeAttributeDrawer : OdinAttributeDrawer<SchedulePointCodeAttribute, long>
 	{
 		private const string TYPE_LABEL = "Type";
+		private const string FROM_LABEL = "from";
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
@@ -44,74 +45,118 @@ namespace Fusumity.Editor
 			{
 				SirenixEditorGUI.BeginHorizontalPropertyLayout(GUIContent.none);
 				{
-					decode.hr = Math.Clamp(SirenixEditorFields.IntField(decode.hr), 0, 23);
+					var culture = CultureInfo.CurrentUICulture;
+					var dateTimeFormat = culture.DateTimeFormat;
+
+					if (kind is not SchedulePointKind.Daily
+					    and SchedulePointKind.Weekly
+					    or SchedulePointKind.MonthlyOnWeekday
+					    or SchedulePointKind.YearlyOnWeekday)
+					{
+						if (kind is SchedulePointKind.MonthlyOnWeekday or SchedulePointKind.YearlyOnWeekday)
+						{
+							if (kind is SchedulePointKind.YearlyOnWeekday)
+								DrawMonth(ref decode);
+
+							int displayWeekOfMonth = decode.weekOfMonth;
+							displayWeekOfMonth += 1;
+
+							displayWeekOfMonth = SirenixEditorFields.IntField(displayWeekOfMonth, GUILayout.MinWidth(58));
+							FusumityEditorGUILayout.SuffixValue(label, displayWeekOfMonth, Suffix(displayWeekOfMonth)
+								+ TimeUtility.WEEK_LABEL);
+
+							decode.weekOfMonth = (byte) Math.Clamp(displayWeekOfMonth - 1, 0, 4);
+							FusumityEditorGUILayout.SuffixLabel(FROM_LABEL);
+							decode.sign = SirenixEditorFields.Dropdown(
+								GUIContent.none,
+								decode.sign ? 0 : 1,
+								new[]
+								{
+									"start",
+									"end"
+								},
+								GUILayout.MaxWidth(48)
+							) == 0;
+						}
+
+						decode.day = SirenixEditorFields.Dropdown(
+							(int) decode.day,
+							new[]
+							{
+								dateTimeFormat.GetDayName(DayOfWeek.Monday),
+								dateTimeFormat.GetDayName(DayOfWeek.Tuesday),
+								dateTimeFormat.GetDayName(DayOfWeek.Wednesday),
+								dateTimeFormat.GetDayName(DayOfWeek.Thursday),
+								dateTimeFormat.GetDayName(DayOfWeek.Friday),
+								dateTimeFormat.GetDayName(DayOfWeek.Saturday),
+								dateTimeFormat.GetDayName(DayOfWeek.Sunday)
+							}, GUILayout.MinWidth(68)
+						);
+					}
+
+					decode.hr = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.hr), 0, 23);
 					FusumityEditorGUILayout.SuffixValue(label, decode.hr, Suffix(decode.hr) + TimeUtility.HOUR_LABEL);
-					decode.min = Math.Clamp(SirenixEditorFields.IntField(decode.min), 0, 59);
+					decode.min = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.min), 0, 59);
 					FusumityEditorGUILayout.SuffixValue(label, decode.min, Suffix(decode.min) + TimeUtility.MINUTE_LABEL);
 					decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 0, 59);
 					FusumityEditorGUILayout.SuffixValue(label, decode.sec, Suffix(decode.sec) + TimeUtility.SECOND_LABEL);
 
-					var culture = CultureInfo.CurrentUICulture;
-					var dateTimeFormat = culture.DateTimeFormat;
-
-					if (kind is not SchedulePointKind.Daily)
+					if (kind is not SchedulePointKind.Daily
+					    and not SchedulePointKind.Weekly
+					    and not SchedulePointKind.MonthlyOnWeekday
+					    and not SchedulePointKind.YearlyOnWeekday)
 					{
-						if (kind == SchedulePointKind.Weekly)
+						var displayDay = decode.day + 1;
+						displayDay = SirenixEditorFields.LongField(displayDay);
+						FusumityEditorGUILayout.SuffixValue(label, displayDay, Suffix(displayDay) + TimeUtility.DAY_LABEL);
+
+						var dayMax = 30L;
+						switch (kind)
 						{
-							decode.day = SirenixEditorFields.Dropdown(
-								(int) decode.day,
-								new[]
-								{
-									dateTimeFormat.GetDayName(DayOfWeek.Monday),
-									dateTimeFormat.GetDayName(DayOfWeek.Tuesday),
-									dateTimeFormat.GetDayName(DayOfWeek.Wednesday),
-									dateTimeFormat.GetDayName(DayOfWeek.Thursday),
-									dateTimeFormat.GetDayName(DayOfWeek.Friday),
-									dateTimeFormat.GetDayName(DayOfWeek.Saturday),
-									dateTimeFormat.GetDayName(DayOfWeek.Sunday)
-								}
-							);
+							case SchedulePointKind.Date:
+								dayMax = DateTime.DaysInMonth((int) decode.yr, decode.mh + 1) - 1;
+								break;
+
+							case SchedulePointKind.Yearly:
+							case SchedulePointKind.Monthly:
+								FusumityEditorGUILayout.SuffixLabel(FROM_LABEL);
+								dayMax = DateTime.DaysInMonth(DateTime.Now.Year, decode.mh + 1) - 1;
+								if (decode.mh == 1) // Исключение для Февраля
+									dayMax = Math.Clamp(dayMax, 0, 28);
+
+								decode.sign = SirenixEditorFields.Dropdown(
+									GUIContent.none,
+									decode.sign ? 0 : 1,
+									new[]
+									{
+										"start",
+										"end"
+									},
+									GUILayout.MaxWidth(48)
+								) == 0;
+								break;
 						}
-						else
-						{
-							var displayDay = decode.day + 1;
-							displayDay = SirenixEditorFields.LongField(displayDay);
-							FusumityEditorGUILayout.SuffixValue(label, displayDay, Suffix(displayDay) + TimeUtility.DAY_LABEL);
 
-							var max = 30L;
-							switch (kind)
-							{
-								case SchedulePointKind.Date:
-									max = DateTime.DaysInMonth((int) decode.yr, decode.mh + 1) - 1;
-									break;
-
-								case SchedulePointKind.Yearly:
-								case SchedulePointKind.Monthly:
-									FusumityEditorGUILayout.SuffixLabel("from");
-									max = DateTime.DaysInMonth(DateTime.Now.Year, decode.mh + 1) - 1;
-									if (decode.mh == 1) // Исключение для Февраля
-										max = Math.Clamp(max, 0, 28);
-
-									decode.sign = SirenixEditorFields.Dropdown(
-										GUIContent.none,
-										decode.sign ? 0 : 1,
-										new[]
-										{
-											"start",
-											"end"
-										},
-										GUILayout.MaxWidth(55)
-									) == 0;
-									break;
-							}
-
-							decode.day = Math.Clamp(displayDay - 1, 0, max);
-						}
+						decode.day = Math.Clamp(displayDay - 1, 0, dayMax);
 					}
 
-					if (kind is SchedulePointKind.Yearly or SchedulePointKind.Date)
+					if (kind is SchedulePointKind.Yearly
+					    or SchedulePointKind.Date)
 					{
-						decode.mh = SirenixEditorFields.Dropdown(
+						DrawMonth(ref decode);
+					}
+
+					if (kind is SchedulePointKind.Date)
+					{
+						decode.yr = SirenixEditorFields.LongField(decode.yr);
+						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL);
+					}
+
+					ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+
+					void DrawMonth(ref SchedulePointDecode decode)
+					{
+						decode.mh = (byte) SirenixEditorFields.Dropdown(
 							decode.mh,
 							new[]
 							{
@@ -127,19 +172,11 @@ namespace Fusumity.Editor
 								dateTimeFormat.GetMonthName(10),
 								dateTimeFormat.GetMonthName(11),
 								dateTimeFormat.GetMonthName(12)
-							}
+							}, GUILayout.MinWidth(68)
 						);
-						;
 					}
-
-					if (kind is SchedulePointKind.Date)
-					{
-						decode.yr = SirenixEditorFields.LongField(decode.yr);
-						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL);
-					}
-
-					ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
 				}
+
 				SirenixEditorGUI.EndHorizontalPropertyLayout();
 			}
 
@@ -147,7 +184,6 @@ namespace Fusumity.Editor
 			{
 				alignment = TextAnchor.UpperLeft,
 				richText = true,
-
 			};
 			GUILayout.Space(1);
 			style.fontSize -= 2;
@@ -164,8 +200,14 @@ namespace Fusumity.Editor
 
 			var nowLabel = "Now:".ColorText(style.normal.textColor.WithAlpha(0.4f));
 			var nowText = $"{nowLabel} {now.ToString("U", CultureInfo.InvariantCulture)}";
+			var code = $"code: {ValueEntry.SmartValue}".ColorText(style.normal.textColor.WithAlpha(0.2f));
 			GUILayout.Label($" {dateText}" + $"{remainingText}\n" +
 				$" {nowText}", style);
+			var width = style.CalcWidth(code);
+			var height = style.CalcHeight(code, width);
+			GUI.Label(GUILayoutUtility.GetLastRect()
+			   .AlignRight(width, 2)
+			   .AlignBottom(height), code, style);
 		}
 
 		private static string Suffix(long number)

@@ -354,7 +354,7 @@ namespace Fusumity.Editor
 			GUI.Label(labelRect, text, style);
 		}
 
-		public static void SuffixLabel(string text)
+		public static void SuffixLabel(string text, bool overlay = true)
 		{
 			var style = new GUIStyle(EditorStyles.label)
 			{
@@ -369,9 +369,16 @@ namespace Fusumity.Editor
 				}
 			};
 
-			var lastRect = GUILayoutUtility.GetLastRect();
-			var labelRect = lastRect.AlignRight(style.CalcWidth(text), 4);
-			GUI.Label(labelRect, text, style);
+			if (overlay)
+			{
+				var lastRect = GUILayoutUtility.GetLastRect();
+				var labelRect = lastRect.AlignRight(style.CalcWidth(text), 4);
+				GUI.Label(labelRect, text, style);
+			}
+			else
+			{
+				GUILayout.Label(text, style);
+			}
 		}
 
 		public static T EnumPopup<T>(GUIContent label, T value)

@@ -17,5 +17,12 @@ namespace Fusumity.Editor
 			rect.width = width;
 			return rect;
 		}
+
+		public static Rect AlignBottom(this Rect rect, float height, float offset = 0)
+		{
+			rect.y = rect.y + rect.height - height - offset;
+			rect.height = height;
+			return rect;
+		}
 	}
 }
