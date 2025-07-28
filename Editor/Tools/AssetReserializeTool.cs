@@ -56,12 +56,11 @@ namespace Fusumity.Editor
 
 		private static void ReserializeAssets(Type type = null, string folderPath = "Assets")
 		{
+			var filter = type != null ? $"t:{type.Name}" : string.Empty;
+			var guids = AssetDatabase.FindAssets(filter, new[] { folderPath });
+
 			try
 			{
-				var filter = type != null ? $"t: {type.Name}" : string.Empty;
-				var guids = AssetDatabase.FindAssets(filter,
-					new[] {folderPath});
-
 				for (int i = 0; i < guids.Length; i++)
 				{
 					var guid = guids[i];
@@ -71,19 +70,33 @@ namespace Fusumity.Editor
 
 					if (i % 100 == 0)
 					{
-						var progress = (float) i / guids.Length;
 						EditorUtility.DisplayProgressBar("Reserialize Assets",
-							$"Reserialize Assets... ({i}/{guids.Length}) Reserialized: {i}", progress);
+							$"Reserialize Assets... ({i}/{guids.Length})", (float)i / guids.Length);
 					}
 
-					var asset = AssetDatabase.LoadMainAssetAtPath(assetPath);
-					if (!asset)
-						continue;
+					UnityEngine.Object asset = null;
+					try
+					{
+						asset = AssetDatabase.LoadMainAssetAtPath(assetPath);
+						if (!asset)
+							continue;
 
-					ReserializeAsset(asset, false);
+						ReserializeAsset(asset, false);
+					}
+					catch (Exception e)
+					{
+						Debug.LogError($"[Reserialize ERROR]\nPath: {assetPath}\nName: {(asset ? asset.name : "(null)")}\n{e}");
+					}
 				}
 
-				AssetDatabase.SaveAssets();
+				try
+				{
+					AssetDatabase.SaveAssets();
+				}
+				catch (Exception e)
+				{
+					Debug.LogError($"[Reserialize SaveAssets ERROR]\n{e}");
+				}
 			}
 			finally
 			{
