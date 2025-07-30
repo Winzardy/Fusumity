@@ -78,12 +78,19 @@ namespace Fusumity.Editor
 
 					var asset = AssetDatabase.LoadMainAssetAtPath(assetPath);
 					if (!asset)
+					{
+						Debug.LogWarning($"Reserialize can't load {assetPath}");
 						continue;
+					}
 
 					ReserializeAsset(asset, false);
 				}
 
 				AssetDatabase.SaveAssets();
+			}
+			catch (Exception e)
+			{
+				Debug.LogError($"Reserialize exception {e}");
 			}
 			finally
 			{
