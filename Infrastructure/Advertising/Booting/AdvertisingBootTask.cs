@@ -7,7 +7,9 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using Advertising;
+using Advertising.Offline;
 using Fusumity.Reactive;
+using UnityEngine;
 
 #if FAKE
 using Advertising.Fake;
@@ -29,8 +31,11 @@ namespace Booting.Advertising
 	{
 		public override int Priority => HIGH_PRIORITY - 60;
 
+		[LabelText("Backend")]
+		[SerializeReference]
+		private IAdvertisingServiceFactory _factory = new OfflineAdvertisingServiceFactory();
+
 		private IAdvertisingIntegration _integration;
-		private AdvertisingEventsObserver _observer;
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
@@ -40,10 +45,10 @@ namespace Booting.Advertising
 			var settings = ContentManager.Get<UnityLevelPlaySettings>();
 			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectDesk.Platform);
 #endif
-			var management = new AdManagement(_integration);
+			var service = _factory?.Create();
+			var management = new AdManagement(_integration, service);
 			AdManager.Initialize(management);
 
-			_observer = new AdvertisingEventsObserver();
 			return UniTask.CompletedTask;
 		}
 
@@ -52,8 +57,6 @@ namespace Booting.Advertising
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (_integration is IDisposable disposable)
 				disposable.Dispose();
-
-			_observer.Dispose();
 
 			if (UnityLifecycle.ApplicationQuitting)
 				return;

@@ -266,7 +266,7 @@ namespace Content.ScriptableObjects.Editor
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
 				{
-					if (child.children.Count != 0 || child.fullPath == null)
+					if (child.fullPath.IsNullOrEmpty())
 						continue;
 
 					var constName = GetName(child.fullPath);
@@ -301,7 +301,7 @@ namespace Content.ScriptableObjects.Editor
 
 					classDeclaration = classDeclaration.AddMembers(fieldDeclaration);
 
-					space = true;
+					space = child.children.Count == 0;
 				}
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))

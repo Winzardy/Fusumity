@@ -1,0 +1,4 @@
+{
+  "name": "Advertising.Offline",
+  "references":[ "GUID:343deaaf83e0cee4ca978e7df0b80d21", "GUID:2bafac87e7f4b9b418d9448d219b01ab", "GUID:6dec8a5bf86841e59bcb2c2957cbac16", "GUID:7f24a995f30d4bdd9bb11cab7b795632", "GUID:bd10b8cc39d09ac4e9c31728752096c0" ]
+}

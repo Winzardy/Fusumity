@@ -14,7 +14,8 @@
         "Fusumity",
         "Game.App.BootTask.Advertising",
         "Sapientia",
-        "Messaging"
+        "Messaging",
+        "Advertising.Offline"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

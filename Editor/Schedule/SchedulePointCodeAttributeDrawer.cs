@@ -188,7 +188,7 @@ namespace Fusumity.Editor
 			GUILayout.Space(1);
 			style.fontSize -= 2;
 			var now = DateTime.UtcNow;
-			var date = point.GetNextDateTime(now);
+			var date = point.ToDateTime(now);
 
 			var remaining = date - now;
 

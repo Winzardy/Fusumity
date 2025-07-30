@@ -15,6 +15,7 @@ namespace Booting.Trading
 	[Serializable]
 	public class TradingBootTask : BaseBootTask
 	{
+		[LabelText("Backend")]
 		[SerializeReference]
 		private ITradingBackendFactory _factory;
 

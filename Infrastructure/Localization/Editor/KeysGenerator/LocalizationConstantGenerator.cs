@@ -95,6 +95,7 @@ namespace Localization.Editor
 				{
 					if (!current.children.ContainsKey(part))
 						current.children[part] = new GeneratorConstantsNode {name = part};
+
 					current = current.children[part];
 				}
 
@@ -150,7 +151,7 @@ namespace Localization.Editor
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
 				{
-					if (child.children.Count != 0 || child.fullPath == null)
+					if (child.fullPath.IsNullOrEmpty())
 						continue;
 
 					var constName = GetName(child.fullPath);
@@ -230,7 +231,7 @@ namespace Localization.Editor
 
 					classDeclaration = classDeclaration.AddMembers(fieldDeclaration);
 
-					space = true;
+					space = child.children.Count == 0;
 				}
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))

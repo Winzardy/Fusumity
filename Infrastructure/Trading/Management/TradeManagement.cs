@@ -10,7 +10,7 @@ namespace Game.App.BootTask
 	using TraderReference = ContentReference<TraderEntry>;
 	using TradeReference = ContentReference<TradeEntry>;
 
-	public interface ITradingBackend
+	public interface ITradingService
 	{
 		/// <summary>
 		/// Отправить детали сделки в backend
@@ -22,11 +22,14 @@ namespace Game.App.BootTask
 
 	public class TradeManagement : ITradeManagement
 	{
-		private readonly ITradingBackend _backend;
+		private readonly ITradingService _service;
 
-		public TradeManagement(ITradingBackend backend)
+		// Заглушка только для offline режима
+		private ITradingBackend _dummyBackend;
+
+		public TradeManagement(ITradingService service)
 		{
-			_backend = backend;
+			_service = service;
 		}
 
 		public bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
@@ -101,10 +104,10 @@ namespace Game.App.BootTask
 			if (payError != null)
 				return new TradeExecuteError(payError, null);
 
-			if (_backend != null)
+			if (_service != null)
 				return null;
 
-			tradeboard.Register<ITradingModel>(new DummyTradingModel());
+			tradeboard.Register<ITradingBackend>(new DummyTradingBackend());
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Execute(in trade, tradeboard))
@@ -148,7 +151,7 @@ namespace Game.App.BootTask
 				{
 					tradeboard.Register(receipts.ToArray());
 
-					_backend?.PushReceipts(tradeboard);
+					_service?.PushReceipts(tradeboard);
 
 					var compositeString = receipts.GetCompositeString(false, getter:
 						receipt => receipt.ToString(), numerate: receipts.Count > 1);
@@ -156,10 +159,11 @@ namespace Game.App.BootTask
 				}
 			}
 
-			if (_backend != null || !full)
+			if (_service != null || !full)
 				return !TradeAccess.CanPay(cost, tradeboard, out error) ? error : null;
 
-			tradeboard.Register<ITradingModel>(new DummyTradingModel());
+			_dummyBackend ??= new DummyTradingBackend();
+			tradeboard.Register(_dummyBackend);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Pay(cost, tradeboard))
@@ -169,13 +173,13 @@ namespace Game.App.BootTask
 		}
 	}
 
-	public class DummyTradingModel : ITradingModel
+	public class DummyTradingBackend : ITradingBackend
 	{
 		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt => null;
 	}
 
 	public interface ITradingBackendFactory
 	{
-		ITradingBackend Create();
+		ITradingService Create();
 	}
 }
