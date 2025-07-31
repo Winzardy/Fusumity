@@ -6,6 +6,11 @@ using Content;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Notifications;
+#if UNITY_ANDROID
+using Notifications.Android;
+#elif UNITY_IOS
+using Notifications.iOS;
+#endif
 
 namespace Booting.Notifications
 {
@@ -22,12 +27,12 @@ namespace Booting.Notifications
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
-#if UNITY_EDITOR
+#if !UNITY_EDITOR
 			_platform = new EditorNotificationPlatform();
 #elif UNITY_ANDROID
-			_platform = new Notifications.Android.AndroidNotificationPlatform();
+			_platform = new AndroidNotificationPlatform();
 #elif UNITY_IOS
-			_platform = new Notifications.iOS.iOSNotificationPlatform();
+			_platform = new iOSNotificationPlatform();
 #endif
 			var settings = ContentManager.Get<NotificationsSettings>();
 			var management = new NotificationsManagement(settings, _platform);

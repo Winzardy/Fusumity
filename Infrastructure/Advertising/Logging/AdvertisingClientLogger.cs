@@ -9,7 +9,7 @@ namespace Logging.Advertising
 #if UNITY_EDITOR
 		[UnityEditor.InitializeOnLoadMethod]
 #else
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
 #endif
 		private static void Setup() => AdsDebug.logger ??= new AdvertisingClientLogger();
 

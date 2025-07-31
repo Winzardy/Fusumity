@@ -17,7 +17,7 @@ namespace Logging.Targeting
 #if UNITY_EDITOR
 		[UnityEditor.InitializeOnLoadMethod]
 #else
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]
 #endif
 		private static void Setup() => ProjectDebug.logger ??= new ProjectClientLogger();
 	}

@@ -17,7 +17,7 @@ namespace Logging.InAppReview
 #if UNITY_EDITOR
 		[UnityEditor.InitializeOnLoadMethod]
 #else
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]
 #endif
 		private static void Setup() => InAppReviewDebug.logger ??= new InAppReviewClientLogger();
 	}

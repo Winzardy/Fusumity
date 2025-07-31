@@ -6,6 +6,8 @@ using Sirenix.OdinInspector;
 using InAppReview;
 #if USE_GOOGLE_PLAY
 using InAppReview.GooglePlay;
+#elif UNITY_IOS
+using InAppReview.AppStore;
 #endif
 
 namespace Booting.InAppReview
@@ -26,7 +28,7 @@ namespace Booting.InAppReview
 #if USE_GOOGLE_PLAY
 			platform = new GooglePlayInAppReview();
 #elif UNITY_IOS
-			platform = new InAppReview.AppStore.AppStoreInAppReview();
+			platform = new AppStoreInAppReview();
 #endif
 
 			InAppReviewManager.Initialize(platform);
