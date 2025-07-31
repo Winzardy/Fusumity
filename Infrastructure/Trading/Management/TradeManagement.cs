@@ -1,11 +1,11 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
-using Trading;
 
-namespace Game.App.BootTask
+namespace Trading
 {
 	using TraderReference = ContentReference<TraderEntry>;
 	using TradeReference = ContentReference<TradeEntry>;
@@ -13,7 +13,7 @@ namespace Game.App.BootTask
 	public interface ITradingService
 	{
 		/// <summary>
-		/// Отправить детали сделки в backend
+		/// Отправить детали сделки в сервис
 		/// </summary>
 		public void PushReceipts(Tradeboard tradeboard);
 
@@ -22,10 +22,10 @@ namespace Game.App.BootTask
 
 	public class TradeManagement : ITradeManagement
 	{
-		private readonly ITradingService _service;
-
 		// Заглушка только для offline режима
 		private ITradingBackend _dummyBackend;
+
+		private readonly ITradingService _service;
 
 		public TradeManagement(ITradingService service)
 		{
@@ -153,9 +153,9 @@ namespace Game.App.BootTask
 
 					_service?.PushReceipts(tradeboard);
 
-					var compositeString = receipts.GetCompositeString(false, getter:
+					var cStr = receipts.GetCompositeString(true, getter:
 						receipt => receipt.ToString(), numerate: receipts.Count > 1);
-					TradingDebug.Log($"{tradeboard.Id}, receipts: {compositeString}");
+					TradingDebug.Log($"{tradeboard.Id}, receipts:{cStr}");
 				}
 			}
 
@@ -178,7 +178,7 @@ namespace Game.App.BootTask
 		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt => null;
 	}
 
-	public interface ITradingBackendFactory
+	public interface ITradingServiceFactory
 	{
 		ITradingService Create();
 	}

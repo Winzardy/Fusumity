@@ -4,9 +4,11 @@ using Content;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using InAppPurchasing;
+using InAppPurchasing.Offline;
 using InAppPurchasing.Unity;
 using Sirenix.OdinInspector;
 using Targeting;
+using UnityEngine;
 
 namespace Booting.InAppPurchasing
 {
@@ -19,18 +21,23 @@ namespace Booting.InAppPurchasing
 	{
 		public override int Priority => HIGH_PRIORITY - 50;
 
-		private IInAppPurchasingService _service;
-		private UniTaskCompletionSource _storePromotionalCompletionSource;
+		[LabelText("Backend")]
+		[SerializeReference]
+		private IInAppPurchasingServiceFactory _factory = new OfflineInAppPurchasingServiceFactory();
 
-		private InAppPurchasingEventsObserver _observer;
+		private IInAppPurchasingIntegration _integration;
+		private UniTaskCompletionSource _storePromotionalCompletionSource;
 
 		public override UniTask RunAsync(CancellationToken cancellationToken = default)
 		{
 			_storePromotionalCompletionSource = new UniTaskCompletionSource();
 
+			var service = _factory.Create();
+
 			var settings = ContentManager.Get<UnityPurchasingSettings>();
-			var unityPurchasingService = new UnityPurchasingService
+			var unityPurchasingService = new UnityPurchasingIntegration
 			(
+				service,
 				settings,
 				in ProjectDesk.Distribution,
 				ProjectDesk.Identifier,
@@ -42,28 +49,24 @@ namespace Booting.InAppPurchasing
 			   .ContinueWith(OnInitialized)
 			   .Forget();
 
-			_service = unityPurchasingService;
+			_integration = unityPurchasingService;
 
-			var management = new IAPManagement(_service);
+			var management = new IAPManagement(_integration, service);
 			IAPManager.Initialize(management);
-
-			_observer = new InAppPurchasingEventsObserver();
 
 			return UniTask.CompletedTask;
 
 			void OnInitialized(UnityPurchasingInitializationFailureReason failureReason)
 			{
 				if (failureReason != UnityPurchasingInitializationFailureReason.None)
-					IAPDebug.LogError($"Failed to initialize in-app purchasing service with reason [ {failureReason} ]");
+					IAPDebug.LogError($"Failed to initialize in-app purchasing integration with reason [ {failureReason} ]");
 			}
 		}
 
 		protected override void OnDispose()
 		{
-			_observer?.Dispose();
-
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable disposable)
+			if (_integration is IDisposable disposable)
 				disposable.Dispose();
 
 			_storePromotionalCompletionSource?.TrySetCanceled();

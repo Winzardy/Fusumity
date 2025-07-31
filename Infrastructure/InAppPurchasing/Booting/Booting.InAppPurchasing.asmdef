@@ -10,7 +10,8 @@
     "Targeting",
     "UnityEngine.Purchasing",
     "Fusumity",
-    "Sapientia"
+    "Sapientia",
+    "InAppPurchasing.Offline"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

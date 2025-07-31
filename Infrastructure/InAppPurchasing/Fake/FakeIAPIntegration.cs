@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace InAppPurchasing.Fake
 {
-	public class FakeIAPService : IInAppPurchasingService
+	public class FakeIAPIntegration : IInAppPurchasingIntegration
 	{
 		public const bool DEFAULT_USE_FAKE_RESTORE_TRANSACTIONS = false;
 

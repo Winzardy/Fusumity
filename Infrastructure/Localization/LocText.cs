@@ -85,6 +85,9 @@ namespace Localization
 			if (composite)
 				return composite.ToString();
 
+			if (key.IsNullOrEmpty())
+				return defaultValue;
+
 			var text = LocManager.Get(key, defaultValue);
 
 			if (text.IsNullOrEmpty())

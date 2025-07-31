@@ -16,7 +16,7 @@ namespace Booting.Content
 #endif
 
 	[TypeRegistryItem(
-		"\u2009Content", //В начале делаем отступ из-за отрисовки...
+		"\u2009Content Management", //В начале делаем отступ из-за отрисовки...
 		"",
 		SdfIconType.JournalBookmarkFill)]
 	[Serializable]

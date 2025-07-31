@@ -5,6 +5,7 @@ using System.Threading;
 using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Sapientia.Extensions;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
@@ -64,6 +65,9 @@ namespace Localization
 		{
 			if (!_table)
 				return defaultValue;
+
+			if (key.IsNullOrEmpty())
+				throw LocalizationDebug.NullException("Key cannot be null or empty!");
 
 			var entry = _table.GetEntry(key);
 

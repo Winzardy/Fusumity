@@ -6,6 +6,7 @@ namespace InAppPurchasing
 {
 	public abstract partial class IAPProductEntry
 	{
+		// TODO: MetaData?
 		[ClientOnly]
 		public string titleLocKey;
 		[ClientOnly]

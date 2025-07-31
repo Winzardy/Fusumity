@@ -72,7 +72,7 @@ namespace InAppPurchasing.Unity
 		public Dictionary<DistributionEntry, Dictionary<CountryEntry, IAPBillingEntry>> storeToCountryToBilling;
 	}
 
-	public partial class UnityPurchasingService : IInAppPurchasingService, IDetailedStoreListener
+	public partial class UnityPurchasingIntegration : IInAppPurchasingIntegration, IDetailedStoreListener
 	{
 		public string Name => "UnityPurchasing";
 
@@ -129,6 +129,8 @@ namespace InAppPurchasing.Unity
 		/// </summary>
 		private readonly UniTaskCompletionSource _storePromotionalCompletionSource;
 
+		private IInAppPurchasingService _service;
+
 		public bool IsInitialized => _storeController != null && _pending != null;
 
 		public event PurchaseCompleted PurchaseCompleted;
@@ -138,11 +140,12 @@ namespace InAppPurchasing.Unity
 		public event PurchaseDeferred PurchaseDeferred;
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 
-		public UnityPurchasingService(in UnityPurchasingSettings settings,
+		public UnityPurchasingIntegration(IInAppPurchasingService service, in UnityPurchasingSettings settings,
 			in DistributionEntry distributionPlatform,
 			string appIdentifier,
 			UniTaskCompletionSource storePromotionalCompletionSource = null)
 		{
+			_service = service;
 			_settings = settings;
 			_distributionPlatform = distributionPlatform;
 			_appIdentifier = appIdentifier;
@@ -151,7 +154,7 @@ namespace InAppPurchasing.Unity
 
 		public async UniTask<UnityPurchasingInitializationFailureReason> InitializeAsync(CancellationToken cancellationToken = default)
 		{
-			var success = await Fusumity.Utility.UnityServices.UnityServiceInitializationAsync(cancellationToken);
+			var success = await UnityServices.UnityServiceInitializationAsync(cancellationToken);
 
 			if (!success)
 				return UnityPurchasingInitializationFailureReason.UnityServices;
@@ -462,21 +465,22 @@ namespace InAppPurchasing.Unity
 				return PurchaseProcessingResult.Complete;
 			}
 
-			var transactionId = product.transactionID;
-
-			if (!transactionId.IsNullOrEmpty() && LocalSave.Has(transactionId))
-			{
-				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: Transaction by id [ {transactionId} ] has already been completed " +
-					$"for store product id [ {storeProductId} ]");
-				return PurchaseProcessingResult.Complete;
-			}
-
 			var isRestored = product.appleProductIsRestored;
 
 			if (isRestored)
 			{
-				IAPDebug.Log($"[{entry.Type}] Apple Restore detected for store product id [ {storeProductId} ]");
+				IAPDebug.Log($"[{entry.Type}] restore purchase detected for product id [ {storeProductId} ] by transaction id [ {product.transactionID} ]");
+
 				// Отдельная логика для восстановления (если нужна)
+			}
+
+			var transactionId = product.transactionID;
+
+			if (!transactionId.IsNullOrEmpty() && _service.Contains(transactionId))
+			{
+				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: Transaction by id [ {transactionId} ] has already been completed " +
+					$"for store product id [ {storeProductId} ]");
+				return PurchaseProcessingResult.Complete;
 			}
 
 			if (!ValidateReceipt(product))
@@ -505,8 +509,7 @@ namespace InAppPurchasing.Unity
 				_pending.Remove(storeProductId);
 				_storeController.ConfirmPendingPurchase(args.purchasedProduct);
 
-				// Сохраняем транзакцию локально, чтобы избежать повторов
-				LocalSave.Save(transactionId, info);
+				_service.Register(transactionId, info);
 			}
 			catch (Exception e)
 			{

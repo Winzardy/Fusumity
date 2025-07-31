@@ -12,8 +12,8 @@ namespace InAppPurchasing.Cheats
 		[Variable(OnValueChanged = nameof(OnUseFakeUpdated))]
 		public bool useFake;
 
-		private IInAppPurchasingService _main;
-		private IInAppPurchasingService _fake;
+		private IInAppPurchasingIntegration _main;
+		private IInAppPurchasingIntegration _fake;
 
 		public void OnUseFakeUpdated()
 		{
@@ -23,13 +23,13 @@ namespace InAppPurchasing.Cheats
 			if (useFake)
 			{
 				var skip = false;
-				if (IAPManager.Service is FakeIAPService service)
+				if (IAPManager.Integration is FakeIAPIntegration service)
 				{
 					TrySetFake(service);
 					skip = true;
 				}
 				else if (_fake == null)
-					TrySetFake(new FakeIAPService());
+					TrySetFake(new FakeIAPIntegration());
 
 				if (skip)
 					return;
@@ -43,13 +43,13 @@ namespace InAppPurchasing.Cheats
 			}
 		}
 
-		private void TrySetFake(FakeIAPService service)
+		private void TrySetFake(FakeIAPIntegration integration)
 		{
 			if (_fake != null)
 				return;
 
-			_fake = service;
-			LogConsole.GetCommand<IAPFakeRestoreTransactionsCheats>().SetFake((FakeIAPService) _fake);
+			_fake = integration;
+			LogConsole.GetCommand<IAPFakeRestoreTransactionsCheats>().SetFake((FakeIAPIntegration) _fake);
 		}
 	}
 
@@ -59,7 +59,7 @@ namespace InAppPurchasing.Cheats
 		[Variable(OnValueChanged = nameof(OnUseFakeRestoreTransactionsUpdated))]
 		public bool useFakeRestoreTransactions;
 
-		private FakeIAPService _serivce;
+		private FakeIAPIntegration _serivce;
 
 		public void OnUseFakeRestoreTransactionsUpdated()
 		{
@@ -74,10 +74,10 @@ namespace InAppPurchasing.Cheats
 			if (TryGetIntegration(out _serivce))
 				useFakeRestoreTransactions = _serivce.IsRestoreTransactionsSupported;
 			else
-				useFakeRestoreTransactions = FakeIAPService.DEFAULT_USE_FAKE_RESTORE_TRANSACTIONS;
+				useFakeRestoreTransactions = FakeIAPIntegration.DEFAULT_USE_FAKE_RESTORE_TRANSACTIONS;
 		}
 
-		private bool TryGetIntegration(out FakeIAPService integration)
+		private bool TryGetIntegration(out FakeIAPIntegration integration)
 		{
 			integration = _serivce;
 
@@ -85,7 +85,7 @@ namespace InAppPurchasing.Cheats
 				return true;
 			if (!IAPManager.IsInitialized)
 				return false;
-			if (IAPManager.Service is not FakeIAPService x)
+			if (IAPManager.Integration is not FakeIAPIntegration x)
 				return false;
 
 			SetFake(x);
@@ -93,10 +93,10 @@ namespace InAppPurchasing.Cheats
 			return true;
 		}
 
-		public void SetFake(FakeIAPService service)
+		public void SetFake(FakeIAPIntegration integration)
 		{
-			_serivce = service;
-			service.IsRestoreTransactionsSupported = useFakeRestoreTransactions;
+			_serivce = integration;
+			integration.IsRestoreTransactionsSupported = useFakeRestoreTransactions;
 			refreshUI?.Invoke();
 		}
 

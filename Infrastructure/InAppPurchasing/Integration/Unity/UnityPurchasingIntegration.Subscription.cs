@@ -6,8 +6,7 @@ namespace InAppPurchasing.Unity
 {
 	using UnitySubscriptionInfo = UnityEngine.Purchasing.SubscriptionInfo;
 
-
-	public partial class UnityPurchasingService
+	public partial class UnityPurchasingIntegration
 	{
 		private const int DELAY_UPDATING_SUBSCRIPTION_CACHE_MS = 10000; // 10 secs
 		private static readonly long DELAY_UPDATING_SUBSCRIPTION_CACHE_TICKS = DELAY_UPDATING_SUBSCRIPTION_CACHE_MS.ToTicks();

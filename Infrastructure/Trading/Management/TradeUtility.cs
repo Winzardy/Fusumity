@@ -36,20 +36,5 @@ namespace Trading
 			tradeboard.Bind(in reference.Read());
 			return TradeManager.ExecuteAsync(reference, tradeboard, cancellationToken);
 		}
-
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// public static bool CanPay(this in TradeEntry trade, Tradeboard tradeboard, out TradePayError? error)
-		// {
-		// 	tradeboard.Bind(in trade);
-		// 	return TradeManager.CanPay(trade.cost, tradeboard, out error);
-		// }
-		//
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// public static Task<TradePayError?> PayAsync(this in TradeEntry trade, Tradeboard tradeboard,
-		// 	CancellationToken cancellationToken = default)
-		// {
-		// 	tradeboard.Bind(in trade);
-		// 	return TradeManager.PayAsync(trade.cost, tradeboard, cancellationToken);
-		// }
 	}
 }

@@ -9,10 +9,10 @@ namespace Advertising.Offline
 	[TypeRegistryItem("\u2009Offline", "", SdfIconType.Octagon)]
 	public class OfflineAdvertisingServiceFactory : IAdvertisingServiceFactory
 	{
-		public IAdvertisingService Create() => new OfflineAdvertisingBackend();
+		public IAdvertisingService Create() => new OfflineAdvertisingService();
 	}
 
-	public class OfflineAdvertisingBackend : IAdvertisingService
+	public class OfflineAdvertisingService : IAdvertisingService
 	{
 		private DateTime Now => DateTime.UtcNow;
 
