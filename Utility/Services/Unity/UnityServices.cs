@@ -13,22 +13,26 @@ namespace Fusumity.Utility
 		/// </summary>
 		public static async UniTask<bool> UnityServiceInitializationAsync(CancellationToken cancellationToken = default)
 		{
-			switch (global::Unity.Services.Core.UnityServices.State)
+			var servicesInitializationState = Unity.Services.Core.UnityServices.State;
+			switch (servicesInitializationState)
 			{
 				case ServicesInitializationState.Initialized:
 					return true;
 
 				case ServicesInitializationState.Uninitialized:
-					await global::Unity.Services.Core.UnityServices.InitializeAsync()
-					   .AsUniTask().
-						AttachExternalCancellation(cancellationToken);
-					return global::Unity.Services.Core.UnityServices.State == ServicesInitializationState.Initialized;
+					Debug.Log("Initializing UnityServices");
+					await Unity.Services.Core.UnityServices.InitializeAsync()
+					   .AsUniTask().AttachExternalCancellation(cancellationToken);
+					servicesInitializationState = Unity.Services.Core.UnityServices.State;
+					var success = servicesInitializationState == ServicesInitializationState.Initialized;
+					Debug.Log($"Initialized UnityServices, success: {success}");
+					return success;
 
 				case ServicesInitializationState.Initializing:
 					var tcs = new UniTaskCompletionSource<bool>();
 
-					global::Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
-					global::Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
+					Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
+					Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
 
 					try
 					{
@@ -42,16 +46,16 @@ namespace Fusumity.Utility
 
 					void OnInitializedInternal()
 					{
-						global::Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
-						global::Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
+						Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
+						Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
 
 						tcs.TrySetResult(true);
 					}
 
 					void OnInitializeFailedInternal(Exception exception)
 					{
-						global::Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
-						global::Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
+						Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
+						Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
 
 						Debug.LogException(exception);
 						tcs.TrySetResult(false);
@@ -59,8 +63,8 @@ namespace Fusumity.Utility
 
 					void Cancel()
 					{
-						global::Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
-						global::Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
+						Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
+						Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
 						tcs.TrySetCanceled();
 					}
 			}
