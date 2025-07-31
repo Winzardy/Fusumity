@@ -20,12 +20,12 @@ namespace Fusumity.Utility
 					return true;
 
 				case ServicesInitializationState.Uninitialized:
-					Debug.Log("Initializing UnityServices");
+					Debug.Log("[UnityServices] Initializing");
 					await Unity.Services.Core.UnityServices.InitializeAsync()
 					   .AsUniTask().AttachExternalCancellation(cancellationToken);
 					servicesInitializationState = Unity.Services.Core.UnityServices.State;
 					var success = servicesInitializationState == ServicesInitializationState.Initialized;
-					Debug.Log($"Initialized UnityServices, success: {success}");
+					Debug.Log($"[UnityServices] Initialized UnityServices, success: {success}");
 					return success;
 
 				case ServicesInitializationState.Initializing:

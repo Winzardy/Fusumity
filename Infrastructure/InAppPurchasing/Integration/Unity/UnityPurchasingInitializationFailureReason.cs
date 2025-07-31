@@ -11,6 +11,8 @@ namespace InAppPurchasing.Unity
 		NoProductsAvailable,
 		AppNotKnown,
 		UnknownPlatform,
-		UnknownCountry
+		UnknownCountry,
+
+		Exception
 	}
 }

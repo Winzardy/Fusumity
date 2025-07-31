@@ -154,69 +154,77 @@ namespace InAppPurchasing.Unity
 
 		public async UniTask<UnityPurchasingInitializationFailureReason> InitializeAsync(CancellationToken cancellationToken = default)
 		{
-			var success = await UnityServices.UnityServiceInitializationAsync(cancellationToken);
-
-			if (!success)
-				return UnityPurchasingInitializationFailureReason.UnityServices;
-
-			var autoSetDefaultBilling = true;
-
-			if (_settings.storeToCountryToBilling.TryGetValue(_distributionPlatform, out var countryToBilling))
+			try
 			{
-				var country = await UserLocator.GetCountryAsync(cancellationToken);
+				var success = await UnityServices.UnityServiceInitializationAsync(cancellationToken);
 
-				if (country == UserLocator.UNDEFINED)
-					return UnityPurchasingInitializationFailureReason.UnknownCountry;
+				if (!success)
+					return UnityPurchasingInitializationFailureReason.UnityServices;
 
-				if (countryToBilling.TryGetValue(country, out var billing))
+				var autoSetDefaultBilling = true;
+
+				if (_settings.storeToCountryToBilling.TryGetValue(_distributionPlatform, out var countryToBilling))
 				{
-					_billing = billing;
-					autoSetDefaultBilling = false;
-				}
-			}
+					var country = await UserLocator.GetCountryAsync(cancellationToken);
 
-			if (autoSetDefaultBilling)
-				_billing = GetDefaultBilling(_distributionPlatform);
+					if (country == UserLocator.UNDEFINED)
+						return UnityPurchasingInitializationFailureReason.UnknownCountry;
+
+					if (countryToBilling.TryGetValue(country, out var billing))
+					{
+						_billing = billing;
+						autoSetDefaultBilling = false;
+					}
+				}
+
+				if (autoSetDefaultBilling)
+					_billing = GetDefaultBilling(_distributionPlatform);
 
 #if !UNITY_EDITOR
-			if (_billing == IAPBillingType.UNDEFINED)
-				return UnityPurchasingInitializationFailureReason.UnknownPlatform;
+				if (_billing == IAPBillingType.UNDEFINED)
+					return UnityPurchasingInitializationFailureReason.UnknownPlatform;
 #endif
 
-			var module = StandardPurchasingModule.Instance();
-			var builder = ConfigurationBuilder.Instance(module);
+				var module = StandardPurchasingModule.Instance();
+				var builder = ConfigurationBuilder.Instance(module);
 
-			_storeProductIdToEntry = new BidirectionalMap<string, IAPProductEntry>(4);
+				_storeProductIdToEntry = new BidirectionalMap<string, IAPProductEntry>(4);
 
-			AddProductsToBuilder<IAPConsumableProductEntry>(builder);
-			AddProductsToBuilder<IAPNonConsumableProductEntry>(builder);
-			AddProductsToBuilder<IAPSubscriptionProductEntry>(builder);
+				AddProductsToBuilder<IAPConsumableProductEntry>(builder);
+				AddProductsToBuilder<IAPNonConsumableProductEntry>(builder);
+				AddProductsToBuilder<IAPSubscriptionProductEntry>(builder);
 
-			if (_billing == IAPBillingType.GOOGLE_PLAY)
-			{
-				var configuration = builder.Configure<IGooglePlayConfiguration>();
-				configuration.SetDeferredPurchaseListener(OnDeferredPurchase);
+				if (_billing == IAPBillingType.GOOGLE_PLAY)
+				{
+					var configuration = builder.Configure<IGooglePlayConfiguration>();
+					configuration.SetDeferredPurchaseListener(OnDeferredPurchase);
+				}
+
+				if (_billing == IAPBillingType.APP_STORE)
+				{
+					var configuration = builder.Configure<IAppleConfiguration>();
+					_appleCanMakePayments = configuration.canMakePayments;
+					_appleAppReceipt = configuration.appReceipt;
+					configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
+
+					// Данный метод может обрабатывать отозванный продукты (family share)
+					//configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
+				}
+
+				_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
+
+				var productsStr = builder.products
+				   .GetCompositeString(true, definition => definition.storeSpecificId);
+				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
+
+				UnityPurchasing.Initialize(this, builder);
+				return await _initializationCompletionSource.Task;
 			}
-
-			if (_billing == IAPBillingType.APP_STORE)
+			catch (Exception ex)
 			{
-				var configuration = builder.Configure<IAppleConfiguration>();
-				_appleCanMakePayments = configuration.canMakePayments;
-				_appleAppReceipt = configuration.appReceipt;
-				configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
-
-				// Данный метод может обрабатывать отозванный продукты (family share)
-				//configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
+				IAPDebug.LogException(ex);
+				return UnityPurchasingInitializationFailureReason.Exception;
 			}
-
-			_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
-
-			var productsStr = builder.products
-			   .GetCompositeString(true, definition => definition.storeSpecificId);
-			IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
-
-			UnityPurchasing.Initialize(this, builder);
-			return await _initializationCompletionSource.Task;
 		}
 
 		void IStoreListener.OnInitialized(IStoreController controller, IExtensionProvider extensions)
@@ -427,10 +435,10 @@ namespace InAppPurchasing.Unity
 			if (!_pending.Add(storeProductId))
 				return false;
 
-			_storeController.InitiatePurchase(storeProductId);
-
 			var entry = _storeProductIdToEntry[storeProductId];
 			PurchaseRequested?.Invoke(entry);
+
+			_storeController.InitiatePurchase(storeProductId);
 			return true;
 		}
 
@@ -469,7 +477,8 @@ namespace InAppPurchasing.Unity
 
 			if (isRestored)
 			{
-				IAPDebug.Log($"[{entry.Type}] restore purchase detected for product id [ {storeProductId} ] by transaction id [ {product.transactionID} ]");
+				IAPDebug.Log(
+					$"[{entry.Type}] restore purchase detected for product id [ {storeProductId} ] by transaction id [ {product.transactionID} ]");
 
 				// Отдельная логика для восстановления (если нужна)
 			}

@@ -2,12 +2,11 @@ using Sapientia.Extensions;
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEditor.Localization.Plugins.Google;
-using UnityEditor.Localization.Reporting;
 using UnityEngine;
 
 namespace Localization.Editor
 {
-	public static class LocalizationConstantsGeneratorMenu
+	public static class LocalizationToolsMenu
 	{
 		private const string DOC_URL = "https://www.notion.so/winzardy/Localization-38343db9d7f845f4b4361163736075e6?source=copy_link";
 

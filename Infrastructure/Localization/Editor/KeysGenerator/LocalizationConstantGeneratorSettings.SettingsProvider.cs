@@ -7,15 +7,15 @@ namespace Localization.Editor
 {
 	public partial class LocalizationConstantGeneratorSettings
 	{
-		[MenuItem(LocalizationConstantsGeneratorMenu.CONSTANTS_MENU_PATH + "Settings", priority = 60)]
+		[MenuItem(LocalizationToolsMenu.CONSTANTS_MENU_PATH + "Settings", priority = 60)]
 		private static void OpenGenerateSettings()
 		{
 			SettingsService.OpenProjectSettings(SETTINGS_PROVIDER_PATH);
 		}
 
-		internal const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Localization/";
+		internal const string SETTINGS_PROVIDER_ROOT_PATH = "Project/Localization";
 		private const string SETTINGS_PROVIDER_LABEL = "Constant Generator";
-		public const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + SETTINGS_PROVIDER_LABEL;
+		public const string SETTINGS_PROVIDER_PATH = SETTINGS_PROVIDER_ROOT_PATH + "/" + SETTINGS_PROVIDER_LABEL;
 
 		private static OdinEditor _editor;
 

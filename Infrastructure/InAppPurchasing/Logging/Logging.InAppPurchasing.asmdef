@@ -8,7 +8,12 @@
         "UnityEngine.Purchasing",
         "Targeting",
         "InAppPurchasing.Fake",
-        "Logging"
+        "Logging",
+        "UnityEditor.UI",
+        "UnityEngine.UI",
+        "WLog",
+        "Fusumity",
+        "Sapientia"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -16,9 +21,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [
-        "IAP"
-    ],
     "versionDefines": [],
     "noEngineReferences": false
 }
