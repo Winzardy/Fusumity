@@ -324,18 +324,18 @@ namespace Fusumity.Editor
 
 		#endregion
 
-		public static void SuffixValue(GUIContent label, object value, string text)
+		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle textStyle = null, float textOffset = 0)
 		{
 			var style = EditorStyles.textField;
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
 			var width = style.CalcWidth(value.ToString());
-			var offset = width;
+			var offset = width + textOffset;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
 
-			style = new GUIStyle(EditorStyles.label)
+			style = textStyle ?? new GUIStyle(EditorStyles.label)
 			{
 				fontSize = EditorStyles.textField.fontSize - 3,
 				normal =

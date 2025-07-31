@@ -32,11 +32,12 @@ namespace InAppPurchasing.Offline
 		public bool Contains(string transactionId)
 			=> LocalSave.Has(transactionId);
 
-		public void Register(string transactionId, PurchaseReceipt receipt)
+		public InAppPurchasingRegisterResult Register(string transactionId, PurchaseReceipt receipt)
 		{
 			_transactionsToSave.Add(transactionId);
-
 			LocalSave.Save(transactionId, receipt);
+
+			return InAppPurchasingRegisterResult.Done;
 		}
 
 		public PurchaseReceipt? GetReceipt(string transactionId)
@@ -47,7 +48,7 @@ namespace InAppPurchasing.Offline
 			return null;
 		}
 
-		public string[] GetAll(string transactionId) => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
+		public string[] GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
 		   .ToArray();
 
 		private void OnLateUpdate()

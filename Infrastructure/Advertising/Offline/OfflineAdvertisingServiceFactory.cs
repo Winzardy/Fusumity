@@ -40,17 +40,18 @@ namespace Advertising.Offline
 			return true;
 		}
 
-		public void RegisterShow(AdPlacementKey key)
+		public AdvertisingRegisterResult RegisterShow(AdPlacementKey key)
 		{
 			if (!key.TryGetEntry(out var entry))
 				throw new Exception($"Failed to register show: Not found AdPlacementEntry for key [ {key} ]");
 
 			if(entry.usageLimit.IsEmpty())
-				return;
+				return AdvertisingRegisterResult.Done;
 
 			var model = LocalSave.Load<AdPlacementOfflineModel>(key);
 			UsageLimitUtility.ApplyUsage(ref model.usageLimit, in entry.usageLimit, Now);
 			LocalSave.Save(key, model);
+			return AdvertisingRegisterResult.Done;
 		}
 	}
 

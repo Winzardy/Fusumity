@@ -78,36 +78,30 @@ namespace Content.ContextLabel.Editor
 
 			var originalColor = GUI.color;
 
+			var style = EditorStyles.textField;
 			if (!contains)
 				GUI.color = SirenixGUIStyles.YellowWarningColor;
-
-			var style = new GUIStyle(EditorStyles.textField)
+			else
 			{
-				fontSize = EditorStyles.textField.fontSize - 3,
-				//alignment = TextAnchor.MiddleLeft,
-				normal =
+				style = new GUIStyle(EditorStyles.textField)
 				{
-					textColor = Color.gray
-				},
-				hover =
-				{
-					textColor = Color.gray
-				}
-			};
+					fontSize = EditorStyles.textField.fontSize - 3,
+					normal =
+					{
+						textColor = Color.gray
+					},
+					hover =
+					{
+						textColor = Color.gray
+					}
+				};
+			}
 
 			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.IntField(textFieldPosition, label, selectedKey, style);
 			GUI.color = originalColor;
 
 			if (currentCatalog.TryGet(selectedKey, out var labelByKey))
-			{
-				var width = EditorStyles.label.CalcWidth(labelByKey);
-				var offset = style.CalcWidth(selectedKey.ToString()) + 18f;
-				if (!label.text.IsNullOrEmpty())
-					offset += GUIHelper.BetterLabelWidth;
-
-				var labelRect = textFieldPosition.AlignLeft(width, offset);
-				GUI.Label(labelRect, labelByKey, EditorStyles.label);
-			}
+				FusumityEditorGUILayout.SuffixValue(label, selectedKey, labelByKey, EditorStyles.label, -1.5f);
 
 			if (!_selector.show)
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretDownFill);
