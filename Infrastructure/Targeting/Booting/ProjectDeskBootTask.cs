@@ -30,9 +30,6 @@ namespace Booting.Targeting
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			ProjectDesk.Terminate();
 		}
 

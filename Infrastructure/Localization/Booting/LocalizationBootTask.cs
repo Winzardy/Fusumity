@@ -29,9 +29,6 @@ namespace Booting.Localization
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			LocManager.Terminate();
 		}
 	}

@@ -4,13 +4,12 @@
 
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
-using Sirenix.OdinInspector;
 using Advertising;
 using Advertising.Offline;
+using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Sirenix.OdinInspector;
 using UnityEngine;
-
 #if FAKE
 using Advertising.Fake;
 
@@ -35,6 +34,7 @@ namespace Booting.Advertising
 		[SerializeReference]
 		private IAdvertisingServiceFactory _factory = new OfflineAdvertisingServiceFactory();
 
+		private IAdvertisingService _service;
 		private IAdvertisingIntegration _integration;
 
 		public override UniTask RunAsync(CancellationToken token = default)
@@ -45,8 +45,8 @@ namespace Booting.Advertising
 			var settings = ContentManager.Get<UnityLevelPlaySettings>();
 			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectDesk.Platform);
 #endif
-			var service = _factory?.Create();
-			var management = new AdManagement(_integration, service);
+			_service = _factory.Create();
+			var management = new AdManagement(_integration, _service);
 			AdManager.Initialize(management);
 
 			return UniTask.CompletedTask;
@@ -58,8 +58,9 @@ namespace Booting.Advertising
 			if (_integration is IDisposable disposable)
 				disposable.Dispose();
 
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (_service is IDisposable disposable2)
+				disposable2.Dispose();
 
 			AdManager.Terminate();
 		}

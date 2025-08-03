@@ -43,9 +43,6 @@ namespace Booting.Notifications
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			_platform?.Dispose();
 			NotificationsCenter.Terminate();
 		}

@@ -38,9 +38,6 @@ namespace Booting.InAppReview
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			InAppReviewManager.Terminate();
 		}
 	}

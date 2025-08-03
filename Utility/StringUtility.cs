@@ -69,9 +69,6 @@ namespace Fusumity.Utility
 			return char.ToUpperInvariant(source[0]) + source[1..];
 		}
 
-		public static StringBuilder Prepend(this StringBuilder builder, string value)
-			=> builder.Insert(0, value);
-
 		/// <summary>
 		/// Работает только в Editor, но при желании можно добавить в Runtime
 		/// </summary>

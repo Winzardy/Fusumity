@@ -24,8 +24,8 @@ namespace Booting.Trading
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
-			var service = _factory?.Create();
-			var management = new TradeManagement(service);
+			_service = _factory?.Create();
+			var management = new TradeManagement(_service);
 			TradeManager.Initialize(management);
 			return UniTask.CompletedTask;
 		}
@@ -35,6 +35,11 @@ namespace Booting.Trading
 			//  ReSharper disable once SuspiciousTypeConversion.Global
 			if (_service is IDisposable disposable)
 				disposable.Dispose();
+
+			TradeManager.Terminate();
 		}
+
+		public override void OnBootCompleted()
+			=> _service.Initialize();
 	}
 }

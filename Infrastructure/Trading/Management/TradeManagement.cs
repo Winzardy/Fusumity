@@ -12,6 +12,7 @@ namespace Trading
 
 	public interface ITradingService
 	{
+		public void Initialize();
 		/// <summary>
 		/// Отправить детали сделки в сервис
 		/// </summary>
@@ -104,6 +105,7 @@ namespace Trading
 			if (payError != null)
 				return new TradeExecuteError(payError, null);
 
+			// Если Service не задан значит offline режим, можно было перенести это в кастомный сервис
 			if (_service != null)
 				return null;
 
@@ -116,9 +118,9 @@ namespace Trading
 			return TradeExecuteError.NotImplemented;
 		}
 
-		/// <param name="full">Нужно ли в конце выполнить Pay если IExternalTradingModel не задан</param>
+		/// <param name="fullPay">Нужно ли в конце выполнить Pay если IExternalTradingModel не задан</param>
 		private async Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
-			CancellationToken cancellationToken, bool full)
+			CancellationToken cancellationToken, bool fullPay)
 		{
 			if (!CanPay(cost, tradeboard, out var error))
 				return error;
@@ -159,8 +161,8 @@ namespace Trading
 				}
 			}
 
-			if (_service != null || !full)
-				return !TradeAccess.CanPay(cost, tradeboard, out error) ? error : null;
+			if (_service != null || !fullPay)
+				return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
 
 			_dummyBackend ??= new DummyTradingBackend();
 			tradeboard.Register(_dummyBackend);

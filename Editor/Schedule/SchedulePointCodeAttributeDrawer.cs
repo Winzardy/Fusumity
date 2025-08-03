@@ -185,7 +185,7 @@ namespace Fusumity.Editor
 				alignment = TextAnchor.UpperLeft,
 				richText = true,
 			};
-			GUILayout.Space(1);
+
 			style.fontSize -= 2;
 			var now = DateTime.UtcNow;
 			var date = point.ToDateTime(now);

@@ -19,7 +19,7 @@ namespace InAppPurchasing.Offline
 
 		private readonly List<string> _transactionsToSave = new();
 
-		public OfflineInAppPurchasingService()
+		public void Initialize()
 		{
 			UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
 		}
@@ -50,6 +50,8 @@ namespace InAppPurchasing.Offline
 
 		public string[] GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
 		   .ToArray();
+
+		public DateTime GetUtcNow() => DateTime.UtcNow;
 
 		private void OnLateUpdate()
 		{

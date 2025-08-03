@@ -25,19 +25,21 @@ namespace Booting.InAppPurchasing
 		[SerializeReference]
 		private IInAppPurchasingServiceFactory _factory = new OfflineInAppPurchasingServiceFactory();
 
+		private IInAppPurchasingService _service;
 		private IInAppPurchasingIntegration _integration;
+
 		private UniTaskCompletionSource _storePromotionalCompletionSource;
 
 		public override UniTask RunAsync(CancellationToken cancellationToken = default)
 		{
 			_storePromotionalCompletionSource = new UniTaskCompletionSource();
 
-			var service = _factory.Create();
+			_service = _factory.Create();
 
 			var settings = ContentManager.Get<UnityPurchasingSettings>();
 			var unityPurchasingService = new UnityPurchasingIntegration
 			(
-				service,
+				_service,
 				settings,
 				in ProjectDesk.Distribution,
 				ProjectDesk.Identifier,
@@ -51,7 +53,7 @@ namespace Booting.InAppPurchasing
 
 			_integration = unityPurchasingService;
 
-			var management = new IAPManagement(_integration, service);
+			var management = new IAPManagement(_integration, _service);
 			IAPManager.Initialize(management);
 
 			return UniTask.CompletedTask;
@@ -69,10 +71,11 @@ namespace Booting.InAppPurchasing
 			if (_integration is IDisposable disposable)
 				disposable.Dispose();
 
-			_storePromotionalCompletionSource?.TrySetCanceled();
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (_service is IDisposable disposable2)
+				disposable2.Dispose();
 
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
+			_storePromotionalCompletionSource?.TrySetCanceled();
 
 			IAPManager.Terminate();
 		}
@@ -81,6 +84,8 @@ namespace Booting.InAppPurchasing
 		{
 			_storePromotionalCompletionSource.TrySetResult();
 			_storePromotionalCompletionSource = null;
+
+			_service.Initialize();
 		}
 	}
 }

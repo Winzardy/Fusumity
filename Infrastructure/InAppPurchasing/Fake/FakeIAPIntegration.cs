@@ -18,6 +18,8 @@ namespace InAppPurchasing.Fake
 		public string Name => "Fake";
 
 		public event PurchaseCompleted PurchaseCompleted;
+		public event PurchaseCompleted RecoveredPurchaseCompleted;
+		public event PurchaseDeferred PurchaseDeferred;
 		public event PurchaseFailed PurchaseFailed;
 		public event PurchaseRequested PurchaseRequested;
 		public event PurchaseCanceled PurchaseCanceled;

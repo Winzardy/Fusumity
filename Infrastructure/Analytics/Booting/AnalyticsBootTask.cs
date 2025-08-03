@@ -35,9 +35,6 @@ namespace Booting.Analytics
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			AnalyticsCenter.Terminate();
 		}
 

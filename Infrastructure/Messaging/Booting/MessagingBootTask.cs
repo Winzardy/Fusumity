@@ -26,9 +26,6 @@ namespace Booting.Messaging
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			Messenger.Terminate();
 		}
 	}

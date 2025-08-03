@@ -46,9 +46,6 @@ namespace Booting.Presenters
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			foreach (var presenter in _presenters)
 				presenter.Dispose();
 

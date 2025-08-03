@@ -28,7 +28,7 @@ namespace InAppPurchasing.Unity
 		internal static bool IsPurchased(this UnityProduct product, out object rawData)
 		{
 			rawData = null;
-			if (product.definition.type == ProductType.Consumable)
+			if (product.definition.type == ProductType.NonConsumable)
 			{
 				rawData = product;
 				return product.hasReceipt;
@@ -49,7 +49,7 @@ namespace InAppPurchasing.Unity
 		public static bool IsActive(this SubscriptionInfo subscriptionInfo)
 			=> subscriptionInfo is {isSubscribed: true, isExpired: false};
 
-		internal static bool TryGetUnitySubscriptionInfo(this UnityProduct product, out UnityEngine.Purchasing.SubscriptionInfo info,
+		internal static bool TryGetUnitySubscriptionInfo(this UnityProduct product, out UnitySubscriptionInfo info,
 			bool debug = false)
 		{
 			const string PREFIX_DEBUG = "Couldn't get subscription info:";

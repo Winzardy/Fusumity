@@ -47,9 +47,6 @@ namespace Booting.Audio
 			_factory?.Dispose();
 			_listener?.Dispose();
 
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			AudioManager.Terminate();
 		}
 

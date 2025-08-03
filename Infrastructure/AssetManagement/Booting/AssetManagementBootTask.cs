@@ -25,9 +25,6 @@ namespace Booting.AssetManagement
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			AssetLoader.Terminate();
 		}
 	}

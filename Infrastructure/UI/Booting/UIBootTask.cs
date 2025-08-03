@@ -55,9 +55,6 @@ namespace Booting.UI
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			UIDispatcher.Terminate();
 			_eventSystem.Destroy();
 		}

@@ -34,9 +34,6 @@ namespace Booting.Content
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			ContentManager.Terminate();
 		}
 	}

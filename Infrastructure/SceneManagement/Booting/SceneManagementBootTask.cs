@@ -25,9 +25,6 @@ namespace Booting.SceneManagement
 
 		protected override void OnDispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
-				return;
-
 			SceneManager.Terminate();
 		}
 	}

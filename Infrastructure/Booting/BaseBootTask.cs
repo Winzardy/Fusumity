@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using Fusumity.Reactive;
 using Sapientia.Extensions;
 
 namespace Booting
@@ -19,6 +20,9 @@ namespace Booting
 
 		public sealed override void Dispose()
 		{
+			if (UnityLifecycle.ApplicationQuitting)
+				return;
+
 			base.Dispose();
 			OnDispose();
 		}

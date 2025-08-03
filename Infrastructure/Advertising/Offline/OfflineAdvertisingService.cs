@@ -45,7 +45,7 @@ namespace Advertising.Offline
 			if (!key.TryGetEntry(out var entry))
 				throw new Exception($"Failed to register show: Not found AdPlacementEntry for key [ {key} ]");
 
-			if(entry.usageLimit.IsEmpty())
+			if (entry.usageLimit.IsEmpty())
 				return AdvertisingRegisterResult.Done;
 
 			var model = LocalSave.Load<AdPlacementOfflineModel>(key);
