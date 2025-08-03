@@ -75,7 +75,7 @@ namespace Fusumity.Collections
 		public static IEnumerable<TEnum> ToEnums<TEnum, TData>(this EnumList<TEnum, TData> enumList)
 			where TEnum : unmanaged, Enum
 		{
-			for (int i = 0; i < enumList.Count; i++)
+			for (var i = 0; i < enumList.Count; i++)
 				yield return enumList[i].enumValue;
 		}
 	}
