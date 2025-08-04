@@ -28,7 +28,7 @@ namespace Analytics
 
 		public static void Send(ref AnalyticsEventArgs args) => management.Send(ref args);
 
-		public static bool TryRegister(Type type, out AnalyticsAggregator aggregator)
-			=> management.TryRegister(type, out aggregator);
+		public static bool TryCreateOrRegister(Type type, out AnalyticsAggregator aggregator)
+			=> management.TryCreateOrRegister(type, out aggregator);
 	}
 }

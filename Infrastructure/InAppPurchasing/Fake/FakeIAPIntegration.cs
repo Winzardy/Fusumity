@@ -18,7 +18,6 @@ namespace InAppPurchasing.Fake
 		public string Name => "Fake";
 
 		public event PurchaseCompleted PurchaseCompleted;
-		public event PurchaseCompleted RecoveredPurchaseCompleted;
 		public event PurchaseDeferred PurchaseDeferred;
 		public event PurchaseFailed PurchaseFailed;
 		public event PurchaseRequested PurchaseRequested;
@@ -122,7 +121,7 @@ namespace InAppPurchasing.Fake
 				productId = entry.Id,
 				receipt = product.receipt,
 				transactionId = transactionId
-			});
+			}, true);
 			return true;
 		}
 

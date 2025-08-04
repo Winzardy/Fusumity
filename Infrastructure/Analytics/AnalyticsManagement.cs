@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
@@ -16,8 +17,9 @@ namespace Analytics
 
 		private readonly AnalyticsSettings _settings;
 
-		private SimpleList<AnalyticsAggregator> _aggregators;
-		private SimpleList<IAnalyticsIntegration> _integrations;
+		private List<AnalyticsAggregator> _registeredAggregators;
+
+		private List<IAnalyticsIntegration> _integrations;
 
 		public event Action<AnalyticsEventArgs> BeforeSend;
 
@@ -56,14 +58,9 @@ namespace Analytics
 				integration.Dispose();
 
 			_integrations = null;
-
-			foreach (var aggregator in _aggregators)
-				aggregator.Dispose();
-
-			_aggregators = null;
 		}
 
-		internal bool TryRegister(Type type, out AnalyticsAggregator aggregator)
+		internal bool TryCreateOrRegister(Type type, out AnalyticsAggregator aggregator)
 		{
 			aggregator = null;
 
@@ -71,8 +68,9 @@ namespace Analytics
 				return false;
 
 			aggregator = type.CreateInstance<AnalyticsAggregator>();
-			_aggregators ??= new();
-			_aggregators.Add(aggregator);
+
+			_registeredAggregators ??= new();
+			_registeredAggregators.Add(aggregator);
 
 			return true;
 		}

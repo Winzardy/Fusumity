@@ -38,8 +38,5 @@ namespace Booting.Trading
 
 			TradeManager.Terminate();
 		}
-
-		public override void OnBootCompleted()
-			=> _service.Initialize();
 	}
 }

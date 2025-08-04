@@ -12,7 +12,6 @@ namespace Trading
 
 	public interface ITradingService
 	{
-		public void Initialize();
 		/// <summary>
 		/// Отправить детали сделки в сервис
 		/// </summary>

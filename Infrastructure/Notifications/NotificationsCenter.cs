@@ -21,8 +21,8 @@ namespace Notifications
 		public static bool Active => management.Active;
 		public static Type PlatformType => management.PlatformType;
 
-		public static bool TryRegisterScheduler(Type type, out NotificationScheduler scheduler)
-			=> management.TryRegisterScheduler(type, out scheduler);
+		public static bool TryCreateOrRegister(Type type, out NotificationScheduler scheduler)
+			=> management.TryCreateOrRegister(type, out scheduler);
 
 		public static void Schedule(ref NotificationArgs args) => management.Schedule(ref args);
 

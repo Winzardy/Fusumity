@@ -51,7 +51,7 @@ namespace Booting.Notifications
 		{
 			foreach (var type in ReflectionUtility.GetAllTypes<NotificationScheduler>(false))
 			{
-				if (!NotificationsCenter.TryRegisterScheduler(type, out var scheduler))
+				if (!NotificationsCenter.TryCreateOrRegister(type, out var scheduler))
 					continue;
 
 				AddDisposable(scheduler);

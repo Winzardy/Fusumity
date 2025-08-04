@@ -14,7 +14,7 @@ namespace Notifications
 		private readonly INotificationPlatform _platform;
 		private readonly NotificationsSettings _settings;
 
-		private List<NotificationScheduler> _schedulers;
+		private List<NotificationScheduler> _registeredSchedulers;
 
 		//Пока соотношение 1 к 1, но пока не придумал кейсов когда нужно больше одного overrider'а
 		private Dictionary<Type, Type> _schedulerToOverrider;
@@ -55,15 +55,9 @@ namespace Notifications
 			_schedulerToOverrider = null;
 
 			_platform.NotificationReceived -= OnNotificationReceived;
-
-			if (!_schedulers.IsNullOrEmpty())
-				foreach (var scheduler in _schedulers)
-					scheduler.Dispose();
-
-			_schedulers = null;
 		}
 
-		internal bool TryRegisterScheduler(Type type, out NotificationScheduler scheduler)
+		internal bool TryCreateOrRegister(Type type, out NotificationScheduler scheduler)
 		{
 			scheduler = null;
 
@@ -77,8 +71,8 @@ namespace Notifications
 				overrider = overriderType.CreateInstance<ISchedulerOverrider>();
 			scheduler.Construct(overrider);
 
-			_schedulers ??= new();
-			_schedulers.Add(scheduler);
+			_registeredSchedulers ??= new();
+			_registeredSchedulers.Add(scheduler);
 
 			return true;
 		}

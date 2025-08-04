@@ -42,7 +42,7 @@ namespace Booting.Analytics
 		{
 			foreach (var type in ReflectionUtility.GetAllTypes<AnalyticsAggregator>(false))
 			{
-				if (!AnalyticsCenter.TryRegister(type, out var aggregator))
+				if (!AnalyticsCenter.TryCreateOrRegister(type, out var aggregator))
 					continue;
 
 				AddDisposable(aggregator);

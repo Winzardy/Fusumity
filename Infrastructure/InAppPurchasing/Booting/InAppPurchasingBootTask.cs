@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
+using Fusumity.Utility;
 using InAppPurchasing;
 using InAppPurchasing.Offline;
 using InAppPurchasing.Unity;
@@ -25,8 +25,10 @@ namespace Booting.InAppPurchasing
 		[SerializeReference]
 		private IInAppPurchasingServiceFactory _factory = new OfflineInAppPurchasingServiceFactory();
 
+		private IInAppPurchasingGrantCenter _grantCenter;
+
 		private IInAppPurchasingService _service;
-		private IInAppPurchasingIntegration _integration;
+		private UnityPurchasingIntegration _integration;
 
 		private UniTaskCompletionSource _storePromotionalCompletionSource;
 
@@ -37,21 +39,29 @@ namespace Booting.InAppPurchasing
 			_service = _factory.Create();
 
 			var settings = ContentManager.Get<UnityPurchasingSettings>();
-			var unityPurchasingService = new UnityPurchasingIntegration
+
+			_grantCenter = new InAppPurchasingGrantCenter();
+			foreach (var type in ReflectionUtility.GetAllTypes<IPurchaseGranter>(false))
+			{
+				var granter = _grantCenter.CreateOrRegister(type);
+				if (granter is IDisposable disposable)
+					AddDisposable(disposable);
+			}
+
+			_integration = new UnityPurchasingIntegration
 			(
 				_service,
+				_grantCenter,
 				settings,
 				in ProjectDesk.Distribution,
 				ProjectDesk.Identifier,
 				_storePromotionalCompletionSource
 			);
 
-			unityPurchasingService
+			_integration
 			   .InitializeAsync(cancellationToken)
 			   .ContinueWith(OnInitialized)
 			   .Forget();
-
-			_integration = unityPurchasingService;
 
 			var management = new IAPManagement(_integration, _service);
 			IAPManager.Initialize(management);
@@ -61,7 +71,13 @@ namespace Booting.InAppPurchasing
 			void OnInitialized(UnityPurchasingInitializationFailureReason failureReason)
 			{
 				if (failureReason != UnityPurchasingInitializationFailureReason.None)
+				{
 					IAPDebug.LogError($"Failed to initialize in-app purchasing integration with reason [ {failureReason} ]");
+					return;
+				}
+
+				if (IAPManager.IsRestoreSupported())
+					IAPManager.RestoreTransactions();
 			}
 		}
 
@@ -86,6 +102,13 @@ namespace Booting.InAppPurchasing
 			_storePromotionalCompletionSource = null;
 
 			_service.Initialize();
+			InitializeGrantCenterAsync().Forget();
+		}
+
+		private async UniTaskVoid InitializeGrantCenterAsync()
+		{
+			await UniTask.DelayFrame(2); // На всякий случай ждем 1-2 кадра
+			_grantCenter.Initialize();
 		}
 	}
 }

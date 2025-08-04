@@ -32,10 +32,10 @@ namespace InAppPurchasing.Offline
 		public bool Contains(string transactionId)
 			=> LocalSave.Has(transactionId);
 
-		public InAppPurchasingRegisterResult Register(string transactionId, PurchaseReceipt receipt)
+		public InAppPurchasingRegisterResult Register(in PurchaseReceipt receipt)
 		{
-			_transactionsToSave.Add(transactionId);
-			LocalSave.Save(transactionId, receipt);
+			_transactionsToSave.Add(receipt.transactionId);
+			LocalSave.Save(receipt.transactionId, receipt);
 
 			return InAppPurchasingRegisterResult.Done;
 		}
