@@ -86,7 +86,7 @@ namespace Content.ScriptableObjects.Editor
 			ContentDatabaseScriptableObject misc = null;
 			try
 			{
-				foreach (var (database, index) in CollectionsUtility.WithIndex(dbs))
+				foreach (var (database, index) in dbs.WithIndex())
 				{
 					EditorUtility.DisplayProgressBar("Update Content", database.name, index / (float) dbs.Length);
 					if (database is MiscDatabaseScriptableObject)
@@ -214,7 +214,11 @@ namespace Content.ScriptableObjects.Editor
 					foreach (var scriptableObject in scriptableObjects)
 					{
 						if (scriptableObject is ContentDatabaseScriptableObject)
+						{
+							if (scriptableObject is IContentEntrySource)
+								Refresh(scriptableObject);
 							continue;
+						}
 
 						scriptableObject.Sync();
 
@@ -230,12 +234,7 @@ namespace Content.ScriptableObjects.Editor
 									continue;
 
 								all.Add(scriptableObject);
-
-								var originRefreshEnabled = ContentDebug.Logging.Nested.refresh;
-								ContentDebug.Logging.Nested.refresh = false;
-								scriptableObject.Refresh();
-								ContentDebug.Logging.Nested.refresh = originRefreshEnabled;
-
+								Refresh(scriptableObject);
 								TryAddToGenerator(scriptableObject, dictionary);
 							}
 						}
@@ -271,7 +270,11 @@ namespace Content.ScriptableObjects.Editor
 					foreach (var scriptableObject in scriptableObjects)
 					{
 						if (scriptableObject is ContentDatabaseScriptableObject)
+						{
+							if (scriptableObject is IContentEntrySource)
+								Refresh(scriptableObject);
 							continue;
+						}
 
 						if (!ValidateByCollisions(scriptableObject, scriptableObjects, ref collisionsMap))
 							collided = true;
@@ -282,6 +285,7 @@ namespace Content.ScriptableObjects.Editor
 								continue;
 
 							all.Add(scriptableObject);
+							Refresh(scriptableObject);
 							TryAddToGenerator(scriptableObject, dictionary);
 						}
 					}
@@ -509,5 +513,13 @@ namespace Content.ScriptableObjects.Editor
 
 		public static string ToLabel(this ContentDatabaseScriptableObject database)
 			=> database.name.Remove(DEFAULT_NAME_ENDING);
+
+		private static void Refresh(ContentScriptableObject scriptableObject)
+		{
+			var originRefreshEnabled = ContentDebug.Logging.Nested.refresh;
+			ContentDebug.Logging.Nested.refresh = false;
+			scriptableObject.Refresh();
+			ContentDebug.Logging.Nested.refresh = originRefreshEnabled;
+		}
 	}
 }
