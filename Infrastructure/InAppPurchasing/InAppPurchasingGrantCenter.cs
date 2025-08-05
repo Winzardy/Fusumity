@@ -29,6 +29,9 @@ namespace InAppPurchasing
 		{
 			_initialized = true;
 
+			foreach (var granter in _registeredGranters)
+				granter.Initialize();
+
 			if (_queue.IsNullOrEmpty())
 				return;
 

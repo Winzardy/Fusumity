@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using Content;
 using Cysharp.Threading.Tasks;
 using InAppPurchasing;
-using Sapientia.Collections;
 using Sapientia.Pooling;
 using UnityEngine.Scripting;
 
@@ -13,7 +13,7 @@ namespace Trading.InAppPurchasing
 	[Preserve]
 	public class TradingPurchaseGranter : IAPPurchaseGranter
 	{
-		private HashMap<IAPProductEntry, Pair> _iapProductToTradePair;
+		private Dictionary<IAPProductEntry, Pair> _iapProductToTradePair;
 
 		protected override void OnInitialize()
 		{
@@ -24,10 +24,8 @@ namespace Trading.InAppPurchasing
 		{
 			var entry = receipt.ToEntry();
 
-			if (_iapProductToTradePair.Contains(entry))
+			if (_iapProductToTradePair.TryGetValue(entry, out var pair))
 			{
-				var pair = _iapProductToTradePair[entry];
-
 				var trader = pair.trader;
 				var trade = pair.trade;
 
@@ -106,8 +104,7 @@ namespace Trading.InAppPurchasing
 								}
 
 								if (hashSet.Add(productEntry))
-									_iapProductToTradePair[productEntry] =
-										new Pair(traderReference, tradeReference.trade);
+									_iapProductToTradePair[productEntry] = new Pair(traderReference, tradeReference.trade);
 								else
 									TradingDebug.LogError($"IAP product already registered [ {productEntry} ]");
 							}
@@ -119,7 +116,7 @@ namespace Trading.InAppPurchasing
 			}
 		}
 
-		private struct Pair
+		private class Pair
 		{
 			public ContentReference<TraderEntry> trader;
 			public ContentReference<TradeEntry> trade;

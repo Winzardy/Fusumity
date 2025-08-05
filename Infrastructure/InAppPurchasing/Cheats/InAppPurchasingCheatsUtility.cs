@@ -33,12 +33,12 @@ namespace InAppPurchasing.Cheats
 		{
 			using (ListPool<IAPProductEntry>.Get(out var list))
 			{
-				foreach (IAPConsumableProductEntry entry in ContentManager.GetAll<IAPConsumableProductEntry>())
-					list.Add(entry);
-				foreach (IAPNonConsumableProductEntry entry in ContentManager.GetAll<IAPNonConsumableProductEntry>())
-					list.Add(entry);
-				foreach (IAPSubscriptionProductEntry entry in ContentManager.GetAll<IAPSubscriptionProductEntry>())
-					list.Add(entry);
+				foreach (var contentEntry in ContentManager.GetAll<IAPConsumableProductEntry>())
+					list.Add(contentEntry.Value);
+				foreach (var contentEntry in ContentManager.GetAll<IAPNonConsumableProductEntry>())
+					list.Add(contentEntry.Value);
+				foreach (var contentEntry in ContentManager.GetAll<IAPSubscriptionProductEntry>())
+					list.Add(contentEntry.Value);
 
 				return list.ToArray();
 			}

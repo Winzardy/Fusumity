@@ -63,7 +63,7 @@ namespace Booting.InAppPurchasing
 			   .ContinueWith(OnInitialized)
 			   .Forget();
 
-			var management = new IAPManagement(_integration, _service);
+			var management = new IAPManagement(_integration, _service, _grantCenter);
 			IAPManager.Initialize(management);
 
 			return UniTask.CompletedTask;
