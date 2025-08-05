@@ -69,6 +69,8 @@ namespace Fusumity.Editor.Utility
 
 						if (!key.Contains("\""))
 							key = key[..^2];
+						else
+							key = key[1..^1];
 
 						steps.Add((name, key));
 					}
