@@ -11,7 +11,7 @@ namespace InAppPurchasing
 	public interface IInAppPurchasingGrantCenter
 	{
 		public void Initialize();
-		public IPurchaseGranter CreateOrRegister(Type type);
+		public IIAPPurchaseGranter CreateOrRegister(Type type);
 		public void Grant(in PurchaseReceipt receipt, IntegrationCallback callback = null);
 	}
 
@@ -19,7 +19,7 @@ namespace InAppPurchasing
 
 	public class InAppPurchasingGrantCenter : IInAppPurchasingGrantCenter
 	{
-		private List<IPurchaseGranter> _registeredGranters;
+		private List<IIAPPurchaseGranter> _registeredGranters;
 
 		private Queue<Pair> _queue;
 
@@ -36,9 +36,9 @@ namespace InAppPurchasing
 				Grant(in pair.receipt, pair.callback);
 		}
 
-		public IPurchaseGranter CreateOrRegister(Type type)
+		public IIAPPurchaseGranter CreateOrRegister(Type type)
 		{
-			var granter = type.CreateInstance<IPurchaseGranter>();
+			var granter = type.CreateInstance<IIAPPurchaseGranter>();
 			_registeredGranters ??= new();
 			_registeredGranters.Add(granter);
 			return granter;

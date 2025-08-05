@@ -7,15 +7,15 @@ namespace InAppPurchasing
 	/// Используется в ситуациях, когда покупка по каким-то причинам не "обработалась" сразу — например,
 	/// в случае восстановления, отложенной транзакции или повторной обработки после сбоя
 	/// </summary>
-	public interface IPurchaseGranter
+	public interface IIAPPurchaseGranter
 	{
 		public void Initialize();
 
 		bool Grant(in PurchaseReceipt receipt);
 	}
 
-	/// <inheritdoc cref="IPurchaseGranter"/>
-	public abstract class PurchaseGranter : CompositeDisposable, IPurchaseGranter
+	/// <inheritdoc cref="IIAPPurchaseGranter"/>
+	public abstract class IAPPurchaseGranter : CompositeDisposable, IIAPPurchaseGranter
 	{
 		public void Initialize()
 		{

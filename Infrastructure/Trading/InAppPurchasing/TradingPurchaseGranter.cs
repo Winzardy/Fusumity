@@ -11,7 +11,7 @@ namespace Trading.InAppPurchasing
 	using TraderReference = ContentReference<TraderEntry>;
 
 	[Preserve]
-	public class TradingPurchaseGranter : PurchaseGranter
+	public class TradingPurchaseGranter : IAPPurchaseGranter
 	{
 		private HashMap<IAPProductEntry, Pair> _iapProductToTradePair;
 

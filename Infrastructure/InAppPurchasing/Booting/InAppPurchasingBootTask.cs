@@ -41,7 +41,7 @@ namespace Booting.InAppPurchasing
 			var settings = ContentManager.Get<UnityPurchasingSettings>();
 
 			_grantCenter = new InAppPurchasingGrantCenter();
-			foreach (var type in ReflectionUtility.GetAllTypes<IPurchaseGranter>(false))
+			foreach (var type in ReflectionUtility.GetAllTypes<IIAPPurchaseGranter>(false))
 			{
 				var granter = _grantCenter.CreateOrRegister(type);
 				if (granter is IDisposable disposable)
