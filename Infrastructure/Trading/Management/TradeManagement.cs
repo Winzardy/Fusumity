@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
@@ -17,7 +18,10 @@ namespace Trading
 		/// </summary>
 		public void PushReceipts(Tradeboard tradeboard);
 
+		/// <param name="trader">Передаем торговца, так как он определяет контекст сделки</param>
 		public bool PushTrade(in TraderReference trader, in TradeReference trade);
+
+		public PooledObject<Tradeboard> CreateTradeboard(in TraderReference trader);
 	}
 
 	public class TradeManagement : ITradeManagement
@@ -116,6 +120,16 @@ namespace Trading
 
 			return TradeExecuteError.NotImplemented;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public PooledObject<Tradeboard>? CreateTradeboard(in TraderReference trader)
+		{
+			return _service?.CreateTradeboard(in trader) ?? null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool PushTrade(in TraderReference trader, in TradeReference trade)
+			=> _service?.PushTrade(in trader, in trade) ?? false;
 
 		/// <param name="fullPay">Нужно ли в конце выполнить Pay если IExternalTradingModel не задан</param>
 		private async Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,

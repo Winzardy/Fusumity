@@ -1,17 +1,15 @@
 {
-    "name": "Trading.Editor",
-    "rootNamespace": "Trading.Editor",
+    "name": "InAppPurchasing.Trading",
+    "rootNamespace": "",
     "references": [
-        "Content",
-        "Trading",
+        "UniTask",
+        "InAppPurchasing",
         "Sapientia",
-        "Fusumity.Editor",
-        "AssetManagement",
-        "Localization"
+        "Trading",
+        "Content",
+        "Trading.InAppPurchasing"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

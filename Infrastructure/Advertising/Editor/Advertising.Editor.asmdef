@@ -2,13 +2,11 @@
     "name": "Advertising.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:6dec8a5bf86841e59bcb2c2957cbac16",
-        "GUID:a527b238a468414383742720c350ba3f",
-        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c",
-        "GUID:f31d5bc9e1334163b61d93a3d8c3e6f0",
-        "Caption",
-        "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
-        "GUID:bd10b8cc39d09ac4e9c31728752096c0"
+        "Advertising",
+        "Content.Editor",
+        "Fusumity",
+        "Content",
+        "Sapientia"
     ],
     "includePlatforms": [
         "Editor"

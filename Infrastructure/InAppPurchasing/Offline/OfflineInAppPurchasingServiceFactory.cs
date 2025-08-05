@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
@@ -17,16 +18,17 @@ namespace InAppPurchasing.Offline
 	{
 		private const string ALL_SAVE_KEY = "iap_all_transactions";
 
-		private readonly List<string> _transactionsToSave = new();
+		private bool _saving;
+		private readonly HashSet<string> _transactionsToSave = new();
 
 		public void Initialize()
 		{
-			UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
+			UnityLifecycle.ApplicationQuitEvent += SaveTransactions;
 		}
 
 		public void Dispose()
 		{
-			UnityLifecycle.LateUpdateEvent.UnSubscribe(OnLateUpdate);
+			UnityLifecycle.ApplicationQuitEvent -= SaveTransactions;
 		}
 
 		public bool Contains(string transactionId)
@@ -34,8 +36,19 @@ namespace InAppPurchasing.Offline
 
 		public InAppPurchasingRegisterResult Register(in PurchaseReceipt receipt)
 		{
-			_transactionsToSave.Add(receipt.transactionId);
+			if (!_transactionsToSave.Add(receipt.transactionId))
+			{
+				IAPDebug.LogWarning($"Already registered transaction by id [ {receipt.transactionId} ]");
+				return InAppPurchasingRegisterResult.Done;
+			}
+
 			LocalSave.Save(receipt.transactionId, receipt);
+
+			if (!_saving)
+			{
+				_saving = true;
+				SaveTransactionAsync().Forget();
+			}
 
 			return InAppPurchasingRegisterResult.Done;
 		}
@@ -53,15 +66,23 @@ namespace InAppPurchasing.Offline
 
 		public DateTime GetUtcNow() => DateTime.UtcNow;
 
-		private void OnLateUpdate()
+		private async UniTaskVoid SaveTransactionAsync()
 		{
-			if (_transactionsToSave.Count <= 0)
-				return;
+			await UniTask.DelayFrame(2);
+			SaveTransactions();
+		}
 
-			var all = LocalSave.Load(ALL_SAVE_KEY, new List<string>(2));
-			all.AddRange(_transactionsToSave);
-			_transactionsToSave.Clear();
-			LocalSave.Save(ALL_SAVE_KEY, all);
+		private void SaveTransactions()
+		{
+			if (_transactionsToSave.Count > 0)
+			{
+				var all = LocalSave.Load(ALL_SAVE_KEY, new List<string>(2));
+				all.AddRange(_transactionsToSave);
+				_transactionsToSave.Clear();
+				LocalSave.Save(ALL_SAVE_KEY, all);
+			}
+
+			_saving = false;
 		}
 	}
 }

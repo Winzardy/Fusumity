@@ -1,0 +1,10 @@
+{
+  "name": "Trading.Advertising.Editor",
+  "references": [
+    "Trading.Advertising",
+    "Fusumity",
+    "Content",
+    "UnityEditor.UI",
+    "UnityEngine.UI"
+  ]
+}

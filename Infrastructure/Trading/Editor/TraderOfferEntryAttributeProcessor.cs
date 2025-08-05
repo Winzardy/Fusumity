@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Content;
-using Fusumity.Editor;
-using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Trading.Inventory;
 using UnityEngine;
 
 namespace Trading.Editor
@@ -64,7 +61,7 @@ namespace Trading.Editor
 				if (entry.trade.IsEmpty())
 					return false;
 
-				if (entry.trade.Read()?.cost is ItemTradeCost _)
+				if (entry.trade.Read()?.cost.GetType().Name.Contains("Item") ?? false)
 					return true;
 			}
 
