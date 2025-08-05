@@ -46,7 +46,7 @@ namespace ZenoTween.Editor
 					var showIf = $"@{nameof(AnimationTweenAttributeProcessor)}." +
 						$"{nameof(IsLoop)}($property)";
 					attributes.Add(new InfoBoxAttribute(
-						"Данный твин зациклен! Остановка твина будет при уничтожении верстки или через код!", InfoMessageType.Warning,
+						"Данный твин зациклен! Остановка твина будет при уничтожении верстки или через код!", InfoMessageType.Info,
 						showIf));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
 					break;
