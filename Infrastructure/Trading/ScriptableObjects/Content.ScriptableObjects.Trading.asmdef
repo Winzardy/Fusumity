@@ -6,7 +6,8 @@
         "Content.ScriptableObjects.Editor",
         "Trading",
         "Content",
-        "Sapientia"
+        "Sapientia",
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -20,7 +20,8 @@ namespace InAppPurchasing.Cheats
 					productId = productEntry.Id,
 					productType = productEntry.Type,
 
-					transactionId = transactionId
+					transactionId = transactionId,
+					isRestored = true
 				}, IAPRestoreSelectedCheats.OnGrant);
 			}
 		}
@@ -50,7 +51,8 @@ namespace InAppPurchasing.Cheats
 				productId = productEntry.Id,
 				productType = productEntry.Type,
 
-				transactionId = transactionId
+				transactionId = transactionId,
+				isRestored = true
 			}, OnGrant);
 		}
 

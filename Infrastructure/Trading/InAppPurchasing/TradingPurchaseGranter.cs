@@ -1,22 +1,22 @@
-using System.Collections.Generic;
 using Content;
 using Cysharp.Threading.Tasks;
 using InAppPurchasing;
-using Sapientia.Pooling;
+using Sapientia.Collections;
 using UnityEngine.Scripting;
 
 namespace Trading.InAppPurchasing
 {
-	using TradeReference = ContentReference<TradeEntry>;
-	using TraderReference = ContentReference<TraderEntry>;
-
 	[Preserve]
 	public class TradingPurchaseGranter : IAPPurchaseGranter
 	{
-		private Dictionary<IAPProductEntry, Pair> _iapProductToTradePair;
+		private ITradingService _service;
+
+		private HashMap<IAPProductEntry, TraderOfferReference> _iapProductToOffer;
 
 		protected override void OnInitialize()
 		{
+			TradeManager.GetService(out _service);
+
 			LinkIapProductsToTradePair();
 		}
 
@@ -24,107 +24,86 @@ namespace Trading.InAppPurchasing
 		{
 			var entry = receipt.ToEntry();
 
-			if (_iapProductToTradePair.TryGetValue(entry, out var pair))
+			if (_iapProductToOffer.Contains(entry))
 			{
-				var trader = pair.trader;
-				var trade = pair.trade;
+				ref readonly var offer = ref _iapProductToOffer[entry];
+				var pooledTradeboard = _service.CreateTradeboard(in offer.trader);
+				Tradeboard tradeboard = pooledTradeboard;
+				tradeboard.Register(in receipt);
 
-				var pooledTradeboard = TradeManager.CreateTradeboard(in trader);
-				if (pooledTradeboard == null)
-					return false;
-
-				if (!trade.CanExecute(pooledTradeboard, out var error))
+				if (!offer.CanExecute(tradeboard, out var error))
 				{
-					TradingDebug.LogError($"Error on can execute trade {trade.ToLabel()} in trader {trader.ToLabel()}: {error}");
+					TradingDebug.LogError(
+						$"Error on can execute trader offer [ {offer} ]: {error}");
 					return false;
 				}
 
-				ExecuteAsync(trader, trade, receipt, pooledTradeboard.Value).Forget();
+				ExecuteAsync(offer, tradeboard)
+				   .ContinueWith(Release)
+				   .Forget();
+
 				return true;
+
+				void Release() => pooledTradeboard.Dispose();
 			}
 
 			return false;
 		}
 
-		private async UniTaskVoid ExecuteAsync(TraderReference trader, TradeReference trade, PurchaseReceipt receipt,
-			PooledObject<Tradeboard> pooledTradeboard)
+		private async UniTask ExecuteAsync(TraderOfferReference offer, Tradeboard tradeboard)
 		{
-			using (pooledTradeboard)
+			var error = await offer.ExecuteAsync(tradeboard);
+			if (error != null)
 			{
-				Tradeboard tradeboard = pooledTradeboard;
-				tradeboard.Register(in receipt);
-
-				var error = await trade.ExecuteAsync(tradeboard);
-				if (error != null)
-				{
-					TradingDebug.LogError($"Error on execute trade {trade.ToLabel()} in trader {trader.ToLabel()}: {error}");
-					return;
-				}
-
-				// Значит оффлайн режим и service не задан, знаю что не супер очевидно, пока так, лучше не придумал
-				if (tradeboard.Contains<DummyTradingBackend>())
-					return;
-
-				var success = TradeManager.PushTrade(in trader, in trade);
-
-				if (!success)
-					TradingDebug.LogError($"Error on push trade {trade.ToLabel()} in trader {trader.ToLabel()}");
+				TradingDebug.LogError($"Error on execute trader offer [ {offer} ]: {error}");
+				return;
 			}
+
+			var success = _service.PushOffer(in offer);
+
+			if (!success)
+				TradingDebug.LogError($"Error on push trader offer [ {offer} ]");
 		}
 
 		private void LinkIapProductsToTradePair()
 		{
-			_iapProductToTradePair = new();
-			using (HashSetPool<IAPProductEntry>.Get(out var hashSet))
+			_iapProductToOffer = new();
+
+			foreach (var traderContentEntry in ContentManager.GetAll<TraderEntry>())
 			{
-				foreach (var traderContentEntry in ContentManager.GetAll<TraderEntry>())
+				var traderReference = traderContentEntry.ToReference();
+
+				ref readonly var traderEntry = ref traderContentEntry.Value;
+
+				foreach (var catalogReference in traderEntry.catalogs)
 				{
-					var traderReference = traderContentEntry.ToReference();
+					ref readonly var catalogEntry = ref catalogReference.Read();
 
-					ref readonly var traderEntry = ref traderContentEntry.Value;
-
-					foreach (var catalogReference in traderEntry.catalogs)
+					var i = 0;
+					foreach (ref var offerEntry in catalogEntry)
 					{
-						ref readonly var catalogEntry = ref catalogReference.Read();
-
-						var i = 0;
-						foreach (ref var tradeReference in catalogEntry)
+						var tradeEntry = offerEntry.trade.Read();
+						foreach (var cost in tradeEntry.cost)
 						{
-							var tradeEntry = tradeReference.trade.Read();
-							foreach (var cost in tradeEntry.cost)
+							if (cost is not IAPTradeCost iapTradeCost)
+								continue;
+
+							var productEntry = iapTradeCost.GetProductEntry();
+							if (productEntry == null)
 							{
-								if (cost is not IAPTradeCost iapTradeCost)
-									continue;
-
-								var productEntry = iapTradeCost.GetProductEntry();
-								if (productEntry == null)
-								{
-									TradingDebug.LogWarning("Empty product entry in cost");
-									continue;
-								}
-
-								if (hashSet.Add(productEntry))
-									_iapProductToTradePair[productEntry] = new Pair(traderReference, tradeReference.trade);
-								else
-									TradingDebug.LogError($"IAP product already registered [ {productEntry} ]");
+								TradingDebug.LogWarning("Empty product entry in cost");
+								continue;
 							}
 
-							i++;
+							if (!_iapProductToOffer.Contains(productEntry))
+								_iapProductToOffer.SetOrAdd(productEntry, new TraderOfferReference(traderReference, catalogReference, i));
+							else
+								TradingDebug.LogError($"IAP product already registered [ {productEntry} ]");
 						}
+
+						i++;
 					}
 				}
-			}
-		}
-
-		private class Pair
-		{
-			public ContentReference<TraderEntry> trader;
-			public ContentReference<TradeEntry> trade;
-
-			public Pair(ContentReference<TraderEntry> trader, ContentReference<TradeEntry> trade)
-			{
-				this.trade = trade;
-				this.trader = trader;
 			}
 		}
 	}

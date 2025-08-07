@@ -39,6 +39,14 @@ namespace Fusumity.Utility
 		public static bool IsActive(this GameObject go)
 			=> go.activeSelf && go.activeInHierarchy;
 
+		public static void ForceSaveEditor(this Object obj)
+		{
+#if UNITY_EDITOR
+			UnityEditor.EditorUtility.SetDirty(obj);
+			UnityEditor.AssetDatabase.SaveAssetIfDirty(obj);
+#endif
+		}
+
 		public readonly ref struct DisableGameObjectScope
 		{
 			public readonly GameObject gameObject;

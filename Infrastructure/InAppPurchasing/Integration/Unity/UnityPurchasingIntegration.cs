@@ -547,6 +547,7 @@ namespace InAppPurchasing.Unity
 					return PurchaseProcessingResult.Complete;
 				}
 
+				receipt.isRestored = true;
 				_grantCenter.Grant(in receipt, OnComplete);
 				return PurchaseProcessingResult.Pending;
 			}

@@ -1,29 +1,15 @@
-using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
+using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 
 namespace Trading
 {
-	using TraderReference = ContentReference<TraderEntry>;
-	using TradeReference = ContentReference<TradeEntry>;
-
-	public interface ITradingService
-	{
-		/// <summary>
-		/// Отправить детали сделки в сервис
-		/// </summary>
-		public void PushReceipts(Tradeboard tradeboard);
-
-		/// <param name="trader">Передаем торговца, так как он определяет контекст сделки</param>
-		public bool PushTrade(in TraderReference trader, in TradeReference trade);
-
-		public PooledObject<Tradeboard> CreateTradeboard(in TraderReference trader);
-	}
-
+	/// <summary>
+	/// Только для Client'a
+	/// </summary>
 	public class TradeManagement : ITradeManagement
 	{
 		// Заглушка только для offline режима
@@ -110,28 +96,21 @@ namespace Trading
 
 			// Если Service не задан значит offline режим, можно было перенести это в кастомный сервис
 			if (_service != null)
-				return null;
+				return TradeExecuteError.NotError;
 
-			tradeboard.Register<ITradingBackend>(new DummyTradingBackend());
+			_dummyBackend ??= new DummyTradingBackend();
+			tradeboard.Register(_dummyBackend);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Execute(in trade, tradeboard))
-				return null;
+				return TradeExecuteError.NotError;
 
 			return TradeExecuteError.NotImplemented;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PooledObject<Tradeboard>? CreateTradeboard(in TraderReference trader)
-		{
-			return _service?.CreateTradeboard(in trader) ?? null;
-		}
+		public void GetService(out ITradingService service) => service = _service;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool PushTrade(in TraderReference trader, in TradeReference trade)
-			=> _service?.PushTrade(in trader, in trade) ?? false;
-
-		/// <param name="fullPay">Нужно ли в конце выполнить Pay если IExternalTradingModel не задан</param>
+		/// <param name="fullPay">Нужно ли в конце выполнить Pay если ITradingBackend не задан</param>
 		private async Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
 			CancellationToken cancellationToken, bool fullPay)
 		{
@@ -182,15 +161,18 @@ namespace Trading
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Pay(cost, tradeboard))
-				return null;
+				return TradePayError.NotError;
 
 			return TradePayError.NotImplemented;
 		}
 	}
 
+	// TODO: не нравится, убрать...
 	public class DummyTradingBackend : ITradingBackend
 	{
-		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt => null;
+		private UsageLimitModel _empty;
+		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt => null;
+		public ref UsageLimitModel GetUsageModel(SerializableGuid guid) => ref _empty;
 	}
 
 	public interface ITradingServiceFactory

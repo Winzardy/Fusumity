@@ -1,15 +1,10 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Content;
 using Sapientia;
-using Sapientia.Pooling;
 
 namespace Trading
 {
-	using TraderReference = ContentReference<TraderEntry>;
-	using TradeReference = ContentReference<TradeEntry>;
-
 	public interface ITradeManagement
 	{
 		public bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error);
@@ -21,8 +16,7 @@ namespace Trading
 		public Task<TradeExecuteError?> ExecuteAsync(TradeEntry trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default);
 
-		public PooledObject<Tradeboard>? CreateTradeboard(in TraderReference trader);
-		public bool PushTrade(in TraderReference trader, in TradeReference trade);
+		public void GetService(out ITradingService service);
 	}
 
 	/// <summary>
@@ -60,13 +54,7 @@ namespace Trading
 			CancellationToken cancellationToken = default) =>
 			management.ExecuteAsync(trade, tradeboard, cancellationToken);
 
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static PooledObject<Tradeboard>? CreateTradeboard(in TraderReference trader)
-			=> management.CreateTradeboard(in trader);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool PushTrade(in TraderReference trader, in TradeReference trade)
-			=> management.PushTrade(in trader, in trade);
+		public static void GetService(out ITradingService service) => management.GetService(out service);
 	}
 }
