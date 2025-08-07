@@ -1,10 +1,22 @@
 {
-  "name": "Trading.Advertising.Editor",
-  "references": [
-    "Trading.Advertising",
-    "Fusumity",
-    "Content",
-    "UnityEditor.UI",
-    "UnityEngine.UI"
-  ]
+    "name": "Trading.Advertising.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Trading.Advertising",
+        "Fusumity",
+        "Content",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
