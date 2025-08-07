@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
@@ -121,24 +122,35 @@ namespace Trading
 			{
 				foreach (var t in cost)
 				{
-					if (t is not ITradeCostWithReceipt tradeCostWithReceipt)
-						continue;
-
-					if (cancellationToken.IsCancellationRequested)
-						return TradePayError.NotImplemented; //TODO: остановка
-
-					var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
-
-					if (cancellationToken.IsCancellationRequested)
-						return TradePayError.NotImplemented; //TODO: остановка
-
-					if (receipt != null)
+					try
 					{
-						if (receipt.NeedPush())
-							receipts.Add(receipt);
+						if (t is not ITradeCostWithReceipt tradeCostWithReceipt)
+							continue;
+
+						if (cancellationToken.IsCancellationRequested)
+							return TradePayError.NotImplemented; //TODO: остановка
+
+						var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
+
+						if (cancellationToken.IsCancellationRequested)
+							return TradePayError.NotImplemented; //TODO: остановка
+
+						if (receipt != null)
+						{
+							if (receipt.NeedPush())
+								receipts.Add(receipt);
+						}
+						else
+							return TradePayError.NotImplemented; //TODO: ошибка получения чека
 					}
-					else
-						return TradePayError.NotImplemented; //TODO: ошибка получения чека
+					catch (OperationCanceledException)
+					{
+						return TradePayError.Cancelled;
+					}
+					catch (Exception e)
+					{
+						throw TradingDebug.Exception(e.Message);
+					}
 				}
 
 				if (receipts.Count > 0)
