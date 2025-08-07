@@ -24,12 +24,6 @@ namespace InAppPurchasing.Unity.Editor
 
 			switch (member.Name)
 			{
-				case nameof(UnityPurchasingSettings.appleSimulateAskToBuy):
-					attributes.Add(new TitleGroupAttribute(appStoreGroup));
-
-					attributes.Add(new LabelTextAttribute("Simulate Ask To Buy"));
-					break;
-
 				case nameof(UnityPurchasingSettings.appleDisableValidationRecipe):
 					attributes.Add(new TitleGroupAttribute(appStoreGroup));
 

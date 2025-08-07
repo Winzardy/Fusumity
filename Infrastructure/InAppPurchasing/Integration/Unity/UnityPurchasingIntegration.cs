@@ -39,11 +39,6 @@ namespace InAppPurchasing.Unity
 		#region Apple
 
 		/// <summary>
-		/// Включает или выключает режим симуляции отложенных покупок (Ask-to-Buy) в Apple App Store (полезно для тестирования)
-		/// </summary>
-		public bool appleSimulateAskToBuy;
-
-		/// <summary>
 		/// Включает или выключает проверку чеков Apple во время обработки покупок
 		/// </summary>
 		public bool appleDisableValidationRecipe;
@@ -261,11 +256,7 @@ namespace InAppPurchasing.Unity
 
 					UnityPurchasingUtility.appleExtensions = _appleExtension;
 
-					if (_appleExtension != null)
-					{
-						_appleExtension.RegisterPurchaseDeferredListener(OnDeferredPurchase);
-						_appleExtension.simulateAskToBuy = _settings.appleSimulateAskToBuy;
-					}
+					_appleExtension?.RegisterPurchaseDeferredListener(OnDeferredPurchase);
 
 					break;
 
@@ -338,6 +329,14 @@ namespace InAppPurchasing.Unity
 			}
 
 			return false;
+		}
+
+		public bool SimulateAskToBuy => _appleExtension?.simulateAskToBuy ?? false;
+
+		public void SetSimulateAskToBuy(bool value)
+		{
+			if (_appleExtension != null)
+				_appleExtension.simulateAskToBuy = value;
 		}
 
 		#region Restore

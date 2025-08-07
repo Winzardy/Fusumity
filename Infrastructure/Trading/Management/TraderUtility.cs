@@ -20,7 +20,7 @@ namespace Trading
 		{
 			return reference.GetEntry()
 			   .trade
-			   .ExecuteAsync(tradeboard, cancellationToken: cancellationToken);
+			   .ExecuteAsync(tradeboard, cancellationToken);
 		}
 	}
 }

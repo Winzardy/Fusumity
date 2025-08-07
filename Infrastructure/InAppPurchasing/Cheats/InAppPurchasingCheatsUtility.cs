@@ -7,7 +7,7 @@ using UnityEngine.Scripting;
 namespace InAppPurchasing.Cheats
 {
 	[Preserve]
-	internal static class InAppPurchasingCheatsUtility
+	public static class InAppPurchasingCheatsUtility
 	{
 		public const string NONE = "None";
 

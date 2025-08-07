@@ -1,14 +1,13 @@
 {
-    "name": "Trading.Advertising.Editor",
+    "name": "InAppPurchasing.Unity.Cheats",
     "rootNamespace": "",
     "references": [
-        "Trading.Advertising",
-        "Fusumity",
-        "Content"
+        "MCK",
+        "InAppPurchasing",
+        "InAppPurchasing.Unity",
+        "InAppPurchasing.Cheats"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

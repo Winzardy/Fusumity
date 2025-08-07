@@ -33,9 +33,9 @@ namespace Fusumity.Utility
 		public static int Load(string key, int defaultValue = default) =>
 			PlayerPrefs.GetInt(key, defaultValue);
 
-		/// <summary>
+		/// <remarks>
 		/// Важно подметить! Проверяет лишь наличие ключа, тип не проверяется
-		/// </summary>
+		/// </remarks>
 		public static bool Has(string key) => PlayerPrefs.HasKey(key);
 
 		public static void Clear(string key) => PlayerPrefs.DeleteKey(key);
