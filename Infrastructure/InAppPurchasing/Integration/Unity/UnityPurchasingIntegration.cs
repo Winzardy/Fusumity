@@ -491,15 +491,6 @@ namespace InAppPurchasing.Unity
 				return PurchaseProcessingResult.Pending;
 			}
 
-			var isRestored = product.appleProductIsRestored;
-			if (isRestored)
-			{
-				IAPDebug.Log(
-					$"[{entry.Type}] restore purchase detected for product id [ {billingProductId} ] by transaction id [ {product.transactionID} ]");
-
-				// Отдельная логика для восстановления (если нужна)
-			}
-
 			var transactionId = product.transactionID;
 			if (transactionId.IsNullOrEmpty())
 			{
@@ -535,9 +526,7 @@ namespace InAppPurchasing.Unity
 					billing = _billing,
 
 					transactionId = transactionId,
-					receipt = product.receipt,
-
-					isRestored = isRestored
+					receipt = product.receipt
 				};
 
 				if (_processing.Remove(billingProductId))

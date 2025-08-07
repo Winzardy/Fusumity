@@ -5,6 +5,7 @@ using System.Threading;
 using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Fusumity.Utility;
 using Sapientia.Extensions;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
@@ -115,6 +116,8 @@ namespace Localization
 
 			_currentLocale = LocalizationSettings.SelectedLocale;
 			CurrentLocaleCodeUpdated?.Invoke(_currentLocale.Identifier.Code);
+
+			SmartLocaleSelector.PlayerSave(_currentLocale.Identifier.Code);
 		}
 
 		private string GetDisplayName()
