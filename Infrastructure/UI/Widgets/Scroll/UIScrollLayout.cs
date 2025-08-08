@@ -247,7 +247,7 @@ namespace UI.Scroll
 
 		public float lookAheadAfter { get => _lookAheadAfter; set => _lookAheadAfter = Mathf.Abs(value); }
 
-		private bool _forceUpdatePaddingRequest = false;
+		private bool _forceUpdatePaddingRequest;
 
 		/// <summary>
 		/// This delegate is called when a cell is hidden or shown
@@ -1434,6 +1434,8 @@ namespace UI.Scroll
 		/// </summary>
 		private Incrementer _incrementer;
 
+		private bool _valueChangedSubscribed;
+
 		/// <summary>
 		/// Flag to tell the Scroll to reload the data
 		/// </summary>
@@ -2237,16 +2239,24 @@ namespace UI.Scroll
 
 			_forceUpdatePaddingRequest = true;
 
+			if (_valueChangedSubscribed)
+				return;
+
 			// when the Scroll is enabled, add a listener to the onValueChanged handler
 			_scrollRect.onValueChanged.AddListener(_ScrollRect_OnValueChanged);
+			_valueChangedSubscribed = true;
 		}
 
 		protected override void OnDisable()
 		{
 			base.OnDisable();
 
+			if (!_valueChangedSubscribed)
+				return;
+
 			// when the Scroll is disabled, remove the listener
 			_scrollRect.onValueChanged.RemoveListener(_ScrollRect_OnValueChanged);
+			_valueChangedSubscribed = false;
 		}
 
 		/// <summary>

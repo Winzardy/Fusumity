@@ -639,6 +639,20 @@ namespace InAppPurchasing.Unity
 			}
 		}
 
+		void IDetailedStoreListener.OnPurchaseFailed(UnityProduct product, PurchaseFailureDescription failureDescription)
+		{
+			switch (failureDescription.reason)
+			{
+				case PurchaseFailureReason.UserCancelled:
+					OnPurchaseCanceledInternal(product, failureDescription);
+					break;
+
+				default:
+					OnPurchaseFailedInternal(product, failureDescription.message, failureDescription);
+					break;
+			}
+		}
+
 		private void OnPurchaseFailedInternal(UnityProduct product, string error, object rawData = null)
 		{
 			var billingProductId = product.definition.id;
@@ -658,9 +672,6 @@ namespace InAppPurchasing.Unity
 				IAPDebug.LogError(
 					$"[{product.definition.type}] Failed to canceled product (not found!) by store product id [ {billingProductId} ]");
 		}
-
-		void IDetailedStoreListener.OnPurchaseFailed(UnityProduct product, PurchaseFailureDescription failureDescription)
-			=> OnPurchaseFailedInternal(product, failureDescription.message, failureDescription);
 
 		private void OnDeferredPurchase(UnityProduct product)
 		{
