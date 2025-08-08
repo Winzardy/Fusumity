@@ -12,8 +12,7 @@ namespace Trading.Editor
 	{
 		public static bool Filter(Type type, InspectorProperty property)
 		{
-			// TODO: убрать когда появится поддержка
-			if (type == typeof(TradeCostOptions))
+			if (type.GetCustomAttribute<SerializableAttribute>(inherit: false) == null)
 				return false;
 
 			var fieldAccess = TradeAccessType.Low;
