@@ -15,6 +15,9 @@ namespace UI
 
 		public Type type;
 
+		[Tooltip("Инвертирует получаемое значение (1 - value)")]
+		public bool invert;
+
 		[ShowIf(nameof(type), Type.Image)]
 		public Image image;
 

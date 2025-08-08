@@ -15,7 +15,10 @@ namespace UI
 		private Sequence CreateSequence()
 		{
 			var sequence = DOTween.Sequence();
-			ref readonly var value = ref _widget.args;
+			var value = _widget.args;
+
+			if (_layout.invert)
+				value = 1 - value;
 
 			if (_layout.hideOutsideAnimation)
 				sequence.PrependCallback(Show);
