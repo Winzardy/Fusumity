@@ -28,4 +28,5 @@ namespace Content.Editor
 			UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
 		}
 	}
+
 }
