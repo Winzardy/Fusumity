@@ -13,6 +13,7 @@ namespace Fusumity.Reactive
 		public static event Action LateExecuteOnceEvent;
 		public static event Action ApplicationPauseEvent;
 		public static event Action ApplicationResumeEvent;
+		public static event Action ApplicationShutdown;
 
 		public static event Action ApplicationFocusEvent;
 		public static event Action ApplicationUnfocusEvent;
@@ -106,6 +107,9 @@ namespace Fusumity.Reactive
 		}
 
 		private void OnApplicationQuit()
-			=> _applicationQuitting = true;
+		{
+			ApplicationShutdown?.Invoke();
+			_applicationQuitting = true;
+		}
 	}
 }
