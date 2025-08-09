@@ -23,12 +23,12 @@ namespace InAppPurchasing.Offline
 
 		public void Initialize()
 		{
-			UnityLifecycle.ApplicationQuitEvent += SaveTransactions;
+			UnityLifecycle.ApplicationShutdown += SaveTransactions;
 		}
 
 		public void Dispose()
 		{
-			UnityLifecycle.ApplicationQuitEvent -= SaveTransactions;
+			UnityLifecycle.ApplicationShutdown -= SaveTransactions;
 		}
 
 		public bool Contains(string transactionId)
