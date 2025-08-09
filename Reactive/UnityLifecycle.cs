@@ -13,7 +13,7 @@ namespace Fusumity.Reactive
 		public static event Action LateExecuteOnceEvent;
 		public static event Action ApplicationPauseEvent;
 		public static event Action ApplicationResumeEvent;
-		public static event Action ApplicationQuitEvent;
+		public static event Action ApplicationShutdown;
 
 		public static event Action ApplicationFocusEvent;
 		public static event Action ApplicationUnfocusEvent;
@@ -24,7 +24,6 @@ namespace Fusumity.Reactive
 		public static readonly DelayableAction LateUpdateEvent = new();
 		public static readonly DelayableAction OnDestroyEvent = new();
 		public static readonly DelayableAction ResolutionChangedEvent = new();
-		public static readonly DelayableAction QuitEvent = new();
 
 		public static float DeltaTime => Time.deltaTime;
 		public static bool ApplicationQuitting => _instance._applicationQuitting;
@@ -109,7 +108,7 @@ namespace Fusumity.Reactive
 
 		private void OnApplicationQuit()
 		{
-			ApplicationQuitEvent?.Invoke();
+			ApplicationShutdown?.Invoke();
 			_applicationQuitting = true;
 		}
 	}

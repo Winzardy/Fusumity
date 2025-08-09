@@ -98,8 +98,8 @@ namespace Content.ScriptableObjects.Editor
 						color.g,
 						color.b,
 						color.a));
-					attributes.Add(
-						new ShowIfAttribute($"@{nameof(ScriptableContentEntryAttributeProcessor)}.{nameof(ShowIfNested)}($property)"));
+					var expr = $"@{nameof(ScriptableContentEntryAttributeProcessor)}.{nameof(ShowIfNested)}($property)";
+					attributes.Add(new ShowIfAttribute(expr));
 					attributes.Add(new LabelTextAttribute("Nested Content Entries"));
 					var dictionaryDrawerSettings = new DictionaryDrawerSettings
 					{
@@ -151,8 +151,9 @@ namespace Content.ScriptableObjects.Editor
 			if (!ContentEntryDebugModeMenu.IsEnable)
 				return false;
 
-			if (property.ValueEntry.WeakSmartValue is Dictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> nested)
-				return !nested.IsEmpty();
+			if (property.ValueEntry.WeakSmartValue is
+			    Dictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> _)
+				return true;
 
 			return false;
 		}

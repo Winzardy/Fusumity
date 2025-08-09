@@ -63,7 +63,7 @@ namespace Content.Editor
 				return;
 
 			var iterator = serializedObject.GetIterator();
-			if (!iterator.NextVisible(true))
+			if (!iterator.Next(true))
 				return;
 			do
 			{
@@ -91,7 +91,7 @@ namespace Content.Editor
 				}
 
 				Track((asset, reference), in entry.Guid);
-			} while (iterator.NextVisible(true));
+			} while (iterator.Next(true));
 		}
 
 		/// <returns><c>true</c>, если запомнили без проблем; иначе <c>false</c></returns>
@@ -186,7 +186,7 @@ namespace Content.Editor
 			scriptableObject.ScriptableContentEntry.ClearNested();
 
 			var iterator = serializedObject.GetIterator();
-			if (!iterator.NextVisible(true))
+			if (!iterator.Next(true))
 				return;
 			do
 			{
@@ -205,7 +205,7 @@ namespace Content.Editor
 					throw new Exception($"Can't add nested entry with guid [ {entry.Guid} ] by path [ {reference.Path} ]");
 
 				Track((asset, reference), in entry.Guid);
-			} while (iterator.NextVisible(true));
+			} while (iterator.Next(true));
 		}
 
 		private static void ClearNested(this IScriptableContentEntry entry)
