@@ -676,6 +676,7 @@ namespace InAppPurchasing.Unity
 		private void OnDeferredPurchase(UnityProduct product)
 		{
 			var billingProductId = product.definition.id;
+			_processing.Remove(billingProductId);
 			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
 				PurchaseDeferred?.Invoke(entry, product);
 			else
