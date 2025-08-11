@@ -23,6 +23,12 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 ToInt(this float2 v)
+		{
+			return (int2)v;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int2 FloorToInt_Positive(this float2 v)
 		{
 			return new int2(v.x.FloorToInt_Positive(), v.y.FloorToInt_Positive());
