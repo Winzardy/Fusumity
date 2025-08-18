@@ -8,7 +8,7 @@ using Sirenix.OdinInspector;
 namespace Notifications.Android.Entry
 {
 	[System.Serializable]
-	public struct AndroidPlatformNotificationEntry : IPlatformNotificationEntry
+	public class AndroidPlatformNotificationEntry : IPlatformNotificationEntry
 	{
 #if UNITY_ANDROID || UNITY_EDITOR
 		[InfoBox("Если не выбран, выбирается канал по дефолту")]

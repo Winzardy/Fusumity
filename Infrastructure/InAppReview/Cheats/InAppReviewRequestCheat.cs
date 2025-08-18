@@ -5,9 +5,9 @@ using Messaging;
 namespace Game.Cheats.App
 {
 	[ExecutableCommand(name = "App/In App Review/Request")]
-	public class InAppReviewCheats : Command
+	public class InAppReviewRequestCheat : Command
 	{
-		public InAppReviewCheats()
+		public InAppReviewRequestCheat()
 		{
 			info.actionAfterExecuted = ActionAfterExecuted.CloseConsole;
 		}

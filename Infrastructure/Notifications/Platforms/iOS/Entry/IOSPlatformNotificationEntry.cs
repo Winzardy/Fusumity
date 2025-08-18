@@ -1,10 +1,13 @@
+#if UNITY_IOS || UNITY_EDITOR
 using Localization;
+#endif
 
 namespace Notifications.iOS
 {
-	public struct IOSPlatformNotificationEntry : IPlatformNotificationEntry
+	[System.Serializable]
+	public class IOSPlatformNotificationEntry : IPlatformNotificationEntry
 	{
-#if UNITY_IOS|| UNITY_EDITOR
+#if UNITY_IOS || UNITY_EDITOR
 		//TODO: добавить категории
 		//Категории что-то наподобии каналов в Android
 

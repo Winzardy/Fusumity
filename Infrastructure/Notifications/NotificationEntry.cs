@@ -27,6 +27,6 @@ namespace Notifications
 
 		[Space]
 		[SerializeReference]
-		public IPlatformNotificationEntry[] platforms;
+		public IPlatformNotificationEntry[] platformEntries;
 	}
 }
