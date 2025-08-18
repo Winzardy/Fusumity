@@ -8,6 +8,9 @@ using Sirenix.OdinInspector;
 namespace Notifications.Android.Entry
 {
 	[System.Serializable]
+#if UNITY_ANDROID || UNITY_EDITOR
+	[TypeRegistryItem("Android", icon: SdfIconType.Robot)]
+#endif
 	public class AndroidPlatformNotificationEntry : IPlatformNotificationEntry
 	{
 #if UNITY_ANDROID || UNITY_EDITOR

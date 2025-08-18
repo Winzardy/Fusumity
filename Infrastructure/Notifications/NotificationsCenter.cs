@@ -27,5 +27,7 @@ namespace Notifications
 		public static void Schedule(ref NotificationArgs args) => management.Schedule(ref args);
 
 		public static string GetLastIntentNotificationId() => management.GetLastIntentNotificationId();
+
+		public static void OpenApplicationSettings() => management.OpenApplicationSettings();
 	}
 }
