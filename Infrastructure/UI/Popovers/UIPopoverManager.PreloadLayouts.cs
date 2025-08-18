@@ -14,12 +14,12 @@ namespace UI.Popovers
 			{
 				foreach (var entry in ContentManager.GetAll<UIPopoverEntry>())
 				{
-					ref readonly var tooltip = ref entry.Value;
+					ref readonly var popover = ref entry.Value;
 
-					if (!tooltip.layout.HasFlag(LayoutAutomationMode.Preload))
+					if (!popover.layout.HasFlag(LayoutAutomationMode.Preload))
 						continue;
 
-					list.Add(tooltip.layout.LayoutReference);
+					list.Add(popover.layout.LayoutReference);
 				}
 
 				_preloader.Preload(list.ToArray());

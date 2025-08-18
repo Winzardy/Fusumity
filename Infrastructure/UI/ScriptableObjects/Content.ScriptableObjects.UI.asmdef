@@ -9,7 +9,8 @@
         "Content.ScriptableObjects",
         "Content.ScriptableObjects.Editor",
         "UI.Screens",
-        "UI.Tabs"
+        "UI.Tabs",
+        "UI.Popovers"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

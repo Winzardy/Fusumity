@@ -4,8 +4,6 @@ using Fusumity.Reactive;
 using Fusumity.Utility;
 using Messaging;
 using Sapientia;
-using Sapientia.MemoryAllocator;
-using Sapientia.MemoryAllocator.State;
 using UnityEngine;
 
 namespace UI
@@ -108,7 +106,7 @@ namespace UI
 
 		protected override void OnBeganOpening()
 		{
-			_gameLateUpdateMessageToken = Messenger.Subscribe<World.LateUpdateMessage>(OnGameLateUpdate);
+			UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
 		}
 
 		protected override void OnEndedOpening() =>
@@ -121,10 +119,10 @@ namespace UI
 
 			TryClearMoveRoutine();
 
-			_gameLateUpdateMessageToken?.Dispose();
+			UnityLifecycle.LateUpdateEvent.UnSubscribe(OnLateUpdate);
 		}
 
-		private void OnGameLateUpdate(in World.LateUpdateMessage message) => TryCalculateAndUpdatePosition();
+		private void OnLateUpdate() => TryCalculateAndUpdatePosition();
 
 		private void TryCalculateAndUpdatePosition(bool animation = true, bool force = false)
 		{

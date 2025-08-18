@@ -5,11 +5,9 @@
         "UI",
         "AssetManagement",
         "Content",
-        "Content.Constants",
         "Fusumity",
         "Sapientia",
-        "DOTween.Modules",
-        "Game.Constants"
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

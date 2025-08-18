@@ -7,10 +7,8 @@ using UI.Layers;
 
 namespace UI.Windows
 {
-	public interface IWindow : IIdentifiable, IDisposable
+	public interface IWindow : IWidget, IIdentifiable
 	{
-		public bool Active { get; }
-
 		public void RequestClose();
 
 		internal event Action<IWindow> RequestedClose;
@@ -120,6 +118,7 @@ namespace UI.Windows
 					//Неявное поведение...
 					//Нужно вызывать OnHide у окна если хотим
 					//переоткрыть окно с новыми аргументами
+					_suppressShownOrHiddenEvents = true;
 					SetActive(false, true);
 				}
 
@@ -127,6 +126,7 @@ namespace UI.Windows
 			}
 
 			SetActive(true, immediate);
+			_suppressShownOrHiddenEvents = false;
 		}
 
 		IWindowArgs IWindow.GetArgs() => GetArgs();

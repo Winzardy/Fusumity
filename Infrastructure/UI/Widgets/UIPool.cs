@@ -36,7 +36,7 @@ namespace UI
 				_autoActivation = autoActivation;
 				_root = root;
 				_template = template;
-				_parent = parent != null ? parent : root.Root;
+				_parent = parent != null ? parent : root.RectTransform;
 			}
 
 			public TWidget Create()

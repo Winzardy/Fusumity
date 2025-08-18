@@ -15,7 +15,7 @@ namespace UI.Screens
 
 		private Dictionary<Type, IScreen> _screens = new(2);
 
-		private HashSet<object> _blockers = new(2);
+		private readonly HashSet<object> _blockers = new(2);
 
 		private readonly UIScreenFactory _factory = new();
 

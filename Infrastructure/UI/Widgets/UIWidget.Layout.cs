@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Threading;
-using ZenoTween;
-using Cysharp.Threading.Tasks;
+using System.ComponentModel;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sapientia.Collections;
-using Sapientia.Utility;
 using UnityEngine;
+using ZenoTween;
 
 namespace UI
 {
@@ -30,6 +29,9 @@ namespace UI
 		private bool _visible;
 		private bool _open;
 
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal bool _suppressShownOrHiddenEvents;
+
 		protected virtual bool UseSetAsLastSibling => false;
 
 		/// <summary>
@@ -44,15 +46,18 @@ namespace UI
 
 		public IWidgetAnimator<TLayout> Animator => _animator;
 
-		public event Action<bool> VisibleChanged;
+		public sealed override event WidgetShownDelegate Shown;
+		public sealed override event WidgetHiddenDelegate Hidden;
+		public sealed override event WidgetLayoutInstalledDelegate LayoutInstalled;
+		public sealed override event WidgetLayoutClearedDelegate LayoutCleared;
 
-		protected internal sealed override RectTransform Root => _layout ? _layout.rectTransform : null;
+		public sealed override RectTransform RectTransform => _layout ? _layout.rectTransform : null;
 
 		public virtual void SetupLayout(TLayout layout)
 		{
 			if (layout == null)
 			{
-				GUIDebug.LogError($"Layout can't be null ({typeof(TLayout)})", Root);
+				GUIDebug.LogError($"Layout can't be null ({typeof(TLayout)})", RectTransform);
 				return;
 			}
 
@@ -65,6 +70,8 @@ namespace UI
 
 			TrySetDefaultAnimator(layout);
 			TrySetupLayoutToAnimator();
+
+			LayoutInstalled?.Invoke(_layout);
 		}
 
 		public virtual void ClearLayout() => LayoutClearingInternal();
@@ -73,7 +80,7 @@ namespace UI
 		{
 			if (!ValidateLayout(out var msg))
 			{
-				//Может отрабатывать при Quit приложения...
+				// Может отрабатывать при OnApplicationQuit...
 				GUIDebug.LogWarning(msg);
 				return;
 			}
@@ -84,12 +91,15 @@ namespace UI
 				OnDeactivatedInternal(immediate);
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		private protected override void OnDisposeInternal()
 		{
 			LayoutClearingInternal();
 
-			_animator?.Dispose();
-			_animator = null;
+			DisposeAndSetNullSafe(ref _animator);
 
 			OnDispose();
 			base.OnDisposeInternal();
@@ -101,52 +111,6 @@ namespace UI
 
 			if (Visible && _layout)
 				_layout.rectTransform.SetSiblingIndex(_siblingIndex);
-		}
-
-		/// <summary>
-		/// Подождать пока виджет станет видимым
-		/// </summary>
-		public async UniTask WaitUntilIsVisible(CancellationToken? cancellationToken = null)
-		{
-			if (cancellationToken.HasValue)
-			{
-				try
-				{
-					using var linked = DisposeCancellationTokenSource.Link(cancellationToken.Value);
-					await UniTask.WaitUntil(IsVisible, cancellationToken: linked.Token);
-				}
-				catch (OperationCanceledException e)
-				{
-					_animator?.Stop(WidgetAnimationType.OPENING);
-				}
-			}
-			else
-			{
-				await UniTask.WaitUntil(IsVisible, cancellationToken: DisposeCancellationToken);
-			}
-		}
-
-		/// <summary>
-		/// Подождать пока виджет скроется
-		/// </summary>
-		public async UniTask WaitUntilIsNotVisible(CancellationToken? cancellationToken = null)
-		{
-			if (cancellationToken.HasValue)
-			{
-				try
-				{
-					using var linkedCts = DisposeCancellationTokenSource.Link(cancellationToken.Value);
-					await UniTask.WaitWhile(IsVisible, cancellationToken: linkedCts.Token);
-				}
-				catch (OperationCanceledException e)
-				{
-					_animator?.Stop(WidgetAnimationType.CLOSING);
-				}
-			}
-			else
-			{
-				await UniTask.WaitWhile(IsVisible, cancellationToken: DisposeCancellationToken);
-			}
 		}
 
 		/// <summary>
@@ -173,6 +137,10 @@ namespace UI
 		/// при переопределение таких методов нужно быть аккуратным.<br/>
 		/// Вызывать такие методы у наследника тоже опасно!)
 		/// </summary>
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected virtual void OnActivatedInternal(bool immediate)
 		{
 			if (_layout == null)
@@ -210,6 +178,9 @@ namespace UI
 		/// при переопределение таких методов нужно быть аккуратным.<br/>
 		/// Вызывать такие методы у наследника тоже опасно!)
 		/// </summary>
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected virtual void OnDeactivatedInternal(bool immediate)
 		{
 			if (_layout == null)
@@ -275,12 +246,14 @@ namespace UI
 		/// </summary>
 		void IWidget.SetVisible(bool value) => SetVisibleInternal(value);
 
+		protected sealed override void OnVisibleOperationCanceledException(bool openingOrClosing)
+			=> _animator?.Stop(openingOrClosing ? WidgetAnimationType.OPENING : WidgetAnimationType.CLOSING);
+
 		protected internal void SetVisibleInternal(bool visible) => SetVisibleInternal(visible, true);
 
 		protected void SetVisibleInternal(bool visible, bool layoutClearing)
 		{
 			_visible = visible;
-			VisibleChanged?.Invoke(visible);
 
 			if (!_layout)
 				return;
@@ -385,29 +358,65 @@ namespace UI
 			return _layout;
 		}
 
-		protected internal virtual void OnBeganOpeningInternal() => OnBeganOpening();
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
+		protected internal virtual void OnBeganOpeningInternal()
+		{
+			if (!_suppressShownOrHiddenEvents)
+				Shown?.Invoke(this);
+			OnBeganOpening();
+		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnEndedOpeningInternal()
 		{
 			_open = true;
 			OnEndedOpening();
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnBeganClosingInternal()
 		{
 			_open = false;
 			OnBeganClosing();
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnEndedClosingInternal()
 		{
 			OnEndedClosing();
 			SetActiveInHierarchyForChildren(false);
+
+			if (!_suppressShownOrHiddenEvents)
+				Hidden?.Invoke(this);
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnLayoutInstalledInternal() => OnLayoutInstalled();
 
-		protected internal virtual void OnLayoutClearedInternal() => OnLayoutCleared();
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
+		protected internal virtual void OnLayoutClearedInternal()
+		{
+			LayoutCleared?.Invoke(_layout);
+			OnLayoutCleared();
+		}
 
 		#endregion
 

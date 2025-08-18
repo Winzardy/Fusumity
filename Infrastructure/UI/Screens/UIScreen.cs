@@ -76,10 +76,12 @@ namespace UI.Screens
 				//Неявное поведение...
 				//Нужно вызывать OnHide если хотим
 				//переоткрыть экран
+				_suppressShownOrHiddenEvents = true;
 				SetActive(false, true);
 			}
 
 			SetActive(true, immediate);
+			_suppressShownOrHiddenEvents = false;
 		}
 
 		void IScreen.Hide(bool reset)

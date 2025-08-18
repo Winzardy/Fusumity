@@ -2,9 +2,9 @@
 
 namespace UI.Windows
 {
-	public class UIWindowDispatcher : IUIDispatcher, IDisposable
+	public class UIWindowDispatcher : IWidgetDispatcher, IDisposable
 	{
-		private readonly UIWindowManager _manager;
+		private UIWindowManager _manager;
 
 		/// <summary>
 		/// Активация окна, даже если окно в очереди
@@ -42,6 +42,8 @@ namespace UI.Windows
 		{
 			_manager.Shown -= OnShown;
 			_manager.Hidden -= OnHidden;
+
+			_manager = null;
 		}
 
 		private void OnShown(IWindow window, bool fromQueue)

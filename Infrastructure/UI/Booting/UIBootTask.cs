@@ -8,6 +8,7 @@ using Sapientia.Extensions;
 using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
 using UI;
+using UI.Popovers;
 using UI.Popups;
 using UI.Screens;
 using UI.Windows;
@@ -31,6 +32,7 @@ namespace Booting.UI
 		private UIScreenDispatcher _screens;
 		private UIWindowDispatcher _windows;
 		private UIPopupDispatcher _popups;
+		private UIPopoverDispatcher _popovers;
 
 		private EventSystem _eventSystem;
 
@@ -45,6 +47,7 @@ namespace Booting.UI
 			InitializeScreens();
 			InitializeWindows();
 			InitializePopups();
+			InitializePopovers();
 
 			Initialize();
 
@@ -79,8 +82,6 @@ namespace Booting.UI
 
 			_screens = new UIScreenDispatcher(manager);
 			_management.Register(_screens);
-			_screens.RegisterAsService();
-
 			AddDisposable(_screens);
 		}
 
@@ -91,8 +92,6 @@ namespace Booting.UI
 
 			_windows = new UIWindowDispatcher(manager);
 			_management.Register(_windows);
-			_windows.RegisterAsService();
-
 			AddDisposable(_windows);
 		}
 
@@ -103,9 +102,17 @@ namespace Booting.UI
 
 			_popups = new UIPopupDispatcher(manager);
 			_management.Register(_popups);
-			_popups.RegisterAsService();
-
 			AddDisposable(_popups);
+		}
+
+		private void InitializePopovers()
+		{
+			var manager = new UIPopoverManager();
+			AddDisposable(manager);
+
+			_popovers = new UIPopoverDispatcher(manager);
+			_management.Register(_popovers);
+			AddDisposable(_popovers);
 		}
 
 		private void CreateEventSystem()
@@ -114,6 +121,5 @@ namespace Booting.UI
 			_eventSystem.name = _eventSystem.name.Remove("(Clone)");
 			_eventSystem.MoveTo(UIFactory.scene);
 		}
-
 	}
 }

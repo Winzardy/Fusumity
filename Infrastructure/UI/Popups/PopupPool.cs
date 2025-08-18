@@ -1,49 +1,49 @@
-﻿using System;
-using Sapientia.Pooling;
-using UnityEngine;
+using System;
+using System.Collections.Generic;
 
 namespace UI.Popups
 {
-	public interface IPopupPool : IDisposable
+	public class PopupPool : IDisposable
 	{
-		public void Release(IPopup popup);
-	}
+		private readonly UIPopupFactory _factory;
 
-	public class PopupPool<T> : ObjectPool<T>, IPopupPool
-		where T : UIWidget, IPopup
-	{
-		public PopupPool(UIPopupFactory factory) : base(new Policy(factory))
+		private Dictionary<Type, IPopupPool> _pools = new(4);
+
+		public PopupPool(UIPopupFactory factory)
 		{
+			_factory = factory;
 		}
 
-		void IPopupPool.Release(IPopup popup) => Release((T) popup);
-
-		private class Policy : IObjectPoolPolicy<T>
+		public void Dispose()
 		{
-			private readonly UIPopupFactory _factory;
+			foreach (var pool in _pools.Values)
+				pool.Dispose();
 
-			public Policy(UIPopupFactory factory)
-			{
-				_factory = factory;
-			}
+			_pools = null;
+		}
 
-			public T Create()
-			{
-				return _factory.Create<T>();
-			}
+		public T Get<T>()
+			where T : UIWidget, IPopup
+		{
+			var pool = GetOrCreatePool<T>();
+			return pool.Get();
+		}
 
-			public void OnGet(T obj)
-			{
-			}
+		public void Release(IPopup popup)
+		{
+			var pool = _pools[popup.GetType()];
+			pool.Release(popup);
+		}
 
-			public void OnRelease(T obj)
-			{
-			}
+		private PopupPool<T> GetOrCreatePool<T>()
+			where T : UIWidget, IPopup
+		{
+			if (_pools.TryGetValue(typeof(T), out var rawPool))
+				return (PopupPool<T>) rawPool;
 
-			public void OnDispose(T obj)
-			{
-				obj.Dispose();
-			}
+			var pool = new PopupPool<T>(_factory);
+			_pools[typeof(T)] = pool;
+			return pool;
 		}
 	}
 }

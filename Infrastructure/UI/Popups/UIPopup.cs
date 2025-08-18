@@ -15,12 +15,12 @@ namespace UI.Popups
 		public void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
-		internal void Initialize(UIPopupEntry entry);
+		internal void Initialize(in UIPopupEntry entry);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования попапа!
-		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
-		///получить через GetArgs() в своих целях (скрыть попап на время).
-		///Получается аргументы задают состояние окна от начала до конца использования.</param>
+		/// При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
+		/// получить через GetArgs() в своих целях (скрыть попап на время).
+		/// Получается аргументы задают состояние окна от начала до конца использования.</param>
 		internal void Show(IPopupArgs args);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
@@ -81,6 +81,7 @@ namespace UI.Popups
 		event Action<IPopup> IPopup.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
 		protected override string Layer => LayerType.POPUPS;
+
 		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
@@ -97,7 +98,7 @@ namespace UI.Popups
 		public sealed override void Initialize() =>
 			throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IPopup.Initialize(UIPopupEntry entry)
+		void IPopup.Initialize(in UIPopupEntry entry)
 		{
 			_entry = entry;
 
@@ -119,9 +120,10 @@ namespace UI.Popups
 
 					force = true;
 
-					//Неявное поведение...
-					//Нужно вызывать OnHide у попапа если хотим
-					//переоткрыть тот же попап с новыми аргументами
+					// Неявное поведение...
+					// Нужно вызывать OnHide у попапа если хотим
+					// переоткрыть тот же попап с новыми аргументами
+					_suppressShownOrHiddenEvents = true;
 					SetActive(false, true);
 				}
 
@@ -129,6 +131,7 @@ namespace UI.Popups
 			}
 
 			SetActive(true, force);
+			_suppressShownOrHiddenEvents = false;
 		}
 
 		bool IPopup.CanShow(IPopupArgs boxedArgs, out string error)

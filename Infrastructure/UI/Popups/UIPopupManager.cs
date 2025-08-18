@@ -2,7 +2,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Utility;
-using UnityEngine;
 
 namespace UI.Popups
 {
@@ -13,9 +12,9 @@ namespace UI.Popups
 	{
 		private IPopup _current;
 
-		private readonly PopupsPool _pool;
+		private readonly PopupPool _pool;
 
-		private readonly PanelQueue<IPopup, IPopupArgs> _queue;
+		private readonly UIRootWidgetQueue<IPopup, IPopupArgs> _queue;
 		private readonly CancellationTokenSource _cts = new();
 
 		internal event ShownDelegate Shown;
@@ -25,7 +24,7 @@ namespace UI.Popups
 		public UIPopupManager()
 		{
 			var factory = new UIPopupFactory();
-			_pool = new PopupsPool(factory);
+			_pool = new PopupPool(factory);
 
 			InitializeAssetsPreloader();
 

@@ -36,7 +36,7 @@ namespace UI.Tabs
 
 		protected override bool UseSetAsLastSibling => true;
 
-		protected override RectTransform RectTransform =>
+		protected override RectTransform LayerRectTransform =>
 			_group.TryGetRoot(out var parent) ? parent : _layout.rectTransform.parent as RectTransform;
 
 		public abstract string Id { get; }

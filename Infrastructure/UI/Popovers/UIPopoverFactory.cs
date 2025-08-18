@@ -1,4 +1,5 @@
-﻿using Content;
+﻿using System;
+using Content;
 
 namespace UI.Popovers
 {
@@ -7,12 +8,24 @@ namespace UI.Popovers
 		public T Create<T>()
 			where T : UIWidget, IPopover
 		{
-			var tooltip = UIFactory.CreateWidget<T>(false);
-			var entry = ContentManager.Get<UIPopoverEntry>(tooltip.Id);
+			var popup = UIFactory.CreateWidget<T>(false);
+			return Initialize(popup);
+		}
 
-			tooltip.Initialize(entry);
+		public IPopover Create(Type type)
+		{
+			if (UIFactory.CreateWidget(type, false) is not IPopover popup)
+				throw GUIDebug.Exception($"Error create popup by type [ {type.Name} ]");
 
-			return tooltip;
+			return Initialize(popup);
+		}
+
+		private T Initialize<T>(T popup)
+			where T : IPopover
+		{
+			var entry = ContentManager.Get<UIPopoverEntry>(popup.Id);
+			popup.Initialize(in entry);
+			return popup;
 		}
 	}
 }

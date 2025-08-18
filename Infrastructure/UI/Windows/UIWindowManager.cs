@@ -13,7 +13,7 @@ namespace UI.Windows
 
 		private readonly UIWindowFactory _factory;
 
-		private readonly PanelQueue<IWindow, IWindowArgs> _queue;
+		private readonly UIRootWidgetQueue<IWindow, IWindowArgs> _queue;
 
 		internal IWindow Current => _current;
 

@@ -3,38 +3,34 @@ using Sapientia.Pooling;
 
 namespace UI.Popovers
 {
-	public interface IPopoverObjectPool : IDisposable
+	internal interface IPopoverPool : IDisposable
 	{
-		public void Release(IPopover popover);
 	}
 
-	public class PopoverObjectPool<T> : ObjectPool<T>, IPopoverObjectPool
+	internal class PopoverPool<T> : ObjectPool<T>, IPopoverPool
 		where T : UIWidget, IPopover
 	{
-		public PopoverObjectPool(UIPopoverFactory factory) : base(new Policy(factory))
+		internal PopoverPool(UIPopoverFactory factory) : base(new Policy(factory))
 		{
 		}
 
-		void IPopoverObjectPool.Release(IPopover popup)
+		internal T Get(UIWidget parent)
 		{
-			Release((T) popup);
+			var popover = Get();
+			popover.Bind(parent);
+			return popover;
 		}
 
 		private class Policy : IObjectPoolPolicy<T>
 		{
-			private UIPopoverFactory _factory;
+			private readonly UIPopoverFactory _factory;
 
 			public Policy(UIPopoverFactory factory)
 			{
 				_factory = factory;
 			}
 
-			public T Create()
-			{
-				var popup = _factory.Create<T>();
-
-				return popup;
-			}
+			public T Create() => _factory.Create<T>();
 
 			public void OnGet(T obj)
 			{
@@ -42,6 +38,7 @@ namespace UI.Popovers
 
 			public void OnRelease(T obj)
 			{
+				obj.Clear();
 			}
 
 			public void OnDispose(T obj)

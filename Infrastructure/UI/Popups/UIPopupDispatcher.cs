@@ -3,7 +3,7 @@ using UI.Popups;
 
 namespace UI
 {
-	public class UIPopupDispatcher : IUIDispatcher, IDisposable
+	public class UIPopupDispatcher : IWidgetDispatcher, IDisposable
 	{
 		private UIPopupManager _manager;
 
@@ -45,6 +45,8 @@ namespace UI
 			_manager.Shown -= OnShown;
 			_manager.Hidden -= OnHidden;
 			_manager.Enqueued -= OnEnqueued;
+
+			_manager = null;
 		}
 
 		/// <summary>

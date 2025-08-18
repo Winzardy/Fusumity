@@ -22,7 +22,7 @@ namespace UI
 		private CancellationTokenSource _loadTemplateCts;
 		private CancellationTokenSource _autoDestroyCts;
 
-		protected abstract RectTransform RectTransform { get; }
+		protected abstract RectTransform LayerRectTransform { get; }
 
 		protected abstract ComponentReferenceEntry LayoutReference { get; }
 		protected virtual bool LayoutAutoDestroy => false;
@@ -169,7 +169,7 @@ namespace UI
 		{
 			TryLayoutClearingAndReleaseTemplate();
 
-			var layout = UIFactory.CreateLayout(template, RectTransform, LayoutPrefixName);
+			var layout = UIFactory.CreateLayout(template, LayerRectTransform, LayoutPrefixName);
 			SetupLayout(layout);
 			SetVisibleInternal(false, false);
 
