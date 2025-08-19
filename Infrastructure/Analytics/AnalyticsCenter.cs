@@ -6,6 +6,7 @@ namespace Analytics
 {
 	public class AnalyticsCenter : StaticProvider<AnalyticsManagement>
 	{
+		// ReSharper disable once InconsistentNaming
 		private static AnalyticsManagement management
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

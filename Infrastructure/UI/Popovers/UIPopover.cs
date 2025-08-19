@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssetManagement;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
@@ -18,8 +19,9 @@ namespace UI.Popovers
 
 		internal void Show(IPopoverArgs args);
 
-		internal void Bind(UIWidget parent);
-		internal void Clear();
+		protected internal UIWidget Anchor { get; }
+		internal void Bind(UIWidget anchor);
+		internal void Unbind();
 	}
 
 	public abstract class UIPopover<TLayout> : UIBasePopover<TLayout, EmptyPopoverArgs>
@@ -48,7 +50,7 @@ namespace UI.Popovers
 		where TLayout : UIBasePopoverLayout
 		where TArgs : struct, IPopoverArgs
 	{
-		protected internal UIWidget _source;
+		protected internal UIWidget _anchor;
 
 		private const string LAYOUT_PREFIX_NAME = "[Popover] ";
 
@@ -63,23 +65,33 @@ namespace UI.Popovers
 
 		private event Action<IPopover> RequestedClose;
 
-		event Action<IPopover> IPopover.RequestedClose
-		{
-			add => RequestedClose += value;
-			remove => RequestedClose -= value;
-		}
+		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
-		protected override string Layer => _source?.Layer ?? LayerType.POPOVERS;
+		UIWidget IPopover.Anchor => _anchor;
+
+		protected override string Layer
+		{
+			get
+			{
+				if (_layout)
+					return _anchor?.Layer ?? LayerType.POPOVERS;
+
+				return LayerType.POPOVERS;
+			}
+		}
 
 		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
 		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
 
+		private TransformSnapshot _layoutTransformSnapshot;
+
 		public sealed override void SetupLayout(TLayout layout)
 		{
+			_layoutTransformSnapshot = layout.transform
+			   .Snapshot(TransformSpace.Local);
 			OnSetupDefaultAnimator();
-
 			base.SetupLayout(layout);
 		}
 
@@ -95,35 +107,31 @@ namespace UI.Popovers
 
 		protected override void OnLayoutInstalledInternal()
 		{
-			RebindTransformSafe();
+			UpdateParentTransformBindSafe();
+			_layout.transform.Apply(in _layoutTransformSnapshot);
+
 			base.OnLayoutInstalledInternal();
 		}
 
-		void IPopover.Bind(UIWidget source)
+		void IPopover.Bind(UIWidget anchor)
 		{
-			_source = source;
-			RebindTransformSafe();
+			_anchor = anchor;
+
+			UpdateParentTransformBindSafe();
+			if (_layout)
+				_layout.transform.Apply(in _layoutTransformSnapshot);
 		}
 
-		void IPopover.Clear()
+		void IPopover.Unbind()
 		{
-			_source = null;
-			RebindTransformSafe();
-		}
+			_anchor = null;
 
-		private void RebindTransformSafe()
-		{
-			if (!_layout)
-				return;
-
-			var parentRectTransform = _source?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
-			_layout.transform.SetParent(parentRectTransform, false);
+			UpdateParentTransformBindSafe();
+			SetActive(false, true);
 		}
 
 		void IPopover.Show(IPopoverArgs boxedArgs)
 		{
-			var force = false;
-
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -133,20 +141,19 @@ namespace UI.Popovers
 					if (_args.Equals(args))
 						return;
 
-					force = true;
+					EnableSuppress();
 
 					// Неявное поведение...
 					// Нужно вызывать OnHide у попапа если хотим
 					// переоткрыть тот же попап с новыми аргументами
-					_suppressShownOrHiddenEvents = true;
-					SetActive(false, true);
+					SetActive(false, true, false);
 				}
 
 				_args = args;
 			}
 
-			SetActive(true, force);
-			_suppressShownOrHiddenEvents = false;
+			SetActive(true, Suppress);
+			DisableSuppress();
 		}
 
 		protected sealed override void OnEndedClosingInternal()
@@ -169,7 +176,7 @@ namespace UI.Popovers
 		protected virtual void OnSetupDefaultAnimator()
 		{
 			if (_animator == null)
-				SetAnimator<DefaultPopoverAnimator>();
+				SetAnimator<DefaultPopoverAnimator<UIBasePopover<TLayout, TArgs>>>();
 		}
 
 		private TArgs UnboxedArgs(IPopoverArgs boxedArgs)
@@ -182,6 +189,15 @@ namespace UI.Popovers
 					$"[{GetType()}] (need type: {typeof(TArgs)})");
 
 			return args;
+		}
+
+		private void UpdateParentTransformBindSafe()
+		{
+			if (!_layout)
+				return;
+
+			var parentRectTransform = _anchor?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
+			_layout.transform.SetParent(parentRectTransform, false);
 		}
 	}
 

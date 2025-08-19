@@ -102,8 +102,6 @@ namespace UI.Windows
 
 		void IWindow.Show(IWindowArgs boxedArgs)
 		{
-			var immediate = false;
-
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -113,20 +111,19 @@ namespace UI.Windows
 					if (_args.Equals(args))
 						return;
 
-					immediate = true;
+					EnableSuppress();
 
 					//Неявное поведение...
 					//Нужно вызывать OnHide у окна если хотим
 					//переоткрыть окно с новыми аргументами
-					_suppressShownOrHiddenEvents = true;
-					SetActive(false, true);
+					SetActive(false, true, false);
 				}
 
 				_args = args;
 			}
 
-			SetActive(true, immediate);
-			_suppressShownOrHiddenEvents = false;
+			SetActive(true, Suppress, !Suppress);
+			DisableSuppress();
 		}
 
 		IWindowArgs IWindow.GetArgs() => GetArgs();

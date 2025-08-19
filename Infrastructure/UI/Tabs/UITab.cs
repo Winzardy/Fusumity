@@ -91,8 +91,10 @@ namespace UI.Tabs
 
 		public void Hide(bool immediate = false)
 		{
-			if (Active)
-				SetActive(false, immediate);
+			if (!Active)
+				return;
+
+			SetActive(false, immediate);
 		}
 	}
 

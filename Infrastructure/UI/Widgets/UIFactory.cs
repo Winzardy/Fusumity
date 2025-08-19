@@ -1,5 +1,8 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
 using UnityEngine;
@@ -45,14 +48,44 @@ namespace UI
 			return widget;
 		}
 
+		public static async UniTask<TLayout> CreateLayoutAsync<TLayout>(TLayout template,
+			RectTransform parent = null,
+			string prefix = null,
+			CancellationToken cancellationToken = default)
+			where TLayout : UIBaseLayout
+		{
+			var operation = UILayoutFactory.InstantiateAsync(template);
+			var layout = (await operation)
+			   .First();
+			if (cancellationToken.IsCancellationRequested)
+			{
+				layout.Destroy();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
+
+			if (parent)
+				layout.transform.SetParent(parent, false);
+
+			FinalizeLayout(layout, prefix);
+			return layout;
+		}
+
 		public static TLayout CreateLayout<TLayout>(TLayout template, RectTransform parent = null, string prefix = null)
 			where TLayout : UIBaseLayout
 		{
 			var layout = parent ? UILayoutFactory.Instantiate(template, parent) : UILayoutFactory.Instantiate(template);
-			var split = layout.name.Remove(UNITY_CLONE_POSTFIX).Split(NAME_SEPARATOR);
+			FinalizeLayout(layout, prefix);
+			return layout;
+		}
+
+		private static void FinalizeLayout<TLayout>(TLayout layout, string prefix)
+			where TLayout : UIBaseLayout
+		{
+			var split = layout.name
+			   .Remove(UNITY_CLONE_POSTFIX)
+			   .Split(NAME_SEPARATOR);
 			var name = split.Length > 1 ? split[^1] : split[0];
 			layout.name = $"{prefix}{name}";
-			return layout;
 		}
 
 		public static void Destroy<TLayout>(TLayout layout)

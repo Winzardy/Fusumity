@@ -324,6 +324,7 @@ namespace UI
 			public static implicit operator WidgetGroupToken(Token token) => new(token, token._generation);
 			public static implicit operator WidgetGroupToken<TWidget>(Token token) => new(token, token._generation);
 			public static implicit operator TWidget(Token token) => token._widget;
+
 		}
 
 		internal delegate void TokenReleaser(Token token, bool immediate = false);
@@ -333,8 +334,6 @@ namespace UI
 	{
 		private readonly IWidgetGroupToken<TWidget> _token;
 		private readonly int _generation;
-
-		public TWidget Widget => _token.Widget;
 
 		internal WidgetGroupToken(IWidgetGroupToken<TWidget> token, int generation)
 		{

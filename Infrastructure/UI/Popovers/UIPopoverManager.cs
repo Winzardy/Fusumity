@@ -34,16 +34,17 @@ namespace UI.Popovers
 			_cts?.Trigger();
 		}
 
-		internal void Show<T>(ref PopoverToken<T> token, UIWidget source, IPopoverArgs args)
+		/// <param name="anchor">Виджет к которому привязан поповер</param>
+		internal void Show<T>(ref PopoverToken<T> token, UIWidget anchor, IPopoverArgs args)
 			where T : UIWidget, IPopover
 		{
-			if (token.IsValid())
+			if (token.IsValid() && token.Popover.Visible)
 			{
 				token.Popover.Show(args);
 				return;
 			}
 
-			var popover = _pool.Get<T>(source);
+			var popover = _pool.Get<T>(anchor);
 
 			var pooledToken = GetToken(popover);
 
@@ -51,15 +52,16 @@ namespace UI.Popovers
 			popover.Hidden += OnHidden;
 			popover.RequestedClose += OnRequestedClose;
 
-			source.LayoutCleared += OnSourceLayoutCleared;
+			anchor.LayoutCleared += OnSourceLayoutCleared;
 
 			token = pooledToken;
 
+			// Принудительно убрать поповер в пул (что происходит при OnHidden)
 			void OnSourceLayoutCleared(UIBaseLayout _) => OnHidden(popover);
 
 			void OnHidden(IWidget _)
 			{
-				source.LayoutCleared -= OnSourceLayoutCleared;
+				anchor.LayoutCleared -= OnSourceLayoutCleared;
 
 				popover.Hidden -= OnHidden;
 				popover.RequestedClose -= OnRequestedClose;
@@ -72,7 +74,7 @@ namespace UI.Popovers
 				if (!popover.Active)
 					return;
 
-				popover.SetActive(false);
+				popover.SetActive(false); // -> приведет к OnHidden
 			}
 		}
 

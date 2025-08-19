@@ -7,14 +7,12 @@ using UI.Layers;
 
 namespace UI.Popups
 {
-	public interface IPopup : IIdentifiable, IDisposable
+	public interface IPopup : IWidget, IIdentifiable
 	{
-		public bool Active { get; }
-		public bool Visible { get; }
-
 		public void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
+
 		internal void Initialize(in UIPopupEntry entry);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования попапа!
@@ -107,8 +105,6 @@ namespace UI.Popups
 
 		void IPopup.Show(IPopupArgs boxedArgs)
 		{
-			var force = false;
-
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -118,20 +114,19 @@ namespace UI.Popups
 					if (_args.Equals(args))
 						return;
 
-					force = true;
+					EnableSuppress();
 
 					// Неявное поведение...
 					// Нужно вызывать OnHide у попапа если хотим
 					// переоткрыть тот же попап с новыми аргументами
-					_suppressShownOrHiddenEvents = true;
-					SetActive(false, true);
+					SetActive(false, true, false);
 				}
 
 				_args = args;
 			}
 
-			SetActive(true, force);
-			_suppressShownOrHiddenEvents = false;
+			SetActive(true, Suppress);
+			DisableSuppress();
 		}
 
 		bool IPopup.CanShow(IPopupArgs boxedArgs, out string error)

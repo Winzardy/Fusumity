@@ -3,6 +3,7 @@ using AssetManagement;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Fusumity.Utility;
+using Sapientia.Collections;
 
 namespace UI
 {
@@ -19,9 +20,17 @@ namespace UI
 			public UIObjectInspectorEntry entry { get; set; }
 		}
 
-		protected override T Create(T prefab)
+		protected override async UniTask<T> CreateAsync(T prefab, CancellationToken cancellationToken)
 		{
-			_gameObject = Object.Instantiate(prefab.gameObject);
+			var operation = Object.InstantiateAsync(prefab.gameObject);
+			_gameObject = (await operation)
+			   .First();
+
+			if (cancellationToken.IsCancellationRequested)
+			{
+				_gameObject.Destroy();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			if (_args.entry.useCustomRotation)
 				_gameObject.transform.localRotation = Quaternion.Euler(_args.entry.rotation);

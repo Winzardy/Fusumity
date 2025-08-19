@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using DG.Tweening;
-using JetBrains.Annotations;
 using Sapientia.Collections;
 using UnityEngine;
 using ZenoTween;
@@ -29,8 +28,13 @@ namespace UI
 		private bool _visible;
 		private bool _open;
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		protected internal bool _suppressShownOrHiddenEvents;
+		/// <summary>
+		/// Флаг для подавления повторного запуска анимации и вызова событий <see cref="Shown"/> и <see cref="Hidden"/>.
+		/// </summary>
+		private bool _suppress;
+
+		/// <inheritdoc cref="_suppress"/>
+		protected internal bool Suppress => _suppress;
 
 		protected virtual bool UseSetAsLastSibling => false;
 
@@ -152,7 +156,8 @@ namespace UI
 			if (UseSetAsLastSibling)
 				_layout.rectTransform.SetAsLastSibling();
 
-			if (_animator == null)
+			var withoutAnimation = _animator == null || _suppress;
+			if (withoutAnimation)
 			{
 				OnBeganOpeningInternal();
 				SetVisibleInternal(true);
@@ -166,7 +171,7 @@ namespace UI
 			SetActiveInHierarchyForChildren(true);
 			OnShow();
 
-			if (_animator == null)
+			if (withoutAnimation)
 				OnEndedOpeningInternal();
 		}
 
@@ -188,7 +193,8 @@ namespace UI
 
 			OnHide();
 
-			if (_animator == null)
+			var withoutAnimation = _animator == null || _suppress;
+			if (withoutAnimation)
 			{
 				OnBeganClosingInternal();
 				SetVisibleInternal(false);
@@ -199,7 +205,7 @@ namespace UI
 				_animator.Play(args, immediate);
 			}
 
-			if (_animator == null)
+			if (withoutAnimation)
 				OnEndedClosingInternal();
 		}
 
@@ -254,6 +260,14 @@ namespace UI
 		protected void SetVisibleInternal(bool visible, bool layoutClearing)
 		{
 			_visible = visible;
+
+			if (!_suppress)
+			{
+				if (visible)
+					Shown?.Invoke(this);
+				else
+					Hidden?.Invoke(this);
+			}
 
 			if (!_layout)
 				return;
@@ -364,8 +378,6 @@ namespace UI
 		/// </remarks>
 		protected internal virtual void OnBeganOpeningInternal()
 		{
-			if (!_suppressShownOrHiddenEvents)
-				Shown?.Invoke(this);
 			OnBeganOpening();
 		}
 
@@ -397,9 +409,6 @@ namespace UI
 		{
 			OnEndedClosing();
 			SetActiveInHierarchyForChildren(false);
-
-			if (!_suppressShownOrHiddenEvents)
-				Hidden?.Invoke(this);
 		}
 
 		/// <remarks>
@@ -497,5 +506,11 @@ namespace UI
 
 			SetAnimator<DefaultWidgetAnimator>();
 		}
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal void EnableSuppress() => _suppress = true;
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal void DisableSuppress() => _suppress = false;
 	}
 }

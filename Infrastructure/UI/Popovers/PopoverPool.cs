@@ -22,11 +22,11 @@ namespace UI.Popovers
 			_pools = null;
 		}
 
-		public T Get<T>(UIWidget source)
+		public T Get<T>(UIWidget anchor)
 			where T : UIWidget, IPopover
 		{
 			var pool = GetOrCreatePool<T>();
-			return pool.Get(source);
+			return pool.Get(anchor);
 		}
 
 		public void Release<T>(T popover)

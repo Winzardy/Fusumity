@@ -158,18 +158,18 @@ namespace UI
 		{
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
 			TryClearTemplate();
-			SetupTemplate(template);
+			await SetupTemplateAsync(template, cancellationToken);
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
 #endif
 			base.OnActivatedInternal(immediate);
 		}
 
-		private void SetupTemplate(TLayout template)
+		private async UniTask SetupTemplateAsync(TLayout template, CancellationToken cancellationToken)
 		{
 			TryLayoutClearingAndReleaseTemplate();
 
-			var layout = UIFactory.CreateLayout(template, LayerRectTransform, LayoutPrefixName);
+			var layout = await UIFactory.CreateLayoutAsync(template, LayerRectTransform, LayoutPrefixName, cancellationToken);
 			SetupLayout(layout);
 			SetVisibleInternal(false, false);
 

@@ -74,6 +74,10 @@ namespace UI
 		protected bool _activeInHierarchy = true;
 
 		private bool _active;
+
+		/// <summary>
+		/// Флаг немедленного выполнения (анимации при OnShow) при последнем вызове
+		/// </summary>
 		protected bool _immediate;
 
 		/// <inheritdoc cref="IWidget{TLayout}.Active"/>

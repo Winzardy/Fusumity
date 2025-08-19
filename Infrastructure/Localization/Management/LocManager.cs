@@ -7,7 +7,8 @@ namespace Localization
 {
 	public partial class LocManager : StaticProvider<LocalizationResolver>
 	{
-		private static LocalizationResolver Resolver
+		// ReSharper disable once InconsistentNaming
+		private static LocalizationResolver resolver
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
@@ -16,34 +17,34 @@ namespace Localization
 		public static bool IsInitialized
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Resolver != null;
+			get => resolver != null;
 		}
 
 
-		public static string CurrentLocaleCode => Resolver.CurrentLocaleCode;
+		public static string CurrentLocaleCode => resolver.CurrentLocaleCode;
 
 		/// <inheritdoc cref="LocalizationResolver.CurrentLanguage"/>
-		public static string CurrentLanguage => Resolver.CurrentLanguage;
+		public static string CurrentLanguage => resolver.CurrentLanguage;
 
 		// Нет обработки нулевого LocalizationResolver, так как такой нужны явно нет
 		public static event Action<string> CurrentLocaleCodeUpdated
 		{
-			add => Resolver.CurrentLocaleCodeUpdated += value;
-			remove => Resolver.CurrentLocaleCodeUpdated -= value;
+			add => resolver.CurrentLocaleCodeUpdated += value;
+			remove => resolver.CurrentLocaleCodeUpdated -= value;
 		}
 
-		public static bool Has(string key) => Resolver.Has(key);
+		public static bool Has(string key) => resolver.Has(key);
 
 		/// <returns>Перевод слова по ключу (текущего выбранного языка)</returns>
-		public static string Get(string key, string defaultValue = null) => Resolver.Get(key, defaultValue);
+		public static string Get(string key, string defaultValue = null) => resolver.Get(key, defaultValue);
 
 		public static void SetLanguage(string localeCode)
-			=> Resolver.SetLanguage(localeCode);
+			=> resolver.SetLanguage(localeCode);
 
 		public static IEnumerable<string> GetAllLocaleCodes()
-			=> Resolver.GetAllLocaleCodes();
+			=> resolver.GetAllLocaleCodes();
 
 		public static IEnumerable<string> GetAllLanguages()
-			=> Resolver.GetAllLanguages();
+			=> resolver.GetAllLanguages();
 	}
 }

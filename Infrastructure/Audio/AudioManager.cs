@@ -10,6 +10,7 @@ namespace Audio
 {
 	public class AudioManager : StaticProvider<AudioManagement>
 	{
+		// ReSharper disable once InconsistentNaming
 		private static AudioManagement management
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

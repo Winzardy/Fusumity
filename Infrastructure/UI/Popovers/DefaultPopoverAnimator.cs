@@ -1,9 +1,11 @@
 ﻿using DG.Tweening;
+using UI.Popovers;
 using UnityEngine;
 
 namespace UI
 {
-	public class DefaultPopoverAnimator : BaseWidgetAnimator<UIBaseLayout>
+	public class DefaultPopoverAnimator<TPopover> : BaseWidgetAnimator<UIBaseCanvasGroupLayout, TPopover>
+		where TPopover : UIWidget, IPopover
 	{
 		private const float OPENING_TIME = 0.5f;
 		private const float CLOSING_TIME = 0.3f;
@@ -12,16 +14,14 @@ namespace UI
 		{
 			sequence ??= DOTween.Sequence();
 
-			// if (_layout.canvasGroup)
-			// {
-			// 	sequence.Join(_layout.canvasGroup
-			// 	   .DOFade(1f, OPENING_TIME)
-			// 	   .From(0f));
-			// }
-			//
+			if (_layout.canvasGroup)
+			{
+				sequence.Join(_layout.canvasGroup
+				   .DOFade(1f, OPENING_TIME));
+			}
+
 			sequence.Join(_layout.rectTransform
-			   .DOAnchorPosY(0f, OPENING_TIME)
-			   .From(new Vector2(0, -100f))
+			   .DOLocalMove(Vector3.up * 200, OPENING_TIME)
 			   .SetEase(Ease.OutBack));
 		}
 
@@ -29,16 +29,14 @@ namespace UI
 		{
 			sequence ??= DOTween.Sequence();
 
-			// if (_layout.canvasGroup)
-			// {
-			// 	sequence.Join(_layout.canvasGroup
-			// 	   .DOFade(0f, CLOSING_TIME * 0.7f)
-			// 	   .From(1f));
-			// }
-			//
+			if (_layout.canvasGroup)
+			{
+				sequence.Join(_layout.canvasGroup
+				   .DOFade(0f, CLOSING_TIME));
+			}
+
 			sequence.Join(_layout.rectTransform
-			   .DOAnchorPosY(-200f, CLOSING_TIME)
-			   .From(Vector2.zero)
+			   .DOLocalMove(Vector3.up * 100, CLOSING_TIME)
 			   .SetEase(Ease.OutCubic));
 		}
 	}

@@ -14,10 +14,10 @@ namespace UI.Popovers
 		{
 		}
 
-		internal T Get(UIWidget parent)
+		internal T Get(UIWidget anchor)
 		{
 			var popover = Get();
-			popover.Bind(parent);
+			popover.Bind(anchor);
 			return popover;
 		}
 
@@ -38,7 +38,7 @@ namespace UI.Popovers
 
 			public void OnRelease(T obj)
 			{
-				obj.Clear();
+				obj.Unbind();
 			}
 
 			public void OnDispose(T obj)

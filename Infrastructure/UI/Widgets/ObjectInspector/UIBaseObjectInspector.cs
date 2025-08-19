@@ -162,7 +162,7 @@ namespace UI
 				}
 
 				TryClearPrefab();
-				target = Create(prefab);
+				target = await CreateAsync(prefab, DisposeCancellationToken);
 
 				_targetPrefab = prefab;
 			}
@@ -177,7 +177,7 @@ namespace UI
 			_layout.image.SetActive(true);
 		}
 
-		protected abstract T Create(T prefab);
+		protected abstract UniTask<T> CreateAsync(T prefab, CancellationToken cancellationToken);
 
 		protected abstract void OnShow(T target);
 
