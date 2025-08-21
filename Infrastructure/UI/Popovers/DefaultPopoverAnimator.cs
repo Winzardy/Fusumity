@@ -1,6 +1,5 @@
 ﻿using DG.Tweening;
 using UI.Popovers;
-using UnityEngine;
 
 namespace UI
 {
@@ -21,7 +20,7 @@ namespace UI
 			}
 
 			sequence.Join(_layout.rectTransform
-			   .DOLocalMove(Vector3.up * 200, OPENING_TIME)
+			   .DOLocalMoveY(100, OPENING_TIME)
 			   .SetEase(Ease.OutBack));
 		}
 
@@ -36,7 +35,7 @@ namespace UI
 			}
 
 			sequence.Join(_layout.rectTransform
-			   .DOLocalMove(Vector3.up * 100, CLOSING_TIME)
+			   .DOLocalMoveY(25, CLOSING_TIME)
 			   .SetEase(Ease.OutCubic));
 		}
 	}

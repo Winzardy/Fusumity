@@ -34,6 +34,10 @@ namespace UI
 			if (_closableCts != null)
 				RequestClose();
 		}
+
+		protected void CancelRequestClose()
+			=> AsyncUtility.Trigger(ref _closableCts);
+
 	}
 
 	/// <summary>

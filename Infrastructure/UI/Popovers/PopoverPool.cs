@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UI.Popovers
 {
@@ -22,11 +23,11 @@ namespace UI.Popovers
 			_pools = null;
 		}
 
-		public T Get<T>(UIWidget anchor)
+		public T Get<T>(UIWidget host, RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 		{
 			var pool = GetOrCreatePool<T>();
-			return pool.Get(anchor);
+			return pool.Get(host, customAnchor);
 		}
 
 		public void Release<T>(T popover)
@@ -41,6 +42,7 @@ namespace UI.Popovers
 		{
 			if (_pools.TryGetValue(typeof(T), out var rawPool))
 				return (PopoverPool<T>) rawPool;
+
 
 			var pool = new PopoverPool<T>(_factory);
 			_pools[typeof(T)] = pool;

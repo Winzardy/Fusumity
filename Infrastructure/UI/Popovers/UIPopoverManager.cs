@@ -2,6 +2,7 @@
 using System.Threading;
 using Sapientia.Pooling;
 using Sapientia.Utility;
+using UnityEngine;
 
 namespace UI.Popovers
 {
@@ -34,8 +35,8 @@ namespace UI.Popovers
 			_cts?.Trigger();
 		}
 
-		/// <param name="anchor">Виджет к которому привязан поповер</param>
-		internal void Show<T>(ref PopoverToken<T> token, UIWidget anchor, IPopoverArgs args)
+		/// <param name="host">Виджет к которому привязан поповер</param>
+		internal void Show<T>(ref PopoverToken<T> token, UIWidget host, IPopoverArgs args, RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 		{
 			if (token.IsValid() && token.Popover.Visible)
@@ -44,7 +45,7 @@ namespace UI.Popovers
 				return;
 			}
 
-			var popover = _pool.Get<T>(anchor);
+			var popover = _pool.Get<T>(host, customAnchor);
 
 			var pooledToken = GetToken(popover);
 
@@ -52,7 +53,7 @@ namespace UI.Popovers
 			popover.Hidden += OnHidden;
 			popover.RequestedClose += OnRequestedClose;
 
-			anchor.LayoutCleared += OnSourceLayoutCleared;
+			host.LayoutCleared += OnSourceLayoutCleared;
 
 			token = pooledToken;
 
@@ -61,7 +62,7 @@ namespace UI.Popovers
 
 			void OnHidden(IWidget _)
 			{
-				anchor.LayoutCleared -= OnSourceLayoutCleared;
+				host.LayoutCleared -= OnSourceLayoutCleared;
 
 				popover.Hidden -= OnHidden;
 				popover.RequestedClose -= OnRequestedClose;

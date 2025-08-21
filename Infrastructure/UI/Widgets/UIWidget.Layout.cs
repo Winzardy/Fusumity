@@ -31,10 +31,10 @@ namespace UI
 		/// <summary>
 		/// Флаг для подавления повторного запуска анимации и вызова событий <see cref="Shown"/> и <see cref="Hidden"/>.
 		/// </summary>
-		private bool _suppress;
+		private SuppressFlag _suppressFlag;
 
-		/// <inheritdoc cref="_suppress"/>
-		protected internal bool Suppress => _suppress;
+		/// <inheritdoc cref="_suppressFlag"/>
+		protected internal SuppressFlag suppressFlag => _suppressFlag;
 
 		protected virtual bool UseSetAsLastSibling => false;
 
@@ -120,7 +120,7 @@ namespace UI
 		/// <summary>
 		/// C проверкой на наличие верстки
 		/// </summary>
-		public void TryForceRebuildLayout(int delayMs = 10, Action callback = null)
+		public void ForceRebuildLayoutSafe(int delayMs = 10, Action callback = null)
 		{
 			if (!_layout)
 				return;
@@ -156,7 +156,11 @@ namespace UI
 			if (UseSetAsLastSibling)
 				_layout.rectTransform.SetAsLastSibling();
 
-			var withoutAnimation = _animator == null || _suppress;
+			var withoutAnimation = _animator == null ||
+				_suppressFlag.HasFlag(SuppressFlag.Animation);
+
+			OnPrepareOpening();
+
 			if (withoutAnimation)
 			{
 				OnBeganOpeningInternal();
@@ -193,7 +197,8 @@ namespace UI
 
 			OnHide();
 
-			var withoutAnimation = _animator == null || _suppress;
+			var withoutAnimation = _animator == null
+				|| _suppressFlag.HasFlag(SuppressFlag.Animation);
 			if (withoutAnimation)
 			{
 				OnBeganClosingInternal();
@@ -259,9 +264,11 @@ namespace UI
 
 		protected void SetVisibleInternal(bool visible, bool layoutClearing)
 		{
+			var changed = _visible != visible;
+
 			_visible = visible;
 
-			if (!_suppress)
+			if (!_suppressFlag.HasFlag(SuppressFlag.Events) && changed)
 			{
 				if (visible)
 					Shown?.Invoke(this);
@@ -507,10 +514,29 @@ namespace UI
 			SetAnimator<DefaultWidgetAnimator>();
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		protected internal void EnableSuppress() => _suppress = true;
+		/// <summary>
+		/// Происходит перед вызовом аниматора или просто OnShow!
+		/// </summary>
+		protected virtual void OnPrepareOpening()
+		{
+		}
 
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		protected internal void DisableSuppress() => _suppress = false;
+		protected internal void EnableSuppress(SuppressFlag flag = SuppressFlag.All) => _suppressFlag = flag;
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal void DisableSuppress() => _suppressFlag = SuppressFlag.None;
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Flags]
+		public enum SuppressFlag
+		{
+			None,
+
+			Events = 1 << 0,
+			Animation = 1 << 1,
+
+			All = Events | Animation
+		}
 	}
 }

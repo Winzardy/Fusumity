@@ -114,9 +114,7 @@ namespace UI
 			if (!rectTransform)
 				return;
 
-			rectTransform.localPosition = Vector3.zero;
-			rectTransform.localRotation = Quaternion.identity;
-			rectTransform.localScale = Vector3.one;
+			Reset(rectTransform);
 		}
 
 		public static void Reset(this RectTransform rectTransform)
@@ -124,6 +122,19 @@ namespace UI
 			rectTransform.localPosition = Vector3.zero;
 			rectTransform.localRotation = Quaternion.identity;
 			rectTransform.localScale = Vector3.one;
+		}
+
+		public static void CopyFrom(this RectTransform target, RectTransform source)
+		{
+			target.anchorMin = source.anchorMin;
+			target.anchorMax = source.anchorMax;
+			target.anchoredPosition = source.anchoredPosition;
+			target.sizeDelta = source.sizeDelta;
+			target.pivot = source.pivot;
+
+			target.localRotation = source.localRotation;
+			target.localScale = source.localScale;
+			target.localPosition = source.localPosition;
 		}
 	}
 }

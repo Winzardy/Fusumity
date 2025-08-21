@@ -65,7 +65,6 @@ namespace Fusumity.Utility
 		{
 			return $"<size={size}>{text}</size>";
 		}
-
 		public static string GetSpriteTag(string atlas, string name, Color? color = null)
 		{
 			if (color.HasValue)

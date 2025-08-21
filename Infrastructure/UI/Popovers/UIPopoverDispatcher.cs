@@ -1,5 +1,6 @@
 ﻿using System;
 using UI.Popovers;
+using UnityEngine;
 
 namespace UI
 {
@@ -26,9 +27,13 @@ namespace UI
 			_manager = null;
 		}
 
-		public void Show<T>(ref PopoverToken<T> token, UIWidget source, IPopoverArgs args = null)
+		/// <param name="customAnchor">Если не задан (<c>null</c>), то используется <see cref="RectTransform"/> host'а</param>
+		public void Show<T>(ref PopoverToken<T> token,
+			UIWidget host,
+			IPopoverArgs args = null,
+			RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
-			=> _manager.Show(ref token, source, args);
+			=> _manager.Show(ref token, host, args, customAnchor);
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

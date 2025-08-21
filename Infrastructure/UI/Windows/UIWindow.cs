@@ -122,7 +122,8 @@ namespace UI.Windows
 				_args = args;
 			}
 
-			SetActive(true, Suppress, !Suppress);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
 		}
 

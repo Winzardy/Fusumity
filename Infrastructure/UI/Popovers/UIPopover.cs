@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AssetManagement;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
@@ -19,9 +20,9 @@ namespace UI.Popovers
 
 		internal void Show(IPopoverArgs args);
 
-		protected internal UIWidget Anchor { get; }
-		internal void Bind(UIWidget anchor);
-		internal void Unbind();
+		protected internal UIWidget Host { get; }
+		internal void Attach(UIWidget parent, RectTransform customAnchor = null);
+		internal void Detach();
 	}
 
 	public abstract class UIPopover<TLayout> : UIBasePopover<TLayout, EmptyPopoverArgs>
@@ -50,7 +51,10 @@ namespace UI.Popovers
 		where TLayout : UIBasePopoverLayout
 		where TArgs : struct, IPopoverArgs
 	{
-		protected internal UIWidget _anchor;
+		protected internal UIWidget _host;
+
+		[CanBeNull]
+		protected internal RectTransform _customAnchor;
 
 		private const string LAYOUT_PREFIX_NAME = "[Popover] ";
 
@@ -61,20 +65,22 @@ namespace UI.Popovers
 		protected TArgs _args;
 		private object _context;
 
+		private bool _layoutResetRequest;
+
 		string IIdentifiable.Id => Id;
 
 		private event Action<IPopover> RequestedClose;
 
 		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
-		UIWidget IPopover.Anchor => _anchor;
+		UIWidget IPopover.Host => _host;
 
 		protected override string Layer
 		{
 			get
 			{
 				if (_layout)
-					return _anchor?.Layer ?? LayerType.POPOVERS;
+					return _host?.Layer ?? LayerType.POPOVERS;
 
 				return LayerType.POPOVERS;
 			}
@@ -85,12 +91,8 @@ namespace UI.Popovers
 		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
 		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
 
-		private TransformSnapshot _layoutTransformSnapshot;
-
 		public sealed override void SetupLayout(TLayout layout)
 		{
-			_layoutTransformSnapshot = layout.transform
-			   .Snapshot(TransformSpace.Local);
 			OnSetupDefaultAnimator();
 			base.SetupLayout(layout);
 		}
@@ -108,26 +110,35 @@ namespace UI.Popovers
 		protected override void OnLayoutInstalledInternal()
 		{
 			UpdateParentTransformBindSafe();
-			_layout.transform.Apply(in _layoutTransformSnapshot);
+
+			if (_layoutResetRequest)
+			{
+				_layout.ResetTransform();
+				_layoutResetRequest = false;
+			}
 
 			base.OnLayoutInstalledInternal();
 		}
 
-		void IPopover.Bind(UIWidget anchor)
+		void IPopover.Attach(UIWidget host, RectTransform customAnchor = null)
 		{
-			_anchor = anchor;
+			_host = host;
+			_customAnchor = customAnchor;
 
 			UpdateParentTransformBindSafe();
 			if (_layout)
-				_layout.transform.Apply(in _layoutTransformSnapshot);
+				_layout.ResetTransform();
+			else
+				_layoutResetRequest = true;
 		}
 
-		void IPopover.Unbind()
+		void IPopover.Detach()
 		{
-			_anchor = null;
+			_host = null;
+			_customAnchor = null;
 
 			UpdateParentTransformBindSafe();
-			SetActive(false, true);
+			SetActive(false, true, false);
 		}
 
 		void IPopover.Show(IPopoverArgs boxedArgs)
@@ -152,7 +163,8 @@ namespace UI.Popovers
 				_args = args;
 			}
 
-			SetActive(true, Suppress);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
 		}
 
@@ -196,8 +208,12 @@ namespace UI.Popovers
 			if (!_layout)
 				return;
 
-			var parentRectTransform = _anchor?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
-			_layout.transform.SetParent(parentRectTransform, false);
+			var parentRectTransform = _customAnchor;
+			if (!_customAnchor)
+				parentRectTransform = _host?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
+
+			_layout.transform
+			   .SetParent(parentRectTransform, false);
 		}
 	}
 

@@ -75,7 +75,8 @@ namespace UI.Screens
 				SetActive(false, true, false);
 			}
 
-			SetActive(true, Suppress);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
 		}
 

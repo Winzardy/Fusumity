@@ -125,7 +125,8 @@ namespace UI.Popups
 				_args = args;
 			}
 
-			SetActive(true, Suppress);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
 		}
 

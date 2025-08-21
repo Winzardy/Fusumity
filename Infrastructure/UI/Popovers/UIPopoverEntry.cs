@@ -1,5 +1,6 @@
 ﻿using System;
 using Content;
+using Sapientia;
 
 namespace UI.Popovers
 {
@@ -9,5 +10,7 @@ namespace UI.Popovers
 	public struct UIPopoverEntry
 	{
 		public LayoutEntry<UIBasePopoverLayout> layout;
+
+		public Toggle<int> poolCapacity;
 	}
 }

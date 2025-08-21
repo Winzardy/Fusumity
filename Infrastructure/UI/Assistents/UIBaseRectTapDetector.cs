@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace UI
 {
+	using UnityRectTransformUtility = UnityEngine.RectTransformUtility;
+
 	/// <summary>
 	/// Детектор тапа по области (rect)
 	/// </summary>
@@ -20,6 +22,7 @@ namespace UI
 		private Action _insideCallback;
 		private Action _outsideCallback;
 
+		private bool _subscribed;
 		private bool _active = true;
 
 		public UIBaseRectTapDetector(
@@ -28,7 +31,8 @@ namespace UI
 			Action outOfBoundsCallback = null,
 			Action inBoundsCallback = null,
 			TouchPhase phase = TouchPhase.Began,
-			params RectTransform[] rects) : this(rect, outOfBoundsCallback, inBoundsCallback, phase, rects)
+			bool autoActivation = true,
+			params RectTransform[] rects) : this(rect, outOfBoundsCallback, inBoundsCallback, phase, autoActivation, rects)
 		{
 			SetInputReader(inputReader);
 		}
@@ -38,6 +42,7 @@ namespace UI
 			Action outOfBoundsCallback = null,
 			Action inBoundsCallback = null,
 			TouchPhase phase = TouchPhase.Began,
+			bool autoActivation = true,
 			params RectTransform[] rects)
 		{
 			Add(rect);
@@ -47,6 +52,9 @@ namespace UI
 
 			_outsideCallback = outOfBoundsCallback;
 			_insideCallback = inBoundsCallback;
+
+			if (!autoActivation)
+				SetActive(false);
 		}
 
 		public void Dispose()
@@ -61,22 +69,26 @@ namespace UI
 		public void SetActive(bool active)
 		{
 			_active = active;
+
+			if (_inputReader == null)
+				return;
+
+			if (_active)
+				SubscribeSafe();
+			else
+				UnsubscribeSafe();
 		}
 
 		public void Add(params RectTransform[] rects)
 		{
 			foreach (var rect in rects)
-			{
 				_rects.Add(rect);
-			}
 		}
 
 		public void Remove(params RectTransform[] rects)
 		{
 			foreach (var rect in rects)
-			{
 				_rects.Remove(rect);
-			}
 		}
 
 		protected void SetInputReader(IInputReader inputReader)
@@ -84,13 +96,15 @@ namespace UI
 			TryClearInputReader();
 
 			_inputReader = inputReader;
-			_inputReader.Tapped += OnTap;
+
+			if (_active)
+				SubscribeSafe();
 		}
 
 		private void TryClearInputReader()
 		{
 			if (_inputReader != null)
-				_inputReader.Tapped -= OnTap;
+				UnsubscribeSafe();
 		}
 
 		private void OnTap(TapInfo info)
@@ -115,11 +129,29 @@ namespace UI
 				if (!rect.gameObject.IsActive())
 					continue;
 
-				if (UnityEngine.RectTransformUtility.RectangleContainsScreenPoint(rect, position))
+				if (UnityRectTransformUtility.RectangleContainsScreenPoint(rect, position))
 					return true;
 			}
 
 			return false;
+		}
+
+		private void SubscribeSafe()
+		{
+			if (_subscribed)
+				return;
+
+			_inputReader.Tapped += OnTap;
+			_subscribed = true;
+		}
+
+		private void UnsubscribeSafe()
+		{
+			if (!_subscribed)
+				return;
+
+			_inputReader.Tapped -= OnTap;
+			_subscribed = false;
 		}
 	}
 }
