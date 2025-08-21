@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
 using Sapientia.Pooling;
-using UnityEngine;
 
 namespace UI
 {
@@ -16,6 +15,8 @@ namespace UI
 
 		private UIPool<TWidget, TWidgetLayout> _pool;
 		private SimpleList<TWidget> _used = new();
+
+		private HashSet<Token> _tokens = new();
 
 		public event Action<TWidget> Registered;
 		public event Action<TWidget> Unregistered;
@@ -39,11 +40,13 @@ namespace UI
 		protected override void OnLayoutCleared()
 		{
 			ReleaseAll();
+			ReleaseTokens();
 			DisposePool();
 		}
 
 		protected override void OnDispose()
 		{
+			ReleaseTokens();
 			DisposePool();
 		}
 
@@ -113,7 +116,7 @@ namespace UI
 				Reset();
 		}
 
-		public IGroupToken Add(in TWidgetArgs args, bool immediate = false)
+		public WidgetGroupToken<TWidget> Add(in TWidgetArgs args, bool immediate = false)
 		{
 			var widget = Add();
 			widget.Show(in args, immediate);
@@ -121,11 +124,27 @@ namespace UI
 			if (_layout.forceRebuild)
 				ForceRebuildLayout();
 
-			return new WidgetGroupToken(widget, Release);
+			var token = Pool<Token>.Get();
+			_tokens.Add(token);
+
+			token.Bind(widget, Release);
+			return token;
 		}
 
-		private void Release(TWidget widget, bool immediate = false)
-			=> ReleaseAsync(widget, immediate).Forget();
+		private void Release(Token token, bool immediate = false)
+		{
+			ReleaseToken(token);
+
+			ReleaseAsync(token, immediate)
+			   .Forget();
+		}
+
+		private void ReleaseToken(Token token, bool remove = true)
+		{
+			Pool<Token>.Release(token);
+			if (remove)
+				_tokens.Remove(token);
+		}
 
 		private async UniTaskVoid ReleaseAsync(TWidget widget, bool immediate = false)
 		{
@@ -227,6 +246,17 @@ namespace UI
 			_pool = null;
 		}
 
+		private void ReleaseTokens()
+		{
+			if (_tokens.IsNullOrEmpty())
+				return;
+
+			foreach (var token in _tokens)
+				ReleaseToken(token, false);
+
+			_tokens.Clear();
+		}
+
 		private void ReleaseAll()
 		{
 			if (_used.IsNullOrEmpty())
@@ -266,25 +296,96 @@ namespace UI
 			Registered?.Invoke(widget);
 		}
 
-		public readonly struct WidgetGroupToken : IGroupToken
+		internal class Token : IWidgetGroupToken<TWidget>, IPoolable
 		{
-			private readonly TWidget _widget;
-			private readonly Action<TWidget, bool> _onRelease;
+			private TokenReleaser _releaser;
 
-			public WidgetGroupToken(TWidget widget, Action<TWidget, bool> onRelease)
+			private TWidget _widget;
+
+			private int _generation;
+
+			public TWidget Widget => _widget;
+
+			int IWidgetGroupToken.Generation => _generation;
+
+			public void Bind(TWidget widget, TokenReleaser releaser)
 			{
 				_widget = widget;
-				_onRelease = onRelease;
+				_releaser = releaser;
 			}
 
 			public void Dispose() => Release();
 
-			public void Release(bool immediate = false) => _onRelease.Invoke(_widget, immediate);
+			public void Release(bool immediate = false)
+				=> _releaser.Invoke(this, immediate);
+
+			void IPoolable.Release() => _generation++;
+
+			public static implicit operator WidgetGroupToken(Token token) => new(token, token._generation);
+			public static implicit operator WidgetGroupToken<TWidget>(Token token) => new(token, token._generation);
+			public static implicit operator TWidget(Token token) => token._widget;
+
+		}
+
+		internal delegate void TokenReleaser(Token token, bool immediate = false);
+	}
+
+	public readonly struct WidgetGroupToken<TWidget> : IDisposable
+	{
+		private readonly IWidgetGroupToken<TWidget> _token;
+		private readonly int _generation;
+
+		internal WidgetGroupToken(IWidgetGroupToken<TWidget> token, int generation)
+		{
+			_token = token;
+			_generation = generation;
+		}
+
+		public void Dispose() => Release(true);
+
+		public void Release(bool immediate = false)
+		{
+			if (_token.Generation != _generation)
+				throw new InvalidOperationException(
+					$"[{nameof(WidgetGroupToken)}] Invalid token (token gen:{_token.Generation} != gen: {_generation})");
+
+			_token.Release(immediate);
+		}
+
+		public static implicit operator WidgetGroupToken(WidgetGroupToken<TWidget> token) => new(token._token, token._generation);
+	}
+
+	public readonly struct WidgetGroupToken : IDisposable
+	{
+		private readonly IWidgetGroupToken _token;
+		private readonly int _generation;
+
+		internal WidgetGroupToken(IWidgetGroupToken token, int generation)
+		{
+			_token = token;
+			_generation = generation;
+		}
+
+		public void Dispose() => Release(true);
+
+		public void Release(bool immediate = false)
+		{
+			if (_token.Generation != _generation)
+				throw new InvalidOperationException(
+					$"[{nameof(WidgetGroupToken)}] Invalid token (token gen:{_token.Generation} != gen: {_generation})");
+
+			_token.Release(immediate);
 		}
 	}
 
-	public interface IGroupToken : IDisposable
+	internal interface IWidgetGroupToken<TWidget> : IWidgetGroupToken
 	{
+		public TWidget Widget { get; }
+	}
+
+	internal interface IWidgetGroupToken : IDisposable
+	{
+		internal int Generation { get; }
 		public void Release(bool immediate = false);
 	}
 }

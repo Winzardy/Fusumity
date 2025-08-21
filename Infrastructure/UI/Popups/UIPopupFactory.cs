@@ -24,7 +24,7 @@ namespace UI.Popups
 			where T : IPopup
 		{
 			var entry = ContentManager.Get<UIPopupEntry>(popup.Id);
-			popup.Initialize(entry);
+			popup.Initialize(in entry);
 			return popup;
 		}
 	}

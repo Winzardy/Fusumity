@@ -9,7 +9,8 @@
         "UI.Windows",
         "UI.Popups",
         "Sapientia",
-        "Fusumity"
+        "Fusumity",
+        "UI.Popovers"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

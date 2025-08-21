@@ -113,7 +113,6 @@ namespace AssetManagement
 				return usedAsset;
 
 			var handle = Addressables.LoadAssetAsync<T>(key);
-
 			if (!handle.IsValid())
 			{
 				AssetManagementDebug.LogError($"Failed to load asset: handle by key [ {key} ] is invalid.");
@@ -121,6 +120,7 @@ namespace AssetManagement
 			}
 
 			_keyToAssetContainer[key] = new AssetContainer(key, handle);
+
 
 			var (isCanceled, asset) = await handle
 			   .WithCancellation(cancellationToken)

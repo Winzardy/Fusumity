@@ -21,7 +21,7 @@ namespace UI.Windows.Editor
 		{
 			if (type == null)
 			{
-				GUIDebug.LogError("Выберите тип экрана!");
+				GUIDebug.LogError("Выберите тип окна!");
 				return;
 			}
 

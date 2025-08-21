@@ -32,7 +32,7 @@ namespace Fusumity.Editor
 			if (kind is SchedulePointKind.Interval)
 			{
 				decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 1, long.MaxValue - ISchedulePoint.TYPE_OFFSET);
-				var timeLabel = decode.sec.ToLabelFromLong();
+				var timeLabel = decode.sec.ToLabel();
 				var suffix = decode.sec == 1
 					? TimeUtility.SECOND_LABEL
 					: decode.sec <= TimeUtility.SECS_IN_ONE_MINUTE - 1

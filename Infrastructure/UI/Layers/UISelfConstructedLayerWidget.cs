@@ -7,7 +7,7 @@ namespace UI
 		where TLayout : UIBaseLayout
 	{
 		protected new abstract string Layer { get; }
-		protected sealed override RectTransform RectTransform => UIDispatcher.Get(Layer).rectTransform;
+		protected sealed override RectTransform LayerRectTransform => UIDispatcher.Get(Layer).rectTransform;
 		protected override string LayoutPrefixName => $"[{Layer}] ";
 
 		protected override void OnChildWidgetRegistered(UIWidget child)

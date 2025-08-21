@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Fusumity.Utility
 {
-	public static class TransformUtility
+	public static partial class TransformUtility
 	{
 		public static void SetParent(this IEnumerable<Transform> components, Transform parent)
 		{
@@ -19,18 +19,32 @@ namespace Fusumity.Utility
 			var obj = new GameObject(name, typeof(T));
 			obj.TryGetComponent(out T transform);
 			transform.SetParent(parent);
-			transform.Reset();
+			transform.ResetTransform();
 			return transform;
 		}
 
-		public static void Reset<T>(this T transform)
-			where T : Transform
+		public static void ResetTransformSafe<T>(this T component)
+			where T : Component
 		{
-			transform.localScale = Vector3.one;
-			transform.localRotation = Quaternion.identity;
-			transform.localPosition = Vector3.zero;
+			if (!component)
+				return;
+
+			Reset(component.transform);
 		}
 
+		public static void ResetTransform<T>(this T component) where T : Component
+			=> Reset(component.transform);
+
+		public static void ResetSafe(this Transform transform)
+		{
+			if (!transform)
+				return;
+
+			Reset(transform);
+		}
+
+		public static void Reset(this Transform transform)
+			=> TransformEntry.identity.ApplyTo(transform, TransformSpace.Local);
 
 		public static void SetLayerRecursive(this Transform transform, int layer)
 		{

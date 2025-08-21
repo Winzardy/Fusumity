@@ -26,7 +26,7 @@ namespace UI
 			Rebuild(rect, activity);
 			var time = Time.realtimeSinceStartup;
 			await UniTask.NextFrame();
-			var diffMs = (time - Time.realtimeSinceStartup).ToMS();
+			var diffMs = (time - Time.realtimeSinceStartup).ToMilliseconds();
 			if (diffMs < delayMs)
 				await UniTask.Delay(delayMs - diffMs);
 
@@ -107,6 +107,34 @@ namespace UI
 			var position = rectTransform.localPosition;
 			position.z = zPosition;
 			rectTransform.localPosition = position;
+		}
+
+		public static void ResetSafe(this RectTransform rectTransform)
+		{
+			if (!rectTransform)
+				return;
+
+			Reset(rectTransform);
+		}
+
+		public static void Reset(this RectTransform rectTransform)
+		{
+			rectTransform.localPosition = Vector3.zero;
+			rectTransform.localRotation = Quaternion.identity;
+			rectTransform.localScale = Vector3.one;
+		}
+
+		public static void CopyFrom(this RectTransform target, RectTransform source)
+		{
+			target.anchorMin = source.anchorMin;
+			target.anchorMax = source.anchorMax;
+			target.anchoredPosition = source.anchoredPosition;
+			target.sizeDelta = source.sizeDelta;
+			target.pivot = source.pivot;
+
+			target.localRotation = source.localRotation;
+			target.localScale = source.localScale;
+			target.localPosition = source.localPosition;
 		}
 	}
 }

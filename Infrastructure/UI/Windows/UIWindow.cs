@@ -7,10 +7,8 @@ using UI.Layers;
 
 namespace UI.Windows
 {
-	public interface IWindow : IIdentifiable, IDisposable
+	public interface IWindow : IWidget, IIdentifiable
 	{
-		public bool Active { get; }
-
 		public void RequestClose();
 
 		internal event Action<IWindow> RequestedClose;
@@ -104,8 +102,6 @@ namespace UI.Windows
 
 		void IWindow.Show(IWindowArgs boxedArgs)
 		{
-			var immediate = false;
-
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -115,18 +111,20 @@ namespace UI.Windows
 					if (_args.Equals(args))
 						return;
 
-					immediate = true;
+					EnableSuppress();
 
 					//Неявное поведение...
 					//Нужно вызывать OnHide у окна если хотим
 					//переоткрыть окно с новыми аргументами
-					SetActive(false, true);
+					SetActive(false, true, false);
 				}
 
 				_args = args;
 			}
 
-			SetActive(true, immediate);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
+			DisableSuppress();
 		}
 
 		IWindowArgs IWindow.GetArgs() => GetArgs();

@@ -16,12 +16,13 @@ namespace UI
 	{
 		protected HashSet<UIWidget> _children;
 
+		public IEnumerable<UIWidget> Children => _children;
+
 		private void DisposeChildren()
 		{
 			DisposeAndClearChildren();
 
-			_children?.ReleaseToStaticPool();
-			_children = null;
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _children);
 		}
 
 		protected void SetActiveInHierarchyForChildren(bool value)
@@ -56,7 +57,7 @@ namespace UI
 		/// <br/>
 		/// Регистрирует созданный виджет ребенком (<see cref="RegisterChildWidget{TLayout}"/>)
 		/// </summary>
-		protected T TryCreateWidgetByLayout<T, TLayout>(out T widget,
+		protected T CreateWidgetByLayoutSafe<T, TLayout>(out T widget,
 			TLayout layout,
 			bool autoActivation = false,
 			bool autoInitialization = true,
@@ -75,7 +76,7 @@ namespace UI
 
 		//TODO: подумать над лучшим названием и поведением...
 		/// <summary>
-		/// Создает виджет если он не создан далее пытается создать виджет по Layout <see cref="TryCreateWidgetByLayout{T,TLayout}"/>
+		/// Создает виджет если он не создан далее пытается создать виджет по Layout <see cref="CreateWidgetByLayoutSafe{T,TLayout}"/>
 		/// <br/>
 		/// Регистрирует созданный виджет ребенком (<see cref="RegisterChildWidget{TLayout}"/>)
 		/// </summary>
@@ -90,7 +91,7 @@ namespace UI
 			if (widget != null)
 				return true;
 
-			return TryCreateWidgetByLayout(out widget, layout, autoActivation, autoInitialization, immediateActivation);
+			return CreateWidgetByLayoutSafe(out widget, layout, autoActivation, autoInitialization, immediateActivation);
 		}
 
 		/// <summary>
@@ -200,7 +201,7 @@ namespace UI
 			where TLayout : UIBaseLayout
 		{
 			if (!parent)
-				parent = Root;
+				parent = RectTransform;
 
 			return UIFactory.CreateLayout(template, parent);
 		}
@@ -286,7 +287,7 @@ namespace UI
 		/// и удорожает простую очистку верстки, лучше просто дольше держать активной ту верстку которая нужна по логике.
 		/// (подробнее в <see cref="LayoutEntry"/>)
 		/// </summary>
-		private void RegisterChildWidget(UIWidget widget, bool soft = false)
+		internal void RegisterChildWidget(UIWidget widget, bool soft = false)
 		{
 			_children ??= HashSetPool<UIWidget>.Get();
 
@@ -310,7 +311,7 @@ namespace UI
 
 		protected internal void SetLayer(string layer) => Layer = layer;
 
-		public void UnregisterChildWidget(UIWidget widget)
+		internal void UnregisterChildWidget(UIWidget widget)
 		{
 			if (_children.IsNullOrEmpty())
 				return;

@@ -11,7 +11,7 @@ namespace UI
 		private const string NAME = "Container";
 
 		[Tooltip("Используется в анимации, чтобы отделить root и контейнер, можно переназначить. " +
-			"Reset создает контейнер только в случае если он неназначен")]
+			"Reset создает контейнер только в случае если он не назначен")]
 		public RectTransform container;
 
 		#region Blend Mode For Layout Animations

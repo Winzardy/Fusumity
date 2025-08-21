@@ -5,6 +5,7 @@ namespace InAppReview
 {
 	public class InAppReviewManager : StaticProvider<IInAppReviewStorePlatform>
 	{
+		// ReSharper disable once InconsistentNaming
 		private static IInAppReviewStorePlatform storePlatform
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

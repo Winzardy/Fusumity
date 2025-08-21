@@ -7,10 +7,8 @@ using UI.Layers;
 
 namespace UI.Screens
 {
-	public interface IScreen : IDisposable, IIdentifiable
+	public interface IScreen : IWidget, IIdentifiable
 	{
-		public bool Active { get; }
-
 		internal void Initialize(UIScreenEntry entry);
 
 		internal void Show();
@@ -67,19 +65,19 @@ namespace UI.Screens
 
 		void IScreen.Show()
 		{
-			var immediate = false;
-
 			if (Active)
 			{
-				immediate = true;
+				EnableSuppress();
 
 				//Неявное поведение...
 				//Нужно вызывать OnHide если хотим
 				//переоткрыть экран
-				SetActive(false, true);
+				SetActive(false, true, false);
 			}
 
-			SetActive(true, immediate);
+			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
+			SetActive(true, suppressAnyFlag);
+			DisableSuppress();
 		}
 
 		void IScreen.Hide(bool reset)

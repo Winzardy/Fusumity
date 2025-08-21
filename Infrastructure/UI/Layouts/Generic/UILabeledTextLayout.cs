@@ -1,5 +1,4 @@
 using TMPro;
-using WLog;
 
 namespace UI
 {
@@ -13,7 +12,7 @@ namespace UI
 		public void SetLabel(string value)
 		{
 			if (locInfo.enable)
-				this.LogError($"The layout uses built-in localization, text [ {value} ] will be overwritten", this);
+				GUIDebug.LogError($"The layout uses built-in localization, text [ {value} ] will be overwritten", this);
 
 			label.text = value;
 		}

@@ -22,8 +22,6 @@ namespace UI
 	//TODO: доделать
 	public class UIInputFieldWidget : UIWidget<UIInputFieldWidgetLayout>
 	{
-		private const string AMOUNT = "{amount}";
-
 		private bool _autoHideScrollBar;
 		private InputFieldArgs _args;
 

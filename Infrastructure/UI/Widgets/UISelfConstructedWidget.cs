@@ -17,12 +17,12 @@ namespace UI
 	{
 		private const string LAYOUT_PREFIX_NAME = "[UI] ";
 
-		private bool _setupTemplate;
+		protected TLayout _template;
 
-		private CancellationTokenSource _loadTemplateCts;
+		private CancellationTokenSource _setupTemplateCts;
 		private CancellationTokenSource _autoDestroyCts;
 
-		protected abstract RectTransform RectTransform { get; }
+		protected abstract RectTransform LayerRectTransform { get; }
 
 		protected abstract ComponentReferenceEntry LayoutReference { get; }
 		protected virtual bool LayoutAutoDestroy => false;
@@ -33,8 +33,8 @@ namespace UI
 
 		private protected override void OnDisposeInternal()
 		{
-			TryCancelCreateLayout();
-			TryLayoutClearingAndReleaseTemplate();
+			CancelSetupLayout();
+			LayoutClearingAndReleaseTemplateSafe();
 
 			base.OnDisposeInternal();
 		}
@@ -54,7 +54,7 @@ namespace UI
 
 		protected sealed override void OnDeactivatedInternal(bool immediate)
 		{
-			TryCancelCreateLayout();
+			CancelSetupLayout();
 
 			base.OnDeactivatedInternal(immediate);
 		}
@@ -65,7 +65,7 @@ namespace UI
 			{
 				if (LayoutAutoDestroyDelayMs <= 0)
 				{
-					TryLayoutClearingAndReleaseTemplate();
+					LayoutClearingAndReleaseTemplateSafe();
 					return true;
 				}
 
@@ -85,7 +85,7 @@ namespace UI
 			OnLayoutClearedInternal();
 			DisposeAndClearChildren();
 
-			if (_setupTemplate)
+			if (_template)
 				UIFactory.Destroy(_layout);
 
 			_layout = null;
@@ -99,14 +99,15 @@ namespace UI
 
 		private async UniTaskVoid WaitSetupTemplateAndActivateAsync(bool immediate)
 		{
-			if (_loadTemplateCts != null)
+			if (_setupTemplateCts != null)
 				return;
 
-			_loadTemplateCts = new CancellationTokenSource();
+			_setupTemplateCts = new CancellationTokenSource();
+			_setupTemplateCts.Token.Register(() => { Debug.Log("Загрузка отменена!"); });
 
 			try
 			{
-				await SetupTemplateAndActivateAsync(immediate, _loadTemplateCts.Token);
+				await SetupTemplateAndActivateAsync(immediate, _setupTemplateCts.Token);
 			}
 			catch (OperationCanceledException)
 			{
@@ -118,7 +119,7 @@ namespace UI
 			}
 			finally
 			{
-				AsyncUtility.Release(ref _loadTemplateCts);
+				AsyncUtility.Release(ref _setupTemplateCts);
 			}
 		}
 
@@ -143,7 +144,7 @@ namespace UI
 				if (Visible)
 					await UniTask.WaitWhile(() => Visible, cancellationToken: _autoDestroyCts.Token);
 
-				TryLayoutClearingAndReleaseTemplate();
+				LayoutClearingAndReleaseTemplateSafe();
 			}
 			finally
 			{
@@ -157,48 +158,60 @@ namespace UI
 		private async UniTask SetupTemplateAndActivateAsync(bool immediate, CancellationToken cancellationToken)
 		{
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
-			TryClearTemplate();
-			SetupTemplate(template);
+			ClearTemplateSafe();
+			await SetupTemplateAsync(template, cancellationToken);
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
 #endif
 			base.OnActivatedInternal(immediate);
 		}
 
-		private void SetupTemplate(TLayout template)
+		private async UniTask SetupTemplateAsync(TLayout template, CancellationToken cancellationToken)
 		{
-			TryLayoutClearingAndReleaseTemplate();
+			LayoutClearingAndReleaseTemplateSafe();
 
-			var layout = UIFactory.CreateLayout(template, RectTransform, LayoutPrefixName);
+			var layout = await UIFactory.CreateLayoutAsync(template, LayerRectTransform, LayoutPrefixName, cancellationToken);
 			SetupLayout(layout);
-			SetVisibleInternal(false, false);
 
-			PreloadAssets?.Preload();
-			_setupTemplate = true;
+			EnableSuppress(SuppressFlag.Events);
+			{
+				SetVisibleInternal(false, false);
+				SetActiveInternal(false, true);
+			}
+			DisableSuppress();
+
+			// ReSharper disable once MethodHasAsyncOverload
+			PreloadAssets?.Preload(cancellationToken);
+			_template = template;
 		}
 
-		private void TryLayoutClearingAndReleaseTemplate()
+		private void LayoutClearingAndReleaseTemplateSafe()
 		{
 			TryStopAutoDestroy();
 			LayoutClearingInternal();
 
-			TryClearTemplate();
-			SetVisibleInternal(false);
+			ClearTemplateSafe();
+
+			EnableSuppress(SuppressFlag.Events);
+			{
+				SetVisibleInternal(false);
+			}
+			DisableSuppress();
 		}
 
-		private void TryClearTemplate()
+		private void ClearTemplateSafe()
 		{
-			if (!_setupTemplate)
+			if (!_template)
 				return;
 
 			LayoutReference.Release();
 			PreloadAssets?.Release();
 
-			_setupTemplate = false;
+			_template = null;
 		}
 
-		private void TryCancelCreateLayout()
-			=> AsyncUtility.Trigger(ref _loadTemplateCts);
+		private void CancelSetupLayout()
+			=> AsyncUtility.Trigger(ref _setupTemplateCts);
 
 		#region Prepare
 

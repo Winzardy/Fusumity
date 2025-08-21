@@ -13,7 +13,7 @@ namespace UI.Windows
 
 		private readonly UIWindowFactory _factory;
 
-		private readonly PanelQueue<IWindow, IWindowArgs> _queue;
+		private readonly UIRootWidgetQueue<IWindow, IWindowArgs> _queue;
 
 		internal IWindow Current => _current;
 
@@ -118,6 +118,12 @@ namespace UI.Windows
 					return true;
 
 			return false;
+		}
+
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			if (_current is UIWidget castCurrent)
+				yield return castCurrent;
 		}
 
 		private T Create<T>()

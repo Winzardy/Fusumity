@@ -1,0 +1,24 @@
+{
+    "name": "UI.Popovers.Editor",
+    "rootNamespace": "",
+    "references": [
+        "UI",
+        "UI.Editor",
+        "UI.Popovers",
+        "Sapientia",
+        "Fusumity",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

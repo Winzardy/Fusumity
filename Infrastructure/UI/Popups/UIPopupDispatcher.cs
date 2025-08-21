@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using UI.Popups;
 
 namespace UI
 {
-	public class UIPopupDispatcher : IUIDispatcher, IDisposable
+	public class UIPopupDispatcher : IWidgetDispatcher, IDisposable
 	{
 		private UIPopupManager _manager;
 
@@ -45,6 +46,8 @@ namespace UI
 			_manager.Shown -= OnShown;
 			_manager.Hidden -= OnHidden;
 			_manager.Enqueued -= OnEnqueued;
+
+			_manager = null;
 		}
 
 		/// <summary>
@@ -95,5 +98,7 @@ namespace UI
 			if (!fromQueue)
 				Deactivated?.Invoke(popup);
 		}
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

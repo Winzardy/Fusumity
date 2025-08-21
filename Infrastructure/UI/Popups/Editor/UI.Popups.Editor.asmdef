@@ -6,7 +6,9 @@
         "UI.Editor",
         "UI.Popups",
         "Sapientia",
-        "Fusumity"
+        "Fusumity",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

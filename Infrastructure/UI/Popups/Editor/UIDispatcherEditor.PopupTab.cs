@@ -19,7 +19,7 @@ namespace UI.Popups.Editor
 		{
 			if (type == null)
 			{
-				GUIDebug.LogError("Выберите тип экрана!");
+				GUIDebug.LogError("Выберите тип попапа!");
 				return;
 			}
 

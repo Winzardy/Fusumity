@@ -12,14 +12,12 @@ namespace UI
 		}
 
 		public static T Get<T>()
-			where T : IUIDispatcher
+			where T : class, IWidgetDispatcher
 			=> management.Get<T>();
 
 		public static void Get<T>(out T dispatcher)
-			where T : IUIDispatcher
-		{
-			dispatcher = Get<T>();
-		}
+			where T : class, IWidgetDispatcher
+			=> dispatcher = Get<T>();
 
 		/// <summary>
 		/// Возвращает слой по айди (если его нет создаст)

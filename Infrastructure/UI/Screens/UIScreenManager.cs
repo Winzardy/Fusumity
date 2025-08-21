@@ -15,7 +15,7 @@ namespace UI.Screens
 
 		private Dictionary<Type, IScreen> _screens = new(2);
 
-		private HashSet<object> _blockers = new(2);
+		private readonly HashSet<object> _blockers = new(2);
 
 		private readonly UIScreenFactory _factory = new();
 
@@ -123,6 +123,12 @@ namespace UI.Screens
 
 		internal IDisposable Prepare<T>(Action callback) where T : UIWidget, IScreen
 			=> Get<T>().Prepare(callback);
+
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			if (_current is UIWidget castCurrent)
+				yield return castCurrent;
+		}
 
 		private void SetCurrent(IScreen screen)
 		{

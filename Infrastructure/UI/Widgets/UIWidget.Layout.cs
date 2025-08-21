@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Threading;
-using ZenoTween;
-using Cysharp.Threading.Tasks;
+using System.ComponentModel;
 using DG.Tweening;
 using Sapientia.Collections;
-using Sapientia.Utility;
 using UnityEngine;
+using ZenoTween;
 
 namespace UI
 {
@@ -30,6 +28,14 @@ namespace UI
 		private bool _visible;
 		private bool _open;
 
+		/// <summary>
+		/// Флаг для подавления повторного запуска анимации и вызова событий <see cref="Shown"/> и <see cref="Hidden"/>.
+		/// </summary>
+		private SuppressFlag _suppressFlag;
+
+		/// <inheritdoc cref="_suppressFlag"/>
+		protected internal SuppressFlag suppressFlag => _suppressFlag;
+
 		protected virtual bool UseSetAsLastSibling => false;
 
 		/// <summary>
@@ -44,15 +50,18 @@ namespace UI
 
 		public IWidgetAnimator<TLayout> Animator => _animator;
 
-		public event Action<bool> VisibleChanged;
+		public sealed override event WidgetShownDelegate Shown;
+		public sealed override event WidgetHiddenDelegate Hidden;
+		public sealed override event WidgetLayoutInstalledDelegate LayoutInstalled;
+		public sealed override event WidgetLayoutClearedDelegate LayoutCleared;
 
-		protected internal sealed override RectTransform Root => _layout ? _layout.rectTransform : null;
+		public sealed override RectTransform RectTransform => _layout ? _layout.rectTransform : null;
 
 		public virtual void SetupLayout(TLayout layout)
 		{
 			if (layout == null)
 			{
-				GUIDebug.LogError($"Layout can't be null ({typeof(TLayout)})", Root);
+				GUIDebug.LogError($"Layout can't be null ({typeof(TLayout)})", RectTransform);
 				return;
 			}
 
@@ -65,6 +74,8 @@ namespace UI
 
 			TrySetDefaultAnimator(layout);
 			TrySetupLayoutToAnimator();
+
+			LayoutInstalled?.Invoke(_layout);
 		}
 
 		public virtual void ClearLayout() => LayoutClearingInternal();
@@ -73,7 +84,7 @@ namespace UI
 		{
 			if (!ValidateLayout(out var msg))
 			{
-				//Может отрабатывать при Quit приложения...
+				// Может отрабатывать при OnApplicationQuit...
 				GUIDebug.LogWarning(msg);
 				return;
 			}
@@ -84,12 +95,15 @@ namespace UI
 				OnDeactivatedInternal(immediate);
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		private protected override void OnDisposeInternal()
 		{
 			LayoutClearingInternal();
 
-			_animator?.Dispose();
-			_animator = null;
+			DisposeAndSetNullSafe(ref _animator);
 
 			OnDispose();
 			base.OnDisposeInternal();
@@ -104,55 +118,9 @@ namespace UI
 		}
 
 		/// <summary>
-		/// Подождать пока виджет станет видимым
-		/// </summary>
-		public async UniTask WaitUntilIsVisible(CancellationToken? cancellationToken = null)
-		{
-			if (cancellationToken.HasValue)
-			{
-				try
-				{
-					using var linked = DisposeCancellationTokenSource.Link(cancellationToken.Value);
-					await UniTask.WaitUntil(IsVisible, cancellationToken: linked.Token);
-				}
-				catch (OperationCanceledException e)
-				{
-					_animator?.Stop(WidgetAnimationType.OPENING);
-				}
-			}
-			else
-			{
-				await UniTask.WaitUntil(IsVisible, cancellationToken: DisposeCancellationToken);
-			}
-		}
-
-		/// <summary>
-		/// Подождать пока виджет скроется
-		/// </summary>
-		public async UniTask WaitUntilIsNotVisible(CancellationToken? cancellationToken = null)
-		{
-			if (cancellationToken.HasValue)
-			{
-				try
-				{
-					using var linkedCts = DisposeCancellationTokenSource.Link(cancellationToken.Value);
-					await UniTask.WaitWhile(IsVisible, cancellationToken: linkedCts.Token);
-				}
-				catch (OperationCanceledException e)
-				{
-					_animator?.Stop(WidgetAnimationType.CLOSING);
-				}
-			}
-			else
-			{
-				await UniTask.WaitWhile(IsVisible, cancellationToken: DisposeCancellationToken);
-			}
-		}
-
-		/// <summary>
 		/// C проверкой на наличие верстки
 		/// </summary>
-		public void TryForceRebuildLayout(int delayMs = 10, Action callback = null)
+		public void ForceRebuildLayoutSafe(int delayMs = 10, Action callback = null)
 		{
 			if (!_layout)
 				return;
@@ -173,6 +141,10 @@ namespace UI
 		/// при переопределение таких методов нужно быть аккуратным.<br/>
 		/// Вызывать такие методы у наследника тоже опасно!)
 		/// </summary>
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected virtual void OnActivatedInternal(bool immediate)
 		{
 			if (_layout == null)
@@ -184,7 +156,12 @@ namespace UI
 			if (UseSetAsLastSibling)
 				_layout.rectTransform.SetAsLastSibling();
 
-			if (_animator == null)
+			var withoutAnimation = _animator == null ||
+				_suppressFlag.HasFlag(SuppressFlag.Animation);
+
+			OnPrepareOpening();
+
+			if (withoutAnimation)
 			{
 				OnBeganOpeningInternal();
 				SetVisibleInternal(true);
@@ -198,7 +175,7 @@ namespace UI
 			SetActiveInHierarchyForChildren(true);
 			OnShow();
 
-			if (_animator == null)
+			if (withoutAnimation)
 				OnEndedOpeningInternal();
 		}
 
@@ -210,6 +187,9 @@ namespace UI
 		/// при переопределение таких методов нужно быть аккуратным.<br/>
 		/// Вызывать такие методы у наследника тоже опасно!)
 		/// </summary>
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected virtual void OnDeactivatedInternal(bool immediate)
 		{
 			if (_layout == null)
@@ -217,7 +197,9 @@ namespace UI
 
 			OnHide();
 
-			if (_animator == null)
+			var withoutAnimation = _animator == null
+				|| _suppressFlag.HasFlag(SuppressFlag.Animation);
+			if (withoutAnimation)
 			{
 				OnBeganClosingInternal();
 				SetVisibleInternal(false);
@@ -228,7 +210,7 @@ namespace UI
 				_animator.Play(args, immediate);
 			}
 
-			if (_animator == null)
+			if (withoutAnimation)
 				OnEndedClosingInternal();
 		}
 
@@ -275,21 +257,36 @@ namespace UI
 		/// </summary>
 		void IWidget.SetVisible(bool value) => SetVisibleInternal(value);
 
+		protected sealed override void OnVisibleOperationCanceledException(bool openingOrClosing)
+			=> _animator?.Stop(openingOrClosing ? WidgetAnimationType.OPENING : WidgetAnimationType.CLOSING);
+
 		protected internal void SetVisibleInternal(bool visible) => SetVisibleInternal(visible, true);
 
 		protected void SetVisibleInternal(bool visible, bool layoutClearing)
 		{
+			var changed = _visible != visible;
+
 			_visible = visible;
-			VisibleChanged?.Invoke(visible);
+
+			if (!_suppressFlag.HasFlag(SuppressFlag.Events) && changed)
+			{
+				if (visible)
+					Shown?.Invoke(this);
+				else
+					Hidden?.Invoke(this);
+			}
 
 			if (!_layout)
 				return;
 
-			if (!Visible && layoutClearing)
+			if (!_suppressFlag.HasFlag(SuppressFlag.Events))
 			{
-				//Автоматизация по очисте верстк
-				if (AutomaticLayoutClearingInternal())
-					return;
+				if (!Visible && layoutClearing)
+				{
+					// Автоматизация по очистке верстки
+					if (AutomaticLayoutClearingInternal())
+						return;
+				}
 			}
 
 			OnUpdateVisibleInternal(Visible);
@@ -385,29 +382,60 @@ namespace UI
 			return _layout;
 		}
 
-		protected internal virtual void OnBeganOpeningInternal() => OnBeganOpening();
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
+		protected internal virtual void OnBeganOpeningInternal()
+		{
+			OnBeganOpening();
+		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnEndedOpeningInternal()
 		{
 			_open = true;
 			OnEndedOpening();
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnBeganClosingInternal()
 		{
 			_open = false;
 			OnBeganClosing();
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnEndedClosingInternal()
 		{
 			OnEndedClosing();
 			SetActiveInHierarchyForChildren(false);
 		}
 
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
 		protected internal virtual void OnLayoutInstalledInternal() => OnLayoutInstalled();
 
-		protected internal virtual void OnLayoutClearedInternal() => OnLayoutCleared();
+		/// <remarks>
+		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
+		/// обязательно нужно вызывать если переопределяем!
+		/// </remarks>
+		protected internal virtual void OnLayoutClearedInternal()
+		{
+			LayoutCleared?.Invoke(_layout);
+			OnLayoutCleared();
+		}
 
 		#endregion
 
@@ -487,6 +515,31 @@ namespace UI
 				return;
 
 			SetAnimator<DefaultWidgetAnimator>();
+		}
+
+		/// <summary>
+		/// Происходит перед вызовом аниматора или просто OnShow!
+		/// </summary>
+		protected virtual void OnPrepareOpening()
+		{
+		}
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal void EnableSuppress(SuppressFlag flag = SuppressFlag.All) => _suppressFlag = flag;
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		protected internal void DisableSuppress() => _suppressFlag = SuppressFlag.None;
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Flags]
+		public enum SuppressFlag
+		{
+			None,
+
+			Events = 1 << 0,
+			Animation = 1 << 1,
+
+			All = Events | Animation
 		}
 	}
 }

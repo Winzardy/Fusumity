@@ -7,6 +7,7 @@ using UI.Layers;
 namespace UI
 {
 	internal class UIDispatcherLocator<T>
+		where T : class, IWidgetDispatcher
 	{
 		internal static T instance;
 	}
@@ -21,16 +22,16 @@ namespace UI
 
 		public bool TryGet(string id, out UILayerLayout layer) => _layers.TryGetValue(id, out layer);
 
-		public T Get<T>() where T : IUIDispatcher
+		public T Get<T>() where T : class, IWidgetDispatcher
 			=> UIDispatcherLocator<T>.instance;
 
 		public void Register<T>(T dispatcher)
-			where T : IUIDispatcher
+			where T : class, IWidgetDispatcher
 			=> UIDispatcherLocator<T>.instance = dispatcher;
 
 		public void Unregister<T>()
-			where T : IUIDispatcher
-			=> UIDispatcherLocator<T>.instance = default;
+			where T : class, IWidgetDispatcher
+			=> UIDispatcherLocator<T>.instance = null;
 
 		private UILayerLayout Create(string id)
 		{

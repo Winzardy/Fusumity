@@ -787,7 +787,7 @@ namespace UI.Scroll
 				// no recyleable cell found, so we create a new view
 				// and attach it to our container
 				cell = UIFactory.CreateLayout(template, _container, "[ScrollItem] ");
-				cell.transform.Reset();
+				cell.ResetTransform();
 
 				_incrementer ??= new Incrementer();
 

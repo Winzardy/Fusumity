@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UI.Screens
 {
-	public class UIScreenDispatcher : IUIDispatcher, IDisposable
+	public class UIScreenDispatcher : IWidgetDispatcher, IDisposable
 	{
-		private readonly UIScreenManager _manager;
+		private UIScreenManager _manager;
 
 		public IScreen Current => _manager.Current;
 		public IScreen Default => _manager.Default;
@@ -23,6 +24,8 @@ namespace UI.Screens
 		{
 			_manager.Shown -= OnShown;
 			_manager.Hidden -= OnHidden;
+
+			_manager = null;
 		}
 
 		/// <summary>
@@ -103,5 +106,7 @@ namespace UI.Screens
 
 		private void OnHidden(IScreen screen)
 			=> Hidden?.Invoke(screen);
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

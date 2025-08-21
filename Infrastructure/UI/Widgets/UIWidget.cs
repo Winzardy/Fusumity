@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Utility;
@@ -10,6 +12,11 @@ namespace UI
 {
 	public interface IWidget : IDisposable
 	{
+		public event WidgetShownDelegate Shown;
+		public event WidgetHiddenDelegate Hidden;
+		public event WidgetLayoutInstalledDelegate LayoutInstalled;
+		public event WidgetLayoutClearedDelegate LayoutCleared;
+
 		/// <summary>
 		///Когда виджет активирован (начало анимации - начало закрывание)
 		/// </summary>
@@ -51,8 +58,8 @@ namespace UI
 	}
 
 	/// <summary>
-	/// Cтроительный блок-кирпичик, который может иметь внутри себя такие же вложенные widget<br/>
-	/// Widget = Controller (MVC family) название взято для удобствоа, чтобы при использовании
+	/// Cтроительный блок-кирпичик, который может иметь внутри себя такие же вложенные Widget<br/>
+	/// Widget = Controller (MVC family) название взято для удобства, чтобы при использовании
 	/// было сразу ясно что идет речь именно о UI контроллере<br/>
 	/// </summary>
 	public abstract partial class UIWidget : CompositeDisposable, IWidget
@@ -63,9 +70,14 @@ namespace UI
 		protected const string INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE = "Initialization override for widget";
 
 		private CancellationTokenSource _disposeCts;
+
 		protected bool _activeInHierarchy = true;
 
 		private bool _active;
+
+		/// <summary>
+		/// Флаг немедленного выполнения (анимации при OnShow) при последнем вызове
+		/// </summary>
 		protected bool _immediate;
 
 		/// <inheritdoc cref="IWidget{TLayout}.Active"/>
@@ -79,9 +91,34 @@ namespace UI
 
 		protected virtual bool UseCustomReset => false;
 
-		protected internal abstract RectTransform Root { get; }
+		public abstract RectTransform RectTransform { get; }
 
 		public string Layer { get; protected set; }
+
+		public abstract event WidgetShownDelegate Shown;
+		public abstract event WidgetHiddenDelegate Hidden;
+		public abstract event WidgetLayoutInstalledDelegate LayoutInstalled;
+		public abstract event WidgetLayoutClearedDelegate LayoutCleared;
+
+		protected CancellationTokenSource DisposeCancellationTokenSource
+		{
+			get
+			{
+				_disposeCts ??= new CancellationTokenSource();
+				return _disposeCts;
+			}
+		}
+
+		protected CancellationToken DisposeCancellationToken => DisposeCancellationTokenSource.Token;
+
+		/// <inheritdoc cref="IWidget{TLayout}.Active"/>
+		public bool IsActive() => Active;
+
+		/// <inheritdoc cref="IWidget{TLayout}.Visible"/>
+		public bool IsVisible() => Visible;
+
+		/// <inheritdoc cref="IWidget{TLayout}.Open"/>
+		public bool IsOpen() => Open;
 
 		/// <summary>
 		/// Internal <br/><br/>
@@ -117,8 +154,7 @@ namespace UI
 		{
 			DisposeChildren();
 
-			_disposeCts?.Trigger();
-			_disposeCts = null;
+			AsyncUtility.Trigger(ref _disposeCts);
 
 			GC.SuppressFinalize(this);
 		}
@@ -183,26 +219,61 @@ namespace UI
 		{
 		}
 
-		protected CancellationTokenSource DisposeCancellationTokenSource
+		/// <summary>
+		/// Подождать пока виджет станет видимым
+		/// </summary>
+		public async UniTask WaitUntilIsVisible(CancellationToken? cancellationToken = null)
 		{
-			get
+			if (cancellationToken.HasValue)
 			{
-				_disposeCts ??= new CancellationTokenSource();
-				return _disposeCts;
+				try
+				{
+					using var linked = DisposeCancellationTokenSource.Link(cancellationToken.Value);
+					await UniTask.WaitUntil(IsVisible, cancellationToken: linked.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					OnVisibleOperationCanceledException(true);
+				}
+			}
+			else
+			{
+				await UniTask.WaitUntil(IsVisible, cancellationToken: DisposeCancellationToken);
 			}
 		}
 
-		protected CancellationToken DisposeCancellationToken => DisposeCancellationTokenSource.Token;
+		/// <summary>
+		/// Подождать пока виджет скроется
+		/// </summary>
+		public async UniTask WaitUntilIsNotVisible(CancellationToken? cancellationToken = null)
+		{
+			if (cancellationToken.HasValue)
+			{
+				try
+				{
+					using var linkedCts = DisposeCancellationTokenSource.Link(cancellationToken.Value);
+					await UniTask.WaitWhile(IsVisible, cancellationToken: linkedCts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					OnVisibleOperationCanceledException(false);
+				}
+			}
+			else
+			{
+				await UniTask.WaitWhile(IsVisible, cancellationToken: DisposeCancellationToken);
+			}
+		}
 
-		/// <inheritdoc cref="IWidget{TLayout}.Active"/>
-		public bool IsActive() => Active;
-
-		/// <inheritdoc cref="IWidget{TLayout}.Visible"/>
-		public bool IsVisible() => Visible;
-
-		/// <inheritdoc cref="IWidget{TLayout}.Open"/>
-		public bool IsOpen() => Open;
+		protected virtual void OnVisibleOperationCanceledException(bool openingOrClosing)
+		{
+		}
 
 		public static implicit operator bool(UIWidget widget) => widget != null;
 	}
+
+	public delegate void WidgetShownDelegate(IWidget widget);
+	public delegate void WidgetHiddenDelegate(IWidget widget);
+	public delegate void WidgetLayoutClearedDelegate([CanBeNull] UIBaseLayout layout);
+	public delegate void WidgetLayoutInstalledDelegate(UIBaseLayout layout);
 }
