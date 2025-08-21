@@ -5,6 +5,8 @@
     "Content",
     "MCK",
     "Sapientia",
-    "Localization"
+    "Localization",
+    "UnityEditor.UI",
+    "UnityEngine.UI"
   ]
 }
