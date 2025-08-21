@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Utility;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector.Editor.ValueResolvers;
 using UnityEngine;
 
 namespace Content.Editor
@@ -129,8 +131,21 @@ namespace Content.Editor
 			var filterAttribute = property.Parent?.GetAttribute<ContentTypeFilterAttribute>();
 			if (filterAttribute == null)
 				yield break;
-			foreach (var type in filterAttribute.Types)
-				yield return type;
+
+			if (!filterAttribute.Expression.IsNullOrEmpty())
+			{
+				var expression = filterAttribute.Expression;
+
+				var resolver = ValueResolver.Get<IEnumerable<Type>>(property.Parent, expression);
+				foreach (var type in resolver.GetValue())
+					yield return type;
+			}
+
+			if (!filterAttribute.Types.IsNullOrEmpty())
+			{
+				foreach (var type in filterAttribute.Types)
+					yield return type;
+			}
 		}
 
 		public static void CopyGuid(InspectorProperty property)
