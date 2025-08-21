@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UI.Windows
 {
@@ -90,5 +91,7 @@ namespace UI.Windows
 		/// </summary>
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

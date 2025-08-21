@@ -16,6 +16,8 @@ namespace UI
 	{
 		protected HashSet<UIWidget> _children;
 
+		public IEnumerable<UIWidget> Children => _children;
+
 		private void DisposeChildren()
 		{
 			DisposeAndClearChildren();

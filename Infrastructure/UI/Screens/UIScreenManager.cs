@@ -124,6 +124,12 @@ namespace UI.Screens
 		internal IDisposable Prepare<T>(Action callback) where T : UIWidget, IScreen
 			=> Get<T>().Prepare(callback);
 
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			if (_current is UIWidget castCurrent)
+				yield return castCurrent;
+		}
+
 		private void SetCurrent(IScreen screen)
 		{
 			if (_current == screen)

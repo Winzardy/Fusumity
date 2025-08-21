@@ -120,6 +120,12 @@ namespace UI.Windows
 			return false;
 		}
 
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			if (_current is UIWidget castCurrent)
+				yield return castCurrent;
+		}
+
 		private T Create<T>()
 			where T : UIWidget, IWindow
 		{

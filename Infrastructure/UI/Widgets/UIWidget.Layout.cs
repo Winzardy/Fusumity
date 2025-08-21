@@ -279,11 +279,14 @@ namespace UI
 			if (!_layout)
 				return;
 
-			if (!Visible && layoutClearing)
+			if (!_suppressFlag.HasFlag(SuppressFlag.Events))
 			{
-				//Автоматизация по очисте верстк
-				if (AutomaticLayoutClearingInternal())
-					return;
+				if (!Visible && layoutClearing)
+				{
+					// Автоматизация по очистке верстки
+					if (AutomaticLayoutClearingInternal())
+						return;
+				}
 			}
 
 			OnUpdateVisibleInternal(Visible);

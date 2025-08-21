@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sapientia.Utility;
 using UnityEngine;
@@ -11,6 +13,8 @@ namespace UI.Popovers
 	/// </summary>
 	public partial class UIPopoverManager : IDisposable
 	{
+		private LinkedList<UIWidget> _active = new();
+
 		private readonly PopoverPool _pool;
 
 		private readonly CancellationTokenSource _cts = new();
@@ -46,6 +50,7 @@ namespace UI.Popovers
 			}
 
 			var popover = _pool.Get<T>(host, customAnchor);
+			_active.AddLast(popover);
 
 			var pooledToken = GetToken(popover);
 
@@ -92,6 +97,7 @@ namespace UI.Popovers
 		{
 			var popover = token.Popover;
 			_pool.Release(popover);
+			_active.Remove(popover);
 			Pool<PooledPopoverToken<T>>.Release(token);
 		}
 
@@ -104,7 +110,12 @@ namespace UI.Popovers
 
 		internal bool TryHideLast()
 		{
-			return false;
+			if (_active.IsNullOrEmpty())
+				return false;
+
+			var last = _active.Last;
+			last.Value.SetActive(false);
+			return true;
 		}
 
 		#region Delegates
@@ -114,5 +125,7 @@ namespace UI.Popovers
 		public delegate void HiddenDelegate(UIWidget root, IPopover popover);
 
 		#endregion
+
+		internal IEnumerable<UIWidget> GetAllActive() => _active;
 	}
 }

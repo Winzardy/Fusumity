@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UI.Popovers;
 using UnityEngine;
 
@@ -27,7 +28,29 @@ namespace UI
 			_manager = null;
 		}
 
-		/// <param name="customAnchor">Если не задан (<c>null</c>), то используется <see cref="RectTransform"/> host'а</param>
+		/// <param name="customAnchor">
+		/// Якорь для позиционирования. Если <c>null</c>, используется <see cref="RectTransform"/>.
+		/// <paramref name="host"/>'а.
+		/// </param>
+		public PopoverToken<T> Show<T>(UIWidget host,
+			IPopoverArgs args = null,
+			RectTransform customAnchor = null)
+			where T : UIWidget, IPopover
+		{
+			var token = new PopoverToken<T>();
+			_manager.Show(ref token, host, args, customAnchor);
+			return token;
+		}
+
+		/// <summary>
+		/// Показывает поповер с возможностью переиспользовать ранее полученный токен.
+		/// В отличие от <see cref="Show{T}(UIWidget, IPopoverArgs, RectTransform)"/>,
+		/// повторные вызовы с тем же токеном позволяют переоткрывать поповер из одной и той же точки.
+		/// </summary>
+		/// <param name="customAnchor">
+		/// Якорь для позиционирования. Если <c>null</c>, используется <see cref="RectTransform"/>.
+		/// <paramref name="host"/>'а.
+		/// </param>
 		public void Show<T>(ref PopoverToken<T> token,
 			UIWidget host,
 			IPopoverArgs args = null,
@@ -50,5 +73,7 @@ namespace UI
 		{
 			Hidden?.Invoke(popover);
 		}
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

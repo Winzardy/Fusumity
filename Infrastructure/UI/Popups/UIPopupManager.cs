@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Utility;
@@ -79,6 +80,12 @@ namespace UI.Popups
 					return true;
 
 			return false;
+		}
+
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			if (_current is UIWidget castCurrent)
+				yield return castCurrent;
 		}
 
 		//TODO: добавить приоритет вместо force

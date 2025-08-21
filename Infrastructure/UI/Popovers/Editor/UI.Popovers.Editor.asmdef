@@ -1,10 +1,10 @@
 {
-    "name": "UI.Popups.Editor",
+    "name": "UI.Popovers.Editor",
     "rootNamespace": "",
     "references": [
         "UI",
         "UI.Editor",
-        "UI.Popups",
+        "UI.Popovers",
         "Sapientia",
         "Fusumity",
         "UnityEditor.UI",

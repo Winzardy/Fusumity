@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UI.Popups;
 
 namespace UI
@@ -97,5 +98,7 @@ namespace UI
 			if (!fromQueue)
 				Deactivated?.Invoke(popup);
 		}
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

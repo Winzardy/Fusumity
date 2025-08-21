@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UI.Screens
 {
@@ -105,5 +106,7 @@ namespace UI.Screens
 
 		private void OnHidden(IScreen screen)
 			=> Hidden?.Invoke(screen);
+
+		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}
 }

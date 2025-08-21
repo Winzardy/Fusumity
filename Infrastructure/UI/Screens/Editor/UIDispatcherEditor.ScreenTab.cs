@@ -9,6 +9,8 @@ namespace UI.Screens.Editor
 		private UIScreenDispatcher _dispatcher => UIDispatcher.Get<UIScreenDispatcher>();
 		public string Title => "Screens";
 
+		public int Order => 3;
+
 		public Type type;
 
 		internal void Show()
