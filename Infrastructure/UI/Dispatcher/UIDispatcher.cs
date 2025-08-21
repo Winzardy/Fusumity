@@ -11,6 +11,8 @@ namespace UI
 			get => _instance;
 		}
 
+		public static bool IsInitialized => management != null;
+
 		public static T Get<T>()
 			where T : class, IWidgetDispatcher
 			=> management.Get<T>();

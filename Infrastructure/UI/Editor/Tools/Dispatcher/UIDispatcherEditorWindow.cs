@@ -22,6 +22,12 @@ namespace UI.Editor
 				return;
 			}
 
+			if (!UIDispatcher.IsInitialized)
+			{
+				FusumityEditorGUILayout.DrawWarning("Инициализация...", iconSize: 60);
+				return;
+			}
+
 			base.OnImGUI();
 		}
 

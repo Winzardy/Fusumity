@@ -1,6 +1,7 @@
 ﻿using System;
 using Content;
 using Sapientia;
+using UnityEngine;
 
 namespace UI.Popovers
 {
@@ -11,6 +12,7 @@ namespace UI.Popovers
 	{
 		public LayoutEntry<UIBasePopoverLayout> layout;
 
+		[Space]
 		public Toggle<int> poolCapacity;
 	}
 }
