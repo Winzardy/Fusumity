@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Reflection;
@@ -31,6 +32,7 @@ namespace Notifications
 				return;
 
 			_platform.NotificationReceived += OnNotificationReceived;
+
 
 			//Очищаем все уведомления при запуске и пересоздаем. Это решаем вопросы с призрачными уведомлениями
 			if (!_settings.disableClearAllOnStart)
@@ -103,7 +105,10 @@ namespace Notifications
 
 		private void OnNotificationReceived(string id, string data)
 		{
-			//TODO: Добавить по надобности Receivers..
+			// Очищаем уведомление на которое тыкнули во включенном приложении
+			Remove(id);
+
+			// TODO: Добавить по надобности Receivers..
 		}
 	}
 }

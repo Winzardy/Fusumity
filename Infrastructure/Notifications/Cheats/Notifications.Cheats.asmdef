@@ -1,0 +1,10 @@
+{
+  "name": "Notifications.Cheats",
+  "references": [
+    "Notifications",
+    "Content",
+    "MCK",
+    "Sapientia",
+    "Localization"
+  ]
+}

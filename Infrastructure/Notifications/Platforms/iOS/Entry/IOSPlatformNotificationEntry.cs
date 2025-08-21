@@ -1,10 +1,17 @@
+#if UNITY_IOS || UNITY_EDITOR
 using Localization;
+using Sirenix.OdinInspector;
+#endif
 
 namespace Notifications.iOS
 {
-	public struct IOSPlatformNotificationEntry : IPlatformNotificationEntry
+	[System.Serializable]
+#if UNITY_IOS || UNITY_EDITOR
+	[TypeRegistryItem("iOS", icon: SdfIconType.Apple)]
+#endif
+	public class IOSPlatformNotificationEntry : IPlatformNotificationEntry
 	{
-#if UNITY_IOS|| UNITY_EDITOR
+#if UNITY_IOS || UNITY_EDITOR
 		//TODO: добавить категории
 		//Категории что-то наподобии каналов в Android
 

@@ -23,6 +23,12 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int2 Sign(this float2 v)
+		{
+			return new int2(v.x.Sign(), v.y.Sign());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int2 ToInt(this float2 v)
 		{
 			return (int2)v;
