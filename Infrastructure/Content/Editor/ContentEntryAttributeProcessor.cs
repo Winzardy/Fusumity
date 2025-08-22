@@ -5,6 +5,7 @@ using System.Reflection;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.ValueResolvers;
@@ -138,13 +139,23 @@ namespace Content.Editor
 
 				var resolver = ValueResolver.Get<IEnumerable<Type>>(property.Parent, expression);
 				foreach (var type in resolver.GetValue())
-					yield return type;
+				{
+					if (!type.IsPolymorphic())
+						yield return type;
+					foreach (var inherited in type.GetAllTypes(true))
+						yield return inherited;
+				}
 			}
 
 			if (!filterAttribute.Types.IsNullOrEmpty())
 			{
 				foreach (var type in filterAttribute.Types)
-					yield return type;
+				{
+					if (!type.IsPolymorphic())
+						yield return type;
+					foreach (var inherited in type.GetAllTypes(true))
+						yield return inherited;
+				}
 			}
 		}
 
