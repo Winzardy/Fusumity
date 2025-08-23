@@ -150,6 +150,7 @@ namespace Fusumity.Editor
 					{
 						decode.yr = SirenixEditorFields.LongField(decode.yr);
 						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL);
+						decode.sign = decode.yr > DateTime.UnixEpoch.Year;
 					}
 
 					ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);

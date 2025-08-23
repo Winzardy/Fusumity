@@ -29,7 +29,7 @@ namespace UI
 		private bool _open;
 
 		/// <summary>
-		/// Флаг для подавления повторного запуска анимации и вызова событий <see cref="Shown"/> и <see cref="Hidden"/>.
+		/// Флаг отвечающий за подавление разного функционала
 		/// </summary>
 		private SuppressFlag _suppressFlag;
 

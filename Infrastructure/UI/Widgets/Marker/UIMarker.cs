@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using Fusumity.Reactive;
 using Fusumity.Utility;
-using Messaging;
+using JetBrains.Annotations;
 using Sapientia;
 using UnityEngine;
 
@@ -34,6 +34,9 @@ namespace UI
 
 		public Func<Vector3> sizeFunc;
 		public Vector3? size;
+
+		[CanBeNull]
+		public IEventSource positionUpdateEventSource;
 
 		/// <summary>
 		/// Важное уточнение, что маркер скрывается визуально, в пуле он все еще занимает место.
@@ -90,8 +93,6 @@ namespace UI
 		private IEnumerator _moveRoutine;
 		private bool? _cacheOffscreen;
 
-		private IMessageSubscriptionToken? _gameLateUpdateMessageToken;
-
 		public bool Enable => _enable;
 
 		protected override void OnSetupDefaultAnimator() => SetAnimator<DefaultMarkerAnimator<TArgs>>();
@@ -99,32 +100,34 @@ namespace UI
 		protected override void OnActivatedInternal(bool immediate)
 		{
 			TryClearMoveRoutine();
-			TryCalculateAndUpdatePosition(false);
+			CalculateAndUpdatePosition(false);
 
 			base.OnActivatedInternal(immediate);
 		}
 
 		protected override void OnBeganOpening()
 		{
-			UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
+			Subscribe();
 		}
 
 		protected override void OnEndedOpening() =>
-			TryCalculateAndUpdatePosition(force: true);
+			CalculateAndUpdatePosition(force: true);
 
 		protected override void OnEndedClosing()
 		{
 			_enable = false;
 			_cacheWorldPosition = null;
+			_cacheCamera = null;
+			_cacheInput = default;
 
 			TryClearMoveRoutine();
 
-			UnityLifecycle.LateUpdateEvent.UnSubscribe(OnLateUpdate);
+			Unsubscribe();
 		}
 
-		private void OnLateUpdate() => TryCalculateAndUpdatePosition();
+		private void OnUpdate() => CalculateAndUpdatePosition();
 
-		private void TryCalculateAndUpdatePosition(bool animation = true, bool force = false)
+		private void CalculateAndUpdatePosition(bool animation = true, bool force = false)
 		{
 			if (!_layout)
 				return;
@@ -285,6 +288,28 @@ namespace UI
 				return;
 
 			SetPositionAndDirection(position, direction);
+		}
+
+		private void Subscribe()
+		{
+			if (_args.positionUpdateEventSource != null)
+			{
+				_args.positionUpdateEventSource.Invoked += OnUpdate;
+				return;
+			}
+
+			UnityLifecycle.LateUpdateEvent.Subscribe(OnUpdate);
+		}
+
+		private void Unsubscribe()
+		{
+			if (_args.positionUpdateEventSource != null)
+			{
+				_args.positionUpdateEventSource.Invoked -= OnUpdate;
+				return;
+			}
+
+			UnityLifecycle.LateUpdateEvent.UnSubscribe(OnUpdate);
 		}
 
 		private IEnumerator SmoothMoveRoutine()

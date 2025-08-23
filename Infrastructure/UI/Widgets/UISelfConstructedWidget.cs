@@ -54,7 +54,8 @@ namespace UI
 
 		protected sealed override void OnDeactivatedInternal(bool immediate)
 		{
-			CancelSetupLayout();
+			if (!suppressFlag.HasFlag(SuppressFlag.Events))
+				CancelSetupLayout();
 
 			base.OnDeactivatedInternal(immediate);
 		}
@@ -103,7 +104,8 @@ namespace UI
 				return;
 
 			_setupTemplateCts = new CancellationTokenSource();
-			_setupTemplateCts.Token.Register(() => { Debug.Log("Загрузка отменена!"); });
+			_setupTemplateCts.Token
+			   .Register(OnTriggered);
 
 			try
 			{
@@ -111,7 +113,7 @@ namespace UI
 			}
 			catch (OperationCanceledException)
 			{
-				GUIDebug.LogWarning($"{GetType()} layout (template) loading was canceled");
+				GUIDebug.LogWarning($"[ {GetType()} ] template loading was canceled");
 			}
 			catch (Exception e)
 			{
@@ -121,6 +123,8 @@ namespace UI
 			{
 				AsyncUtility.Release(ref _setupTemplateCts);
 			}
+
+			void OnTriggered() => GUIDebug.LogWarning($"[ {GetType()} ] template loading cancel was triggered");
 		}
 
 		private void TryStopAutoDestroy()

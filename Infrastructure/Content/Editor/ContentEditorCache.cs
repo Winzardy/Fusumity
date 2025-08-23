@@ -9,6 +9,8 @@ using UnityEngine;
 
 namespace Content.Editor
 {
+	using UnityObject = UnityEngine.Object;
+
 	public static class ContentEditorCache
 	{
 		private static Dictionary<string, ScriptableObject> _cache;
@@ -147,6 +149,8 @@ namespace Content.Editor
 		private static void Refresh(Type type)
 		{
 			EditorContentEntryMap.Clear(type);
+			EditorSingleContentEntryShortcut.Clear(type);
+
 			foreach (var scriptableObject in cache.Values)
 			{
 				if (scriptableObject is not IContentEntrySource target)
@@ -155,7 +159,10 @@ namespace Content.Editor
 				var valueType = target.ContentEntry.ValueType;
 
 				if (valueType == type)
+				{
 					Register(valueType, target);
+					continue;
+				}
 
 				if (target.ContentEntry.Nested.IsNullOrEmpty())
 					continue;
@@ -169,9 +176,9 @@ namespace Content.Editor
 			if (!target.Validate())
 				return;
 
-			EditorContentEntryMap.Register(valueType, target);
-
-			if (!target.ContentEntry.IsUnique())
+			if (target.ContentEntry.IsUnique())
+				EditorContentEntryMap.Register(valueType, target);
+			else
 				EditorSingleContentEntryShortcut.Register(valueType, target);
 		}
 	}
@@ -181,17 +188,14 @@ namespace Content.Editor
 	internal static class EditorSingleContentEntryShortcut
 	{
 		private static Dictionary<Type, MethodInfo> _typeToMethod = new(1);
-		internal static Dictionary<Type, EditorTypeSingleResolver> _dictionary = new(1);
+		internal static readonly Dictionary<Type, EditorTypeSingleResolver> typeToResolver = new(1);
+		internal static readonly Dictionary<Type, Action> typeToClearAction = new(1);
 
 		public static bool Contains(Type type) =>
-			_dictionary.TryGetValue(type, out var resolver) && resolver() != null;
+			typeToResolver.TryGetValue(type, out var resolver) && resolver() != null;
 
 		public static IContentEntrySource Get(Type type)
-		{
-			if (_dictionary.TryGetValue(type, out var resolver))
-				return resolver();
-			return null;
-		}
+			=> typeToResolver.TryGetValue(type, out var resolver) ? resolver() : null;
 
 		public static void Register(Type type, IContentEntrySource target)
 		{
@@ -199,11 +203,19 @@ namespace Content.Editor
 			{
 				methodInfo = typeof(EditorSingleContentEntryShortcut<>)
 				   .MakeGenericType(type)
-				   .GetMethod("RegisterRaw", BindingFlags.NonPublic | BindingFlags.Static);
+					// EditorSingleContentEntryShortcut<object> - object выбран первый попавшийся тип
+				   .GetMethod(nameof(EditorSingleContentEntryShortcut<object>.RegisterRaw),
+						BindingFlags.NonPublic | BindingFlags.Static);
 				_typeToMethod[type] = methodInfo;
 			}
 
 			methodInfo?.Invoke(null, new object[] {target});
+		}
+
+		public static void Clear(Type type)
+		{
+			if (typeToClearAction.TryGetValue(type, out var action))
+				action?.Invoke();
 		}
 	}
 
@@ -217,18 +229,38 @@ namespace Content.Editor
 				Register(source);
 		}
 
-		internal static void Register(IContentEntrySource<T> entry)
+		internal static void Register(IContentEntrySource<T> source)
 		{
-			if (!EditorSingleContentEntryShortcut._dictionary.ContainsKey(typeof(T)))
-				EditorSingleContentEntryShortcut._dictionary[typeof(T)] = Resolve;
+			if (!EditorSingleContentEntryShortcut.typeToResolver.ContainsKey(typeof(T)))
+				EditorSingleContentEntryShortcut.typeToResolver[typeof(T)] = Resolve;
+			if (!EditorSingleContentEntryShortcut.typeToClearAction.ContainsKey(typeof(T)))
+				EditorSingleContentEntryShortcut.typeToClearAction[typeof(T)] = Clear;
 
-			if (Contains())
-				ContentDebug.LogError($"Already registered single entry of type: [ {typeof(T).Name} ]");
+			if (source?.ContentEntry == null)
+			{
+				ContentDebug.LogWarning("Source is null", (UnityObject) source);
+				return;
+			}
 
-			_source = entry;
+			if (source.ContentEntry.IsUnique())
+			{
+				ContentDebug.LogWarning("Source is unique?", (UnityObject) source);
+				return;
+			}
+
+			//if (Contains())
+			{
+				// TODO: разобраться позже почему некоторые типы перерегистрируются
+				// ContentDebug.LogWarning($"Already registered single entry of type: [ {typeof(T).Name} ]", (UnityObject) source);
+			}
+
+			_source = source;
+
+			EditorContentEntryMap.RegisterNestedSafe(source);
 		}
 
 		private static IContentEntrySource Resolve() => _source;
+		private static void Clear() => _source = null;
 
 		public static IContentEntrySource<T> Get() => _source;
 
@@ -300,6 +332,25 @@ namespace Content.Editor
 			if (typeToClearAction.TryGetValue(type, out var action))
 				action?.Invoke();
 		}
+
+		internal static void RegisterNestedSafe<T>(IContentEntrySource<T> source)
+		{
+			if (source.ContentEntry.Nested.IsNullOrEmpty())
+				return;
+
+			nestedToSource ??= new();
+			foreach (var guid in source.ContentEntry.Nested.Keys)
+			{
+				if (nestedToSource.ContainsKey(guid))
+					continue;
+
+				nestedToSource[guid] = new NestedContentEntrySource
+				{
+					source = source,
+					guid = guid
+				};
+			}
+		}
 	}
 
 	internal static class EditorContentEntryMap<T>
@@ -333,21 +384,7 @@ namespace Content.Editor
 				_idToGuid[id] = new(guid);
 			}
 
-			if (source.ContentEntry.Nested.IsNullOrEmpty())
-				return;
-
-			EditorContentEntryMap.nestedToSource ??= new();
-			foreach (var guid in source.ContentEntry.Nested.Keys)
-			{
-				if (EditorContentEntryMap.nestedToSource.ContainsKey(guid))
-					continue;
-
-				EditorContentEntryMap.nestedToSource[guid] = new NestedContentEntrySource
-				{
-					source = source,
-					guid = guid
-				};
-			}
+			EditorContentEntryMap.RegisterNestedSafe(source);
 		}
 
 		private static IContentEntrySource Resolve(in SerializableGuid guid, string id = null)
