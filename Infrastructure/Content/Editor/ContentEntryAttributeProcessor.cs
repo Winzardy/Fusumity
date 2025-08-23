@@ -95,17 +95,6 @@ namespace Content.Editor
 					}
 					else
 					{
-						var typeFilterAttribute = parentProperty.GetAttribute<ContentTypeFilterAttribute>();
-						if (typeFilterAttribute != null)
-						{
-							var exp = $"@{nameof(ContentEntryAttributeProcessor)}.{nameof(TypeFilter)}($property)";
-							attributes.Add(new TypeFilterAttribute(exp)
-							{
-								DrawValueNormally = typeFilterAttribute.DrawValueNormally,
-								DropdownTitle = typeFilterAttribute.DropdownTitle
-							});
-						}
-
 						attributes.Add(new ShowInInspectorAttribute());
 
 						if (propertyToGUIContent.TryGetValue(parentProperty, out var label) && label.text != null)
@@ -124,38 +113,6 @@ namespace Content.Editor
 					}
 
 					break;
-			}
-		}
-
-		public static IEnumerable<Type> TypeFilter(InspectorProperty property)
-		{
-			var filterAttribute = property.Parent?.GetAttribute<ContentTypeFilterAttribute>();
-			if (filterAttribute == null)
-				yield break;
-
-			if (!filterAttribute.Expression.IsNullOrEmpty())
-			{
-				var expression = filterAttribute.Expression;
-
-				var resolver = ValueResolver.Get<IEnumerable<Type>>(property.Parent, expression);
-				foreach (var type in resolver.GetValue())
-				{
-					if (!type.IsPolymorphic())
-						yield return type;
-					foreach (var inherited in type.GetAllTypes(true))
-						yield return inherited;
-				}
-			}
-
-			if (!filterAttribute.Types.IsNullOrEmpty())
-			{
-				foreach (var type in filterAttribute.Types)
-				{
-					if (!type.IsPolymorphic())
-						yield return type;
-					foreach (var inherited in type.GetAllTypes(true))
-						yield return inherited;
-				}
 			}
 		}
 
