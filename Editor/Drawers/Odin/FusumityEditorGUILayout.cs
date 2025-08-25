@@ -324,34 +324,25 @@ namespace Fusumity.Editor
 
 		#endregion
 
-		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle textStyle = null, float textOffset = 0)
+		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
+			GUIStyle textStyle = null, float textOffset = 0)
 		{
-			var style = EditorStyles.textField;
+			const float SPACING = 1.5f;
+			valueStyle ??= EditorStyles.textField;
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
-			var width = style.CalcWidth(value.ToString());
-			var offset = width + textOffset;
+			var width = valueStyle.CalcWidth(value.ToString());
+			var offset = width + textOffset + SPACING;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
 
-			style = textStyle ?? new GUIStyle(EditorStyles.label)
-			{
-				fontSize = EditorStyles.textField.fontSize - 3,
-				normal =
-				{
-					textColor = Color.gray
-				},
-				hover =
-				{
-					textColor = Color.gray
-				}
-			};
-
-			width = style.CalcWidth(text);
 			var lastRect = GUILayoutUtility.GetLastRect();
+			textStyle ??= EditorStyles.label;
+			width = textStyle.CalcWidth(text);
+
 			var labelRect = lastRect.AlignLeft(width, offset);
-			GUI.Label(labelRect, text, style);
+			GUI.Label(labelRect, text, textStyle);
 		}
 
 		public static void SuffixLabel(string text, bool overlay = true)

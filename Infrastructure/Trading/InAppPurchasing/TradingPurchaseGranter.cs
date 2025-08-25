@@ -29,12 +29,13 @@ namespace Trading.InAppPurchasing
 				ref readonly var offer = ref _iapProductToOffer[entry];
 				var pooledTradeboard = _service.CreateTradeboard(in offer.trader);
 				Tradeboard tradeboard = pooledTradeboard;
-				tradeboard.Register(in receipt);
+				var registerToken = tradeboard.Register(in receipt);
 
 				if (!offer.CanExecute(tradeboard, out var error))
 				{
 					TradingDebug.LogError(
 						$"Error on can execute trader offer [ {offer} ]: {error}");
+					registerToken.Release();
 					return false;
 				}
 
@@ -44,7 +45,11 @@ namespace Trading.InAppPurchasing
 
 				return true;
 
-				void Release() => pooledTradeboard.Dispose();
+				void Release()
+				{
+					registerToken.Release();
+					pooledTradeboard.Dispose();
+				}
 			}
 
 			return false;

@@ -35,6 +35,9 @@ namespace UI
 		{
 			base.OnValidate();
 
+			if (UnityEngine.Application.isPlaying)
+				return;
+
 			if (Placeholder && locInfo.enable)
 				Placeholder.text = LocManager.GetEditor(locInfo, _languageEditor.IsNullOrEmpty() ? null : _languageEditor);
 		}

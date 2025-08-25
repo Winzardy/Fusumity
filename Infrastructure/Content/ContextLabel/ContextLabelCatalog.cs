@@ -24,7 +24,7 @@ namespace Content.ContextLabel
 
 		public readonly bool TryGet(TKey key, out string value) => _keyToLabel.TryGetValue(key, out value);
 
-		public readonly bool Contains(TKey key) => _keyToLabel.ContainsKey(key);
+		public readonly bool Contains(TKey key) => _keyToLabel?.ContainsKey(key) ?? false;
 
 		public readonly IEnumerable<TKey> GetKeys() => _keyToLabel.Keys;
 

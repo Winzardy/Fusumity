@@ -100,7 +100,7 @@ namespace Trading
 				return TradeExecuteError.NotError;
 
 			_dummyBackend ??= new DummyTradingBackend();
-			tradeboard.Register(_dummyBackend);
+			using var _ = tradeboard.Register(_dummyBackend);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Execute(in trade, tradeboard))
@@ -155,7 +155,7 @@ namespace Trading
 
 				if (receipts.Count > 0)
 				{
-					tradeboard.Register(receipts.ToArray());
+					using var _ = tradeboard.Register(receipts.ToArray());
 
 					_service?.PushReceipts(tradeboard);
 
@@ -169,7 +169,7 @@ namespace Trading
 				return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
 
 			_dummyBackend ??= new DummyTradingBackend();
-			tradeboard.Register(_dummyBackend);
+			using var __ = tradeboard.Register(_dummyBackend);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Pay(cost, tradeboard))

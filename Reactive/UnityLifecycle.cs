@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Sapientia.Data;
+using Sapientia.Extensions;
 using UnityEngine;
 
 namespace Fusumity.Reactive
@@ -9,6 +10,11 @@ namespace Fusumity.Reactive
 	{
 		private bool _applicationQuitting;
 		private bool _pause;
+
+		private float _fixedTimeAccumulator;
+		private float _fixedUnscaledTimeAccumulator;
+		private float _timeAccumulator;
+		private float _unscaledTimeAccumulator;
 
 		public static event Action LateExecuteOnceEvent;
 		public static event Action ApplicationPauseEvent;
@@ -22,8 +28,14 @@ namespace Fusumity.Reactive
 		public static readonly DelayableAction UpdateEvent = new();
 		public static readonly DelayableAction FixedUpdateEvent = new();
 		public static readonly DelayableAction LateUpdateEvent = new();
+
 		public static readonly DelayableAction OnDestroyEvent = new();
 		public static readonly DelayableAction ResolutionChangedEvent = new();
+
+		public static readonly DelayableAction FixedEachSecondEvent = new();
+		public static readonly DelayableAction FixedUnscaledEachSecondEvent = new();
+		public static readonly DelayableAction EachSecondEvent = new();
+		public static readonly DelayableAction UnscaledEachSecondEvent = new();
 
 		public static float DeltaTime => Time.deltaTime;
 		public static bool ApplicationQuitting => _instance._applicationQuitting;
@@ -40,6 +52,9 @@ namespace Fusumity.Reactive
 		private void FixedUpdate()
 		{
 			FixedUpdateEvent.ImmediatelyInvoke();
+
+			InvokeEachSecond(FixedEachSecondEvent, ref _fixedTimeAccumulator, Time.fixedDeltaTime);
+			InvokeEachSecond(FixedUnscaledEachSecondEvent, ref _fixedUnscaledTimeAccumulator, Time.fixedUnscaledDeltaTime);
 		}
 
 		private void LateUpdate()
@@ -56,6 +71,9 @@ namespace Fusumity.Reactive
 			var events = LateExecuteOnceEvent;
 			LateExecuteOnceEvent = null;
 			events?.Invoke();
+
+			InvokeEachSecond(EachSecondEvent, ref _timeAccumulator, Time.deltaTime, 1);
+			InvokeEachSecond(UnscaledEachSecondEvent, ref _unscaledTimeAccumulator, Time.unscaledDeltaTime, 1);
 		}
 
 		private void OnDestroy()
@@ -110,6 +128,26 @@ namespace Fusumity.Reactive
 		{
 			ApplicationShutdown?.Invoke();
 			_applicationQuitting = true;
+		}
+
+		private void InvokeEachSecond(DelayableAction action, ref float accumulator, float delta, int maxCatchUpTicks = 20)
+		{
+			const int interval = 1; // одна секунда
+
+			accumulator += delta;
+			if (accumulator < interval)
+				return;
+
+			var ticks = (accumulator / interval)
+			   .CeilToInt();
+
+			if (ticks > maxCatchUpTicks)
+				ticks = maxCatchUpTicks;
+
+			accumulator -= ticks * interval;
+
+			for (int i = 0; i < ticks; i++)
+				action.ImmediatelyInvoke();
 		}
 	}
 }

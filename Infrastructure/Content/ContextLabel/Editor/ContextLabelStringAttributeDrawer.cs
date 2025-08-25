@@ -1,5 +1,6 @@
 using Content.ScriptableObjects;
 using Fusumity.Editor;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
@@ -11,21 +12,19 @@ using UnityEngine;
 namespace Content.ContextLabel.Editor
 {
 	[CustomPropertyDrawer(typeof(ContextLabelAttribute))]
-	public class ContextLabelIntAttributeDrawer : OdinAttributeDrawer<ContextLabelAttribute, int>
+	public class ContextLabelStringAttributeDrawer : OdinAttributeDrawer<ContextLabelAttribute, string>
 	{
 		private const string NONE_MENU = "None";
-		private const int NONE_KEY = 0;
 
 		private const string ADD_MENU = "Add new";
-		private const int ADD_KEY = -1;
 
 		private int _cacheKeyCount = -1;
 		private bool? _showedSelectorBeforeClick;
 
-		private GUIPopupSelector<int> _selector;
+		private GUIPopupSelector<string> _selector;
 
-		private UniqueContentEntry<ContextLabelCatalog<int>> _contentEntry;
-		private ref readonly ContextLabelCatalog<int> currentCatalog => ref _contentEntry.Value;
+		private UniqueContentEntry<ContextLabelCatalog<string>> _contentEntry;
+		private ref readonly ContextLabelCatalog<string> currentCatalog => ref _contentEntry.Value;
 
 		private ScriptableObject Asset => _contentEntry is IScriptableContentEntry scriptableObjectEntry
 			? scriptableObjectEntry.ScriptableObject
@@ -40,7 +39,7 @@ namespace Content.ContextLabel.Editor
 		{
 			if (_contentEntry == null)
 			{
-				SirenixEditorGUI.WarningMessageBox($"Not found catalog (int) by id [ {Attribute.Catalog} ] ");
+				SirenixEditorGUI.WarningMessageBox($"Not found catalog (string) by id [ {Attribute.Catalog} ] ");
 				CallNextDrawer(label);
 				return;
 			}
@@ -50,14 +49,14 @@ namespace Content.ContextLabel.Editor
 			var selectedKey = ValueEntry.SmartValue;
 			if (_selector == null)
 			{
-				ValueEntry.SmartValue = SirenixEditorFields.IntField(label, selectedKey);
+				ValueEntry.SmartValue = SirenixEditorFields.TextField(label, selectedKey);
 				return;
 			}
 
 			if (_selector == null)
 				return;
 
-			var contains = currentCatalog.Contains(selectedKey);
+			var contains = !selectedKey.IsNullOrEmpty() && currentCatalog.Contains(selectedKey);
 			label ??= new GUIContent();
 			EditorGUILayout.GetControlRect();
 
@@ -104,7 +103,7 @@ namespace Content.ContextLabel.Editor
 				};
 			}
 
-			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.IntField(textFieldPosition, label, selectedKey, style);
+			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.TextField(textFieldPosition, label, selectedKey, style);
 			GUI.color = originalColor;
 
 			if (currentCatalog.TryGet(selectedKey, out var labelByKey))
@@ -120,7 +119,7 @@ namespace Content.ContextLabel.Editor
 
 		private void CustomizeAddMenu()
 		{
-			if (!_selector.TryGetMenuItemByValue(ADD_KEY, out var menuItem))
+			if (!_selector.TryGetMenuItemByValue(ADD_MENU, out var menuItem))
 				return;
 
 			menuItem.Icon = EditorIcons.Plus.Active;
@@ -145,26 +144,25 @@ namespace Content.ContextLabel.Editor
 			_selector = CreateSelector(in currentCatalog);
 		}
 
-		private GUIPopupSelector<int> CreateSelector(in ContextLabelCatalog<int> catalog)
+		private GUIPopupSelector<string> CreateSelector(in ContextLabelCatalog<string> catalog)
 		{
 			_cacheKeyCount = catalog.Count;
-			using var _ = ListPool<int>.Get(out var keys);
+			using var _ = ListPool<string>.Get(out var keys);
 			foreach (var key in catalog.GetKeys())
-				keys.Add(key + 1);
-			keys.Add(ADD_KEY);
-			var selector = new GUIPopupSelector<int>(keys.ToArray(),
-				ValueEntry.SmartValue + 1,
+				keys.Add(key);
+			keys.Add(ADD_MENU);
+			var selector = new GUIPopupSelector<string>(keys.ToArray(),
+				ValueEntry.SmartValue,
 				HandleSelected,
 				pathEvaluator: key =>
 				{
-					if (key == NONE_KEY)
+					if (key == NONE_MENU)
 						return NONE_MENU;
 
-					if (key == ADD_KEY)
+					if (key == ADD_MENU)
 						return ADD_MENU;
 
-					var i = key - 1;
-					return currentCatalog[i];
+					return currentCatalog[key];
 				});
 
 			selector.SetSearchFunction(item =>
@@ -176,8 +174,8 @@ namespace Content.ContextLabel.Editor
 				if (item?.Value == null)
 					return false;
 
-				var key = (int) item.Value;
-				var s = currentCatalog[key - 1].ToLower();
+				var key = (string) item.Value;
+				var s = currentCatalog[key].ToLower();
 				if (s.Contains(selector.GetSearchTerm().ToLower()))
 					return true;
 				return false;
@@ -196,21 +194,21 @@ namespace Content.ContextLabel.Editor
 			EditorGUIUtility.PingObject(Asset);
 		}
 
-		private void HandleSelected(int key)
+		private void HandleSelected(string key)
 		{
-			if (key == NONE_KEY)
+			if (key == NONE_MENU)
 				return;
 
-			if (key == ADD_KEY)
+			if (key == ADD_MENU)
 			{
-				_selector.SetSelection(ValueEntry.SmartValue + 1);
+				_selector.SetSelection(ValueEntry.SmartValue);
 				if (Asset != null)
 					GUIHelper.OpenInspectorWindow(Asset);
 				_selector?.Hide();
 				return;
 			}
 
-			ValueEntry.WeakSmartValue = key - 1;
+			ValueEntry.WeakSmartValue = key;
 		}
 	}
 }

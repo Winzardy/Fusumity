@@ -1,5 +1,7 @@
 ﻿using System;
 using Content;
+using Sapientia;
+using UnityEngine;
 
 namespace UI.Popups
 {
@@ -9,5 +11,8 @@ namespace UI.Popups
 	public struct UIPopupEntry
 	{
 		public LayoutEntry<UIBasePopupLayout> layout;
+
+		[Space]
+		public Toggle<int> poolCapacity;
 	}
 }
