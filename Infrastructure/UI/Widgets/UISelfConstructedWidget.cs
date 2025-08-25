@@ -256,7 +256,7 @@ namespace UI
 #endif
 
 #if !UNITY_EDITOR
-			await UniTask.Delay(delay, true, cancellationToken: cancellationToken);
+			await UniTask.Delay(delayMs, true, cancellationToken: cancellationToken);
 #else
 			await UniTask.NextFrame(cancellationToken: cancellationToken);
 
