@@ -36,8 +36,9 @@ namespace UI
 		public abstract ComponentReferenceEntry LayoutReference { get; }
 
 		[Tooltip("Список автоматизаций для работы с версткой.\n" +
-			"<b>"+nameof(LayoutAutomationMode.AutoDestroy)+"</b> - авто-удаление верстки (+Release) через заданную задержку (delay)\n" +
-			"<b>"+nameof(LayoutAutomationMode.Preload)+"</b> - загрузить верстку в память при запуске приложения (возможно потребуется поддержки от разработчика)")]
+			"<b>" + nameof(LayoutAutomationMode.AutoDestroy) + "</b> - авто-удаление верстки (+Release) через заданную задержку (delay)\n" +
+			"<b>" + nameof(LayoutAutomationMode.Preload) +
+			"</b> - загрузить верстку в память при запуске приложения (возможно потребуется поддержки от разработчика)")]
 		public LayoutAutomationMode automationMode = LayoutAutomationMode.None;
 
 		public int autoDestroyDelayMs = 5000;

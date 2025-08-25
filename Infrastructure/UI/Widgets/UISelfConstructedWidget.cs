@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using AssetManagement;
+using Sapientia;
 using Sapientia.Utility;
 using UnityEngine;
 
@@ -245,28 +246,42 @@ namespace UI
 
 		private async UniTask DelayBeforeDestroyAsync(CancellationToken cancellationToken, string originalName)
 		{
-#if !UNITY_EDITOR
-			await UniTask.Delay(LayoutAutoDestroyDelayMs, true, cancellationToken: cancellationToken);
+			var delay =
+#if !DebugLog
+				LayoutAutoDestroyDelayMs;
 #else
-			var leftMs = LayoutAutoDestroyDelayMs;
+				UILayoutDebug.debugDelayMs
+					? UILayoutDebug.debugDelayMs.value
+					: LayoutAutoDestroyDelayMs;
+#endif
 
+#if !UNITY_EDITOR
+			await UniTask.Delay(delay, true, cancellationToken: cancellationToken);
+#else
 			await UniTask.NextFrame(cancellationToken: cancellationToken);
 
-			leftMs -= (int) (Time.unscaledDeltaTime * 1000);
+			delay -= (int) (Time.unscaledDeltaTime * 1000);
 			if (_layout)
 				originalName = _layout.name;
 
-			while (leftMs > 0)
+			while (delay > 0)
 			{
 				await UniTask.NextFrame(cancellationToken: cancellationToken);
 
-				leftMs -= (int) (Time.unscaledDeltaTime * 1000);
-				var seconds = leftMs / 1000f;
+				delay -= (int) (Time.unscaledDeltaTime * 1000);
+				var seconds = delay / 1000f;
 
 				if (_layout)
 					_layout.name = originalName + $" (left: {seconds:F2} sec)";
 			}
 #endif
 		}
+
+#if DebugLog
+		public static class UILayoutDebug
+		{
+			public static Toggle<int> debugDelayMs = 3000;
+		}
+#endif
 	}
 }
