@@ -246,12 +246,12 @@ namespace UI
 
 		private async UniTask DelayBeforeDestroyAsync(CancellationToken cancellationToken, string originalName)
 		{
-			var delay =
+			int delayMs =
 #if !DebugLog
 				LayoutAutoDestroyDelayMs;
 #else
 				UILayoutDebug.debugDelayMs
-					? UILayoutDebug.debugDelayMs.value
+					? UILayoutDebug.debugDelayMs
 					: LayoutAutoDestroyDelayMs;
 #endif
 
@@ -260,16 +260,16 @@ namespace UI
 #else
 			await UniTask.NextFrame(cancellationToken: cancellationToken);
 
-			delay -= (int) (Time.unscaledDeltaTime * 1000);
+			delayMs -= (int) (Time.unscaledDeltaTime * 1000);
 			if (_layout)
 				originalName = _layout.name;
 
-			while (delay > 0)
+			while (delayMs > 0)
 			{
 				await UniTask.NextFrame(cancellationToken: cancellationToken);
 
-				delay -= (int) (Time.unscaledDeltaTime * 1000);
-				var seconds = delay / 1000f;
+				delayMs -= (int) (Time.unscaledDeltaTime * 1000);
+				var seconds = delayMs / 1000f;
 
 				if (_layout)
 					_layout.name = originalName + $" (left: {seconds:F2} sec)";
