@@ -55,8 +55,7 @@ namespace UI
 			where TLayout : UIBaseLayout
 		{
 			var operation = UILayoutFactory.InstantiateAsync(template);
-			var layout = (await operation)
-			   .First();
+			var layout = (await operation)[0];
 			if (cancellationToken.IsCancellationRequested)
 			{
 				layout.Destroy();
