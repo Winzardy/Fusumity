@@ -487,11 +487,17 @@ namespace Content.Editor
 								if (_targetToTree.hash != hash)
 								{
 									_targetToTree.tree?.Dispose();
-									_targetToTree.tree = PropertyTree.Create(rawValue);
+									_targetToTree.tree = PropertyTree.Create(rawValue, ValueEntry.SerializationBackend);
 									_targetToTree.hash = hash;
 								}
 
+								EditorGUI.BeginChangeCheck();
 								_targetToTree.tree.Draw(false);
+								if (EditorGUI.EndChangeCheck())
+								{
+									_targetToTree.tree.ApplyChanges();
+									Property.MarkSerializationRootDirty();
+								}
 
 								//Scripts/
 							}

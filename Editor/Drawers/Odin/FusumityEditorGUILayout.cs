@@ -62,7 +62,7 @@ namespace Fusumity.Editor
 			return true;
 		}
 
-		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey)
+		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey, bool useIndent = false)
 		{
 			var originalIndent = EditorGUI.indentLevel;
 
@@ -93,7 +93,11 @@ namespace Fusumity.Editor
 					var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
 					FusumityEditorGUIHelper.drawAssetReference = false;
 					{
+						if (useIndent)
+							EditorGUI.indentLevel++;
 						body();
+						if (useIndent)
+							EditorGUI.indentLevel--;
 					}
 					FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
 					OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
