@@ -23,8 +23,7 @@ namespace UI
 		protected override async UniTask<T> CreateAsync(T prefab, CancellationToken cancellationToken)
 		{
 			var operation = Object.InstantiateAsync(prefab.gameObject);
-			_gameObject = (await operation)
-			   .First();
+			_gameObject = (await operation)[0];
 
 			if (cancellationToken.IsCancellationRequested)
 			{
