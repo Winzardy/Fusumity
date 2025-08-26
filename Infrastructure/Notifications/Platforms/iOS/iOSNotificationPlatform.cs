@@ -61,11 +61,11 @@ namespace Notifications.iOS
 			if (args.TryGet<IOSPlatformNotificationArgs>(out var platformArgs))
 				notification.Subtitle = platformArgs.subtitle;
 
-			//TODO: добавить поддержку иконок через атачимент
-			//Можно передавать картинки для iOS поместив их в StreamingAssets
-			//"file://" + Path.Combine(Application.streamingAssetsPath, "pictureName.png")
-			//var iconAttachment = new iOSNotificationAttachment();
-			//notification.Attachments.Add(iconAttachment);
+			//	TODO: добавить поддержку иконок через атачимент
+			//	Можно передавать картинки для iOS поместив их в StreamingAssets
+			//	"file://" + Path.Combine(Application.streamingAssetsPath, "pictureName.png")
+			//	var iconAttachment = new iOSNotificationAttachment();
+			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
 			_notifications.Add(notification);
@@ -75,8 +75,17 @@ namespace Notifications.iOS
 
 		public void CancelAll() => iOSNotificationCenter.RemoveAllScheduledNotifications();
 
-		public void Remove(string id) => iOSNotificationCenter.RemoveDeliveredNotification(id);
-		public void RemoveAll() => iOSNotificationCenter.RemoveAllDeliveredNotifications();
+		public void Remove(string id)
+		{
+			iOSNotificationCenter.RemoveDeliveredNotification(id);
+			SetBadge(iOSNotificationCenter.ApplicationBadge - 1);
+		}
+
+		public void RemoveAll()
+		{
+			iOSNotificationCenter.RemoveAllDeliveredNotifications();
+			SetBadge(0);
+		}
 
 		public void OpenApplicationSettings() => iOSNotificationCenter.OpenNotificationSettings();
 
@@ -87,7 +96,7 @@ namespace Notifications.iOS
 		{
 			CancelAll();
 			RemoveAll();
-			SetBadge(0);
+
 		}
 
 		private void SetBadge(int amount) => iOSNotificationCenter.ApplicationBadge = amount;

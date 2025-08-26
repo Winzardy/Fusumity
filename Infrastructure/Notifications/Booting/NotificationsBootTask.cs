@@ -6,6 +6,7 @@ using Content;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Notifications;
+
 #if UNITY_ANDROID
 using Notifications.Android;
 #elif UNITY_IOS
@@ -34,21 +35,30 @@ namespace Booting.Notifications
 #elif UNITY_IOS
 			_platform = new iOSNotificationPlatform();
 #endif
-			var settings = ContentManager.Get<NotificationsSettings>();
-			var management = new NotificationsManagement(settings, _platform);
-			NotificationsCenter.Initialize(management);
+			if (_platform != null)
+			{
+				var settings = ContentManager.Get<NotificationsSettings>();
+				var management = new NotificationsManagement(settings, _platform);
+				NotificationsCenter.Initialize(management);
+			}
 
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			_platform?.Dispose();
+			if (_platform == null)
+				return;
+
+			_platform.Dispose();
 			NotificationsCenter.Terminate();
 		}
 
 		public override void OnBootCompleted()
 		{
+			if (_platform == null)
+				return;
+
 			foreach (var type in ReflectionUtility.GetAllTypes<NotificationScheduler>(false))
 			{
 				if (!NotificationsCenter.TryCreateOrRegister(type, out var scheduler))
