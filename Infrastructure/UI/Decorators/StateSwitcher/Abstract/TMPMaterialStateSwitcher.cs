@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusumity.Collections;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -19,6 +20,6 @@ namespace UI
 		private SerializableDictionary<TState, Material> _dictionary;
 
 		protected override void OnStateSwitched(TState state)
-			=> _tmp.fontMaterial = _dictionary.GetValueOrDefault(state, _default);
+			=> _tmp.fontMaterial = _dictionary.GetValueOrDefaultSafe(state, _default);
 	}
 }

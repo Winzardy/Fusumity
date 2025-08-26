@@ -14,8 +14,7 @@ namespace UI
 			public LocText locLabel;
 			public string label;
 
-			// TODO: убрать как вернусь из отпуска
-			public bool? state;
+			public string state;
 		}
 
 		private Sprite _defaultIconSprite;
@@ -60,8 +59,7 @@ namespace UI
 				_defaultLabelText
 			);
 
-			// TODO: убрать как вернусь из отпуска
-			_layout.stateSwitcher?.Switch(args.state ?? false);
+			_layout.stateSwitcher?.Switch(args.state);
 		}
 	}
 }

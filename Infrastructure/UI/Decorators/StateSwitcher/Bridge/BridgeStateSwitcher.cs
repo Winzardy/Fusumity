@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusumity.Collections;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace UI.Bridge
 
 		protected override void OnStateSwitched(TState state)
 		{
-			var linkedState = _dictionary.GetValueOrDefault(state, _default);
+			var linkedState = _dictionary.GetValueOrDefaultSafe(state, _default);
 			_switcher.Switch(linkedState);
 		}
 	}

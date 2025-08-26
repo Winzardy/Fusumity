@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusumity.Collections;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +19,6 @@ namespace UI
 		private SerializableDictionary<TState, SpriteState> _dictionary;
 
 		protected override void OnStateSwitched(TState state)
-			=> spriteTransition.SetState(_dictionary.GetValueOrDefault(state, _default));
+			=> spriteTransition.SetState(_dictionary.GetValueOrDefaultSafe(state, _default));
 	}
 }

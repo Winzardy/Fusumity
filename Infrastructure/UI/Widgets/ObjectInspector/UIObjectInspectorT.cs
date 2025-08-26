@@ -34,12 +34,6 @@ namespace UI
 			if (_args.entry.useCustomRotation)
 				_gameObject.transform.localRotation = Quaternion.Euler(_args.entry.rotation);
 
-			//TODO: костылище...
-			//Внутри персонажей есть канвас для игровой логики...
-			var canvases = _gameObject.GetComponentsInChildren<Canvas>();
-			foreach (var canvas in canvases)
-				canvas.SetActive(false);
-
 			return _gameObject.GetComponent<T>();
 		}
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusumity.Collections;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +20,7 @@ namespace UI
 
 		protected override void OnStateSwitched(TState state)
 		{
-			button.colors = _dictionary.GetValueOrDefault(state, _default);
+			button.colors = _dictionary.GetValueOrDefaultSafe(state, _default);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusumity.Collections;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -15,6 +16,6 @@ namespace UI
 		private SerializableDictionary<TState, bool> _dictionary;
 
 		protected override void OnStateSwitched(TState state)
-			=> gameObject.SetActive(_dictionary.GetValueOrDefault(state, _default));
+			=> gameObject.SetActive(_dictionary.GetValueOrDefaultSafe(state, _default));
 	}
 }

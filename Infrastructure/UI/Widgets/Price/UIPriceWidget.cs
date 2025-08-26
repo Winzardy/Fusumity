@@ -3,6 +3,12 @@ using Sapientia.Collections;
 
 namespace UI
 {
+	public static class PriceBannerState
+	{
+		public const string AVAILABLE = "Available";
+		public const string LOADING = "Loading";
+	}
+
 	public class UIPriceWidget : UIWidget<UIPriceWidgetLayout, UIPriceWidget.Args>
 	{
 		public struct Args

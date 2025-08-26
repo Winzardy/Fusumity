@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Fusumity.Collections;
 using Fusumity.Utility;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using ZenoTween;
@@ -33,7 +34,7 @@ namespace UI
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
-				_dictionary.GetValueOrDefault(state, _default)
+				_dictionary.GetValueOrDefaultSafe(state, _default)
 				   .ToTween()
 				   .Kill(true);
 
@@ -43,7 +44,7 @@ namespace UI
 
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
-				_cached[state] = tween = _dictionary.GetValueOrDefault(state, _default)
+				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
 				   .ToTween()
 				   .SetAutoKill(false);
 			}
