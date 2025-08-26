@@ -17,6 +17,8 @@ namespace UI.RadialBar
 
 	public static class RadialBarProperties
 	{
+		public const string AlternateInnerColorsEnabled = "AlternateInnerColorsEnabled";
+		public const string InnerAltColor = "InnerAltColor";
 		public const string OverlayColor = "OverlayColor";
 		public const string InnerColor = "InnerColor";
 		public const string BorderColor = "BorderColor";
@@ -272,6 +274,9 @@ namespace UI.RadialBar
 		[field: SerializeField] public ShaderPropertyBool ValueAsGradientTimeEmpty { get; private set; }
 		[field: SerializeField] public ShaderPropertyAnimationCurve VariableWidthCurve { get; private set; }
 		[field: SerializeField] public ShaderPropertyBool FillClockwise { get; private set; }
+		[field: SerializeField] public ShaderPropertyBool  AlternateInnerColorsEnabled { get; private set; }
+		[field: SerializeField] public ShaderPropertyColor InnerAltColor               { get; private set; }
+
 
 		#endregion
 
@@ -465,6 +470,13 @@ namespace UI.RadialBar
 			bool shouldPassProps = true; //SegmentCount != null && SegmentCount.Value != 0;
 			properties = new Dictionary<string, IShaderProperty>
 			{
+				[RadialBarProperties.AlternateInnerColorsEnabled] = AlternateInnerColorsEnabled =
+					new ShaderPropertyBool("_" + RadialBarProperties.AlternateInnerColorsEnabled, BoolPropertyFunc, false,
+						shouldPassProps ? AlternateInnerColorsEnabled : null),
+
+				[RadialBarProperties.InnerAltColor] = InnerAltColor =
+					new ShaderPropertyColor("_" + RadialBarProperties.InnerAltColor, ColorPropertyFunc, Color.white,
+						shouldPassProps ? InnerAltColor : null),
 				[RadialBarProperties.InnerColor] = InnerColor = new ShaderPropertyColor(
 					"_" + RadialBarProperties.InnerColor, ColorPropertyFunc, Color.white, shouldPassProps ? InnerColor : null),
 				[RadialBarProperties.OverlayColor] = OverlayColor = new ShaderPropertyColor(

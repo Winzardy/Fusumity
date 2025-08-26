@@ -25,6 +25,9 @@
         [HDR] _BorderColor("BorderColor", Color) = (1,1,1,1)
         [HDR] _SpaceColor("SpaceColor", Color) = (1,1,1,0)
 
+        [Toggle] _AlternateInnerColorsEnabled("Alternate Inner Colors", Float) = 0
+        [HDR] _InnerAltColor("Inner Alt Color", Color) = (1,1,1,1)
+
         _SegmentCount("SegmentCount", Float) = 5
         _RemoveSegments("RemoveSegments", Float) = 1
 
@@ -168,6 +171,9 @@
             float4 _EmptyColor;
             float4 _BorderColor;
             float4 _SpaceColor;
+
+            float  _AlternateInnerColorsEnabled;
+            float4 _InnerAltColor;
 
             float _SegmentCount;
             float _RemoveSegments;
@@ -570,10 +576,25 @@
 
                 #endif
 
-                //INNER_TEXTURE/COLOR
-                //float4 innerColor = _InnerColor;
-                //lerp based on pulse
-                float4 innerColor = _InnerColor;
+                // INNER_TEXTURE/COLOR
+				float4 innerColor;
+
+				if (_AlternateInnerColorsEnabled > 0.5)
+				{
+				    float2 dir = normalize(transuv);
+				    float rawAngle = atan2(dir.y, dir.x);
+				    if (rawAngle < 0)
+				    	rawAngle += pi2;
+
+				    float sectorSize = pi2 / max(_SegmentCount, 1e-4);
+				    float segIndex = floor(rawAngle / sectorSize);
+
+				    innerColor = (fmod(segIndex, 2.0) < 0.5) ? _InnerColor : _InnerAltColor;
+				}
+				else
+				{
+				    innerColor = _InnerColor;
+				}
 
                 #ifdef INNER_TEXTURE_ON
 
