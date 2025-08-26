@@ -9,6 +9,8 @@ namespace UI.RadialBar.Editor
 	{
 		#region serializedproperties
 
+		private SerializedProperty alternateInnerColorsEnabled;
+		private SerializedProperty innerAltColor;
 		private SerializedProperty parentName;
 		private SerializedProperty hbName;
 		private SerializedProperty usingSpriteRenderer;
@@ -102,6 +104,10 @@ namespace UI.RadialBar.Editor
 			forceBuiltInShader = serializedObject.FindProperty("forceBuiltInShader");
 			updatesPerSecond = serializedObject.FindProperty("updatesPerSecond");
 
+			alternateInnerColorsEnabled =
+				FindSerializedPropertyFromAutoProperty(serializedObject, RadialBarProperties.AlternateInnerColorsEnabled);
+			innerAltColor =
+				FindSerializedPropertyFromAutoProperty(serializedObject, RadialBarProperties.InnerAltColor);
 			overlayColor = FindSerializedPropertyFromAutoProperty(serializedObject, RadialBarProperties.OverlayColor);
 			innerColor = FindSerializedPropertyFromAutoProperty(serializedObject, RadialBarProperties.InnerColor);
 			borderColor = FindSerializedPropertyFromAutoProperty(serializedObject, RadialBarProperties.BorderColor);
@@ -263,6 +269,20 @@ namespace UI.RadialBar.Editor
 					new GUIContent() {text = "Main Color", tooltip = "The color of the value portion of the progress bar"});
 			}
 			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.PropertyField(
+				alternateInnerColorsEnabled,
+				new GUIContent("Alternate Inner Colors", "Чередовать InnerColor/InnerAltColor по сегментам")
+			);
+
+			if (!alternateInnerColorsEnabled.hasMultipleDifferentValues &&
+			    FindValueProperty(alternateInnerColorsEnabled).boolValue)
+			{
+				EditorGUILayout.PropertyField(
+					innerAltColor,
+					new GUIContent("Inner Alt Color", "Цвет для чередующихся сегментов")
+				);
+			}
+
 			if (hbFoldout)
 			{
 				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
