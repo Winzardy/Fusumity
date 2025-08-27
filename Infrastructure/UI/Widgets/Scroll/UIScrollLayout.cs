@@ -808,11 +808,16 @@ namespace UI.Scroll
 			return cell;
 		}
 
+
+		/// <inheritdoc cref="ReloadData(float)"/>
+		[ContextMenu("Reload")]
+		public void ReloadData() => ReloadData(0);
+
 		/// <summary>
 		/// This resets the internal size list and refreshes the cells
 		/// </summary>
 		/// <param name="scrollPositionFactor">The percentage of the Scroll to start at between 0 and 1, 0 being the start of the Scroll</param>
-		public void ReloadData(float scrollPositionFactor = 0)
+		public void ReloadData(float scrollPositionFactor)
 		{
 			_reloadDataRequest = false;
 

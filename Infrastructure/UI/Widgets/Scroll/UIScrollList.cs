@@ -354,9 +354,12 @@ namespace UI.Scroll
 
 			if (layout.preserveTemplate)
 				SetupItemLayout(layout.template);
+
+			RequestReloadDataAsync(2)
+			   .Forget();
 		}
 
-		public void SetupItemLayout(UIScrollItemLayout itemTemplate)
+		private void SetupItemLayout(UIScrollItemLayout itemTemplate)
 		{
 			var template = itemTemplate as TItemLayout;
 
@@ -491,5 +494,15 @@ namespace UI.Scroll
 
 		private void UpdateScrollSequence() =>
 			_scrollSequence?.Goto(_layout.ContentSize > _layout.ViewportSize ? _layout.NormalizedScrollPosition : 0);
+
+		/// Пока не нашел лучше способа починить поломанную дату в ScrollList
+		private async UniTaskVoid RequestReloadDataAsync(int delayFrame = 1)
+		{
+			if (delayFrame > 0)
+				await UniTask.DelayFrame(delayFrame);
+
+			if (_layout)
+				_layout.ReloadData(_layout.NormalizedScrollPosition);
+		}
 	}
 }
