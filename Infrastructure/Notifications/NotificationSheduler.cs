@@ -6,7 +6,7 @@ using UnityEngine.Scripting;
 namespace Notifications
 {
 	/// <summary>
-	/// Базовая реализация, дублирует предназначение <see cref="Game.Presenters.IPresenter"/> (со своими особенностями)
+	/// Базовая реализация, дублирует предназначение <see cref="IPresenter"/> (со своими особенностями)
 	/// </summary>
 	[Preserve]
 	public abstract class NotificationScheduler : MessageSubscriber

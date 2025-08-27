@@ -33,7 +33,6 @@ namespace Notifications
 
 			_platform.NotificationReceived += OnNotificationReceived;
 
-
 			//Очищаем все уведомления при запуске и пересоздаем. Это решаем вопросы с призрачными уведомлениями
 			if (!_settings.disableClearAllOnStart)
 			{

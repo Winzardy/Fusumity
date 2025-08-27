@@ -13,11 +13,6 @@ namespace Notifications.iOS
 	[Preserve]
 	public class iOSNotificationPlatform : INotificationPlatform
 	{
-		/// <summary>
-		/// Runtime коллекция, нужна чтобы пересобрать нотификации...
-		/// </summary>
-		private SimpleList<iOSNotification> _notifications = new();
-
 		public event Action<string, string> NotificationReceived;
 
 		public iOSNotificationPlatform()
@@ -40,8 +35,7 @@ namespace Notifications.iOS
 			var notification = new iOSNotification(args.id)
 			{
 				Title = args.title,
-				Body = args.message,
-				Badge = _notifications.Count,
+				Body = args.message
 			};
 
 			var date = args.deliveryTime!.Value;
@@ -52,11 +46,14 @@ namespace Notifications.iOS
 				Day = date.Day,
 				Hour = date.Hour,
 				Minute = date.Minute,
-				Second = date.Second
+				Second = date.Second,
+				Repeats = false,
+				UtcTime = false
 			};
 
 			var notificationEntry = args.entry;
 			notification.ShowInForeground = notificationEntry.showInForeground;
+			notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
 
 			if (args.TryGet<IOSPlatformNotificationArgs>(out var platformArgs))
 				notification.Subtitle = platformArgs.subtitle;
@@ -68,7 +65,6 @@ namespace Notifications.iOS
 			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
-			_notifications.Add(notification);
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);
@@ -78,7 +74,7 @@ namespace Notifications.iOS
 		public void Remove(string id)
 		{
 			iOSNotificationCenter.RemoveDeliveredNotification(id);
-			SetBadge(iOSNotificationCenter.ApplicationBadge - 1);
+			SetBadge(iOSNotificationCenter.GetDeliveredNotifications().Length);
 		}
 
 		public void RemoveAll()
@@ -91,13 +87,6 @@ namespace Notifications.iOS
 
 		public string GetLastIntentNotificationId() => iOSNotificationCenter.QueryLastRespondedNotification()
 		   .Notification?.Identifier;
-
-		public void ClearAll()
-		{
-			CancelAll();
-			RemoveAll();
-
-		}
 
 		private void SetBadge(int amount) => iOSNotificationCenter.ApplicationBadge = amount;
 	}
