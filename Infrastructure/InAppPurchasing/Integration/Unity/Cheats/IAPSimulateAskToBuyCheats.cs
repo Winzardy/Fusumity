@@ -1,4 +1,4 @@
-#if UNITY_IOS
+#if DebugLog && UNITY_IOS
 using InAppPurchasing.Cheats;
 using MobileConsole;
 
