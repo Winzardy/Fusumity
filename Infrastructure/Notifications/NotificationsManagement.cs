@@ -105,7 +105,7 @@ namespace Notifications
 		private void OnNotificationReceived(string id, string data)
 		{
 			// Очищаем уведомление на которое тыкнули во включенном приложении
-			Remove(id);
+			// Remove(id);
 
 			// TODO: Добавить по надобности Receivers..
 		}
