@@ -14,7 +14,7 @@ namespace Trading
 	public class TradeManagement : ITradeManagement
 	{
 		// Заглушка только для offline режима
-		private ITradingBackend _dummyBackend;
+		private ITradingNode _dummyNode;
 
 		private readonly ITradingService _service;
 
@@ -99,8 +99,8 @@ namespace Trading
 			if (_service != null)
 				return TradeExecuteError.NotError;
 
-			_dummyBackend ??= new DummyTradingBackend();
-			using var _ = tradeboard.Register(_dummyBackend);
+			_dummyNode ??= new DummyTradingNode();
+			using var _ = tradeboard.Register(_dummyNode);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Execute(in trade, tradeboard))
@@ -168,8 +168,8 @@ namespace Trading
 			if (_service != null || !fullPay)
 				return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
 
-			_dummyBackend ??= new DummyTradingBackend();
-			using var __ = tradeboard.Register(_dummyBackend);
+			_dummyNode ??= new DummyTradingNode();
+			using var __ = tradeboard.Register(_dummyNode);
 
 			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
 			if (TradeAccess.Pay(cost, tradeboard))
@@ -180,11 +180,12 @@ namespace Trading
 	}
 
 	// TODO: не нравится, убрать...
-	public class DummyTradingBackend : ITradingBackend
+	public class DummyTradingNode : ITradingNode
 	{
-		private UsageLimitModel _empty;
+		private UsageLimitData _empty;
 		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt => null;
-		public ref UsageLimitModel GetUsageModel(SerializableGuid guid) => ref _empty;
+		public ref UsageLimitData GetUsageModel(SerializableGuid guid) => ref _empty;
+		public DateTime GetTime(bool _ = false) => DateTime.UtcNow;
 	}
 
 	public interface ITradingServiceFactory

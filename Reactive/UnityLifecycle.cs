@@ -139,7 +139,7 @@ namespace Fusumity.Reactive
 				return;
 
 			var ticks = (accumulator / interval)
-			   .CeilToInt();
+			   .FloorToInt();
 
 			if (ticks > maxCatchUpTicks)
 				ticks = maxCatchUpTicks;
@@ -147,7 +147,7 @@ namespace Fusumity.Reactive
 			accumulator -= ticks * interval;
 
 			for (int i = 0; i < ticks; i++)
-				action.ImmediatelyInvoke();
+				action?.ImmediatelyInvoke();
 		}
 	}
 }

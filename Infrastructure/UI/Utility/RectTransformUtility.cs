@@ -119,9 +119,7 @@ namespace UI
 
 		public static void Reset(this RectTransform rectTransform)
 		{
-			rectTransform.localPosition = Vector3.zero;
-			rectTransform.localRotation = Quaternion.identity;
-			rectTransform.localScale = Vector3.one;
+			rectTransform.ResetTransform();
 		}
 
 		public static void CopyFrom(this RectTransform target, RectTransform source)
