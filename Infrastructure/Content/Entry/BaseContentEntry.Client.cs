@@ -48,6 +48,11 @@ namespace Content
 		private ISerializeReference<T> _serializeReference = null;
 	}
 
+	public partial struct ContentEntry<T, TFilter>
+	{
+		public ref readonly T Value => ref entry.Value;
+	}
+
 	public static class BaseContentEntryExtensions
 	{
 		public static bool IsSerializeReference(this Type type)
