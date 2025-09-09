@@ -139,7 +139,7 @@ namespace Notifications.Android
 		{
 			//TODO: есть еще какие-то AndroidNotificationChannelGroup...
 
-			foreach (var (id, contentEntry) in ContentManager.GetAll<AndroidNotificationChannelEntry>())
+			foreach (var (id, contentEntry) in ContentManager.GetAllEntries<AndroidNotificationChannelEntry>())
 			{
 				if (id.IsNullOrEmpty())
 					continue;

@@ -12,7 +12,7 @@ namespace UI.Screens
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAll<UIScreenEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIScreenEntry>())
 				{
 					ref readonly var screen = ref entry.Value;
 

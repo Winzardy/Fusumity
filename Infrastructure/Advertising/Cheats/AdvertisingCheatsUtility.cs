@@ -17,7 +17,7 @@ namespace Advertising.Cheats
 		{
 			using (ListPool<string>.Get(out var list))
 			{
-				foreach (var (id, _) in ContentManager.GetAll<T>())
+				foreach (var (id, _) in ContentManager.GetAllEntries<T>())
 					list.Add(id);
 
 				if (list.IsEmpty())

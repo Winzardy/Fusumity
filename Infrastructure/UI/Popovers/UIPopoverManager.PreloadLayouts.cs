@@ -12,7 +12,7 @@ namespace UI.Popovers
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAll<UIPopoverEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIPopoverEntry>())
 				{
 					ref readonly var popover = ref entry.Value;
 

@@ -13,7 +13,7 @@ namespace UI.Windows
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAll<UIWindowEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIWindowEntry>())
 				{
 					ref readonly var window = ref entry.Value;
 

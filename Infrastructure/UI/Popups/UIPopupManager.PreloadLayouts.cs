@@ -12,7 +12,7 @@ namespace UI.Popups
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAll<UIPopupEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIPopupEntry>())
 				{
 					ref readonly var popup = ref entry.Value;
 

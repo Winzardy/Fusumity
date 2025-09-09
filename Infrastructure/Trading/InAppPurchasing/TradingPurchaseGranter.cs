@@ -74,7 +74,7 @@ namespace Trading.InAppPurchasing
 		{
 			_iapProductToOffer = new();
 
-			foreach (var traderContentEntry in ContentManager.GetAll<TraderEntry>())
+			foreach (var traderContentEntry in ContentManager.GetAllEntries<TraderEntry>())
 			{
 				var traderReference = traderContentEntry.ToReference();
 

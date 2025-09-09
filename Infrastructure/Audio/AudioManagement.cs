@@ -88,7 +88,7 @@ namespace Audio
 
 			SetVolume(_masterMixer.id, LoadMixerVolume(_masterMixer.id));
 
-			foreach (var (id, _) in ContentManager.GetAll<AudioMixerGroupEntry>())
+			foreach (var (id, _) in ContentManager.GetAllEntries<AudioMixerGroupEntry>())
 				SetVolume(id, LoadMixerVolume(id));
 		}
 
@@ -317,7 +317,7 @@ namespace Audio
 
 		internal IEnumerable<(string, AudioMixerGroupEntry)> GetConfigurableMixer()
 		{
-			foreach (var (id, mixer) in ContentManager.GetAll<AudioMixerGroupEntry>())
+			foreach (var (id, mixer) in ContentManager.GetAllEntries<AudioMixerGroupEntry>())
 			{
 				if (mixer.configurable)
 					yield return (id, mixer);

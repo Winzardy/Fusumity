@@ -21,6 +21,9 @@ namespace Trading
 			return TradeManager.CanPay(cost, tradeboard, out error);
 		}
 
+		/// <summary>
+		/// Собирает чеки и отправляет их
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<TradePayError?> PayAsync(this ContentReference<TradeCost> reference, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
