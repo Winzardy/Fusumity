@@ -26,6 +26,7 @@ namespace Fusumity.Reactive
 		public static event Action GestureBackEvent;
 
 		public static readonly DelayableAction UpdateEvent = new();
+		public static readonly DelayableAction OnGUIEvent = new();
 		public static readonly DelayableAction FixedUpdateEvent = new();
 		public static readonly DelayableAction LateUpdateEvent = new();
 
@@ -47,6 +48,11 @@ namespace Fusumity.Reactive
 		private void Update()
 		{
 			UpdateEvent.ImmediatelyInvoke();
+		}
+
+		private void OnGUI()
+		{
+			OnGUIEvent.ImmediatelyInvoke();
 		}
 
 		private void FixedUpdate()
