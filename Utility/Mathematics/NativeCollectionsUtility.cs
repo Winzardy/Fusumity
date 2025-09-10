@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Memory;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
