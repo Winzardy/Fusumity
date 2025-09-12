@@ -8,13 +8,20 @@ using UnityEngine;
 namespace Fusumity.Collections
 {
 	[Serializable]
-	public class EnumList<TEnum, TValue> : EnumList<TEnum, TValue, EnumValueEditableEnum<TEnum, TValue>>
+	public class EnumReferenceList<TEnum, TValue> : BaseEnumList<TEnum, EnumReferenceValueEditableEnum<TEnum, TValue>>
+		where TEnum : unmanaged, Enum
+		where TValue : class
+	{
+	}
+
+	[Serializable]
+	public class EnumList<TEnum, TValue> : BaseEnumList<TEnum, EnumValueEditableEnum<TEnum, TValue>>
 		where TEnum : unmanaged, Enum
 	{
 	}
 
 	[Serializable]
-	public class EnumList<TEnum, TValue, TEnumValue>
+	public class BaseEnumList<TEnum, TEnumValue>
 		: ISerializationCallbackReceiver
 #if UNITY_EDITOR
 			, IArrayContainer
@@ -72,7 +79,15 @@ namespace Fusumity.Collections
 
 	public static class EnumListExtensions
 	{
-		public static IEnumerable<TEnum> ToEnums<TEnum, TData>(this EnumList<TEnum, TData> enumList)
+		public static IEnumerable<TEnum> ToEnums<TEnum, TValue>(this EnumReferenceList<TEnum, TValue> enumList)
+			where TEnum : unmanaged, Enum
+			where TValue : class
+		{
+			for (var i = 0; i < enumList.Count; i++)
+				yield return enumList[i].enumValue;
+		}
+
+		public static IEnumerable<TEnum> ToEnums<TEnum, TValue>(this EnumList<TEnum, TValue> enumList)
 			where TEnum : unmanaged, Enum
 		{
 			for (var i = 0; i < enumList.Count; i++)

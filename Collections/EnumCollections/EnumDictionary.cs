@@ -6,7 +6,7 @@ using Sapientia.Extensions;
 namespace Fusumity.Collections
 {
 	[Serializable]
-	public class EnumDictionary<TEnum, TValue> : EnumList<TEnum, TValue, EnumValueEditableEnum<TEnum, TValue>>
+	public class EnumDictionary<TEnum, TValue> : BaseEnumList<TEnum, EnumValueEditableEnum<TEnum, TValue>>
 		where TEnum : unmanaged, Enum
 	{
 		private int[] _enumIndexToIndex;
