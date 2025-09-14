@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -29,24 +30,25 @@ namespace Fusumity.Collections
 		where TEnum : unmanaged, Enum
 		where TEnumValue : struct, IEnumValue<TEnum>
 	{
+		[FormerlySerializedAs("elements")]
 		[SerializeField, HideLabel, InlineProperty]
-		public TEnumValue[] elements = new TEnumValue[0];
+		public TEnumValue[] values = new TEnumValue[0];
 
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => elements.Length;
+			get => values.Length;
 		}
 
 		public ref TEnumValue this[int i]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref elements[i];
+			get => ref values[i];
 		}
 
 		public void Add(TEnumValue value)
 		{
-			ArrayExt.Add(ref elements, value);
+			ArrayExt.Add(ref values, value);
 		}
 
 		public virtual void OnBeforeSerialize()
@@ -66,12 +68,12 @@ namespace Fusumity.Collections
 #if UNITY_EDITOR
 		protected virtual void OnValuesUpdated(bool isSerialize)
 		{
-			for (var i = 0; i < elements.Length; i++)
+			for (var i = 0; i < values.Length; i++)
 			{
-				if (!isSerialize && Enum.TryParse<TEnum>(elements[i].EnumValueName, out var enumValue))
-					elements[i].EnumValue = enumValue;
+				if (!isSerialize && Enum.TryParse<TEnum>(values[i].EnumValueName, out var enumValue))
+					values[i].EnumValue = enumValue;
 				else
-					elements[i].EnumValueName = elements[i].EnumValue.ToString();
+					values[i].EnumValueName = values[i].EnumValue.ToString();
 			}
 		}
 #endif

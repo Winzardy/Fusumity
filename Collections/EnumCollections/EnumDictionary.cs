@@ -14,7 +14,7 @@ namespace Fusumity.Collections
 		public ref EnumValueEditableEnum<TEnum, TValue> this[TEnum enumValue]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref elements[GetIndexOf(enumValue)];
+			get => ref values[GetIndexOf(enumValue)];
 		}
 
 		public bool TryGetValue(TEnum enumValue, out TValue value)
@@ -27,7 +27,7 @@ namespace Fusumity.Collections
 			index = GetIndexOf(enumValue);
 			if (index >= 0)
 			{
-				value = elements[index].value;
+				value = values[index].value;
 				return true;
 			}
 
@@ -46,9 +46,9 @@ namespace Fusumity.Collections
 		{
 			_enumIndexToIndex = new int[EnumValues<TEnum>.ENUM_LENGHT];
 			_enumIndexToIndex.Fill(-1);
-			for (var i = 0; i < elements.Length; i++)
+			for (var i = 0; i < values.Length; i++)
 			{
-				var enumIndex = EnumToIndex<TEnum>.GetIndex(elements[i].enumValue);
+				var enumIndex = EnumToIndex<TEnum>.GetIndex(values[i].enumValue);
 				_enumIndexToIndex[enumIndex] = i;
 			}
 
