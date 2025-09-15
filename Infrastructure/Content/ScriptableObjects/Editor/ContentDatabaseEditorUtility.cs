@@ -107,6 +107,7 @@ namespace Content.ScriptableObjects.Editor
 
 			AssetDatabase.SaveAssets();
 			ContentEditorCache.Refresh();
+			ContentEntryEditorUtility.ClearCache();
 		}
 
 		public static bool Validate(this ContentDatabaseScriptableObject database, out string message)
