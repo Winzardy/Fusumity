@@ -61,7 +61,7 @@ namespace InAppPurchasing.Offline
 			return null;
 		}
 
-		public string[] GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
+		public IEnumerable<string> GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
 		   .ToArray();
 
 		public DateTime GetUtcNow() => DateTime.UtcNow;

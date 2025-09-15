@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using DG.Tweening;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using UnityEngine;
 using ZenoTween;
 
@@ -157,7 +158,7 @@ namespace UI
 				_layout.rectTransform.SetAsLastSibling();
 
 			var withoutAnimation = _animator == null ||
-				_suppressFlag.HasFlag(SuppressFlag.Animation);
+				_suppressFlag.Has(SuppressFlag.Animation);
 
 			OnPrepareOpening();
 
