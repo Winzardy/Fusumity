@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Fusumity.Attributes.Odin;
 using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Fusumity.Collections
 {
@@ -69,16 +69,12 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
+	[SingleFieldInline]
 	public class BaseEnumList<TEnum, TEnumValue>
 		: ISerializationCallbackReceiver
-#if UNITY_EDITOR
-			, IArrayContainer
-#endif
 		where TEnum : unmanaged, Enum
 		where TEnumValue : struct, IEnumValue<TEnum>
 	{
-		[FormerlySerializedAs("elements")]
-		[SerializeField, HideLabel, InlineProperty]
 		public TEnumValue[] values = new TEnumValue[0];
 
 		public int Count
