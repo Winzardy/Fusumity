@@ -4,16 +4,16 @@ namespace SharedLogic
 	{
 		public static ICommandRunner commandRunner;
 
-		public static bool PushCommand<T>(this ISharedRoot root)
+		public static bool ExecuteCommand<T>(this ISharedRoot root)
 			where T : struct, ICommand
 		{
-			return PushCommand(root, new T());
+			return ExecuteCommand(root, new T());
 		}
 
-		public static bool PushCommand<T>(this ISharedRoot root, in T command)
+		public static bool ExecuteCommand<T>(this ISharedRoot root, in T command)
 			where T : struct, ICommand
 		{
-			if (command is ITimedCommand)
+			if (command is ICommand)
 			{
 				var timedCommand = new TimedCommand(commandRunner.Timestamp);
 				commandRunner.Execute(in timedCommand);

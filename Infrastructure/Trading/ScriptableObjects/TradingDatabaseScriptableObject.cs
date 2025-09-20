@@ -15,6 +15,5 @@ namespace Content.ScriptableObjects.Trading
 #endif
 	public class TradingDatabaseScriptableObject : ContentDatabaseScriptableObject
 	{
-
 	}
 }
