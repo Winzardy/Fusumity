@@ -66,6 +66,11 @@ namespace Fusumity.Collections
 
 			return result;
 		}
+
+		public static implicit operator EnumList<TEnum>(ShortEnumMask<TEnum> mask)
+		{
+			return (EnumMask<TEnum>)mask;
+		}
 	}
 
 	[Serializable]
