@@ -76,7 +76,7 @@ namespace Content.Editor
 				if (reference == null)
 					continue;
 
-				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
+				if (!IsValid(entry, reference))
 				{
 					iterator.RegenerateGuid(entry, asset, refreshAndSave);
 
@@ -92,11 +92,18 @@ namespace Content.Editor
 
 				Track((asset, reference), in entry.Guid);
 			} while (iterator.Next(true));
+
+			bool IsValid(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
+				=> entry.Guid != SerializableGuid.Empty && scriptableObject.ScriptableContentEntry
+				   .RegisterNestedEntry(entry.Guid, reference);
 		}
 
 		/// <returns><c>true</c>, если запомнили без проблем; иначе <c>false</c></returns>
 		public static bool Remember(this IContentEntryScriptableObject source, in SerializableGuid guid)
 		{
+			if (guid == SerializableGuid.Empty)
+				return false;
+
 			if (_guidToSource.TryAdd(guid, source))
 				return true;
 
