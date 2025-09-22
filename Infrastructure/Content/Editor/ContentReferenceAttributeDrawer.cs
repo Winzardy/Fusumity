@@ -33,6 +33,14 @@ namespace Content.Editor
 
 		private bool _guidRawMode;
 
+		protected override bool CanDrawValueProperty(InspectorProperty property)
+		{
+			if (ContentReferenceAttributeProcessor.propertyToContentReferenceAttribute.ContainsKey(property))
+				return false;
+
+			return base.CanDrawValueProperty(property);
+		}
+
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var output = FusumityEditorGUILayout.DrawGuidField(ValueEntry.SmartValue, label, ref _guidRawMode);
@@ -651,7 +659,7 @@ namespace Content.Editor
 
 		private IContentEntrySource FindSelectedSource(IContentReference reference)
 		{
-			if (ContentEditorCache.TryGetSource(reference, out var source))
+			if (ContentEditorCache.TryGetSource(reference, _valueType, out var source))
 			{
 				_found = true;
 				return source;
@@ -661,7 +669,7 @@ namespace Content.Editor
 				return null;
 
 			ContentEditorCache.Refresh();
-			if (ContentEditorCache.TryGetSource(reference, out source))
+			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
 				_found = true;
 				return source;

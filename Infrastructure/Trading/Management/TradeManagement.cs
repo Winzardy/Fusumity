@@ -185,7 +185,8 @@ namespace Trading
 		private UsageLimitData _empty;
 		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt => null;
 		public ref UsageLimitData GetUsageModel(SerializableGuid guid) => ref _empty;
-		public DateTime GetTime(bool _ = false) => DateTime.UtcNow;
+		public DateTime DateTime => DateTime.UtcNow;
+		public DateTime VirtualDateTime => DateTime.UtcNow;
 	}
 
 	public interface ITradingServiceFactory

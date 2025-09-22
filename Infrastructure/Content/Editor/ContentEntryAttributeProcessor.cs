@@ -2,13 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Attributes.Specific;
 using Fusumity.Utility;
-using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.OdinInspector.Editor.ValueResolvers;
 using UnityEngine;
 
 namespace Content.Editor
@@ -48,7 +46,7 @@ namespace Content.Editor
 
 					//TODO: Добавить свой AssetSelector...
 					if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
-						attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
+						attributes.Add(new FastAssetSelectorAttribute());
 
 					if (contentEntry.ValueType.IsSerializeReference())
 					{

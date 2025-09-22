@@ -21,6 +21,8 @@ namespace InAppPurchasing.Offline
 		private bool _saving;
 		private readonly HashSet<string> _transactionsToSave = new();
 
+		public DateTime DateTime => DateTime.UtcNow;
+
 		public void Initialize()
 		{
 			UnityLifecycle.ApplicationShutdown += SaveTransactions;
@@ -63,8 +65,6 @@ namespace InAppPurchasing.Offline
 
 		public IEnumerable<string> GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
 		   .ToArray();
-
-		public DateTime GetUtcNow() => DateTime.UtcNow;
 
 		private async UniTaskVoid SaveTransactionAsync()
 		{

@@ -606,7 +606,7 @@ namespace InAppPurchasing.Unity
 						}
 
 						var purchaseDate = receipt.purchaseDate;
-						var nowDate = _service.GetUtcNow();
+						var nowDate = _service.DateTime;
 						if (purchaseDate > nowDate.AddMinutes(TOLERANCE_MINUTES))
 						{
 							IAPDebug.LogWarning($"{PREFIX} Future-dated purchase (possibly deferred): {purchaseDate} > {nowDate}");

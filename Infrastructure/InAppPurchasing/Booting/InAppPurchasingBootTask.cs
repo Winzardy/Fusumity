@@ -6,6 +6,7 @@ using Fusumity.Utility;
 using InAppPurchasing;
 using InAppPurchasing.Offline;
 using InAppPurchasing.Unity;
+using Sapientia;
 using Sirenix.OdinInspector;
 using Targeting;
 using UnityEngine;
@@ -84,12 +85,12 @@ namespace Booting.InAppPurchasing
 		protected override void OnDispose()
 		{
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_integration is IDisposable disposable)
-				disposable.Dispose();
+			if (_integration is IDisposable integration)
+				integration.Dispose();
 
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable disposable2)
-				disposable2.Dispose();
+			if (_service is IDisposable service)
+				service.Dispose();
 
 			_storePromotionalCompletionSource?.TrySetCanceled();
 
@@ -98,10 +99,11 @@ namespace Booting.InAppPurchasing
 
 		public override void OnBootCompleted()
 		{
-			_storePromotionalCompletionSource.TrySetResult();
-			_storePromotionalCompletionSource = null;
+			UniTaskUtility.TrySetResultAndSetNull(ref _storePromotionalCompletionSource);
 
-			_service.Initialize();
+			if (_service is IInitializable service)
+				service.Initialize();
+
 			InitializeGrantCenterAsync().Forget();
 		}
 

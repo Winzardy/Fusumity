@@ -1,18 +1,14 @@
 {
-    "name": "Fusumity",
+    "name": "Content.ScriptableObjects.SharedLogic",
     "rootNamespace": "",
     "references": [
-        "UniTask",
-        "Sapientia",
-        "Unity.Addressables",
-        "Unity.ResourceManager",
-        "Unity.Collections",
-        "Unity.Mathematics",
-        "Unity.Burst"
+        "Content",
+        "Content.ScriptableObjects",
+        "SharedLogic"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

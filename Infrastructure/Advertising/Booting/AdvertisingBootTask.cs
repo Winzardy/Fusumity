@@ -8,6 +8,7 @@ using Advertising;
 using Advertising.Offline;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #if FAKE
@@ -55,14 +56,20 @@ namespace Booting.Advertising
 		protected override void OnDispose()
 		{
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_integration is IDisposable disposable)
-				disposable.Dispose();
+			if (_integration is IDisposable integration)
+				integration.Dispose();
 
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable disposable2)
-				disposable2.Dispose();
+			if (_service is IDisposable service)
+				service.Dispose();
 
 			AdManager.Terminate();
+		}
+
+		public override void OnBootCompleted()
+		{
+			if (_service is IInitializable service)
+				service.Initialize();
 		}
 	}
 }

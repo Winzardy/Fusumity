@@ -349,18 +349,18 @@ namespace Fusumity.Editor
 			GUI.Label(labelRect, text, textStyle);
 		}
 
-		public static void SuffixLabel(string text, bool overlay = true)
+		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
 		{
 			var style = new GUIStyle(EditorStyles.label)
 			{
 				fontSize = EditorStyles.textField.fontSize - 3,
 				normal =
 				{
-					textColor = Color.gray
+					textColor = textColor ?? Color.gray
 				},
 				hover =
 				{
-					textColor = Color.gray
+					textColor = textColor ?? Color.gray
 				}
 			};
 

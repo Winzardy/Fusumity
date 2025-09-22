@@ -109,8 +109,13 @@ namespace Content.Editor
 
 		public static bool TryGetSource(IContentReference reference, out IContentEntrySource source)
 		{
+			return TryGetSource(reference, reference.ValueType, out source);
+		}
+
+		public static bool TryGetSource(IContentReference reference, Type valueType, out IContentEntrySource source)
+		{
 			if (reference.IsSingle)
-				return TryGetSource(reference.ValueType, out source);
+				return TryGetSource(valueType, out source);
 
 			if (reference.IsEmpty())
 			{
@@ -118,7 +123,7 @@ namespace Content.Editor
 				return true;
 			}
 
-			return TryGetSource(reference.ValueType, reference.Guid, out source);
+			return TryGetSource(valueType, reference.Guid, out source);
 		}
 
 		public static bool AnyByValueType<T>()
