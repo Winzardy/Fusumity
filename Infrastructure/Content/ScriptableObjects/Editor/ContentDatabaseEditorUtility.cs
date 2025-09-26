@@ -235,6 +235,8 @@ namespace Content.ScriptableObjects.Editor
 									continue;
 
 								all.Add(scriptableObject);
+								scriptableObject.SyncedUpdate();
+
 								Refresh(scriptableObject);
 								TryAddToGenerator(scriptableObject, dictionary);
 							}
