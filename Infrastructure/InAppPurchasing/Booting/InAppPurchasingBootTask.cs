@@ -1,3 +1,6 @@
+#if DebugLog
+#define IAP_DEBUG
+#endif
 using System;
 using System.Threading;
 using Content;
@@ -64,7 +67,11 @@ namespace Booting.InAppPurchasing
 			   .ContinueWith(OnInitialized)
 			   .Forget();
 
-			var management = new IAPManagement(_integration, _service, _grantCenter);
+			var management = new IAPManagement(_integration, _service
+#if IAP_DEBUG
+				, _grantCenter
+#endif
+			);
 			IAPManager.Initialize(management);
 
 			return UniTask.CompletedTask;

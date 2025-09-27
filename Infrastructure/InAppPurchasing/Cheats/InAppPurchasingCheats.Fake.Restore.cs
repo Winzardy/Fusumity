@@ -1,3 +1,4 @@
+#if DebugLog
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,3 +74,4 @@ namespace InAppPurchasing.Cheats
 		}
 	}
 }
+#endif

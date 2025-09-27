@@ -11,7 +11,7 @@ namespace Content
 	{
 		IContentEntry IFilteredContentEntry.Entry => entry;
 		Type IFilteredContentEntry.Type => typeof(TFilter);
-		void IFilteredContentEntry.SetValue(object value) => entry.SetValue((T) value);
+		public void SetValue(object value) => entry.SetValue((T) value);
 	}
 
 	/// <summary>

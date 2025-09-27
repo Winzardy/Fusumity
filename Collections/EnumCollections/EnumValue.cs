@@ -116,6 +116,38 @@ namespace Fusumity.Collections
 		}
 	}
 
+	[Serializable]
+	public struct EnumReferenceValueEditableEnum<TEnum, TValue> : IComparable<EnumReferenceValueEditableEnum<TEnum, TValue>>, IEnumValue<TEnum>
+		where TEnum: unmanaged, Enum
+		where TValue : class
+	{
+		[SerializeField, HideInInspector]
+		private string enumValueName;
+
+		[HideLabel]
+		public TEnum enumValue;
+		[HideLabel]
+		[SerializeReference]
+		public TValue value;
+
+		TEnum IEnumValue<TEnum>.EnumValue
+		{
+			get => enumValue;
+			set => enumValue = value;
+		}
+
+		string IEnumValue<TEnum>.EnumValueName
+		{
+			get => enumValueName;
+			set => enumValueName = value;
+		}
+
+		public int CompareTo(EnumReferenceValueEditableEnum<TEnum, TValue> other)
+		{
+			return EnumToIndex<TEnum>.GetIndex(enumValue).CompareTo(EnumToIndex<TEnum>.GetIndex(other.enumValue));
+		}
+	}
+
 	public interface IEnumValue<TEnum>
 	{
 		public TEnum EnumValue { get; set; }
