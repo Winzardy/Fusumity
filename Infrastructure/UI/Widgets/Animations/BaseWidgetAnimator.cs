@@ -29,7 +29,7 @@ namespace UI
 		private string _lastKey;
 
 		[CanBeNull]
-		protected IWidget _widget;
+		protected IWidget _rawWidget;
 
 		protected TLayout _layout;
 
@@ -50,7 +50,7 @@ namespace UI
 			OnInitialized();
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 #if UNITY_EDITOR
 			if (_layout)
@@ -58,7 +58,7 @@ namespace UI
 #endif
 
 			_layout = null;
-			_widget = null;
+			_rawWidget = null;
 
 			_keyToSequenceCreator?.ReleaseToStaticPool();
 			_keyToSequenceCreator = null;
@@ -79,9 +79,9 @@ namespace UI
 			OnSetup(widget);
 		}
 
-		protected virtual void OnSetup(UIWidget widget)
+		protected virtual void OnSetup(UIWidget rawWidget)
 		{
-			_widget = widget;
+			_rawWidget = rawWidget;
 		}
 
 		public bool SetupLayout(TLayout layout)
@@ -322,9 +322,9 @@ namespace UI
 
 		private void SetVisible(bool active)
 		{
-			if (_widget != null)
+			if (_rawWidget != null)
 			{
-				_widget.SetVisible(active);
+				_rawWidget.SetVisible(active);
 				return;
 			}
 
@@ -368,13 +368,25 @@ namespace UI
 
 	public abstract class BaseWidgetAnimator<TLayout, TWidget> : BaseWidgetAnimator<TLayout>
 		where TLayout : UIBaseLayout
+		where TWidget : class, IWidget
 	{
-		protected override void OnSetup(UIWidget widget)
+		protected TWidget _widget;
+
+		protected override void OnSetup(UIWidget rawWidget)
 		{
-			if (widget is not TWidget)
+			if (rawWidget is not TWidget widget)
+			{
 				throw new Exception($"Invalid widget type [ {typeof(TWidget)} ]");
+			}
 
 			_widget = widget;
+			_rawWidget = rawWidget;
+		}
+
+		public override void Dispose()
+		{
+			_widget = null;
+			base.Dispose();
 		}
 	}
 
