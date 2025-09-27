@@ -60,14 +60,12 @@ namespace UI
 			_layout = null;
 			_rawWidget = null;
 
-			_keyToSequenceCreator?.ReleaseToStaticPool();
-			_keyToSequenceCreator = null;
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _keyToSequenceCreator);
 
 			foreach (var layer in _layers.Values)
 				layer.tween?.KillSafe();
 
-			_layers.ReleaseToStaticPool();
-			_layers = null;
+			StaticObjectPoolUtility.ReleaseAndSetNull(ref _layers);
 
 			OnDispose();
 
@@ -375,9 +373,7 @@ namespace UI
 		protected override void OnSetup(UIWidget rawWidget)
 		{
 			if (rawWidget is not TWidget widget)
-			{
 				throw new Exception($"Invalid widget type [ {typeof(TWidget)} ]");
-			}
 
 			_widget = widget;
 			_rawWidget = rawWidget;
