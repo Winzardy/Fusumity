@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Trading
 {
-	public partial struct TraderEntry
+	public partial struct TraderConfig
 	{
 		//public LocKey name;
 		[PropertySpace(0,10)]

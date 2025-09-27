@@ -8,7 +8,7 @@ namespace UI
 	{
 		public struct Args
 		{
-			public AssetReferenceEntry<Sprite> iconReference;
+			public AssetReferenceEntry<Sprite> iconRef;
 			public Sprite icon;
 
 			public LocText locLabel;
@@ -47,7 +47,7 @@ namespace UI
 			_layout.icon.SetSpriteSafe
 			(
 				_spriteAssigner,
-				args.iconReference,
+				args.iconRef,
 				args.icon,
 				_defaultIconSprite
 			);

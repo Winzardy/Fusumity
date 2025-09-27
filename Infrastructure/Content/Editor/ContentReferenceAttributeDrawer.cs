@@ -62,7 +62,7 @@ namespace Content.Editor
 		protected override ContentDrawerMode TargetMode => ContentDrawerMode.String;
 	}
 
-	public abstract class ContentReferenceAttributeDrawer<T> : OdinAttributeDrawer<ContentReferenceAttribute, T>
+	public abstract class ContentReferenceAttributeDrawer<T> : OdinAttributeDrawer<ContentReferenceAttribute, T>, IDefinesGenericMenuItems
 	{
 		private bool _guidRawMode;
 		protected abstract ContentDrawerMode TargetMode { get; }
@@ -104,6 +104,12 @@ namespace Content.Editor
 		private static Dictionary<Type, Type> _valueTypeToSourceType = new();
 
 		private (int hash, PropertyTree tree) _targetToTree;
+
+		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
+		{
+			genericMenu.AddSeparator("");
+			genericMenu.AddItem(new GUIContent("Set None"), false, () => property.ValueEntry.WeakSmartValue = null);
+		}
 
 		protected override void Initialize()
 		{

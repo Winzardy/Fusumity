@@ -1,11 +1,14 @@
 {
-    "name": "Logging.Notifications",
+    "name": "Booting.SharedLogic",
     "rootNamespace": "",
     "references": [
-        "Notifications",
+        "Booting",
+        "UniTask",
+        "Sapientia",
+        "SharedLogic",
+        "Content",
         "WLog",
-        "Fusumity",
-        "Sapientia"
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,6 +16,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }

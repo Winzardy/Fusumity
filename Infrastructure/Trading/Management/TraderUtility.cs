@@ -9,18 +9,18 @@ namespace Trading
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanExecute(this in TraderOfferReference reference, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
-			return reference.GetEntry()
+			tradeboard.FetchModeScope(true);
+			return reference.Config
 			   .trade
-			   .CanExecute(tradeboard, out error);
+			   .CanFetch(tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<TradeExecuteError?> ExecuteAsync(this in TraderOfferReference reference, Tradeboard tradeboard,
+		public static Task<TradeExecuteError?> ExecuteAsync(this in TraderOfferReference offerRef, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
-			return reference.GetEntry()
-			   .trade
-			   .ExecuteAsync(tradeboard, cancellationToken);
+			return offerRef.Config.trade
+			   .FetchAsync(tradeboard, cancellationToken);
 		}
 	}
 }

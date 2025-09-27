@@ -11,7 +11,7 @@ namespace UI.Popovers
 		public void Release(bool immediate = false);
 	}
 
-	internal interface IPopoverToken<out T> : IPopoverToken, IDisposable
+	internal interface IPopoverToken<out T> : IPopoverToken
 		where T : UIWidget, IPopover
 	{
 		public T Popover { get; }
@@ -116,8 +116,6 @@ namespace UI.Popovers
 			_releaser = releaser;
 			_popover = popover;
 		}
-
-		public void Dispose() => Release(true);
 
 		void IPopoverToken.Release(bool immediate) => Release(immediate);
 

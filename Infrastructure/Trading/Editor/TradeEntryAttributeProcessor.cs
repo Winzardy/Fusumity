@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Trading.Editor
 {
-	public class TradeEntryAttributeProcessor : OdinAttributeProcessor<TradeEntry>
+	public class TradeEntryAttributeProcessor : OdinAttributeProcessor<TradeConfig>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -16,19 +16,19 @@ namespace Trading.Editor
 
 			switch (member.Name)
 			{
-				case nameof(TradeEntry.reward):
+				case nameof(TradeConfig.reward):
 					attributes.Add(new TitleGroupAttribute("Reward", "Что получаем за сделку", alignment: TitleAlignments.Split));
 					break;
 
-				case nameof(TradeEntry.cost):
+				case nameof(TradeConfig.cost):
 					attributes.Add(new TitleGroupAttribute("Cost", "Что отдаем за сделку", alignment: TitleAlignments.Split));
 					break;
 			}
 
 			switch (member.Name)
 			{
-				case nameof(TradeEntry.reward):
-				case nameof(TradeEntry.cost):
+				case nameof(TradeConfig.reward):
+				case nameof(TradeConfig.cost):
 					attributes.Add(new HideLabelAttribute());
 					break;
 			}

@@ -7,14 +7,14 @@ using UnityEngine;
 
 namespace Trading
 {
-	public partial class TradeCatalogEntry
+	public partial class TradeCatalogConfig
 	{
 		[PropertySpace(0, 10)]
 		[ClientOnly]
 		public LocKey name;
 	}
 
-	public partial struct TraderOfferEntry
+	public partial struct TraderOfferConfig
 	{
 		[ClientOnly]
 		public LocKey name;

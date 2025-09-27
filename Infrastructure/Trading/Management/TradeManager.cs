@@ -7,13 +7,13 @@ namespace Trading
 {
 	public interface ITradeManagement
 	{
-		public bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error);
+		public bool CanFetch(TradeCost cost, Tradeboard tradeboard, out TradePayError? error);
 
-		public Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard, CancellationToken cancellationToken = default);
+		public Task<TradePayError?> FetchAsync(TradeCost cost, Tradeboard tradeboard, CancellationToken cancellationToken = default);
 
-		public bool CanExecute(in TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error);
+		public bool CanFetch(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error);
 
-		public Task<TradeExecuteError?> ExecuteAsync(TradeEntry trade, Tradeboard tradeboard,
+		public Task<TradeExecuteError?> FetchAsync(TradeConfig trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default);
 
 		public void GetService(out ITradingService service);
@@ -37,22 +37,22 @@ namespace Trading
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error) =>
-			management.CanPay(cost, tradeboard, out error);
+		internal static bool CanFetch(TradeCost cost, Tradeboard tradeboard, out TradePayError? error) =>
+			management.CanFetch(cost, tradeboard, out error);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
+		internal static Task<TradePayError?> FetchAsync(TradeCost cost, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default) =>
-			management.PayAsync(cost, tradeboard, cancellationToken);
+			management.FetchAsync(cost, tradeboard, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CanExecute(in TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error) =>
-			management.CanExecute(in trade, tradeboard, out error);
+		internal static bool CanFetch(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error) =>
+			management.CanFetch(in trade, tradeboard, out error);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task<TradeExecuteError?> ExecuteAsync(in TradeEntry trade, Tradeboard tradeboard,
+		internal static Task<TradeExecuteError?> FetchAsync(in TradeConfig trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default) =>
-			management.ExecuteAsync(trade, tradeboard, cancellationToken);
+			management.FetchAsync(trade, tradeboard, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void GetService(out ITradingService service) => management.GetService(out service);

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
@@ -23,10 +24,12 @@ namespace Trading
 			_service = service;
 		}
 
-		public bool CanPay(TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
+		public bool CanFetch([CanBeNull] TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
 		{
 			error = null;
 
+			if (cost == null)
+				return false;
 			foreach (var t in cost)
 			{
 				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
@@ -44,13 +47,7 @@ namespace Trading
 			return true;
 		}
 
-		public Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
-			CancellationToken cancellationToken = default)
-		{
-			return PayAsync(cost, tradeboard, cancellationToken, true);
-		}
-
-		public bool CanExecute(in TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error)
+		public bool CanFetch(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			error = null;
 
@@ -84,38 +81,25 @@ namespace Trading
 			return true;
 		}
 
-		public async Task<TradeExecuteError?> ExecuteAsync(TradeEntry trade, Tradeboard tradeboard,
-			CancellationToken cancellationToken = default)
-		{
-			if (!CanExecute(in trade, tradeboard, out var error))
-				return error;
-
-			var payError = await PayAsync(trade.cost, tradeboard, cancellationToken, false);
-
-			if (payError != null)
-				return new TradeExecuteError(payError, null);
-
-			// Если Service не задан значит offline режим, можно было перенести это в кастомный сервис
-			if (_service != null)
-				return TradeExecuteError.NotError;
-
-			_dummyNode ??= new DummyTradingNode();
-			using var _ = tradeboard.Register(_dummyNode);
-
-			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
-			if (TradeAccess.Execute(in trade, tradeboard))
-				return TradeExecuteError.NotError;
-
-			return TradeExecuteError.NotImplemented;
-		}
-
 		public void GetService(out ITradingService service) => service = _service;
 
-		/// <param name="fullPay">Нужно ли в конце выполнить Pay если ITradingBackend не задан</param>
-		private async Task<TradePayError?> PayAsync(TradeCost cost, Tradeboard tradeboard,
-			CancellationToken cancellationToken, bool fullPay)
+		public async Task<TradeExecuteError?> FetchAsync(TradeConfig trade, Tradeboard tradeboard,
+			CancellationToken cancellationToken = default)
 		{
-			if (!CanPay(cost, tradeboard, out var error))
+			if (!CanFetch(in trade, tradeboard, out var error))
+				return error;
+
+			var payError = await FetchAsync(trade.cost, tradeboard, cancellationToken);
+			if (payError != null)
+				return new TradeExecuteError(payError, null);
+			return null;
+		}
+
+		/// <param name="fullPay">Нужно ли в конце выполнить Pay если ITradingBackend не задан</param>
+		public async Task<TradePayError?> FetchAsync(TradeCost cost, Tradeboard tradeboard,
+			CancellationToken cancellationToken)
+		{
+			if (!CanFetch(cost, tradeboard, out var error))
 				return error;
 
 			using (ListPool<ITradeReceipt>.Get(out var receipts))
@@ -157,7 +141,7 @@ namespace Trading
 				{
 					using var _ = tradeboard.Register(receipts.ToArray());
 
-					_service?.PushReceipts(tradeboard);
+					_service.PushReceipts(tradeboard);
 
 					var cStr = receipts.GetCompositeString(true, getter:
 						receipt => receipt.ToString(), numerate: receipts.Count > 1);
@@ -165,32 +149,16 @@ namespace Trading
 				}
 			}
 
-			if (_service != null || !fullPay)
-				return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
+			return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
 
-			_dummyNode ??= new DummyTradingNode();
-			using var __ = tradeboard.Register(_dummyNode);
-
-			// Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
-			if (TradeAccess.Pay(cost, tradeboard))
-				return TradePayError.NotError;
-
-			return TradePayError.NotImplemented;
+			// _dummyNode ??= new DummyTradingNode();
+			// using var __ = tradeboard.Register(_dummyNode);
+			//
+			// // Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
+			// if (TradeAccess.Pay(cost, tradeboard))
+			// 	return TradePayError.NotError;
+			//
+			// return TradePayError.NotImplemented;
 		}
-	}
-
-	// TODO: не нравится, убрать...
-	public class DummyTradingNode : ITradingNode
-	{
-		private UsageLimitData _empty;
-		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt => null;
-		public ref UsageLimitData GetUsageModel(SerializableGuid guid) => ref _empty;
-		public DateTime DateTime => DateTime.UtcNow;
-		public DateTime VirtualDateTime => DateTime.UtcNow;
-	}
-
-	public interface ITradingServiceFactory
-	{
-		ITradingService Create();
 	}
 }

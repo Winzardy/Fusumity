@@ -10,7 +10,7 @@ using UnityEditor;
 
 namespace Content.Editor
 {
-	using UnityObject =  UnityEngine.Object;
+	using UnityObject = UnityEngine.Object;
 
 	public static partial class ContentEntryEditorUtility
 	{
@@ -78,24 +78,32 @@ namespace Content.Editor
 
 				if (!IsValid(entry, reference))
 				{
-					iterator.RegenerateGuid(entry, asset, refreshAndSave);
-
-					if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
-						SetDirty(serializedObject, refreshAndSave);
-					else
-						throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
+					ForceRegenerate(entry, reference);
 				}
 				else
 				{
 					EditorUtility.SetDirty(asset);
 				}
 
-				Track((asset, reference), in entry.Guid);
+				if (!Track((asset, reference), in entry.Guid))
+				{
+					ForceRegenerate(entry, reference);
+				}
 			} while (iterator.Next(true));
 
 			bool IsValid(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
 				=> entry.Guid != SerializableGuid.Empty && scriptableObject.ScriptableContentEntry
 				   .RegisterNestedEntry(entry.Guid, reference);
+
+			void ForceRegenerate(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
+			{
+				iterator.RegenerateGuid(entry, asset, refreshAndSave);
+
+				if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
+					SetDirty(serializedObject, refreshAndSave);
+				else
+					throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
+			}
 		}
 
 		/// <returns><c>true</c>, если запомнили без проблем; иначе <c>false</c></returns>

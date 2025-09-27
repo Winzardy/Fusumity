@@ -1,11 +1,12 @@
 {
-    "name": "Logging.Notifications",
-    "rootNamespace": "",
+    "name": "Trading",
+    "rootNamespace": "Trading",
     "references": [
-        "Notifications",
-        "WLog",
-        "Fusumity",
-        "Sapientia"
+        "UniTask",
+        "Content",
+        "Sapientia",
+        "Localization",
+        "AssetManagement"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,6 +14,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }

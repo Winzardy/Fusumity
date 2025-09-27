@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UI
 {
-	//Похоже что это можно вообще вынести вне UI... ладно пока пусть будет тут
+	// Похоже что это можно вообще вынести вне UI... ладно пока пусть будет тут
 	public abstract class StateSwitcher<TState> : MonoBehaviour
 	{
 		[HideInInspector]

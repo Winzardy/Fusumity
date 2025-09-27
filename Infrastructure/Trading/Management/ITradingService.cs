@@ -13,9 +13,18 @@ namespace Trading
 		{
 		}
 
-		/// <remarks>Если оффлайн, то отправлять не надо</remarks>
-		public bool PushOffer(in TraderOfferReference offer) => true;
+		#region Trader
 
-		public PooledObject<Tradeboard> CreateTradeboard(in ContentReference<TraderEntry> trader);
+		/// <remarks>Если оффлайн, то отправлять не надо</remarks>
+		public bool PushCompleteOffer(in TraderOfferReference offer) => true;
+
+		public PooledObject<Tradeboard> CreateTradeboard(in ContentReference<TraderConfig> trader, out Tradeboard tradeboard);
+
+		#endregion
+	}
+
+	public interface ITradingServiceFactory
+	{
+		ITradingService Create();
 	}
 }
