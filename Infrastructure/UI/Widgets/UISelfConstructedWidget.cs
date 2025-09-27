@@ -163,8 +163,12 @@ namespace UI
 		private async UniTask SetupTemplateAndActivateAsync(bool immediate, CancellationToken cancellationToken)
 		{
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+
 			ClearTemplateSafe();
+
 			await SetupTemplateAsync(template, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
 #endif
@@ -176,6 +180,8 @@ namespace UI
 			LayoutClearingAndReleaseTemplateSafe();
 
 			var layout = await UIFactory.CreateLayoutAsync(template, LayerRectTransform, LayoutPrefixName, cancellationToken);
+			cancellationToken.ThrowIfCancellationRequested();
+
 			SetupLayout(layout);
 
 			EnableSuppress(SuppressFlag.Events);

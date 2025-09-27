@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using ZenoTween.Participant.Callbacks;
@@ -9,11 +11,6 @@ using ZenoTween.Utility;
 
 namespace UI
 {
-	public abstract class BaseWidgetAnimator<TLayout> : BaseWidgetAnimator<TLayout, UIWidget>
-		where TLayout : UIBaseLayout
-	{
-	}
-
 	public class AnimationLayer
 	{
 		public const string SEPARATOR = "/";
@@ -26,13 +23,14 @@ namespace UI
 		public WidgetAnimationArgs args;
 	}
 
-	public abstract class BaseWidgetAnimator<TLayout, TWidget> : IWidgetAnimator<TLayout>
+	public abstract class BaseWidgetAnimator<TLayout> : IWidgetAnimator<TLayout>
 		where TLayout : UIBaseLayout
-		where TWidget : class, IWidget
 	{
 		private string _lastKey;
 
-		protected TWidget _widget;
+		[CanBeNull]
+		protected IWidget _widget;
+
 		protected TLayout _layout;
 
 		//TODO: есть мысля сделать Blackboard чтобы в инспекторе можно было указывать переменные
@@ -76,11 +74,13 @@ namespace UI
 			GC.SuppressFinalize(this);
 		}
 
-		void IWidgetAnimator.Setup(UIWidget owner)
+		void IWidgetAnimator.Setup(UIWidget widget)
 		{
-			if (owner is not TWidget widget)
-				throw new Exception($"Invalid widget type [ {typeof(TWidget)} ]");
+			OnSetup(widget);
+		}
 
+		protected virtual void OnSetup(UIWidget widget)
+		{
 			_widget = widget;
 		}
 
@@ -160,7 +160,7 @@ namespace UI
 
 			_lastKey = args.key;
 
-			var (layerKey, clipName) = WidgetAnimatorExt.Split(args.key);
+			var (layerKey, clipName) = WidgetAnimatorUtility.Split(args.key);
 
 			if (!_layers.TryGetValue(layerKey, out var layer))
 			{
@@ -320,7 +320,16 @@ namespace UI
 		{
 		}
 
-		private void SetVisible(bool active) => _widget.SetVisible(active);
+		private void SetVisible(bool active)
+		{
+			if (_widget != null)
+			{
+				_widget.SetVisible(active);
+				return;
+			}
+
+			_layout.SetActive(active);
+		}
 
 		protected virtual void OnInitialized()
 		{
@@ -330,7 +339,7 @@ namespace UI
 		{
 			tween = null;
 
-			var (layerKey, clipName) = WidgetAnimatorExt.Split(key);
+			var (layerKey, clipName) = WidgetAnimatorUtility.Split(key);
 
 			if (!_layers.TryGetValue(layerKey, out var layer))
 				return false;
@@ -357,7 +366,19 @@ namespace UI
 #endif
 	}
 
-	public static class WidgetAnimatorExt
+	public abstract class BaseWidgetAnimator<TLayout, TWidget> : BaseWidgetAnimator<TLayout>
+		where TLayout : UIBaseLayout
+	{
+		protected override void OnSetup(UIWidget widget)
+		{
+			if (widget is not TWidget)
+				throw new Exception($"Invalid widget type [ {typeof(TWidget)} ]");
+
+			_widget = widget;
+		}
+	}
+
+	public static class WidgetAnimatorUtility
 	{
 		public static bool IsVisibleKey(this string key)
 			=> key is WidgetAnimationType.OPENING or WidgetAnimationType.CLOSING;
