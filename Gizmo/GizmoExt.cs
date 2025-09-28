@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Fusumity.Utility;
+using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Unity.Mathematics;
@@ -243,13 +244,13 @@ namespace Game.Logic.Gizmo
 			}
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawLineOnce_TopDown(float2 positionA, float2 positionB, Color color)
 		{
 			RequestDrawLine_TopDown(positionA, positionB, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawLine_TopDown(float2 positionA, float2 positionB, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -257,7 +258,7 @@ namespace Game.Logic.Gizmo
 			DRAW_LINES.Add((positionA, positionB, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawPolygon_TopDown(float2 basePos, Span<float2> pointsSpan, Rotation rotation, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -265,13 +266,13 @@ namespace Game.Logic.Gizmo
 			DRAW_POLYGONS.Add((basePos, pointsSpan.ToArray(), rotation, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawCircleOnce_TopDown(float2 position, float radius, Color color)
 		{
 			RequestDrawCircle_TopDown(position, radius, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawCircle_TopDown(float2 position, float radius, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -279,7 +280,7 @@ namespace Game.Logic.Gizmo
 			DRAW_CIRCLES.Add((position, radius, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawSphere_TopDown(float2 position, float3 size, Color color, bool wire = false, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -287,7 +288,7 @@ namespace Game.Logic.Gizmo
 			DRAW_SPHERES.Add((position, size, color, wire, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawCube_TopDown(float2 position, Rotation rotation, float3 size, Color color, bool wire = false, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -295,13 +296,13 @@ namespace Game.Logic.Gizmo
 			DRAW_CUBES.Add((position, rotation, size, color, wire, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawSectorOnce_TopDown(float2 position, Rotation rotation, float radius, float rad, Color color)
 		{
 			RequestDrawSector_TopDown(position, rotation, radius, rad, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawSector_TopDown(float2 position, Rotation rotation, float radius, float rad, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -309,13 +310,13 @@ namespace Game.Logic.Gizmo
 			DRAW_SECTORS.Add((position, rotation, radius, rad, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawCutSectorOnce_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color)
 		{
 			RequestDrawCutSector_TopDown(position, rotation, minRadius, maxRadius, rad, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawCutSector_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -323,13 +324,13 @@ namespace Game.Logic.Gizmo
 			DRAW_CUT_SECTORS.Add((position, rotation, minRadius, maxRadius, rad, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawBoxOnce_TopDown(float2 position, Rotation rotation, float2 size, Color color)
 		{
 			RequestDrawBox_TopDown(position, rotation, size, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawBox_TopDown(float2 position, Rotation rotation, float2 size, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -337,13 +338,13 @@ namespace Game.Logic.Gizmo
 			DRAW_BOXES.Add((position, rotation, size, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawArrowOnce_TopDown(float2 position, Rotation rotation, float2 size, Color color)
 		{
 			RequestDrawArrow_TopDown(position, rotation, size, color, FRAMES_FOR_ONCE_DRAWING);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void RequestDrawArrow_TopDown(float2 position, Rotation rotation, float2 size, Color color, int frames = 1)
 		{
 			if (!IsEnabled)
@@ -351,7 +352,7 @@ namespace Game.Logic.Gizmo
 			DRAW_ARROWS.Add((position, rotation, size, color, frames));
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawLine_TopDown(float2 positionA, float2 positionB, Color color)
 		{
 			var delta = positionB - positionA;
@@ -368,13 +369,13 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawPolygon_TopDown(float2 basePos, IList<float2> points, Rotation rotation, Color color)
 		{
 			DrawPolygon_TopDown(basePos, points, new float2(1f), rotation, color);
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawPolygon_TopDown(float2 basePos, IList<float2> points, float2 scale, Rotation rotation, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -392,7 +393,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawCircle_TopDown(float2 position, float radius, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -404,7 +405,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawSphere_TopDown(float2 position, float3 size, Color color, bool wire)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -419,7 +420,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawSector_TopDown(float2 position, Rotation rotation, float radius, float rad, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -463,7 +464,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawCutSector_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -513,7 +514,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawBox_TopDown(float2 position, Rotation rotation, float2 size, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -538,7 +539,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawCube_TopDown(float2 position, Rotation rotation, float3 size, Color color, bool wire)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -553,7 +554,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.matrix = oldMatrix;
 		}
 
-		[Conditional("UNITY_EDITOR")]
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawArrow_TopDown(float2 position, Rotation rotation, float2 size, Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
