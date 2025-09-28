@@ -369,3 +369,9 @@ MonoBehaviour:
   <FillClockwise>k__BackingField:
     _value: 0
     _isDirty: 0
+  <AlternateInnerColorsEnabled>k__BackingField:
+    _value: 0
+    _isDirty: 0
+  <InnerAltColor>k__BackingField:
+    _value: {r: 0, g: 0, b: 0, a: 0}
+    _isDirty: 0

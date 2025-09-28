@@ -6,8 +6,7 @@ using UnityEngine;
 namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentEntryScriptableObject<T> : ContentEntryScriptableObject,
-		IIdentifierSource<ScriptableContentEntry<T>>,
-		IValidatable, IUniqueContentEntryScriptableObject<T>
+		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>
 	{
 		public bool useCustomId;
 

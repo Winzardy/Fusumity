@@ -15,5 +15,11 @@ namespace Content.ScriptableObjects
 		public virtual bool Enabled => true;
 
 		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
+
+		public void SyncedUpdate() => OnUpdated();
+
+		protected virtual void OnUpdated()
+		{
+		}
 	}
 }

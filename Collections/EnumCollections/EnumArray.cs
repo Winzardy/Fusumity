@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Fusumity.Attributes.Odin;
 using Sapientia.Extensions;
 using UnityEngine;
 
@@ -97,10 +98,10 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
+	[SingleFieldInline]
 	public class EnumArray<TEnum, TValue, TEnumValue>
 #if UNITY_EDITOR
-		: IArrayContainer,
-		ISerializationCallbackReceiver
+		: ISerializationCallbackReceiver
 #endif
 		where TEnum : unmanaged, Enum
 		where TEnumValue : struct, IEnumValue<TEnum>

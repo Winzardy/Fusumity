@@ -26,6 +26,12 @@ namespace Content.Editor
 
 		private static bool _scheduledRefreshAndSave;
 
+		public static void ClearCache()
+		{
+			_guidToSource.Clear();
+			_tracking.Clear();
+		}
+
 		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
 		{
 			if (asset is not IContentEntryScriptableObject scriptableObject)

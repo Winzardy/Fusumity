@@ -50,6 +50,80 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
+	public struct EnumValueEditableEnum<TEnum> : IComparable<EnumValueEditableEnum<TEnum>>, IEnumValue<TEnum>
+		where TEnum: unmanaged, Enum
+	{
+		[SerializeField, HideInInspector]
+		private string enumValueName;
+
+		[HideLabel]
+		public TEnum enumValue;
+
+		TEnum IEnumValue<TEnum>.EnumValue
+		{
+			get => enumValue;
+			set => enumValue = value;
+		}
+
+		string IEnumValue<TEnum>.EnumValueName
+		{
+			get => enumValueName;
+			set => enumValueName = value;
+		}
+
+		public int CompareTo(EnumValueEditableEnum<TEnum> other)
+		{
+			return EnumToIndex<TEnum>.GetIndex(enumValue).CompareTo(EnumToIndex<TEnum>.GetIndex(other.enumValue));
+		}
+
+		public static implicit operator TEnum(EnumValueEditableEnum<TEnum> value)
+		{
+			return value.enumValue;
+		}
+
+		public static implicit operator EnumValueEditableEnum<TEnum>(TEnum value)
+		{
+			return new EnumValueEditableEnum<TEnum>()
+			{
+				enumValue = value,
+			};
+		}
+	}
+
+	[Serializable]
+	public struct EnumValue<TEnum> : IComparable<EnumValue<TEnum>>, IEnumValue<TEnum>
+		where TEnum: unmanaged, Enum
+	{
+		[SerializeField, HideInInspector]
+		private string enumValueName;
+
+		[HideLabel, ReadOnly]
+		public TEnum enumValue;
+
+		TEnum IEnumValue<TEnum>.EnumValue
+		{
+			get => enumValue;
+			set => enumValue = value;
+		}
+
+		string IEnumValue<TEnum>.EnumValueName
+		{
+			get => enumValueName;
+			set => enumValueName = value;
+		}
+
+		public int CompareTo(EnumValue<TEnum> other)
+		{
+			return EnumToIndex<TEnum>.GetIndex(enumValue).CompareTo(EnumToIndex<TEnum>.GetIndex(other.enumValue));
+		}
+
+		public static implicit operator TEnum(EnumValue<TEnum> value)
+		{
+			return value.enumValue;
+		}
+	}
+
+	[Serializable]
 	public struct EnumValue<TEnum, TValue> : IComparable<EnumValue<TEnum, TValue>>, IEnumValue<TEnum>
 		where TEnum: unmanaged, Enum
 	{

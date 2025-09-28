@@ -107,6 +107,7 @@ namespace Content.ScriptableObjects.Editor
 
 			AssetDatabase.SaveAssets();
 			ContentEditorCache.Refresh();
+			ContentEntryEditorUtility.ClearCache();
 		}
 
 		public static bool Validate(this ContentDatabaseScriptableObject database, out string message)
@@ -234,6 +235,8 @@ namespace Content.ScriptableObjects.Editor
 									continue;
 
 								all.Add(scriptableObject);
+								scriptableObject.SyncedUpdate();
+
 								Refresh(scriptableObject);
 								TryAddToGenerator(scriptableObject, dictionary);
 							}
