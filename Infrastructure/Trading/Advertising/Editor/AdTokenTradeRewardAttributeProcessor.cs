@@ -15,9 +15,6 @@ namespace Advertising.Editor
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 			switch (member.Name)
 			{
-				case nameof(AdTokenTradeReward.count):
-					attributes.Add(new MinimumAttribute(1));
-					break;
 				case nameof(AdTokenTradeReward.group):
 					attributes.Add(new TooltipAttribute(
 						"Нужно чтобы разделять выдачу билетиков по группам, например чтобы в одном месте не использовались допустимые билетики из другой группы"));

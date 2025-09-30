@@ -4,34 +4,34 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
-using Presenters;
+using Mediators;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 
-namespace Booting.Presenters
+namespace Booting.Mediators
 {
 	[TypeRegistryItem(
-		"\u2009Presenters", //В начале делаем отступ из-за отрисовки...
+		"\u2009Mediators", //В начале делаем отступ из-за отрисовки...
 		"",
 		SdfIconType.Stars)]
 	[Serializable]
-	public class PresentersBootTask : BaseBootTask
+	public class MediatorsBootTask : BaseBootTask
 	{
 		public override int Priority => HIGH_PRIORITY - 160;
 
-		private HashSet<IPresenter> _presenters;
-		private HashSet<IPresenter> _deferred;
+		private HashSet<IMediator> _presenters;
+		private HashSet<IMediator> _deferred;
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
-			var types = ReflectionUtility.GetAllTypes<IPresenter>(false);
+			var types = ReflectionUtility.GetAllTypes<IMediator>(false);
 
 			_presenters = new(types.Count);
 			_deferred = new(8);
 
 			foreach (var type in types)
 			{
-				var presenter = type.CreateInstance<IPresenter>();
+				var presenter = type.CreateInstance<IMediator>();
 				_presenters.Add(presenter);
 				if (!presenter.IsDeferred)
 					presenter.Initialize();

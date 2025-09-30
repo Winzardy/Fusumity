@@ -1,0 +1,20 @@
+{
+    "name": "Booting.Mediators",
+    "rootNamespace": "",
+    "references": [
+        "Booting",
+        "UniTask",
+        "Mediators",
+        "Fusumity",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

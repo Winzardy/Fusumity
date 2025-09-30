@@ -3,11 +3,12 @@ using Content;
 using Sapientia.Extensions;
 using UnityEngine.Scripting;
 
-namespace Presenters
+namespace Mediators
 {
 	/// <summary>
 	/// <para>
-	/// Роль Presenter только что-то "презентовать". Никто не знает о нем, это он знает о всех.
+	/// Роль Mediator связывать логику между различными системами без прямой зависимости.
+	/// Никто не знает о Mediator, это он знает о всех.
 	/// Это важно чтобы не прокидывать лишние зависимости!
 	/// </para>
 	/// <para>
@@ -18,16 +19,16 @@ namespace Presenters
 	/// например вызывать логику подписавшись на какое-то событие, а не прокидывать Presenter!
 	/// </para>
 	/// </summary>
-	public interface IPresenter : IDisposable
+	public interface IMediator : IDisposable
 	{
 		public void Initialize();
 
 		public bool IsDeferred => true;
 	}
 
-	/// <inheritdoc cref="IPresenter"/>
+	/// <inheritdoc cref="IMediator"/>
 	[Preserve]
-	public abstract class BasePresenter : MessageSubscriber, IPresenter
+	public abstract class BaseMediator : MessageSubscriber, IMediator
 	{
 		public virtual bool IsDeferred => true;
 
@@ -37,7 +38,7 @@ namespace Presenters
 	}
 
 	[Preserve]
-	public abstract class BasePresenter<TSettings> : BasePresenter
+	public abstract class BaseMediator<TSettings> : BaseMediator
 	{
 		protected TSettings _settings;
 

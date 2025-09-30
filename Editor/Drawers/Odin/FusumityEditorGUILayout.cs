@@ -25,6 +25,26 @@ namespace Fusumity.Editor
 		/// </summary>
 		public static GUIStyle objectFieldButtonStyle = GUI.skin.FindStyle("ObjectFieldButton");
 
+		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill)
+		{
+			if (!rect.TryGetValue(out var r))
+			{
+				body.Invoke();
+
+				return false;
+			}
+
+			var trianglePosition = r.AlignRight(9f, 5f);
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Arrow);
+
+			var click = GUI.Button(trianglePosition, GUIContent.none, GUIStyle.none);
+
+			body.Invoke();
+
+			SdfIcons.DrawIcon(trianglePosition, icon);
+			return click;
+		}
+
 		public static bool ToolbarButton(Rect rect, EditorIcon icon, GUIStyle style = null,
 			bool ignoreGUIEnabled = false)
 		{

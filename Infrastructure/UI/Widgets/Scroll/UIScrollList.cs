@@ -104,7 +104,6 @@ namespace UI.Scroll
 			_data = data;
 
 			_layout.ReloadData(normalizedScrollPosition);
-
 			Updated?.Invoke(data, normalizedScrollPosition);
 			OnUpdated(normalizedScrollPosition);
 		}

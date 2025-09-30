@@ -8,7 +8,8 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers
 {
-	public class ColorCardBoxAttributeDrawer : OdinAttributeDrawer<ColorCardBoxAttribute>
+	public class ColorCardBoxAttributeDrawer<T> : OdinAttributeDrawer<T>
+		where T : ColorCardBoxAttribute
 	{
 		private ValueResolver<string> _valueResolver;
 

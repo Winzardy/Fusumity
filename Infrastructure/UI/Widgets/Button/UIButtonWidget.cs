@@ -118,8 +118,8 @@ namespace UI
 			_layout.icon.SetSpriteSafe(_spriteAssigner, args.IconReference, args.Icon, _defaultIconSprite, UpdateIconGroup);
 
 			var locLabel = args.LocLabel.IsEmpty() && _layout.locInfo
-					? _layout.locInfo.value
-					: args.LocLabel;
+				? _layout.locInfo.value
+				: args.LocLabel;
 			_layout.label.SetTextSafe(_localizationAssigner, locLabel, args.Label, _defaultLabelText, UpdateLabelGroup);
 
 			SetInteractable(args.Interactable ?? true);
