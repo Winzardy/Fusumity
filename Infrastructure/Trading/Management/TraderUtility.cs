@@ -9,7 +9,7 @@ namespace Trading
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanExecute(this in TraderOfferReference reference, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
-			tradeboard.FetchModeScope(true);
+			tradeboard.FetchingScope(true);
 			return reference.Config
 			   .trade
 			   .CanFetch(tradeboard, out error);
