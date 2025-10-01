@@ -46,6 +46,11 @@ namespace UI
 
 		protected override void OnDispose()
 		{
+			for (int i = 0; i < _used.Count; i++)
+			{
+				_used[i]?.Dispose();
+			}
+
 			ReleaseTokens();
 			DisposePool();
 		}

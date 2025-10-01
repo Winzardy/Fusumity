@@ -5,11 +5,8 @@ using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
-#if UNITY_EDITOR
-#endif
-
 	[Serializable]
-	public class AssetReferenceEntry<T> : IAssetReferenceEntry
+	public class AssetReferenceEntry<T> : IAssetReferenceEntry, IAssetReferenceEntry<T>
 		where T : Object
 	{
 		[FormerlySerializedAs("_assetReference")]
@@ -76,5 +73,9 @@ namespace AssetManagement
 #else
 			null;
 #endif
+	}
+
+	public interface IAssetReferenceEntry<T> : IAssetReferenceEntry where T : Object
+	{
 	}
 }

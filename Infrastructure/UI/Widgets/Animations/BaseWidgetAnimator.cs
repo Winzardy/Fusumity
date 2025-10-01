@@ -320,7 +320,7 @@ namespace UI
 		{
 		}
 
-		private void SetVisible(bool active) => _widget.SetVisible(active);
+		private void SetVisible(bool active) => _widget?.SetVisible(active);
 
 		protected virtual void OnInitialized()
 		{

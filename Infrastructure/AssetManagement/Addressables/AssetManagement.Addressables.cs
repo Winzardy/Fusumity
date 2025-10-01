@@ -69,12 +69,11 @@ namespace AssetManagement
 		}
 
 		private async UniTask<T> LoadComponentAsync<T>(AssetReference assetReference, CancellationToken cancellationToken)
-			where T : Component
 		{
 			if (!assetReference.RuntimeKeyIsValid())
 			{
 				AssetManagementDebug.LogError("Component reference invalid");
-				return null;
+				return default;
 			}
 
 			var key = assetReference.RuntimeKey;
@@ -82,7 +81,6 @@ namespace AssetManagement
 		}
 
 		private async UniTask<T> LoadComponentByKeyAsync<T>(object key, CancellationToken cancellationToken, UnityObject debugObj = null)
-			where T : Component
 		{
 			var asset = await LoadAssetAsyncByKey<GameObject>(key, cancellationToken);
 
@@ -91,7 +89,7 @@ namespace AssetManagement
 				AssetManagementDebug.LogError($"Component reference invalid (missing type: {typeof(T)})", debugObj);
 
 				ReleaseAssetByKey(key);
-				return null;
+				return default;
 			}
 
 			return component;
