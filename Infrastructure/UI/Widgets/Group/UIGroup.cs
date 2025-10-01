@@ -138,9 +138,9 @@ namespace UI
 
 		private void Release(Token token, bool immediate = false)
 		{
+			TWidget widget = token;
 			ReleaseToken(token);
-
-			ReleaseAsync(token, immediate)
+			ReleaseAsync(widget, immediate)
 			   .Forget();
 		}
 
@@ -313,23 +313,28 @@ namespace UI
 
 			int IWidgetGroupToken.Generation => _generation;
 
-			public void Bind(TWidget widget, TokenReleaser releaser)
+			internal void Bind(TWidget widget, TokenReleaser releaser)
 			{
 				_widget = widget;
 				_releaser = releaser;
 			}
 
-			public void Dispose() => Release();
+			void IWidgetGroupToken.Release(bool immediate)
+			{
+				_releaser.Invoke(this, immediate);
+			}
 
-			public void Release(bool immediate = false)
-				=> _releaser.Invoke(this, immediate);
+			void IPoolable.Release()
+			{
+				_generation++;
 
-			void IPoolable.Release() => _generation++;
+				_releaser = null;
+				_widget = null;
+			}
 
 			public static implicit operator WidgetGroupToken(Token token) => new(token, token._generation);
 			public static implicit operator WidgetGroupToken<TWidget>(Token token) => new(token, token._generation);
 			public static implicit operator TWidget(Token token) => token._widget;
-
 		}
 
 		internal delegate void TokenReleaser(Token token, bool immediate = false);
@@ -388,7 +393,7 @@ namespace UI
 		public TWidget Widget { get; }
 	}
 
-	internal interface IWidgetGroupToken : IDisposable
+	internal interface IWidgetGroupToken
 	{
 		internal int Generation { get; }
 		public void Release(bool immediate = false);
