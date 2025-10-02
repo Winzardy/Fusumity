@@ -29,7 +29,7 @@ namespace UI
 		public static T CreateWidget<T>(bool autoInitialization = true)
 			where T : UIWidget
 		{
-			var widget = FastActivator.CreateInstance<T>();
+			var widget = Activator.CreateInstance<T>();
 
 			if (autoInitialization)
 				widget.Initialize();

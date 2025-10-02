@@ -2,6 +2,7 @@
 using AssetManagement;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Sapientia.Reflection;
 using UnityEngine.Scripting;
 using Sirenix.OdinInspector;
 
@@ -20,6 +21,7 @@ namespace Booting.AssetManagement
 		{
 			var management = new AssetProvider();
 			AssetLoader.Initialize(management);
+
 			return UniTask.CompletedTask;
 		}
 
