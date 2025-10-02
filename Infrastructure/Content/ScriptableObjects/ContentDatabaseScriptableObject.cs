@@ -35,7 +35,7 @@ namespace Content.ScriptableObjects
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
-		bool IValidatable.Validate()
+		bool IContentEntrySource.Validate()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
@@ -47,6 +47,12 @@ namespace Content.ScriptableObjects
 			if (Value is IValidatable validatable && !validatable.Validate())
 			{
 				ContentDebug.LogError("Value is not valid!", this);
+				return false;
+			}
+
+			if (this is IValidatable soValidatable && !soValidatable.Validate())
+			{
+				ContentDebug.LogError("Scriptable Object is not valid!", this);
 				return false;
 			}
 

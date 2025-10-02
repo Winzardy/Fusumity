@@ -19,8 +19,7 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		private Toggle<string> _customId
 		{
-			get => new
-				(useCustomId ? _entry.Id : Id, useCustomId);
+			get => new(useCustomId ? _entry.Id : Id, useCustomId);
 			set
 			{
 				if (value.enable && !useCustomId)

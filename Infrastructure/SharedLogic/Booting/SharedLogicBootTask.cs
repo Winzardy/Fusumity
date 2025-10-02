@@ -6,6 +6,7 @@ using Sapientia;
 using Sapientia.ServiceManagement;
 using SharedLogic;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace Booting.SharedLogic
 {
@@ -20,6 +21,22 @@ namespace Booting.SharedLogic
 		private ICommandSender _sender;
 		private ISharedDataSerializer _dataSerializer;
 
+		[TextArea]
+		[SerializeField]
+		private string _json;
+
+		[Button]
+		private void Save()
+		{
+			_json = _dataSerializer.Save();
+		}
+
+		[Button]
+		private void Load()
+		{
+			_dataSerializer.Load(_json);
+		}
+
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
 			await Initialize();
@@ -33,12 +50,12 @@ namespace Booting.SharedLogic
 
 			var configuration = ContentManager.Get<SharedLogicConfiguration>();
 			var registrar = configuration.registrarFactory.Create();
-			_sharedRoot = new SharedRoot(registrar, dateTimeProvider, SLDebug.logger);
 
+			_sharedRoot = new SharedRoot(registrar, dateTimeProvider, SLDebug.logger);
 			_sender = configuration.commandSender.Create();
 
 			var commandRunner = new ClientCommandRunner(_sharedRoot, _sender, dateTimeProvider, SLDebug.logger);
-			_dataSerializer = configuration.dataHandlerFactory.Create(_sharedRoot);
+			_dataSerializer = configuration.dataSerializerFactory.Create(_sharedRoot);
 
 			_sharedRoot.Initialize();
 			_sharedRoot.RegisterAsService();
