@@ -16,7 +16,7 @@ namespace SharedLogic
 			get => _instance;
 		}
 
-		internal static long Timestamp => router.DateProvider.DateTime.Ticks;
+		internal static long Timestamp => router.Timestamp;
 
 		public static bool ExecuteCommand<T>(in T command)
 			where T : struct, ICommand
@@ -46,9 +46,15 @@ namespace SharedLogic
 			where T : struct, ICommand
 		{
 			var timeSetCommand = new TimeSetCommand(SharedLogicManager.Timestamp);
+			if (!timeSetCommand.Validate(root, out var exception))
+			{
+				SLDebug.LogException(exception);
+				return false;
+			}
+
 			SharedLogicManager.ExecuteCommand(in timeSetCommand);
 
-			if (!command.Validate(root, out var exception))
+			if (!command.Validate(root, out exception))
 			{
 				SLDebug.LogException(exception);
 				return false;

@@ -3,23 +3,22 @@ using AssetManagement;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Fusumity.Utility;
-using Sapientia.Collections;
 
 namespace UI
 {
-	public class UIObjectInspector<T> : UIBaseObjectInspector<T, UIObjectInspector<T>.Args>
+	public class DefaultObjectInspectorViewModel<T> : IObjectInspectorViewModel<T>
 		where T : Component
 	{
-		public struct Args : IObjectInspectorArgs<T>
-		{
-			public IAssetReferenceEntry reference { get; set; }
-			public T prefab { get; set; }
-			public ISpinner spinner { get; set; }
-			public UITextureRendererArgs? render { get; set; }
+		public IAssetReferenceEntry reference { get; set; }
+		public T prefab { get; set; }
+		public ISpinner spinner { get; set; }
+		public UITextureRendererArgs? render { get; set; }
+		public UIObjectInspectorSettings Settings { get; set; }
+	}
 
-			public UIObjectInspectorEntry entry { get; set; }
-		}
-
+	public class UIObjectInspector<T> : UIBaseObjectInspector<T, DefaultObjectInspectorViewModel<T>>
+		where T : Component
+	{
 		protected override async UniTask<T> CreateAsync(T prefab, CancellationToken cancellationToken)
 		{
 			var operation = Object.InstantiateAsync(prefab.gameObject);
@@ -31,8 +30,8 @@ namespace UI
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
-			if (_args.entry.useCustomRotation)
-				_gameObject.transform.localRotation = Quaternion.Euler(_args.entry.rotation);
+			if (Value.Settings.useCustomRotation)
+				_gameObject.transform.localRotation = Quaternion.Euler(Value.Settings.rotation);
 
 			return _gameObject.GetComponent<T>();
 		}
@@ -40,12 +39,12 @@ namespace UI
 		protected override void OnShow(T component)
 		{
 			Vector3? position = null;
-			if (entry.useCustomPosition)
-				position = entry.position;
+			if (Settings.useCustomPosition)
+				position = Settings.position;
 
 			Vector3? scale = null;
-			if (entry.useCustomScale)
-				scale = entry.scale;
+			if (Settings.useCustomScale)
+				scale = Settings.scale;
 
 			_textureRenderer.FocusPoint.localPosition = position ?? Vector3.zero;
 			_textureRenderer.FocusPoint.localScale = scale ?? Vector3.one;

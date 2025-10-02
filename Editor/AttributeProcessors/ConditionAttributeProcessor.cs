@@ -18,7 +18,7 @@ namespace Fusumity.Editor
 			switch (member.Name)
 			{
 				case nameof(Condition.invert):
-					attributes.Add(new HorizontalGroupAttribute(23));
+					attributes.Add(new HorizontalGroupAttribute(23, marginRight:2));
 					attributes.Add(new LabelTextAttribute("!"));
 					attributes.Add(new LabelWidthAttribute(8));
 					attributes.Add(new TooltipAttribute("Инвертировать результат"));

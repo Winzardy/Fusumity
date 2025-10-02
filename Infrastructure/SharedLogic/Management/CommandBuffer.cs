@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace SharedLogic
 {
@@ -90,7 +89,11 @@ namespace SharedLogic
 		public int Add<T1>(in T1 command)
 			where T1 : struct, ICommand
 		{
+#if UNITY_5_3_OR_NEWER
+			var r = command;
+#else
 			ref var r = ref UnsafeExt.AsRef(in command);
+#endif
 			ref var c = ref UnsafeExt.As<T1, T>(ref r);
 			return Add(in c);
 		}

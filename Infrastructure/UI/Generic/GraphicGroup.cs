@@ -75,7 +75,7 @@ namespace UI
 #if UNITY_EDITOR
 				if (graphic == null)
 				{
-					GUIDebug.LogWarning("Empty graphic!", this);
+					GUIDebug.LogWarning($"Empty graphic! ({name})", this);
 					continue;
 				}
 #endif
@@ -95,7 +95,7 @@ namespace UI
 #if UNITY_EDITOR
 				if (graphic == null)
 				{
-					GUIDebug.LogWarning("Empty graphic!", this);
+					GUIDebug.LogWarning($"Empty graphic! ({name})", this);
 					continue;
 				}
 #endif

@@ -7,17 +7,17 @@ using UnityEngine;
 
 namespace UI
 {
-	public class UIObjectInspector : UIBaseObjectInspector<GameObject, UIObjectInspector.Args>
+	public class DefaultObjectInspectorViewModel : IObjectInspectorViewModel<GameObject>
 	{
-		public struct Args : IObjectInspectorArgs<GameObject>
-		{
-			public IAssetReferenceEntry reference { get; set; }
-			public GameObject prefab { get; set; }
-			public ISpinner spinner { get; set; }
-			public UITextureRendererArgs? render { get; set; }
-			public UIObjectInspectorEntry entry { get; set; }
-		}
+		public IAssetReferenceEntry reference { get; set; }
+		public GameObject prefab { get; set; }
+		public ISpinner spinner { get; set; }
+		public UITextureRendererArgs? render { get; set; }
+		public UIObjectInspectorSettings Settings { get; set; }
+	}
 
+	public class UIObjectInspector : UIBaseObjectInspector<GameObject, DefaultObjectInspectorViewModel>
+	{
 		protected override async UniTask<GameObject> CreateAsync(GameObject prefab, CancellationToken cancellationToken)
 		{
 			var operation = Object.InstantiateAsync(prefab);
@@ -29,8 +29,8 @@ namespace UI
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
-			if (_args.entry.useCustomRotation)
-				_gameObject.transform.localRotation = Quaternion.Euler(_args.entry.rotation);
+			if (Value.Settings.useCustomRotation)
+				_gameObject.transform.localRotation = Quaternion.Euler(Value.Settings.rotation);
 
 			return _gameObject;
 		}
@@ -38,12 +38,12 @@ namespace UI
 		protected override void OnShow(GameObject gameObject)
 		{
 			Vector3? position = null;
-			if (entry.useCustomPosition)
-				position = entry.position;
+			if (Settings.useCustomPosition)
+				position = Settings.position;
 
 			Vector3? scale = null;
-			if (entry.useCustomScale)
-				scale = entry.scale;
+			if (Settings.useCustomScale)
+				scale = Settings.scale;
 
 			_textureRenderer.FocusPoint.localPosition = position ?? Vector3.zero;
 			_textureRenderer.FocusPoint.localScale = scale ?? Vector3.one;

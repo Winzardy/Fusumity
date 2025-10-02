@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sapientia.ServiceManagement;
 using SharedLogic;
 using Sirenix.OdinInspector;
@@ -27,7 +28,8 @@ namespace Booting.SharedLogic
 
 		private UniTask Initialize()
 		{
-			var dateTimeProvider = new SharedDateTimeProvider();
+			IDateTimeProvider dateTimeProvider = new SharedDateTimeProvider();
+			dateTimeProvider.RegisterAsService();
 
 			var configuration = ContentManager.Get<SharedLogicConfiguration>();
 			var registrar = configuration.registrarFactory.Create();

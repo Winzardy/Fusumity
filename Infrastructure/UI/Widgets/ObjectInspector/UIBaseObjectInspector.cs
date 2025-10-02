@@ -10,7 +10,7 @@ using ZenoTween.Utility;
 
 namespace UI
 {
-	public struct UIObjectInspectorEntry
+	public class UIObjectInspectorSettings
 	{
 		public bool useCustomPosition;
 		public Vector3 position;
@@ -33,7 +33,7 @@ namespace UI
 		public float rotationDuration;
 
 		//TODO: надо вынести в настройки...
-		public static UIObjectInspectorEntry Default = new()
+		public static UIObjectInspectorSettings Default = new()
 		{
 			useCustomRotation = true,
 			rotation = new Vector3(0, 90, 0),
@@ -46,7 +46,7 @@ namespace UI
 		};
 	}
 
-	public interface IObjectInspectorArgs<T>
+	public interface IObjectInspectorViewModel<T>
 	{
 		public IAssetReferenceEntry reference { get; }
 		public T prefab { get; }
@@ -56,12 +56,12 @@ namespace UI
 
 		public UITextureRendererArgs? render { get; }
 
-		public UIObjectInspectorEntry entry { get; }
+		public UIObjectInspectorSettings Settings { get; }
 	}
 
-	public abstract class UIBaseObjectInspector<T, TArgs> : UIWidget<UIObjectInspectorLayout, TArgs>
+	public abstract class UIBaseObjectInspector<T, TArgs> : UIWidgetC<UIObjectInspectorLayout, TArgs>
 		where T : Object
-		where TArgs : struct, IObjectInspectorArgs<T>
+		where TArgs : class, IObjectInspectorViewModel<T>
 	{
 		private const int RELEASE_DELAY_MS = 500;
 
@@ -69,7 +69,7 @@ namespace UI
 
 		private UISpinner _defaultSpinner;
 
-		private ISpinner spinner => _args.spinner ?? _defaultSpinner;
+		private ISpinner spinner => Value.spinner ?? _defaultSpinner;
 
 		private IAssetReferenceEntry _targetReference;
 		private T _targetPrefab;
@@ -80,7 +80,7 @@ namespace UI
 
 		protected UITextureRenderer _textureRenderer;
 
-		public UIObjectInspectorEntry entry => _args.entry;
+		public UIObjectInspectorSettings Settings => Value.Settings;
 
 		public T target;
 
@@ -115,7 +115,7 @@ namespace UI
 			_restoreRotationTween.KillSafe();
 		}
 
-		protected override void OnShow(ref TArgs args)
+		protected override void OnShow(TArgs args)
 		{
 			if (args.render.HasValue)
 			{
@@ -126,7 +126,7 @@ namespace UI
 			ShowAsync().Forget();
 		}
 
-		protected override void OnHide(ref TArgs args)
+		protected override void OnHide(TArgs args)
 		{
 			TryClearAll();
 			_textureRenderer?.Hide();
@@ -140,15 +140,15 @@ namespace UI
 
 			_layout.image.SetActive(false);
 
-			var prefab = _args.prefab;
+			var prefab = Value.prefab;
 
-			if (prefab == null && !_args.reference.IsEmpty())
+			if (prefab == null && !Value.reference.IsEmpty())
 			{
 				spinner?.SetActive(true);
-				prefab = await LoadAsync(_args.reference, DisposeCancellationToken);
+				prefab = await LoadAsync(Value.reference, DisposeCancellationToken);
 
 				_targetReference?.Release(RELEASE_DELAY_MS);
-				_targetReference = _args.reference;
+				_targetReference = Value.reference;
 
 				spinner?.SetActive(false);
 			}
@@ -216,7 +216,7 @@ namespace UI
 			if (!IsRotateEnabled())
 				return;
 
-			if (entry.disableRestoreRotation)
+			if (Settings.disableRestoreRotation)
 				return;
 
 			if (info.touchPhase == TouchPhase.Began)
@@ -236,9 +236,9 @@ namespace UI
 			_canRotate = false;
 
 			_restoreRotationTween ??= _textureRenderer.FocusPoint.transform
-			   .DOLocalRotate(Vector3.zero, entry.rotationDuration)
-			   .SetEase(entry.rotationEase)
-			   .SetDelay(entry.rotationDelay);
+			   .DOLocalRotate(Vector3.zero, Settings.rotationDuration)
+			   .SetEase(Settings.rotationEase)
+			   .SetDelay(Settings.rotationDelay);
 		}
 
 		private void OnSwiped(SwipeInfo info)
@@ -252,8 +252,8 @@ namespace UI
 			if (!_canRotate)
 				return;
 
-			var x = info.delta.y * entry.rotationSensitivity.y;
-			var y = -info.delta.x * entry.rotationSensitivity.x;
+			var x = info.delta.y * Settings.rotationSensitivity.y;
+			var y = -info.delta.x * Settings.rotationSensitivity.x;
 			_textureRenderer.FocusPoint.transform.Rotate(x, y, 0f);
 		}
 
@@ -262,7 +262,7 @@ namespace UI
 			if (_layout == null || target == null)
 				return false;
 
-			if (entry.rotationSensitivity == Vector2.zero)
+			if (Settings.rotationSensitivity == Vector2.zero)
 				return false;
 
 			return true;
