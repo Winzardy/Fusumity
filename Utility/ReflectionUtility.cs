@@ -30,7 +30,8 @@ namespace Fusumity.Utility
 			"Localization",
 			"Notifications",
 			"Trading",
-			"Booting"
+			"Booting",
+			"Generic"
 		};
 
 		private static readonly string _editorAssemblyTag = "Editor";
