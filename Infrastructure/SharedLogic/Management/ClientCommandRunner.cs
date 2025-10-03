@@ -1,5 +1,6 @@
 using System;
-using Sapientia;
+using UnityEngine;
+using ILogger = Sapientia.ILogger;
 
 namespace SharedLogic
 {
@@ -63,7 +64,7 @@ namespace SharedLogic
 				}
 				finally
 				{
-					_buffer.Dequeue();
+				 	_buffer.Dequeue();
 				}
 			}
 
