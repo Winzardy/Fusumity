@@ -1,4 +1,4 @@
-using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using Sapientia;
 
@@ -24,10 +24,7 @@ namespace SharedLogic
 			return router.ExecuteCommand(in command);
 		}
 
-		public static void SetupServerTime(DateTime newDateTime)
-		{
-			router.SetupServerTime(newDateTime);
-		}
+		public static SharedLogicCacheInfo GetCacheInfo() => router.GetCacheInfo();
 	}
 
 	/// <remarks>
@@ -60,8 +57,20 @@ namespace SharedLogic
 				return false;
 			}
 
-			SharedLogicManager.ExecuteCommand(in command);
-			return true;
+			return SharedLogicManager.ExecuteCommand(in command);
 		}
+	}
+
+	public struct SharedLogicCacheInfo
+	{
+		public string folderPath;
+		public string fileName;
+
+		public string FullPath => Path.Combine(folderPath, fileName);
+	}
+
+	public interface ISharedLogicLocalCacheInfoProvider
+	{
+		public SharedLogicCacheInfo GetInfo();
 	}
 }

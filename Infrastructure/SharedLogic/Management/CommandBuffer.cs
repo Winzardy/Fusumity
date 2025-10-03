@@ -9,7 +9,7 @@ namespace SharedLogic
 	{
 		private Dictionary<Type, ICommandBuffer> _typeToBuffer;
 
-		private Queue<Entry> _queue;
+		private Queue<CommandBufferEntry> _queue;
 
 		public int Count => _queue.Count;
 
@@ -42,7 +42,7 @@ namespace SharedLogic
 				_typeToBuffer[type] = buffer = new CommandBuffer<T>();
 
 			var index = buffer.Add(in command);
-			_queue.Enqueue(new Entry
+			_queue.Enqueue(new CommandBufferEntry
 			{
 				type = type,
 				index = index
@@ -54,10 +54,17 @@ namespace SharedLogic
 			_queue.Dequeue();
 		}
 
-		public void Execute(ISharedRoot root)
+		public CommandBufferEntry Execute(ISharedRoot root)
 		{
 			var entry = _queue.Peek();
 			_typeToBuffer[entry.type].Execute(root, entry.index);
+			return entry;
+		}
+
+		public void OnExecute(ISharedRoot root)
+		{
+			var entry = _queue.Peek();
+			_typeToBuffer[entry.type].OnExecute(root, entry.index);
 		}
 
 		public bool Validate(ISharedRoot root, out Exception exception)
@@ -73,12 +80,12 @@ namespace SharedLogic
 			_typeToBuffer[entry.type]
 			   .Send(sender, entry.index);
 		}
+	}
 
-		private struct Entry
-		{
-			public Type type;
-			public int index;
-		}
+	public struct CommandBufferEntry
+	{
+		public Type type;
+		public int index;
 	}
 
 	internal class CommandBuffer<T> : ICommandBuffer
@@ -110,6 +117,11 @@ namespace SharedLogic
 			_buffer[index].Execute(root);
 		}
 
+		public void OnExecute(ISharedRoot root, int index)
+		{
+			root.OnExecuted(in _buffer[index]);
+		}
+
 		public bool Validate(ISharedRoot root, int index, out Exception exception)
 		{
 			return _buffer[index].Validate(root, out exception);
@@ -130,6 +142,7 @@ namespace SharedLogic
 		public void Clear();
 
 		public void Execute(ISharedRoot root, int index);
+		public void OnExecute(ISharedRoot root, int index);
 		public bool Validate(ISharedRoot root, int index, out Exception exception);
 		public void Send(ICommandSender sender, int index);
 	}

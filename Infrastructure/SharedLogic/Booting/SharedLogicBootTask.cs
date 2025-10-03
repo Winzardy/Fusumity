@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
@@ -6,7 +7,6 @@ using Sapientia;
 using Sapientia.ServiceManagement;
 using SharedLogic;
 using Sirenix.OdinInspector;
-using UnityEngine;
 
 namespace Booting.SharedLogic
 {
@@ -19,23 +19,7 @@ namespace Booting.SharedLogic
 	{
 		private ISharedRoot _sharedRoot;
 		private ICommandSender _sender;
-		private ISharedDataSerializer _dataSerializer;
-
-		[TextArea]
-		[SerializeField]
-		private string _json;
-
-		[Button]
-		private void Save()
-		{
-			_json = _dataSerializer.Save();
-		}
-
-		[Button]
-		private void Load()
-		{
-			_dataSerializer.Load(_json);
-		}
+		private ISharedDataManipulator _dataManipulator;
 
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
@@ -54,11 +38,20 @@ namespace Booting.SharedLogic
 			_sharedRoot = new SharedRoot(registrar, dateTimeProvider, SLDebug.logger);
 			_sender = configuration.commandSender.Create();
 
-			var commandRunner = new ClientCommandRunner(_sharedRoot, _sender, dateTimeProvider, SLDebug.logger);
-			_dataSerializer = configuration.dataSerializerFactory.Create(_sharedRoot);
+			var commandRunner = new ClientCommandRunner(_sharedRoot, _sender, SLDebug.logger);
+			_dataManipulator = configuration.dataManipulatorFactory.Create(_sharedRoot);
+			_dataManipulator.RegisterAsService();
 
 			_sharedRoot.Initialize();
 			_sharedRoot.RegisterAsService();
+
+			var localCacheInfoProvider = configuration.localCacheInfoProvider;
+			var cacheInfo = localCacheInfoProvider.GetInfo();
+			if (File.Exists(cacheInfo.FullPath))
+			{
+				var json = File.ReadAllText(cacheInfo.FullPath);
+				_dataManipulator.Load(json);
+			}
 
 			// var userProfileService = new UserProfileService()
 			//    .RegisterAsService();
@@ -69,7 +62,7 @@ namespace Booting.SharedLogic
 			// new AuthManager(remoteUser)
 			//    .RegisterAsService();
 
-			var router = new SharedLogicRouter(_sharedRoot, dateTimeProvider, commandRunner);
+			var router = new SharedLogicRouter(_sharedRoot, dateTimeProvider, commandRunner, localCacheInfoProvider);
 			SharedLogicManager.Initialize(router);
 			return UniTask.CompletedTask;
 		}
@@ -83,7 +76,7 @@ namespace Booting.SharedLogic
 			if (_sender is IDisposable sender)
 				sender.Dispose();
 
-			if (_dataSerializer is IDisposable dataHandler)
+			if (_dataManipulator is IDisposable dataHandler)
 				dataHandler.Dispose();
 		}
 

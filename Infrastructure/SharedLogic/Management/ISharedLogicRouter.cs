@@ -1,12 +1,10 @@
-using System;
-using Sapientia;
-
 namespace SharedLogic
 {
 	public interface ISharedLogicRouter
 	{
-		long Timestamp { get; }
-		public void SetupServerTime(DateTime newDateTime);
+		public long Timestamp { get; }
 		public bool ExecuteCommand<T>(in T command) where T : struct, ICommand;
+
+		public SharedLogicCacheInfo GetCacheInfo();
 	}
 }

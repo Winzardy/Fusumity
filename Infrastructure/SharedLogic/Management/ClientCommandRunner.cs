@@ -7,22 +7,15 @@ namespace SharedLogic
 	{
 		private readonly ISharedRoot _root;
 		private readonly ICommandSender _sender;
-		private readonly IDateTimeProvider _dateTimeProvider;
 		private readonly ILogger _logger;
 
 		private CommandBuffer _buffer;
 
-		public long Timestamp => _dateTimeProvider.DateTime.Ticks;
-
-		public ClientCommandRunner(ISharedRoot root,
-			ICommandSender sender,
-			IDateTimeProvider dateTimeProvider,
-			ILogger logger = null)
+		public ClientCommandRunner(ISharedRoot root, ICommandSender sender, ILogger logger = null)
 		{
 			_sender = sender;
 			_root = root;
 			_logger = logger;
-			_dateTimeProvider = dateTimeProvider;
 
 			_buffer = new CommandBuffer();
 		}
@@ -33,7 +26,7 @@ namespace SharedLogic
 			_buffer = null;
 		}
 
-		public void Execute<T>(in T command)
+		public bool Execute<T>(in T command)
 			where T : struct, ICommand
 		{
 			var isFirstInQueue = _buffer.Count == 0;
@@ -43,14 +36,13 @@ namespace SharedLogic
 
 			// Только первый в очереди отвечает за выполнение и отправку команд.
 			if (!isFirstInQueue)
-				return;
+				return false;
 
 			while (_buffer.Count > 0)
 			{
 				// В большинстве случае эта валидация уже была, непосредственно перед Execute().
 				// Необходимость в валидации, если предыдущая команда каким-то образом сделала команду в очереди недействительной,
-				// клиент никогда не узнает
-				// и выполнит эту команду без повторного запуска
+				// клиент никогда не узнает и выполнит эту команду без повторного запуска
 				if (!_buffer.Validate(_root, out var exception))
 				{
 					_logger?.Exception(exception);
@@ -61,6 +53,8 @@ namespace SharedLogic
 				try
 				{
 					_buffer.Execute(_root);
+					_buffer.OnExecute(_root);
+
 					_buffer.Send(_sender);
 				}
 				catch (Exception e)
@@ -74,6 +68,7 @@ namespace SharedLogic
 			}
 
 			_buffer.Clear();
+			return true;
 		}
 	}
 }

@@ -10,5 +10,10 @@ namespace SharedLogic
 		[SerializeReference]
 		[Title("Client")]
 		public ICommandSenderFactory commandSender;
+
+		[ClientOnly]
+		[LabelText("Local Cache Info Provider")]
+		[SerializeReference]
+		public ISharedLogicLocalCacheInfoProvider localCacheInfoProvider;
 	}
 }

@@ -1,26 +1,23 @@
-using System;
 using Sapientia;
 
 namespace SharedLogic
 {
 	public class SharedLogicRouter : ISharedLogicRouter
 	{
-		private IDateTimeProvider _dateTimeProvider;
-		private ICommandRunner _runner;
 		private ISharedRoot _root;
+		private ICommandRunner _runner;
+		private IDateTimeProvider _dateTimeProvider;
+		private ISharedLogicLocalCacheInfoProvider _localCacheInfoProvider;
 
 		public long Timestamp => _dateTimeProvider.DateTime.Ticks;
 
-		public SharedLogicRouter(ISharedRoot root, IDateTimeProvider dateTimeProvider, ICommandRunner runner)
+		public SharedLogicRouter(ISharedRoot root, IDateTimeProvider dateTimeProvider, ICommandRunner runner,
+			ISharedLogicLocalCacheInfoProvider localCacheInfoProvider)
 		{
 			_root = root;
-			_runner = runner;
 			_dateTimeProvider = dateTimeProvider;
-		}
-
-		public void SetupServerTime(DateTime newDateTime)
-		{
-			//throw new NotImplementedException();
+			_runner = runner;
+			_localCacheInfoProvider = localCacheInfoProvider;
 		}
 
 		public bool ExecuteCommand<T>(in T command) where T : struct, ICommand
@@ -32,5 +29,7 @@ namespace SharedLogic
 				return true;
 			}
 		}
+
+		public SharedLogicCacheInfo GetCacheInfo() => _localCacheInfoProvider.GetInfo();
 	}
 }
