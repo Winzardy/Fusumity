@@ -16,15 +16,11 @@ namespace SharedLogic
 			get => _instance;
 		}
 
-		internal static long Timestamp => router.Timestamp;
-
 		public static bool ExecuteCommand<T>(in T command)
 			where T : struct, ICommand
 		{
 			return router.ExecuteCommand(in command);
 		}
-
-		public static SharedLogicCacheInfo GetCacheInfo() => router.GetCacheInfo();
 	}
 
 	/// <remarks>
@@ -39,38 +35,8 @@ namespace SharedLogic
 			return ExecuteCommand(root, in command);
 		}
 
-		public static bool ExecuteCommand<T>(this ISharedRoot root, in T command)
+		public static bool ExecuteCommand<T>(this ISharedRoot _, in T command)
 			where T : struct, ICommand
-		{
-			var timeSetCommand = new TimeSetCommand(SharedLogicManager.Timestamp);
-			if (!timeSetCommand.Validate(root, out var exception))
-			{
-				SLDebug.LogException(exception);
-				return false;
-			}
-
-			SharedLogicManager.ExecuteCommand(in timeSetCommand);
-
-			if (!command.Validate(root, out exception))
-			{
-				SLDebug.LogException(exception);
-				return false;
-			}
-
-			return SharedLogicManager.ExecuteCommand(in command);
-		}
-	}
-
-	public struct SharedLogicCacheInfo
-	{
-		public string folderPath;
-		public string fileName;
-
-		public string FullPath => Path.Combine(folderPath, fileName);
-	}
-
-	public interface ISharedLogicLocalCacheInfoProvider
-	{
-		public SharedLogicCacheInfo GetInfo();
+			=> SharedLogicManager.ExecuteCommand(in command);
 	}
 }

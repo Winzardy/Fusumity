@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
@@ -11,15 +10,15 @@ using Sirenix.OdinInspector;
 namespace Booting.SharedLogic
 {
 	[TypeRegistryItem(
-		"\u2009Shared Logic", //В начале делаем отступ из-за отрисовки...
+		"\u2009Shared Logic",
 		"",
 		SdfIconType.Gear)]
 	[Serializable]
 	public class SharedLogicBootTask : BaseBootTask
 	{
 		private ISharedRoot _sharedRoot;
-		private ICommandSender _sender;
-		private ISharedDataManipulator _dataManipulator;
+		private ICommandCenter _center;
+		private ISharedDataStreamer _dataStreamer;
 
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
@@ -27,44 +26,27 @@ namespace Booting.SharedLogic
 			await UniTask.NextFrame(token);
 		}
 
-		private UniTask Initialize()
+		private async UniTask Initialize()
 		{
 			IDateTimeProvider dateTimeProvider = new SharedDateTimeProvider();
 			dateTimeProvider.RegisterAsService();
 
 			var configuration = ContentManager.Get<SharedLogicConfiguration>();
+
 			var registrar = configuration.registrarFactory.Create();
-
 			_sharedRoot = new SharedRoot(registrar, dateTimeProvider, SLDebug.logger);
-			_sender = configuration.commandSender.Create();
-
-			var commandRunner = new ClientCommandRunner(_sharedRoot, _sender, SLDebug.logger);
-			_dataManipulator = configuration.dataManipulatorFactory.Create(_sharedRoot);
-			_dataManipulator.RegisterAsService();
-
 			_sharedRoot.Initialize();
 			_sharedRoot.RegisterAsService();
 
-			var localCacheInfoProvider = configuration.localCacheInfoProvider;
-			var cacheInfo = localCacheInfoProvider.GetInfo();
-			if (File.Exists(cacheInfo.FullPath))
-			{
-				var json = File.ReadAllText(cacheInfo.FullPath);
-				_dataManipulator.Load(json);
-			}
+			_dataStreamer = configuration.dataStreamerFactory.Create(_sharedRoot);
+			_dataStreamer.RegisterAsService();
 
-			// var userProfileService = new UserProfileService()
-			//    .RegisterAsService();
-			//
-			// var remoteUser = new RemoteUser(authSettings.RemoteUrl, GetClientVersion())
-			//    .RegisterAsService();
-			//
-			// new AuthManager(remoteUser)
-			//    .RegisterAsService();
+			_center = configuration.center.Create(_dataStreamer);
+			await _center.InitializeAsync();
 
-			var router = new SharedLogicRouter(_sharedRoot, dateTimeProvider, commandRunner, localCacheInfoProvider);
+			var commandRunner = new ClientCommandRunner(_sharedRoot, _center, SLDebug.logger);
+			var router = new SharedLogicRouter(_sharedRoot, dateTimeProvider, commandRunner);
 			SharedLogicManager.Initialize(router);
-			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
@@ -73,17 +55,11 @@ namespace Booting.SharedLogic
 
 			_sharedRoot?.Dispose();
 
-			if (_sender is IDisposable sender)
-				sender.Dispose();
+			if (_center is IDisposable center)
+				center.Dispose();
 
-			if (_dataManipulator is IDisposable dataHandler)
+			if (_dataStreamer is IDisposable dataHandler)
 				dataHandler.Dispose();
 		}
-
-		// [Pure]
-		// private static string GetClientVersion()
-		// {
-		// 	return AuthSettings.overrideClientVersion ?? ContentManager.Get<ProjectInfo>().version;
-		// }
 	}
 }

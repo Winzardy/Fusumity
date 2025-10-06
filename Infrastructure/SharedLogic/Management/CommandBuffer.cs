@@ -49,9 +49,20 @@ namespace SharedLogic
 			});
 		}
 
-		public void Dequeue()
+		public CommandBufferEntry Dequeue()
 		{
-			_queue.Dequeue();
+			return _queue.Dequeue();
+		}
+
+		public ICommand Peak()
+		{
+			var entry = _queue.Peek();
+			return _typeToBuffer[entry.type].Get(entry.index);
+		}
+
+		public ICommand Get(in CommandBufferEntry entry)
+		{
+			return _typeToBuffer[entry.type].Get(entry.index);
 		}
 
 		public CommandBufferEntry Execute(ISharedRoot root)
@@ -74,11 +85,16 @@ namespace SharedLogic
 			   .Validate(root, entry.index, out exception);
 		}
 
-		public void Send(ICommandSender sender)
+		public void Send(ICommandCenter center)
 		{
 			var entry = _queue.Peek();
 			_typeToBuffer[entry.type]
-			   .Send(sender, entry.index);
+			   .Send(center, entry.index);
+		}
+
+		public void AddCommandToList(in CommandBufferEntry entry, SimpleList<ICommand> list)
+		{
+			_typeToBuffer[entry.type].AddCommandToList(entry.index, list);
 		}
 	}
 
@@ -127,10 +143,20 @@ namespace SharedLogic
 			return _buffer[index].Validate(root, out exception);
 		}
 
-		public void Send(ICommandSender sender, int index)
+		public void Send(ICommandCenter center, int index)
 		{
 			ref var command = ref _buffer[index];
-			sender.Send(in command);
+			center.Submit(in command);
+		}
+
+		public ICommand Get(int index)
+		{
+			return _buffer[index];
+		}
+
+		public void AddCommandToList(int index, SimpleList<ICommand> list)
+		{
+			list.Add(_buffer[index]);
 		}
 	}
 
@@ -144,6 +170,8 @@ namespace SharedLogic
 		public void Execute(ISharedRoot root, int index);
 		public void OnExecute(ISharedRoot root, int index);
 		public bool Validate(ISharedRoot root, int index, out Exception exception);
-		public void Send(ICommandSender sender, int index);
+		public void Send(ICommandCenter center, int index);
+		public ICommand Get(int index);
+		public void AddCommandToList(int index, SimpleList<ICommand> list);
 	}
 }

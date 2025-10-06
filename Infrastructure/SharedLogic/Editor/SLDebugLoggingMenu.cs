@@ -8,21 +8,27 @@ namespace SharedLogic.Editor
 	[InitializeOnLoad]
 	public static class SLDebugLoggingMenu
 	{
-		private const string PATH_RECT_TRANSFORM_REBUILT = "Tools/Interop/Logging/Command/Execute";
+		private const string PATH_LOGGING_COMMAND_EXECUTE = "Tools/Interop/Logging/Command/Execute";
+		private const string PATH_LOGGING_SAVED = "Tools/Interop/Logging/Saved";
+		private const string PATH_LOGGING_LOADED = "Tools/Interop/Logging/Loaded";
 
 		private static readonly Dictionary<string, bool> _cache = new(2);
 		private static readonly Dictionary<string, Action<bool>> _actions = new(2);
 
 		static SLDebugLoggingMenu()
 		{
-			Register(PATH_RECT_TRANSFORM_REBUILT, enable => SLDebug.Logging.Command.execute = enable, SLDebug.Logging.Command.execute);
+			Register(PATH_LOGGING_COMMAND_EXECUTE, enable => SLDebug.Logging.Command.execute = enable, SLDebug.Logging.Command.execute);
+			Register(PATH_LOGGING_SAVED, enable => SLDebug.Logging.saved = enable, SLDebug.Logging.saved);
+			Register(PATH_LOGGING_LOADED, enable => SLDebug.Logging.loaded = enable, SLDebug.Logging.loaded);
 
 			EditorApplication.delayCall += OnDelayCall;
 
 			void OnDelayCall()
 			{
 				EditorApplication.delayCall -= OnDelayCall;
-				PerformAction(PATH_RECT_TRANSFORM_REBUILT);
+				PerformAction(PATH_LOGGING_COMMAND_EXECUTE);
+				PerformAction(PATH_LOGGING_SAVED);
+				PerformAction(PATH_LOGGING_LOADED);
 			}
 		}
 
@@ -45,8 +51,14 @@ namespace SharedLogic.Editor
 
 		#region Menu
 
-		[MenuItem(PATH_RECT_TRANSFORM_REBUILT)]
-		private static void ToggleActionRectTransformRebuilt() => ToggleAction(PATH_RECT_TRANSFORM_REBUILT);
+		[MenuItem(PATH_LOGGING_COMMAND_EXECUTE)]
+		private static void ToggleActionCommandExecute() => ToggleAction(PATH_LOGGING_COMMAND_EXECUTE);
+
+		[MenuItem(PATH_LOGGING_SAVED)]
+		private static void ToggleActionSaved() => ToggleAction(PATH_LOGGING_SAVED);
+
+		[MenuItem(PATH_LOGGING_LOADED)]
+		private static void ToggleActionLoaded() => ToggleAction(PATH_LOGGING_LOADED);
 
 		#endregion
 	}

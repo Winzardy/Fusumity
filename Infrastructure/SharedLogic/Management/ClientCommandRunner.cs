@@ -7,14 +7,14 @@ namespace SharedLogic
 	public class ClientCommandRunner : ICommandRunner, IDisposable
 	{
 		private readonly ISharedRoot _root;
-		private readonly ICommandSender _sender;
+		private readonly ICommandCenter _center;
 		private readonly ILogger _logger;
 
 		private CommandBuffer _buffer;
 
-		public ClientCommandRunner(ISharedRoot root, ICommandSender sender, ILogger logger = null)
+		public ClientCommandRunner(ISharedRoot root, ICommandCenter center, ILogger logger = null)
 		{
-			_sender = sender;
+			_center = center;
 			_root = root;
 			_logger = logger;
 
@@ -56,7 +56,7 @@ namespace SharedLogic
 					_buffer.Execute(_root);
 					_buffer.OnExecute(_root);
 
-					_buffer.Send(_sender);
+					_buffer.Send(_center);
 				}
 				catch (Exception e)
 				{
