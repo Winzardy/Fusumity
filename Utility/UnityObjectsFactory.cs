@@ -121,7 +121,12 @@ namespace Fusumity.Utility
 			await op.WithCancellation(ct);
 			ct.ThrowIfCancellationRequested();
 
-			return op.Result.FirstOrDefault();
+			//NOTE: do not use LINQ with InstantiateAsync
+			//https://discussions.unity.com/t/regarding-instantiateasync-unsafeutility-as-was-used-to-forcibly-convert-the-object-causing-il2cpp-runtime-errors/1535375
+			return
+				op.Result?.Length > 0 ?
+				op.Result[0] :
+				null;
 		}
 
 		private static async UniTask<T> InstantiateAsync<T>(T prefab, Vector3 position, Quaternion rotation, Transform parent, CancellationToken ct) where T : Object
@@ -133,7 +138,10 @@ namespace Fusumity.Utility
 			await op.WithCancellation(ct);
 			ct.ThrowIfCancellationRequested();
 
-			return op.Result.FirstOrDefault();
+			return
+				op.Result?.Length > 0 ?
+				op.Result[0] :
+				null;
 		}
 	}
 }
