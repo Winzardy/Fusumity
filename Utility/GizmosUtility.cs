@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 
+using Sapientia;
 using UnityEditor;
 using UnityEngine;
 
@@ -42,6 +43,72 @@ namespace Fusumity.Utility
 			GUI.color = args.textColor;
 			Handles.Label(worldPos, text, fontStyle);
 			GUI.color = color;
+		}
+
+		public static void DrawSector(Color color, float degrees, Range<float> range, Matrix4x4 matrix, int numSegments = 16)
+		{
+			var gizmoMatrix = Gizmos.matrix;
+			var gizmoColor = Gizmos.color;
+
+			var radians = degrees * Mathf.Deg2Rad;
+
+			Vector3[] points = new Vector3[2 + 2 * numSegments];
+			for (int i = 0; i <= numSegments; ++i)
+			{
+				var angle = -0.5f * radians + i * radians / numSegments;
+				points[i] = new Vector3(
+					range.min * Mathf.Sin(angle),
+					0,
+					range.min * Mathf.Cos(angle));
+			}
+
+			for (int i = 0; i <= numSegments; ++i)
+			{
+				var angle = -0.5f * radians + (numSegments - i) * radians / numSegments;
+				points[numSegments + i + 1] = new Vector3(
+					range.max * Mathf.Sin(angle),
+					0,
+					range.max * Mathf.Cos(angle));
+			}
+
+			Gizmos.color = color;
+			Gizmos.matrix = matrix;
+
+			DrawLineLoop(points);
+
+			Gizmos.matrix = gizmoMatrix;
+			Gizmos.color = gizmoColor;
+		}
+
+		public static void DrawRectangle(Color color, Rect rect, Matrix4x4 matrix, float elevation = 0)
+		{
+			var gizmoMatrix = Gizmos.matrix;
+			var gizmoColor = Gizmos.color;
+
+			var points = new[]
+			{
+				new Vector3(rect.xMin, elevation, rect.yMin),
+				new Vector3(rect.xMin, elevation, rect.yMax),
+				new Vector3(rect.xMax, elevation, rect.yMax),
+				new Vector3(rect.xMax, elevation, rect.yMin),
+			};
+
+			Gizmos.color = color;
+			Gizmos.matrix = matrix;
+
+			DrawLineLoop(points);
+
+			Gizmos.matrix = gizmoMatrix;
+			Gizmos.color = gizmoColor;
+		}
+
+
+		private static void DrawLineLoop(Vector3[] points)
+		{
+			for (int i = 0; i < points.Length; i++)
+			{
+				Gizmos.DrawLine(points[i], points[(i + 1) % points.Length]);
+			}
 		}
 	}
 

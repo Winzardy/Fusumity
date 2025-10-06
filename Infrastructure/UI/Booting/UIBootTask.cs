@@ -25,6 +25,7 @@ namespace Booting.UI
 	[Serializable]
 	public class UIBootTask : BaseBootTask
 	{
+		public InputRouter inputRouter;
 		public EventSystem eventSystemPrefab;
 
 		private UIManagement _management;
@@ -35,6 +36,7 @@ namespace Booting.UI
 		private UIPopoverDispatcher _popovers;
 
 		private EventSystem _eventSystem;
+		private InputRouter _inputRouter;
 
 		private List<IInitializable> _initializables = new();
 
@@ -52,6 +54,7 @@ namespace Booting.UI
 			Initialize();
 
 			CreateEventSystem();
+			CreateInputRouter();
 
 			return UniTask.CompletedTask;
 		}
@@ -120,6 +123,16 @@ namespace Booting.UI
 			_eventSystem = UnityObject.Instantiate(eventSystemPrefab);
 			_eventSystem.name = _eventSystem.name.Remove("(Clone)");
 			_eventSystem.MoveTo(UIFactory.scene);
+		}
+
+		private void CreateInputRouter()
+		{
+			_inputRouter = UnityObject.Instantiate(inputRouter);
+			_inputRouter.name = "[Input Router]";
+			_inputRouter.MoveTo(UIFactory.scene);
+			_inputRouter.SetActive(false);
+
+			_inputRouter.RegisterAsService<IInputRouter>();
 		}
 	}
 }

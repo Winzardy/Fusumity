@@ -25,6 +25,13 @@ namespace Booting
 			new T().RegisterAsService();
 		}
 
+		protected void AddServiceAs<T, TAlias>()
+			where T : class, TAlias, new()			
+		{
+			var instance = new T();
+			instance.RegisterAsService<TAlias>();
+		}
+
 		protected void RemoveService<T>()
 		{
 			if (ServiceLocator.TryGet(out T service) &&
@@ -34,6 +41,11 @@ namespace Booting
 			}
 
 			ServiceLocator<T>.UnRegister();
+		}
+
+		protected T GetService<T>()
+		{
+			return ServiceLocator.Get<T>();
 		}
 	}
 }

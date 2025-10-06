@@ -8,6 +8,7 @@ namespace InputManagement
 		public bool Holding { get; }
 		public event Action<SwipeInfo> Swiped;
 		public event Action<TapInfo> Tapped;
+		public event Action<float> Zoomed;
 		public event Action DoubleTapped;
 	}
 
@@ -25,6 +26,7 @@ namespace InputManagement
 		public event Action<SwipeInfo> Swiped;
 		public event Action<TapInfo> Tapped;
 		public event Action DoubleTapped;
+		public event Action<float> Zoomed;
 
 		public BaseInputReader()
 		{
@@ -36,14 +38,19 @@ namespace InputManagement
 			UnityLifecycle.UpdateEvent.UnSubscribe(Update);
 		}
 
-		protected virtual void Invoke(TapInfo info)
+		protected virtual void InvokeTap(TapInfo info)
 		{
 			Tapped?.Invoke(info);
 		}
 
-		protected virtual void Invoke(SwipeInfo info)
+		protected virtual void InvokeSwipe(SwipeInfo info)
 		{
 			Swiped?.Invoke(info);
+		}
+
+		protected virtual void InvokeZoom(float zoom)
+		{
+			Zoomed?.Invoke(zoom);
 		}
 
 		private void Update()
@@ -68,7 +75,7 @@ namespace InputManagement
 
 				DoubleTapped?.Invoke();
 			}
-		}
+		}		
 
 		private void TapCountdown(float deltaTime)
 		{
@@ -82,6 +89,6 @@ namespace InputManagement
 				_tapCount = 0;
 				_doubleTapDelay = 0;
 			}
-		}
+		}		
 	}
 }

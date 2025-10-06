@@ -1,3 +1,4 @@
+using Fusumity.Utility;
 using System;
 using UI;
 using UnityEngine;
@@ -6,7 +7,6 @@ using UnityEngine.UI;
 namespace Fusumity.MVVM.UI
 {
 	public abstract class UIView<TViewModel, TLayout> : View<TViewModel, TLayout>
-		where TViewModel : class
 		where TLayout : UIBaseLayout
 	{
 		public RectTransform RectTransform { get { return _layout.rectTransform; } }

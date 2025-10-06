@@ -1,4 +1,5 @@
-﻿using UI;
+﻿using Fusumity.Utility;
+using UI;
 using UnityEngine;
 
 namespace Fusumity.MVVM.UI
@@ -11,6 +12,7 @@ namespace Fusumity.MVVM.UI
 	{
 		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)
 		{
+			layout.template.SetActive(false);
 		}
 
 		public UIViewCollection(TViewLayout prefab, RectTransform root = null) : base(prefab, root)

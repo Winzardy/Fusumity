@@ -132,11 +132,15 @@ namespace Fusumity.MVVM
 			AddDisposable(new ClickableSubscription(clickable, handler));
 		}
 
+		protected void Subscribe<T>(IClickable<T> clickable, Action<T> handler)
+		{
+			AddDisposable(new ClickableSubscription<T>(clickable, handler));
+		}
+
 		#endregion Disposables
 	}
 
 	public abstract class View<TViewModel, TLayout> : View<TViewModel>
-		where TViewModel : class
 		where TLayout : MonoBehaviour
 	{
 		protected TLayout _layout;
@@ -154,6 +158,12 @@ namespace Fusumity.MVVM
 			{
 				_layout.SetActive(active);
 			}
+
+			OnSetActive(active);
+		}
+
+		protected virtual void OnSetActive(bool active)
+		{
 		}
 	}
 }

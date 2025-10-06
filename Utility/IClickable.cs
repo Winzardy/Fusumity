@@ -6,4 +6,9 @@ namespace Fusumity.Utility
 	{
 		event Action Clicked;
 	}
+
+	public interface IClickable<T>
+	{
+		event Action<T> Clicked;
+	}
 }

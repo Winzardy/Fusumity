@@ -1,4 +1,5 @@
-﻿using Sapientia.Extensions;
+﻿using Fusumity.Utility;
+using Sapientia.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace Fusumity.MVVM
 
 		public BaseViewCollection(ViewCollectionLayout<TViewLayout> layout) : this(layout.prefab, layout.root)
 		{
+			layout.prefab.SetActive(false);
 		}
 
 		public BaseViewCollection(TViewLayout prefab, Transform root = null)

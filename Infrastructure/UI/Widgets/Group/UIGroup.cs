@@ -345,6 +345,8 @@ namespace UI
 		private readonly IWidgetGroupToken<TWidget> _token;
 		private readonly int _generation;
 
+		public TWidget Widget { get { return _token.Widget; } }
+
 		internal WidgetGroupToken(IWidgetGroupToken<TWidget> token, int generation)
 		{
 			_token = token;

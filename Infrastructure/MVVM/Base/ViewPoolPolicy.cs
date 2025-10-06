@@ -145,6 +145,7 @@ namespace Fusumity.MVVM
 		public sealed override TView Create()
 		{
 			var layout = UnityObjectsFactory.Create(_prefab, _poolRoot, name: $"[ {_viewName} ]");
+			layout.gameObject.SetActive(true);
 
 			var instance = _activator.Invoke(layout);
 			(_instances ??= ListPool<TView>.Get()).Add(instance);

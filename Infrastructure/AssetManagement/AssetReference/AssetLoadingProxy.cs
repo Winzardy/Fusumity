@@ -92,7 +92,7 @@ namespace AssetManagement
 				_loadedAsset = result;
 				_loadingTcs.TrySetResult(_loadedAsset);
 
-				// throw is external token was cancelled
+				// throw if external token was cancelled
 				ct.ThrowIfCancellationRequested();
 			}
 			catch (OperationCanceledException)

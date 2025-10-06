@@ -7,6 +7,7 @@ namespace Fusumity.MVVM
 	{
 		protected TDelegate _delegate;
 
+		public bool IsEnabled { get; private set; } = true;
 		public bool IsDisposed { get; private set; }
 
 		public BaseSubscription(TDelegate @delegate)
@@ -25,6 +26,11 @@ namespace Fusumity.MVVM
 			_delegate = null;
 		}
 
+		public void Enable(bool enable)
+		{
+			IsEnabled = enable;
+		}
+
 		protected abstract void OnDispose();
 	}
 
@@ -39,8 +45,30 @@ namespace Fusumity.MVVM
 
 		public void Invoke()
 		{
+			if (!IsEnabled)
+				return;
+
 			_delegate.Invoke();
 			Invoked?.Invoke();
+		}
+	}
+
+	public abstract class ActionSubscription<T> : BaseSubscription<Action<T>>
+	{
+		public event Action<T> Invoked;
+
+		protected ActionSubscription(Action<T> action) : base(action)
+		{
+			Assert.IsNotNull(action, "action cannot be null");
+		}
+
+		public void Invoke(T args)
+		{
+			if (!IsEnabled)
+				return;
+
+			_delegate.Invoke(args);
+			Invoked?.Invoke(args);
 		}
 	}
 
@@ -55,6 +83,9 @@ namespace Fusumity.MVVM
 
 		public void Invoke()
 		{
+			if (!IsEnabled)
+				return;
+
 			var result = _delegate.Invoke();
 			Invoked?.Invoke(result);
 		}
@@ -71,6 +102,9 @@ namespace Fusumity.MVVM
 
 		public void Invoke(TInput param)
 		{
+			if (!IsEnabled)
+				return;
+
 			var result = _delegate.Invoke(param);
 			Invoked?.Invoke(result);
 		}
