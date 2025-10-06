@@ -15,6 +15,7 @@ namespace InputManagement
 
 		protected override void ReadInput()
 		{
+			TouchCount = 1;
 			var mousePosition = Input.mousePosition;
 
 			if (Input.GetMouseButtonDown(0))

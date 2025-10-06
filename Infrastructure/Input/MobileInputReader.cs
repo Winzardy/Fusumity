@@ -15,6 +15,8 @@ namespace InputManagement
 			if (!Holding)
 				return;
 
+			TouchCount = Input.touchCount;
+
 			var touch = Input.GetTouch(0);
 			InvokeTap(CreateClickInfo(touch));
 

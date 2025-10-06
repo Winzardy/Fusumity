@@ -5,6 +5,7 @@ namespace InputManagement
 {
 	public interface IInputReader : IDisposable
 	{
+		public int TouchCount { get; }
 		public bool Holding { get; }
 		public event Action<SwipeInfo> Swiped;
 		public event Action<TapInfo> Tapped;
@@ -22,6 +23,7 @@ namespace InputManagement
 		private int _tapCount;
 
 		public abstract bool Holding { get; }
+		public int TouchCount { get; protected set; }
 
 		public event Action<SwipeInfo> Swiped;
 		public event Action<TapInfo> Tapped;
