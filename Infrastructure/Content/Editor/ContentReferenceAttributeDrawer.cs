@@ -52,6 +52,14 @@ namespace Content.Editor
 		}
 	}
 
+	public class ContentReferenceArrayAttributeDrawer : OdinAttributeDrawer<ContentReferenceAttribute, ContentReference[]>
+	{
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			CallNextDrawer(label);
+		}
+	}
+
 	public class GuidContentReferenceAttributeDrawer : ContentReferenceAttributeDrawer<SerializableGuid>
 	{
 		protected override ContentDrawerMode TargetMode => ContentDrawerMode.Guid;
