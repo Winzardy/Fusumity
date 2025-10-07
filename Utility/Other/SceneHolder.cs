@@ -33,7 +33,12 @@ namespace Fusumity.Utility
 			if (_created)
 				return;
 
-			_scene = SceneManager.CreateScene(_name);
+			var existingScene = SceneManager.GetSceneByName(_name);
+
+			_scene = existingScene.IsValid() ?
+				existingScene :
+				SceneManager.CreateScene(_name);
+
 			_created = true;
 		}
 	}
