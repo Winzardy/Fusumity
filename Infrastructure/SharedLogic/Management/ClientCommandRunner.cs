@@ -51,21 +51,21 @@ namespace SharedLogic
 					break;
 				}
 
-				try
-				{
+				//try
+				//{
 					_buffer.Execute(_root);
 					_buffer.OnExecute(_root);
 
 					_buffer.Send(_center);
-				}
-				catch (Exception e)
-				{
-					_logger?.Exception(e);
-				}
-				finally
-				{
+				//}
+				// catch (Exception e)
+				// {
+				// 	_logger?.Exception(e);
+				// }
+				// finally
+				// {
 				 	_buffer.Dequeue();
-				}
+				//}
 			}
 
 			_buffer.Clear();

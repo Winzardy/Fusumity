@@ -15,6 +15,7 @@
   "references": [
     "Fusumity",
     "Fusumity.Editor",
-    "Mediators"
+    "Mediators",
+    "Presenters"
   ]
 }

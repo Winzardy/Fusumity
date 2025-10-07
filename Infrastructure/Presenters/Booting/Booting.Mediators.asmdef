@@ -1,10 +1,13 @@
 {
-    "name": "Mediators",
+    "name": "Booting.Mediators",
     "rootNamespace": "",
     "references": [
-        "Messaging",
-        "Content",
-        "Sapientia"
+        "Booting",
+        "UniTask",
+        "Mediators",
+        "Fusumity",
+        "Sapientia",
+        "Presenters"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -3,7 +3,7 @@ using Content;
 using Sapientia.Extensions;
 using UnityEngine.Scripting;
 
-namespace Mediators
+namespace Presenters
 {
 	/// <summary>
 	/// <para>
@@ -19,16 +19,16 @@ namespace Mediators
 	/// например вызывать логику подписавшись на какое-то событие, а не прокидывать Presenter!
 	/// </para>
 	/// </summary>
-	public interface IMediator : IDisposable
+	public interface IPresenter : IDisposable
 	{
 		public void Initialize();
 
 		public bool IsDeferred => true;
 	}
 
-	/// <inheritdoc cref="IMediator"/>
+	/// <inheritdoc cref="IPresenter"/>
 	[Preserve]
-	public abstract class BaseMediator : MessageSubscriber, IMediator
+	public abstract class BasePresenter : MessageSubscriber, IPresenter
 	{
 		public virtual bool IsDeferred => true;
 
@@ -38,7 +38,7 @@ namespace Mediators
 	}
 
 	[Preserve]
-	public abstract class BaseMediator<TSettings> : BaseMediator
+	public abstract class BasePresenter<TSettings> : BasePresenter
 	{
 		protected TSettings _settings;
 
