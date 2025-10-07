@@ -1,13 +1,14 @@
 {
-    "name": "Booting.Mediators",
+    "name": "Booting.Presenters",
     "rootNamespace": "",
     "references": [
         "Booting",
         "UniTask",
-        "Mediators",
         "Fusumity",
         "Sapientia",
-        "Presenters"
+        "Presenters",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
