@@ -30,7 +30,7 @@ namespace Trading.InAppPurchasing
 				var pooledTradeboard = _service.CreateTradeboard(in offer.trader, out var tradeboard);
 				var registerToken = tradeboard.Register(in receipt);
 
-				if (!offer.CanFetch(tradeboard, out var error))
+				if (!offer.CanFetchOrExecute(tradeboard, out var error))
 				{
 					TradingDebug.LogError(
 						$"Error on can execute trader offer [ {offer} ]: {error}");

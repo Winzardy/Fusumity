@@ -15,7 +15,7 @@ namespace Fusumity.Editor
 {
 	using ShowIfAttribute = Sirenix.OdinInspector.ShowIfAttribute;
 
-	public class UsageLimitEntryAttributeProcessor : OdinAttributeProcessor<UsageLimitEntry>
+	public class UsageLimitEntryAttributeProcessor : OdinAttributeProcessor<UsageLimitScheme>
 	{
 		private const string USAGE_COUNT_SUFFIX = "usage";
 		private const string USAGE_COUNT_UNLIMITED_SUFFIX = "unlimited usages";
@@ -30,7 +30,7 @@ namespace Fusumity.Editor
 
 			switch (member.Name)
 			{
-				case nameof(UsageLimitEntry.usageCount):
+				case nameof(UsageLimitScheme.usageCount):
 
 					attributes.Add(new MinimumAttribute(0));
 					var parentLabelContent = parentProperty.Label;
@@ -48,12 +48,12 @@ namespace Fusumity.Editor
 					}
 
 					break;
-				case nameof(UsageLimitEntry.reset):
+				case nameof(UsageLimitScheme.reset):
 					var exp1 = $"@{nameof(UsageLimitEntryAttributeProcessor)}.{nameof(ShowIfUsageCooldown)}($property)";
 					attributes.Add(new ShowIfAttribute(exp1));
 					attributes.Add(new PropertySpaceAttribute(0, 5));
 					break;
-				case nameof(UsageLimitEntry.fullReset):
+				case nameof(UsageLimitScheme.fullReset):
 
 					var exp2 = $"@{nameof(UsageLimitEntryAttributeProcessor)}.{nameof(ShowIfCooldown)}($property)";
 					attributes.Add(new ShowIfAttribute(exp2));
@@ -88,7 +88,7 @@ namespace Fusumity.Editor
 
 		public static bool ShowIfCooldown(InspectorProperty property)
 		{
-			if (property.Parent.ValueEntry.WeakSmartValue is UsageLimitEntry entry)
+			if (property.Parent.ValueEntry.WeakSmartValue is UsageLimitScheme entry)
 				return entry.usageCount > 0;
 
 			return false;
@@ -96,7 +96,7 @@ namespace Fusumity.Editor
 
 		public static bool ShowIfUsageCooldown(InspectorProperty property)
 		{
-			if (property.Parent.ValueEntry.WeakSmartValue is UsageLimitEntry entry)
+			if (property.Parent.ValueEntry.WeakSmartValue is UsageLimitScheme entry)
 				return entry.usageCount > 1;
 
 			return false;

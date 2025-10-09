@@ -24,7 +24,7 @@ namespace Trading
 			_service = service;
 		}
 
-		public bool CanFetch([CanBeNull] TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
+		public bool CanFetchOrExecute([CanBeNull] TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
 		{
 			error = null;
 
@@ -47,7 +47,7 @@ namespace Trading
 			return true;
 		}
 
-		public bool CanFetch(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
+		public bool CanFetchOrExecute(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			error = null;
 
@@ -57,12 +57,18 @@ namespace Trading
 				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
 				{
 					if (!tradeCostWithReceipt.CanFetch(tradeboard, out payError))
+					{
+						payError ??= TradePayError.NotImplemented;
 						break;
+					}
 				}
 				else
 				{
 					if (!t.CanExecute(tradeboard, out payError))
+					{
+						payError ??= TradePayError.NotImplemented;
 						break;
+					}
 				}
 			}
 
@@ -86,7 +92,7 @@ namespace Trading
 		public async Task<TradeExecuteError?> FetchAsync(TradeConfig trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
-			if (!CanFetch(in trade, tradeboard, out var error))
+			if (!CanFetchOrExecute(in trade, tradeboard, out var error))
 				return error;
 
 			var payError = await FetchAsync(trade.cost, tradeboard, cancellationToken);
@@ -99,7 +105,7 @@ namespace Trading
 		public async Task<TradePayError?> FetchAsync(TradeCost cost, Tradeboard tradeboard,
 			CancellationToken cancellationToken)
 		{
-			if (!CanFetch(cost, tradeboard, out var error))
+			if (!CanFetchOrExecute(cost, tradeboard, out var error))
 				return error;
 
 			using (ListPool<ITradeReceipt>.Get(out var receipts))

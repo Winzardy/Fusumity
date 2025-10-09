@@ -24,7 +24,7 @@ namespace Content.Editor
 
 		public static readonly string TOOLTIP_PREFIX_GUID = $"{LABEL_GUID}:\n".ColorText(Color.gray).SizeText(12);
 
-		private static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
+		public static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
 
 		public override bool CanProcessSelfAttributes(InspectorProperty property)
 		{
@@ -80,30 +80,28 @@ namespace Content.Editor
 
 					break;
 
-				case ContentConstants.UNITY_VALUE_FIELD_NAME:
 				case ContentConstants.GUID_FIELD_NAME:
 					attributes.Add(new HideInInspector());
 
 					break;
 
-				case ContentConstants.CUSTOM_VALUE_FIELD_NAME:
+				case ContentConstants.UNITY_VALUE_FIELD_NAME:
 					if (!contentEntry.ValueType.IsSerializeReference())
 					{
 						attributes.Add(new HideInInspector());
 					}
 					else
 					{
-						attributes.Add(new ShowInInspectorAttribute());
-
-						if (propertyToGUIContent.TryGetValue(parentProperty, out var label) && label.text != null)
-						{
-							attributes.Add(new LabelTextAttribute(label.text));
-							if (!parentProperty.Attributes.HasAttribute<DisableContentEntryDrawerAttribute>())
-								attributes.Add(new TooltipAttribute(
-									$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(GetTooltip)}($property, \"{label.tooltip}\")"));
-						}
-						else
-							attributes.Add(new HideLabelAttribute());
+						// if (propertyToGUIContent.TryGetValue(parentProperty, out var label))
+						// {
+						// 	if (!label.text.IsNullOrEmpty())
+						// 		attributes.Add(new LabelTextAttribute(label.text));
+						// 	if (!parentProperty.Attributes.HasAttribute<DisableContentEntryDrawerAttribute>())
+						// 		attributes.Add(new TooltipAttribute(
+						// 			$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(GetTooltip)}($property, \"{label.tooltip}\")"));
+						// }
+						// else
+						// 	attributes.Add(new HideLabelAttribute());
 
 						attributes.Add(new CustomContextMenuAttribute(
 							"Copy Guid",
@@ -129,6 +127,7 @@ namespace Content.Editor
 			var guiContent = new GUIContent(property.Label);
 			propertyToGUIContent[property] = guiContent;
 			var valueType = property.ValueEntry.TypeOfValue.GetGenericArguments()[0];
+			attributes.Add(new HideReferenceObjectPickerAttribute());
 
 			var isCollection = typeof(IList).IsAssignableFrom(valueType);
 			var collectionLabel = valueType.IsArray ? ARRAY_DEFAULT_LABEL : LIST_DEFAULT_LABEL;
@@ -149,8 +148,6 @@ namespace Content.Editor
 				attributes.Add(new ContentEntryGroupStyleAttribute(property));
 
 			attributes.RemoveAll(attr => attr is LabelTextAttribute);
-
-			attributes.Add(new HideReferenceObjectPickerAttribute());
 		}
 
 		public static string GetTooltip(InspectorProperty property, string tooltip)

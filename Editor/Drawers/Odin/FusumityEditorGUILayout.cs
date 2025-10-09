@@ -399,11 +399,7 @@ namespace Fusumity.Editor
 		public static T EnumPopup<T>(GUIContent label, T value)
 			where T : unmanaged, Enum
 		{
-			var enumType = typeof(T);
-			var names = Enum.GetNames(enumType);
-			var nameSelect = Enum.GetName(enumType, value);
-			var target = Array.IndexOf(names, nameSelect);
-			return SirenixEditorFields.Dropdown(label, target, names).ToEnum<T>();
+			return EnumSelector<T>.DrawEnumField(label, value);
 		}
 	}
 }

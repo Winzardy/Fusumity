@@ -7,9 +7,8 @@ namespace Trading
 	public static partial class TraderUtility
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CanFetch(this in TraderOfferReference reference, Tradeboard tradeboard, out TradeExecuteError? error)
+		public static bool CanFetchOrExecute(this in TraderOfferReference reference, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
-			tradeboard.FetchModeScope(true);
 			return reference.Config
 			   .trade
 			   .CanFetch(tradeboard, out error);

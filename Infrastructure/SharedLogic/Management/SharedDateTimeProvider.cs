@@ -10,7 +10,7 @@ namespace SharedLogic
 
 		private TimeSpan _timeDelta;
 
-		public DateTime DateTime => DateTime.UtcNow + _timeDelta;
+		public DateTime DateTimeWithoutOffset => DateTime.UtcNow + _timeDelta;
 
 		public SharedDateTimeProvider()
 		{

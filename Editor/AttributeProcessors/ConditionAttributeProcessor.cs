@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Attributes;
 using Fusumity.Editor.Utility;
 using Sapientia.Conditions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
 using UnityEngine;
 
 namespace Fusumity.Editor
@@ -18,7 +20,7 @@ namespace Fusumity.Editor
 			switch (member.Name)
 			{
 				case nameof(Condition.invert):
-					attributes.Add(new HorizontalGroupAttribute(23, marginRight:2));
+					attributes.Add(new HorizontalGroupAttribute(23, marginRight: 2));
 					attributes.Add(new LabelTextAttribute("!"));
 					attributes.Add(new LabelWidthAttribute(8));
 					attributes.Add(new TooltipAttribute("Инвертировать результат"));
@@ -33,7 +35,8 @@ namespace Fusumity.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-			attributes.Add(new BoxGroupAttribute());
+			var color = Color.Lerp(Color.blue, Color.white, 0.83f);
+			attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
 		}
 	}
 }

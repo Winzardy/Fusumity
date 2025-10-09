@@ -15,14 +15,14 @@ namespace Trading
 		public static bool CanFetch(this in ContentReference<TradeCost> reference, Tradeboard tradeboard, out TradePayError? error)
 		{
 			tradeboard.Bind(in reference);
-			return TradeManager.CanFetch(reference, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(reference, tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanFetch(this TradeCost cost, Tradeboard tradeboard, string tradeId, out TradePayError? error)
 		{
 			tradeboard.Bind(tradeId);
-			return TradeManager.CanFetch(cost, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(cost, tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,7 +44,7 @@ namespace Trading
 		public static bool CanFetch(this in ContentReference<TradeConfig> reference, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			tradeboard.Bind(in reference.Read());
-			return TradeManager.CanFetch(reference, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(reference, tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,6 +3,10 @@ using Sapientia.Extensions.Reflection;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+#if UNITY_EDITOR
+using Sirenix.OdinInspector;
+#endif
+
 namespace Content
 {
 	using UnityObject = UnityEngine.Object;
@@ -30,22 +34,21 @@ namespace Content
 			}
 		}
 
-		// ReSharper disable once InconsistentNaming
-		// Only inspector
-		private T _value
-		{
-			get
-			{
-				_serializeReference ??= new SerializeReference<T>();
-				return _serializeReference.Value;
-			}
-			set => _serializeReference.Value = value;
-		}
-
 		// TODO: надо очищать YAML от Null значений, потому что тупо место занимает rid: -2...
 		// ReSharper disable once InconsistentNaming
 		[SerializeField, SerializeReference, ClientOnly]
 		private ISerializeReference<T> _serializeReference = null;
+
+#if UNITY_EDITOR
+		[OnInspectorGUI]
+		private void OnInspectorGUI()
+		{
+			if (!typeof(T).IsSerializeReference())
+				return;
+
+			_serializeReference ??= new SerializeReference<T>();
+		}
+#endif
 	}
 
 	public partial struct ContentEntry<T, TFilter>
@@ -73,7 +76,11 @@ namespace Content
 		internal ref T EditValue { get; }
 	}
 
-	internal interface ISerializeReference<T>
+	public interface IContentSerializeReference
+	{
+	}
+
+	internal interface ISerializeReference<T> : IContentSerializeReference
 	{
 		internal ref T Value { get; }
 	}

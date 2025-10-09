@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Editor.Utility;
+using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UnityEngine;
 
 namespace Trading.Editor
 {
@@ -43,6 +45,13 @@ namespace Trading.Editor
 			};
 
 			attributes.Add(typeSelectorSettingsAttribute);
+		}
+
+		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
+		{
+			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
+			if (member.TryGetSummary(out var summary))
+				attributes.Add(new TooltipAttribute(summary));
 		}
 
 		protected virtual string GetFilterFunction()

@@ -16,8 +16,6 @@ namespace Content.ScriptableObjects.Editor
 		private const string ARRAY_DEFAULT_LABEL = "Array";
 		private const string LIST_DEFAULT_LABEL = "Collection";
 
-		private static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
-
 		public override bool CanProcessSelfAttributes(InspectorProperty property)
 		{
 			var type = property.ValueEntry.TypeOfValue;
@@ -50,7 +48,7 @@ namespace Content.ScriptableObjects.Editor
 					}
 					else
 					{
-						if (propertyToGUIContent.TryGetValue(parentProperty, out var content))
+						if (ContentEntryAttributeProcessor.propertyToGUIContent.TryGetValue(parentProperty, out var content))
 						{
 							if (!content.text.IsNullOrEmpty())
 								attributes.Add(new LabelTextAttribute(content.text));
@@ -68,7 +66,7 @@ namespace Content.ScriptableObjects.Editor
 
 					break;
 
-				case ContentConstants.CUSTOM_VALUE_FIELD_NAME:
+				case ContentConstants.UNITY_VALUE_FIELD_NAME:
 					if (!contentEntry.ValueType.IsSerializeReference())
 					{
 						attributes.Add(new HideInInspector());
@@ -78,7 +76,6 @@ namespace Content.ScriptableObjects.Editor
 						attributes.Add(
 							new HideIfAttribute(
 								$"@{nameof(ScriptableContentEntryAttributeProcessor)}.{nameof(UseCustomInspector)}($property)"));
-						attributes.Add(new HideLabelAttribute());
 					}
 
 					break;
@@ -86,7 +83,6 @@ namespace Content.ScriptableObjects.Editor
 				case ScriptableContentConstants.SCRIPTABLEOBJECT_FIELD_NAME:
 				case ScriptableContentConstants.ID_FIELD_NAME:
 				case ContentConstants.GUID_FIELD_NAME:
-				case ContentConstants.UNITY_VALUE_FIELD_NAME:
 					attributes.Add(new HideInInspector());
 					break;
 
@@ -127,8 +123,9 @@ namespace Content.ScriptableObjects.Editor
 			base.ProcessSelfAttributes(property, attributes);
 
 			var guiContent = new GUIContent(property.Label);
-			propertyToGUIContent[property] = guiContent;
+			ContentEntryAttributeProcessor.propertyToGUIContent[property] = guiContent;
 			var valueType = property.ValueEntry.TypeOfValue.GetGenericArguments()[0];
+			attributes.Add(new HideReferenceObjectPickerAttribute());
 
 			var isCollection = typeof(IList).IsAssignableFrom(valueType);
 			var collectionLabel = valueType.IsArray ? ARRAY_DEFAULT_LABEL : LIST_DEFAULT_LABEL;
@@ -140,10 +137,8 @@ namespace Content.ScriptableObjects.Editor
 			else if (property.Label.text.IsNullOrEmpty() && isCollection)
 				guiContent.text = collectionLabel;
 
-
 			attributes.Add(new HideLabelAttribute());
 			attributes.RemoveAll(attr => attr is LabelTextAttribute);
-			attributes.Add(new HideReferenceObjectPickerAttribute());
 		}
 
 		public static bool ShowIfNested(InspectorProperty property)

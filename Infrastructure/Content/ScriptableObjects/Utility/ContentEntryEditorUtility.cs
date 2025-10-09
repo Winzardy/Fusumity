@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
+using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEditor;
 
@@ -188,11 +190,30 @@ namespace Content.Editor
 		private static MemberReflectionReference<IUniqueContentEntry> FixSerializeReference(
 			this MemberReflectionReference<IUniqueContentEntry> reference)
 		{
-			for (int i = 0; i < reference.steps.Length; i++)
+			using var steps = new SimpleList<MemberReferencePathStep>();
+			using (ListPool<int>.Get(out var skip))
 			{
-				if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME ||
-				    reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
-					reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
+				for (int i = 0; i < reference.steps.Length; i++)
+				{
+					if (reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
+						reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
+
+					if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME)
+						skip.Add(i);
+				}
+
+				if (!skip.IsEmpty())
+				{
+					for (int i = 0; i < reference.steps.Length; i++)
+					{
+						if (skip.Contains(i))
+							continue;
+
+						steps.Add(in reference.steps[i]);
+					}
+
+					reference.steps = steps.ToArray();
+				}
 			}
 
 			return reference;
