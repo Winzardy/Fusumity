@@ -9,6 +9,7 @@ using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace Content.Editor
 {
@@ -198,8 +199,8 @@ namespace Content.Editor
 					if (reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
 						reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
 
-					if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME)
-						skip.Add(i);
+					// if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME)
+					// 	skip.Add(i);
 				}
 
 				if (!skip.IsEmpty())
