@@ -71,6 +71,15 @@ namespace Fusumity.Utility
 			component.gameObject.SetActive(active);
 		}
 
+		public static void SetActiveSafe<T>(this T component, bool active)
+			where T : Component
+		{
+			if(!component || !component.gameObject)
+				return;
+
+			component.gameObject.SetActive(active);
+		}
+
 		public static void SetEnableSafe<T>(this T component, bool enable)
 			where T : Behaviour
 		{
