@@ -30,6 +30,8 @@ namespace Trading
 
 			if (cost == null)
 				return false;
+
+					//TODO: EnumerateActual
 			foreach (var t in cost)
 			{
 				if (t is ITradeCostWithReceipt tradeCostWithReceipt)

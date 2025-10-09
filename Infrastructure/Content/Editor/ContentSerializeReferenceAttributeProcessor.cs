@@ -24,7 +24,7 @@ namespace Content.Editor
 
 			switch (member.Name)
 			{
-				case ContentConstants.CUSTOM_VALUE_FIELD_NAME:
+				case ContentConstants.VALUE_FIELD_NAME:
 
 					if (ContentEntryAttributeProcessor.propertyToGUIContent.TryGetValue(parentProperty.Parent, out var label))
 					{
