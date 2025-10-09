@@ -20,14 +20,15 @@ namespace Fusumity.Editor
 			switch (member.Name)
 			{
 				case nameof(Condition.invert):
-					attributes.Add(new HorizontalGroupAttribute(23, marginRight: 2));
+					//attributes.Add(new BoxGroupAttribute(Condition.BOX_GROUP, false));
+					attributes.Add(new HorizontalGroupAttribute(Condition.GROUP, 23, marginRight: 2));
 					attributes.Add(new LabelTextAttribute("!"));
 					attributes.Add(new LabelWidthAttribute(8));
 					attributes.Add(new TooltipAttribute("Инвертировать результат"));
 					break;
 
-				case "mode":
-					attributes.Add(new HorizontalGroupAttribute());
+				case nameof(CollectionCondition.mode):
+					attributes.Add(new HorizontalGroupAttribute(Condition.GROUP));
 					break;
 			}
 		}
@@ -37,6 +38,11 @@ namespace Fusumity.Editor
 			base.ProcessSelfAttributes(property, attributes);
 			var color = Color.Lerp(Color.blue, Color.white, 0.83f);
 			attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
+			attributes.Add(new ColorCardBoxAttribute(
+				Color.black.r,
+				Color.black.g,
+				Color.black.b,
+				0.2f));
 		}
 	}
 }
