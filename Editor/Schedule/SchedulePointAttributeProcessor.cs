@@ -80,7 +80,7 @@ namespace Fusumity.Editor
 		{
 			message = null;
 			if (property.ValueEntry.WeakSmartValue is SchedulePoint schedulePoint)
-				if (property.Parent.Parent.ValueEntry.WeakSmartValue is ScheduleEntry {points: {Length: >= 2}} schedule)
+				if (property.Parent.Parent.ValueEntry.WeakSmartValue is ScheduleScheme {points: {Length: >= 2}} schedule)
 				{
 					if (schedulePoint.GetKind() is SchedulePointKind.Interval)
 					{

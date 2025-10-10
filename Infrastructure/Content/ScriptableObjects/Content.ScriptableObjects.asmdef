@@ -5,10 +5,9 @@
         "Content",
         "Content.Editor",
         "Sapientia",
-        "GUID:17eb6086fb1b4f13b640ba906df3d2b7",
         "UniTask",
         "Fusumity.Editor",
-        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c"
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

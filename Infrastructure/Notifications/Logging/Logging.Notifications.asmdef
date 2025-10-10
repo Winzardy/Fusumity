@@ -3,8 +3,6 @@
     "rootNamespace": "",
     "references": [
         "Notifications",
-        "UnityEditor.UI",
-        "UnityEngine.UI",
         "WLog",
         "Fusumity",
         "Sapientia"

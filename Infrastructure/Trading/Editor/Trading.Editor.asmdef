@@ -7,7 +7,8 @@
         "Sapientia",
         "Fusumity.Editor",
         "AssetManagement",
-        "Localization"
+        "Localization",
+        "Fusumity"
     ],
     "includePlatforms": [
         "Editor"

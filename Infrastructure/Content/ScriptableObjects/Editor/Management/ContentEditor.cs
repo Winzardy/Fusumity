@@ -72,6 +72,26 @@ namespace Content.Editor
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + guid + " ]");
 		}
+
+		public static void Edit<T>(in ContentReference<T> reference, ContentEditing<T> editing)
+		{
+			foreach (var database in ContentDatabaseEditorUtility.Databases)
+			{
+				foreach (var target in database.scriptableObjects)
+				{
+					if (target is not IUniqueContentEntryScriptableObject<T> source)
+						continue;
+
+					if (source.UniqueContentEntry.Guid != reference.guid)
+						continue;
+
+					source.Edit(editing);
+					return;
+				}
+			}
+
+			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + reference.guid.guid + " ]");
+		}
 	}
 
 	public static class ContentEditorExtensions

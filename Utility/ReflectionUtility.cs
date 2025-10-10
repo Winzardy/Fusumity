@@ -136,7 +136,9 @@ namespace Fusumity.Utility
 
 		public static bool TryGetType(string typeName, out Type type, params string[] assemblyTags)
 		{
-			var assemblies = assemblyTags != null ? GetAssemblies(assemblyTags) : GetAllowedAssemblies();
+			var assemblies = assemblyTags != null
+				? GetAssemblies(assemblyTags)
+				: GetAllowedAssemblies();
 			foreach (var assembly in assemblies)
 			{
 				type = assembly.GetTypeByName(typeName);

@@ -2,13 +2,13 @@
     "name": "Fusumity",
     "rootNamespace": "",
     "references": [
+        "UniTask",
         "Sapientia",
         "Unity.Addressables",
         "Unity.ResourceManager",
         "Unity.Collections",
         "Unity.Mathematics",
-        "Unity.Burst",
-        "UniTask"
+        "Unity.Burst"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,0 +1,22 @@
+{
+    "name": "Booting.SharedLogic",
+    "rootNamespace": "",
+    "references": [
+        "Booting",
+        "UniTask",
+        "Sapientia",
+        "SharedLogic",
+        "Content",
+        "WLog",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

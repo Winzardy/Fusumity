@@ -80,7 +80,11 @@ namespace Content.Management
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerable<IContentEntry<T>> IContentEditorResolver.GetAll<T>() => GetAll<T>();
+		IEnumerable<ContentReference<T>> IContentEditorResolver.GetAll<T>() => GetAll<T>();
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerable<IContentEntry<T>> IContentEditorResolver.GetAllEntries<T>() => GetAllEntries<T>();
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,7 +187,11 @@ namespace Content.Management
 
 		/// <inheritdoc cref="ContentResolver.GetAll{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IEnumerable<IContentEntry<T>> GetAll<T>();
+		public IEnumerable<ContentReference<T>> GetAll<T>();
+
+		/// <inheritdoc cref="ContentResolver.GetAll{T}()"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<IContentEntry<T>> GetAllEntries<T>();
 
 		/// <inheritdoc cref="ContentResolver.ToId{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

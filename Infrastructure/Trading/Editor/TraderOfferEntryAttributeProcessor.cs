@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Trading.Editor
 {
-	public class TraderOfferEntryAttributeProcessor : OdinAttributeProcessor<TraderOfferEntry>
+	public class TraderOfferEntryAttributeProcessor : OdinAttributeProcessor<TraderOfferConfig>
 	{
 		private const int ICON_SIZE = 64;
 
@@ -18,7 +18,7 @@ namespace Trading.Editor
 
 			switch (member.Name)
 			{
-				case nameof(TraderOfferEntry.Preview):
+				case nameof(TraderOfferConfig.Preview):
 					attributes.Add(new PropertyOrderAttribute(-1));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new HorizontalGroupAttribute("row", width: ICON_SIZE));
@@ -28,13 +28,13 @@ namespace Trading.Editor
 
 					break;
 
-				case nameof(TraderOfferEntry.icon):
-				case nameof(TraderOfferEntry.name):
-				case nameof(TraderOfferEntry.label):
-				case nameof(TraderOfferEntry.costLabel):
+				case nameof(TraderOfferConfig.icon):
+				case nameof(TraderOfferConfig.name):
+				case nameof(TraderOfferConfig.label):
+				case nameof(TraderOfferConfig.costLabel):
 					attributes.Add(new VerticalGroupAttribute("row/right"));
 					break;
-				case nameof(TraderOfferEntry.UseConfirmation):
+				case nameof(TraderOfferConfig.UseConfirmation):
 					attributes.Add(new VerticalGroupAttribute("row/right"));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new ShowIfAttribute("@TraderOfferEntryAttributeProcessor.ShowIfConfirmation($property)"));
@@ -56,7 +56,7 @@ namespace Trading.Editor
 
 		public static bool ShowIfConfirmation(InspectorProperty property)
 		{
-			if (property?.ParentValueProperty.ValueEntry.WeakSmartValue is TraderOfferEntry entry)
+			if (property?.ParentValueProperty.ValueEntry.WeakSmartValue is TraderOfferConfig entry)
 			{
 				if (entry.trade.IsEmpty())
 					return false;

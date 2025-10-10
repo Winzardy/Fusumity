@@ -122,8 +122,8 @@ namespace UI.Windows
 
 		internal IEnumerable<UIWidget> GetAllActive()
 		{
-			if (_current is UIWidget castCurrent)
-				yield return castCurrent;
+			if (_current is UIWidget widget)
+				yield return widget;
 		}
 
 		private T Create<T>()

@@ -2,7 +2,12 @@ namespace Content
 {
 	public partial class UniqueContentEntry<T>
 	{
-		public virtual void RegenerateGuid() => SetGuid(SerializableGuid.New());
+		public virtual SerializableGuid RegenerateGuid()
+		{
+			var serializableGuid = SerializableGuid.New();
+			SetGuid(serializableGuid);
+			return serializableGuid;
+		}
 
 		public void SetGuid(in SerializableGuid newGuid) => guid = newGuid;
 
@@ -13,7 +18,7 @@ namespace Content
 
 	public partial interface IUniqueContentEntry
 	{
-		public void RegenerateGuid();
+		public SerializableGuid RegenerateGuid();
 		public void SetGuid(in SerializableGuid newGuid);
 		public IUniqueContentEntry Clone();
 	}

@@ -25,6 +25,26 @@ namespace Fusumity.Editor
 		/// </summary>
 		public static GUIStyle objectFieldButtonStyle = GUI.skin.FindStyle("ObjectFieldButton");
 
+		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill)
+		{
+			if (!rect.TryGetValue(out var r))
+			{
+				body.Invoke();
+
+				return false;
+			}
+
+			var trianglePosition = r.AlignRight(9f, 5f);
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Arrow);
+
+			var click = GUI.Button(trianglePosition, GUIContent.none, GUIStyle.none);
+
+			body.Invoke();
+
+			SdfIcons.DrawIcon(trianglePosition, icon);
+			return click;
+		}
+
 		public static bool ToolbarButton(Rect rect, EditorIcon icon, GUIStyle style = null,
 			bool ignoreGUIEnabled = false)
 		{
@@ -349,18 +369,18 @@ namespace Fusumity.Editor
 			GUI.Label(labelRect, text, textStyle);
 		}
 
-		public static void SuffixLabel(string text, bool overlay = true)
+		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
 		{
 			var style = new GUIStyle(EditorStyles.label)
 			{
 				fontSize = EditorStyles.textField.fontSize - 3,
 				normal =
 				{
-					textColor = Color.gray
+					textColor = textColor ?? Color.gray
 				},
 				hover =
 				{
-					textColor = Color.gray
+					textColor = textColor ?? Color.gray
 				}
 			};
 
@@ -379,11 +399,7 @@ namespace Fusumity.Editor
 		public static T EnumPopup<T>(GUIContent label, T value)
 			where T : unmanaged, Enum
 		{
-			var enumType = typeof(T);
-			var names = Enum.GetNames(enumType);
-			var nameSelect = Enum.GetName(enumType, value);
-			var target = Array.IndexOf(names, nameSelect);
-			return SirenixEditorFields.Dropdown(label, target, names).ToEnum<T>();
+			return EnumSelector<T>.DrawEnumField(label, value);
 		}
 	}
 }

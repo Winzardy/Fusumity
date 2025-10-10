@@ -4,9 +4,11 @@
     "references": [
         "Booting",
         "UniTask",
-        "Presenters",
         "Fusumity",
-        "Sapientia"
+        "Sapientia",
+        "Presenters",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

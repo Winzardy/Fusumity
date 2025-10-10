@@ -33,6 +33,14 @@ namespace Content.Editor
 
 		private bool _guidRawMode;
 
+		protected override bool CanDrawValueProperty(InspectorProperty property)
+		{
+			if (ContentReferenceAttributeProcessor.propertyToContentReferenceAttribute.ContainsKey(property))
+				return false;
+
+			return base.CanDrawValueProperty(property);
+		}
+
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var output = FusumityEditorGUILayout.DrawGuidField(ValueEntry.SmartValue, label, ref _guidRawMode);
@@ -41,6 +49,14 @@ namespace Content.Editor
 				return;
 
 			ValueEntry.SmartValue = output;
+		}
+	}
+
+	public class ContentReferenceArrayAttributeDrawer : OdinAttributeDrawer<ContentReferenceAttribute, ContentReference[]>
+	{
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			CallNextDrawer(label);
 		}
 	}
 
@@ -54,7 +70,7 @@ namespace Content.Editor
 		protected override ContentDrawerMode TargetMode => ContentDrawerMode.String;
 	}
 
-	public abstract class ContentReferenceAttributeDrawer<T> : OdinAttributeDrawer<ContentReferenceAttribute, T>
+	public abstract class ContentReferenceAttributeDrawer<T> : OdinAttributeDrawer<ContentReferenceAttribute, T>, IDefinesGenericMenuItems
 	{
 		private bool _guidRawMode;
 		protected abstract ContentDrawerMode TargetMode { get; }
@@ -91,9 +107,17 @@ namespace Content.Editor
 
 		private bool? _found;
 
+		private Type _valueType;
+
 		private static Dictionary<Type, Type> _valueTypeToSourceType = new();
 
 		private (int hash, PropertyTree tree) _targetToTree;
+
+		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
+		{
+			genericMenu.AddSeparator("");
+			genericMenu.AddItem(new GUIContent("Set None"), false, () => property.ValueEntry.WeakSmartValue = null);
+		}
 
 		protected override void Initialize()
 		{
@@ -104,21 +128,53 @@ namespace Content.Editor
 			else
 				_mode = TargetMode;
 
-			if (!_valueTypeToSourceType.ContainsKey(Attribute.Type))
+			_valueType = Attribute.Type;
+			if (_valueType == null)
 			{
-				var targetType = typeof(IUniqueContentEntrySource<>).MakeGenericType(Attribute.Type);
+				var typeName = Attribute.TypeName;
+
+				if (typeName.IsNullOrEmpty())
+				{
+					ContentDebug.LogError($"Target value type is null or type name is empty... (path: {Property.UnityPropertyPath})");
+					return;
+				}
+
+				if (!ReflectionUtility.TryGetType(typeName, out _valueType))
+				{
+					ContentDebug.LogError($"Not found value type by name [ {Attribute.TypeName} ] (path: {Property.UnityPropertyPath})");
+					return;
+				}
+			}
+
+			if (!_valueTypeToSourceType.ContainsKey(_valueType))
+			{
+				var targetType = typeof(IUniqueContentEntrySource<>).MakeGenericType(_valueType);
 				var types = targetType.GetAllTypes();
 
 				if (types.Count == 1)
 					targetType = types.First();
 
-				_valueTypeToSourceType[Attribute.Type] = targetType;
+				_valueTypeToSourceType[_valueType] = targetType;
 			}
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
+			if (_valueType == null)
+			{
+				string errorMsg;
+				if (!Attribute.TypeName.IsNullOrEmpty())
+					errorMsg = $"Not found value type by name [ {Attribute.TypeName} ] (path: {Property.UnityPropertyPath})";
+				else
+					errorMsg = $"Target value type is null! (path: {Property.UnityPropertyPath})";
+
+				ContentDebug.LogError(errorMsg);
+				SirenixEditorGUI.ErrorMessageBox(errorMsg);
+				return;
+			}
+
 			var targetLabel = new GUIContent(label ?? GUIContent.none);
+			// Хак: убираем некорректный лейбл, проставленный редакторским кодом (через рефлексию)
 			if (targetLabel.text.Contains("[") && targetLabel.text.Contains("]"))
 				targetLabel.text = string.Empty;
 
@@ -127,15 +183,13 @@ namespace Content.Editor
 			var isSingle = false;
 			IContentEntrySource source = null;
 
-			var valueType = Attribute.Type;
-
 			switch (_mode)
 			{
 				case ContentDrawerMode.Guid:
 					if (Property.ValueEntry.WeakSmartValue is SerializableGuid guid)
 					{
 						isEmpty = guid == SerializableGuid.Empty;
-						source = !isEmpty ? FindSelectedSource(valueType, in guid) : null;
+						source = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
 						invalidLabel = guid.ToString();
 					}
 
@@ -143,7 +197,7 @@ namespace Content.Editor
 				case ContentDrawerMode.String:
 					var id = (string) Property.ValueEntry.WeakSmartValue;
 					isEmpty = id.IsNullOrEmpty();
-					source = !isEmpty ? FindSelectedSource(valueType, id) : null;
+					source = !isEmpty ? FindSelectedSource(_valueType, id) : null;
 					invalidLabel = id;
 					break;
 				case ContentDrawerMode.Reference:
@@ -291,7 +345,7 @@ namespace Content.Editor
 						objectFieldPosition.Value,
 						targetLabel,
 						_targetObject,
-						_valueTypeToSourceType[valueType],
+						_valueTypeToSourceType[_valueType],
 						false
 					);
 				}
@@ -301,7 +355,7 @@ namespace Content.Editor
 					(
 						targetLabel,
 						_targetObject,
-						_valueTypeToSourceType[valueType],
+						_valueTypeToSourceType[_valueType],
 						false
 					);
 				}
@@ -318,7 +372,7 @@ namespace Content.Editor
 					(
 						targetLabel,
 						_targetObject,
-						_valueTypeToSourceType[valueType],
+						_valueTypeToSourceType[_valueType],
 						false
 					);
 				}
@@ -619,7 +673,7 @@ namespace Content.Editor
 
 		private IContentEntrySource FindSelectedSource(IContentReference reference)
 		{
-			if (ContentEditorCache.TryGetSource(reference, out var source))
+			if (ContentEditorCache.TryGetSource(reference, _valueType, out var source))
 			{
 				_found = true;
 				return source;
@@ -629,7 +683,7 @@ namespace Content.Editor
 				return null;
 
 			ContentEditorCache.Refresh();
-			if (ContentEditorCache.TryGetSource(reference, out source))
+			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
 				_found = true;
 				return source;

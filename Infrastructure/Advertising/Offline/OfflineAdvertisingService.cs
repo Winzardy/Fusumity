@@ -58,6 +58,6 @@ namespace Advertising.Offline
 	[Serializable]
 	public struct AdPlacementOfflineModel
 	{
-		public UsageLimitModel usageLimit;
+		public UsageLimitState usageLimit;
 	}
 }

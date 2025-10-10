@@ -12,7 +12,7 @@ namespace Fusumity.Editor
 	public class ToggleAttributeProcessor : OdinAttributeProcessor<IToggle>
 	{
 		private const string ENABLE_FIELD_NAME = "enable";
-		private const string VALUE_FIELD_NAME = "value";
+		public const string VALUE_FIELD_NAME = "value";
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

@@ -1,0 +1,9 @@
+{
+  "name": "Logging.SharedLogic",
+  "references": [
+    "SharedLogic",
+    "WLog",
+    "Fusumity",
+    "Sapientia"
+  ]
+}

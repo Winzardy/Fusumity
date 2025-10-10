@@ -114,7 +114,7 @@ namespace Localization
 				if (!tagToFunc.IsNullOrEmpty())
 				{
 					foreach (var pair in tagToFunc)
-						builder.Replace(pair.Key, pair.Value?.Invoke().ToString());
+						builder.Replace(pair.Key, pair.Value?.Invoke()?.ToString());
 				}
 
 				var str = builder.ToString();

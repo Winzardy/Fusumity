@@ -16,17 +16,18 @@ namespace Content.ScriptableObjects
 
 		public override string Id => id.IsNullOrEmpty() ? base.Id : id;
 
-		internal ref T ScriptableEditValue => ref ContentEditValue;
+		public ref T ScriptableEditValue => ref ContentEditValue;
 		ref T IScriptableContentEntry<T>.EditValue => ref ScriptableEditValue;
 
 		public ScriptableContentEntry(in T value, in SerializableGuid guid) : base(in value, in guid)
 		{
 		}
 
-		public override void RegenerateGuid()
+		public override SerializableGuid RegenerateGuid()
 		{
 			// Guid присваивается от ScriptableObject
 			// Поэтому задать новый Guid для ScriptableContentEntry нельзя!
+			return SerializableGuid.Empty;
 		}
 
 		internal void SetId(string id) => this.id = id;
@@ -36,7 +37,7 @@ namespace Content.ScriptableObjects
 
 	public interface IScriptableContentEntry<T> : IContentEntry<T>, IScriptableContentEntry
 	{
-		internal ref T EditValue { get; }
+		public ref T EditValue { get; }
 	}
 
 	public partial interface IScriptableContentEntry : IContentEntry

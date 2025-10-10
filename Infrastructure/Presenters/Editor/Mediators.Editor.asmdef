@@ -1,5 +1,5 @@
 {
-  "name": "Presenters.Editor",
+  "name": "Mediators.Editor",
   "rootNamespace": "",
   "includePlatforms": [
     "Editor"
@@ -15,6 +15,7 @@
   "references": [
     "Fusumity",
     "Fusumity.Editor",
+    "Mediators",
     "Presenters"
   ]
 }

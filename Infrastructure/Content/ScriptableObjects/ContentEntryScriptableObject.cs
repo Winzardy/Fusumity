@@ -60,7 +60,7 @@ namespace Content.ScriptableObjects
 			return _entry.Clone();
 		}
 
-		bool IUniqueContentEntryScriptableObject.UseCustomId => useCustomId;
+		bool IUniqueContentEntryScriptableObject.UseCustomId => IsExternallyIdentifiable || useCustomId;
 
 		IUniqueContentEntry IUniqueContentEntrySource.UniqueContentEntry => _entry;
 
@@ -74,7 +74,9 @@ namespace Content.ScriptableObjects
 
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
-		bool IValidatable.Validate()
+		private bool IsExternallyIdentifiable => typeof(IExternallyIdentifiable).IsAssignableFrom(typeof(T));
+
+		bool IContentEntrySource.Validate()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
@@ -92,6 +94,12 @@ namespace Content.ScriptableObjects
 			if (Value is IValidatable validatable && !validatable.Validate())
 			{
 				ContentDebug.LogError("Value is not valid!", this);
+				return false;
+			}
+
+			if (this is IValidatable soValidatable && !soValidatable.Validate())
+			{
+				ContentDebug.LogError("Scriptable Object is not valid!", this);
 				return false;
 			}
 
@@ -119,7 +127,7 @@ namespace Content.ScriptableObjects
 	{
 		public IScriptableContentEntry<T> ScriptableContentEntry { get; }
 
-		internal ref T EditValue => ref ScriptableContentEntry.EditValue;
+		public ref T EditValue => ref ScriptableContentEntry.EditValue;
 	}
 
 	public interface IUniqueContentEntryScriptableObject : IContentEntryScriptableObject, IUniqueContentEntrySource

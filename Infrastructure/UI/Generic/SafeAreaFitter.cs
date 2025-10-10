@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -114,14 +116,14 @@ namespace UI
 				| DrivenTransformProperties.SizeDelta
 				| DrivenTransformProperties.Pivot);
 
-			var safeAreaXMin = _adjustEdges.HasFlag(EdgeFlags.Left) ? _leftEdgesFactor * safeArea.xMin / width : 0;
-			var safeAreaYMin = _adjustEdges.HasFlag(EdgeFlags.Bottom) ? _bottomEdgesFactor * safeArea.yMin / height : 0;
+			var safeAreaXMin = _adjustEdges.Has(EdgeFlags.Left) ? _leftEdgesFactor * safeArea.xMin / width : 0;
+			var safeAreaYMin = _adjustEdges.Has(EdgeFlags.Bottom) ? _bottomEdgesFactor * safeArea.yMin / height : 0;
 			var normalizedMin = new Vector2(safeAreaXMin, safeAreaYMin);
 
-			var safeAreaXMax = _adjustEdges.HasFlag(EdgeFlags.Right)
+			var safeAreaXMax = _adjustEdges.Has(EdgeFlags.Right)
 				? 1 - _rightEdgesFactor * (1 - safeArea.xMax / width)
 				: 1;
-			var safeAreaYMax = _adjustEdges.HasFlag(EdgeFlags.Top)
+			var safeAreaYMax = _adjustEdges.Has(EdgeFlags.Top)
 				? 1 - _topEdgesFactor * (1 - safeArea.yMax / height)
 				: 1;
 			var normalizedMax = new Vector2(safeAreaXMax, safeAreaYMax);
@@ -200,11 +202,11 @@ namespace UI
 			UnityEditor.Handles.color = new Color(63 / 256f, 256 / 256f, 63 / 256f, 1);
 
 			var thickness = 2;
-			Vector3[] corners = new Vector3[4];
+			var corners = new Vector3[4];
 			var rect = _rectTransform.rect;
 			_rectTransform.GetWorldCorners(corners);
 
-			for (int i = 0; i < corners.Length; i++)
+			for (var i = 0; i < corners.Length; i++)
 			{
 				var index = i + 1 >= corners.Length ? 0 : i + 1;
 				UnityEditor.Handles.DrawLine(corners[i], corners[index], thickness);

@@ -63,12 +63,19 @@ namespace ZenoTween
 
 			if (repeat != 0)
 			{
-				tween.SetAutoKill(repeat > 0);
-				tween.SetLoops(repeat, repeatType);
+				if (repeat > 0)
+				{
+					tween.SetAutoKill(repeat > 0);
+					tween.SetLoops(repeat, repeatType);
+				}
+				else
+				{
+					tween.SetAutoKill(false);
+				}
 			}
 
 			//TODO: требует доработки, данный участок нужно чтобы делать зацикленные твины на определенный участок, например: пульсация в момент передвижения
-			if (IsLoop && lifetimeByParent)
+			if (IsLoop || lifetimeByParent)
 			{
 				sequence.JoinCallback(() =>
 				{
@@ -77,11 +84,7 @@ namespace ZenoTween
 #endif
 					tween.Play();
 				});
-				sequence.OnComplete(() =>
-				{
-					Debug.LogError("complete");
-					tween.KillSafe();
-				});
+				sequence.OnComplete(() => tween.KillSafe());
 				sequence.OnKill(() => tween.KillSafe());
 
 				return;

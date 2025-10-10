@@ -28,7 +28,8 @@ namespace Fusumity.Editor.Utility
 					if (EditorGUIUtility.hierarchyMode)
 						EditorGUI.indentLevel--;
 
-					EditorGUILayout.ObjectField("Script", cache, typeof(MonoScript), false);
+					if (cache)
+						EditorGUILayout.ObjectField("Script", cache, typeof(MonoScript), false);
 
 					if (EditorGUIUtility.hierarchyMode)
 						EditorGUI.indentLevel++;

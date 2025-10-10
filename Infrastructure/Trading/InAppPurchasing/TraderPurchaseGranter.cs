@@ -7,7 +7,7 @@ using UnityEngine.Scripting;
 namespace Trading.InAppPurchasing
 {
 	[Preserve]
-	public class TradingPurchaseGranter : IAPPurchaseGranter
+	public class TraderPurchaseGranter : IAPPurchaseGranter
 	{
 		private ITradingService _service;
 
@@ -27,11 +27,10 @@ namespace Trading.InAppPurchasing
 			if (_iapProductToOffer.Contains(entry))
 			{
 				ref readonly var offer = ref _iapProductToOffer[entry];
-				var pooledTradeboard = _service.CreateTradeboard(in offer.trader);
-				Tradeboard tradeboard = pooledTradeboard;
+				var pooledTradeboard = _service.CreateTradeboard(in offer.trader, out var tradeboard);
 				var registerToken = tradeboard.Register(in receipt);
 
-				if (!offer.CanExecute(tradeboard, out var error))
+				if (!offer.CanFetchOrExecute(tradeboard, out var error))
 				{
 					TradingDebug.LogError(
 						$"Error on can execute trader offer [ {offer} ]: {error}");
@@ -57,14 +56,14 @@ namespace Trading.InAppPurchasing
 
 		private async UniTask ExecuteAsync(TraderOfferReference offer, Tradeboard tradeboard)
 		{
-			var error = await offer.ExecuteAsync(tradeboard);
+			var error = await offer.FetchAsync(tradeboard);
 			if (error != null)
 			{
 				TradingDebug.LogError($"Error on execute trader offer [ {offer} ]: {error}");
 				return;
 			}
 
-			var success = _service.PushOffer(in offer);
+			var success = _service.PushCompleteOffer(in offer);
 
 			if (!success)
 				TradingDebug.LogError($"Error on push trader offer [ {offer} ]");
@@ -74,7 +73,7 @@ namespace Trading.InAppPurchasing
 		{
 			_iapProductToOffer = new();
 
-			foreach (var traderContentEntry in ContentManager.GetAll<TraderEntry>())
+			foreach (var traderContentEntry in ContentManager.GetAllEntries<TraderConfig>())
 			{
 				var traderReference = traderContentEntry.ToReference();
 

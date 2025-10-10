@@ -4,13 +4,16 @@ using System.Collections.Generic;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
+using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace Content.Editor
 {
-	using UnityObject =  UnityEngine.Object;
+	using UnityObject = UnityEngine.Object;
 
 	public static partial class ContentEntryEditorUtility
 	{
@@ -21,8 +24,8 @@ namespace Content.Editor
 
 		private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 
-		//private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 		private static readonly Dictionary<string, SerializableGuid> _tracking = new();
+		private static readonly HashSet<SerializableGuid> _trackingByGuid = new();
 
 		private static bool _scheduledRefreshAndSave;
 
@@ -30,6 +33,7 @@ namespace Content.Editor
 		{
 			_guidToSource.Clear();
 			_tracking.Clear();
+			_trackingByGuid.Clear();
 		}
 
 		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
@@ -82,27 +86,42 @@ namespace Content.Editor
 				if (reference == null)
 					continue;
 
-				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
+				if (!IsValid(entry, reference))
 				{
-					iterator.RegenerateGuid(entry, asset, refreshAndSave);
-
-					if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
-						SetDirty(serializedObject, refreshAndSave);
-					else
-						throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
+					ForceRegenerate(entry, reference);
 				}
 				else
 				{
 					EditorUtility.SetDirty(asset);
 				}
 
-				Track((asset, reference), in entry.Guid);
+				if (!Track((asset, reference), in entry.Guid))
+				{
+					ForceRegenerate(entry, reference);
+				}
 			} while (iterator.Next(true));
+
+			bool IsValid(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
+				=> entry.Guid != SerializableGuid.Empty && scriptableObject.ScriptableContentEntry
+				   .RegisterNestedEntry(entry.Guid, reference);
+
+			void ForceRegenerate(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
+			{
+				iterator.RegenerateGuid(entry, asset, refreshAndSave);
+
+				if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
+					SetDirty(serializedObject, refreshAndSave);
+				else
+					throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
+			}
 		}
 
 		/// <returns><c>true</c>, если запомнили без проблем; иначе <c>false</c></returns>
 		public static bool Remember(this IContentEntryScriptableObject source, in SerializableGuid guid)
 		{
+			if (guid == SerializableGuid.Empty)
+				return false;
+
 			if (_guidToSource.TryAdd(guid, source))
 				return true;
 
@@ -121,6 +140,9 @@ namespace Content.Editor
 		public static bool Track(in (ContentScriptableObject target, MemberReflectionReference<IUniqueContentEntry> reference) key,
 			in SerializableGuid guid)
 		{
+			if (!_trackingByGuid.Add(guid))
+				return false;
+
 			var hash = $"{key.target.GetInstanceID()}:{key.reference.Path}";
 			return _tracking.TryAdd(hash, guid);
 		}
@@ -131,6 +153,9 @@ namespace Content.Editor
 				return false;
 
 			var hash = $"{key.asset.GetInstanceID()}:{key.reference.Path}";
+			if (_tracking.TryGetValue(hash, out var guid))
+				_trackingByGuid.Remove(guid);
+
 			return _tracking.Remove(hash);
 		}
 
@@ -173,11 +198,30 @@ namespace Content.Editor
 		private static MemberReflectionReference<IUniqueContentEntry> FixSerializeReference(
 			this MemberReflectionReference<IUniqueContentEntry> reference)
 		{
-			for (int i = 0; i < reference.steps.Length; i++)
+			using var steps = new SimpleList<MemberReferencePathStep>();
+			using (ListPool<int>.Get(out var skip))
 			{
-				if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME ||
-				    reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
-					reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
+				for (int i = 0; i < reference.steps.Length; i++)
+				{
+					if (reference.steps[i].name == ContentConstants.CUSTOM_VALUE_FIELD_NAME)
+						reference.steps[i].name = ContentConstants.VALUE_FIELD_NAME;
+
+					// if (reference.steps[i].name == ContentConstants.UNITY_VALUE_FIELD_NAME)
+					// 	skip.Add(i);
+				}
+
+				if (!skip.IsEmpty())
+				{
+					for (int i = 0; i < reference.steps.Length; i++)
+					{
+						if (skip.Contains(i))
+							continue;
+
+						steps.Add(in reference.steps[i]);
+					}
+
+					reference.steps = steps.ToArray();
+				}
 			}
 
 			return reference;

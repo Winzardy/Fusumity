@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Booting;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Fusumity.Utility;
-using Presenters;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 
-namespace Booting.Presenters
+namespace Presenters
 {
 	[TypeRegistryItem(
 		"\u2009Presenters", //В начале делаем отступ из-за отрисовки...

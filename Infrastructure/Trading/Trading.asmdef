@@ -1,0 +1,20 @@
+{
+    "name": "Trading",
+    "rootNamespace": "Trading",
+    "references": [
+        "UniTask",
+        "Content",
+        "Sapientia",
+        "Localization",
+        "AssetManagement"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

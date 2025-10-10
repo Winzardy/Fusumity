@@ -1,7 +1,6 @@
 using Fusumity.Editor.Utility;
-using Presenters;
 
-namespace Game.App.Editor
+namespace Presenters.Editor
 {
 	public class PresenterAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<IPresenter>
 	{

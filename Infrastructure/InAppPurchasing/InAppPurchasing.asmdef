@@ -1,0 +1,19 @@
+{
+    "name": "InAppPurchasing",
+    "rootNamespace": "",
+    "references": [
+        "Content",
+        "Sapientia",
+        "Messaging",
+        "Simulation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

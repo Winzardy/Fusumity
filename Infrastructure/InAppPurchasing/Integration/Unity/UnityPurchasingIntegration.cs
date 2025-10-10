@@ -606,7 +606,7 @@ namespace InAppPurchasing.Unity
 						}
 
 						var purchaseDate = receipt.purchaseDate;
-						var nowDate = _service.GetUtcNow();
+						var nowDate = _service.DateTime;
 						if (purchaseDate > nowDate.AddMinutes(TOLERANCE_MINUTES))
 						{
 							IAPDebug.LogWarning($"{PREFIX} Future-dated purchase (possibly deferred): {purchaseDate} > {nowDate}");
@@ -729,7 +729,7 @@ namespace InAppPurchasing.Unity
 		private void AddProductsToBuilder<TProduct>(ConfigurationBuilder builder)
 			where TProduct : IAPProductEntry
 		{
-			foreach (var entry in ContentManager.GetAll<TProduct>())
+			foreach (var entry in ContentManager.GetAllEntries<TProduct>())
 			{
 				ref readonly var product = ref entry.Value;
 				var id = product.GetBillingId(in _billing);

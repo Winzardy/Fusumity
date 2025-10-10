@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sirenix.OdinInspector;
 using Trading;
 using UnityEngine;
@@ -33,10 +34,16 @@ namespace Booting.Trading
 		protected override void OnDispose()
 		{
 			//  ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable disposable)
-				disposable.Dispose();
+			if (_service is IDisposable service)
+				service.Dispose();
 
 			TradeManager.Terminate();
+		}
+
+		public override void OnBootCompleted()
+		{
+			if (_service is IInitializable service)
+				service.Initialize();
 		}
 	}
 }

@@ -123,7 +123,13 @@ namespace Content.Editor
 
 		public bool Contains<T>() => ContentEditorCache.TryGetSource(typeof(T), out _);
 
-		public IEnumerable<IContentEntry<T>> GetAll<T>() => ContentEditorCache.GetAllSourceByValueType<T>();
+		public IEnumerable<IContentEntry<T>> GetAllEntries<T>() => ContentEditorCache.GetAllSourceByValueType<T>();
+
+		public IEnumerable<ContentReference<T>> GetAll<T>()
+		{
+			foreach (var entry in GetAllEntries<T>())
+				yield return entry.ToReference();
+		}
 
 		public string ToId<T>(in SerializableGuid guid)
 		{

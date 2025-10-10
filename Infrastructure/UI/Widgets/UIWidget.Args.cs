@@ -5,7 +5,7 @@ namespace UI
 {
 	public abstract class UIWidget<TLayout, TArgs> : UIWidget<TLayout>
 		where TLayout : UIBaseLayout
-		where TArgs : struct
+		//where TArgs : struct
 	{
 		protected TArgs _args;
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+using UnityEngine;
 
 namespace UI
 {
@@ -21,8 +22,8 @@ namespace UI
 		{
 			base.OnDisposeInternal();
 
-			_requesters?.ReleaseToStaticPool();
-			_blockers?.ReleaseToStaticPool();
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _requesters);
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _blockers);
 		}
 
 		public override void SetupLayout(TLayout layout)
@@ -89,6 +90,17 @@ namespace UI
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Этот метод вызывается если Hide не отрабатывает...
+		/// </summary>
+		/// <remarks>Гребанные часики...</remarks>
+		public void ForceHide(bool immediate = false)
+		{
+			_requesters.Clear();
+			SetActive(false, immediate);
+			GUIDebug.LogWarning("Force hide spinner...");
 		}
 
 		/// <summary>

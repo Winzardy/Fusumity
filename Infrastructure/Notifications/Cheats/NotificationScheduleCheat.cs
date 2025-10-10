@@ -44,7 +44,7 @@ namespace Notifications.Cheats
 
 		private string[] GetNotifications()
 		{
-			return ContentManager.GetAll<NotificationEntry>()
+			return ContentManager.GetAllEntries<NotificationEntry>()
 			   .Where(x => x is IUniqueContentEntry)
 			   .Select(x => ((IUniqueContentEntry) x).Id)
 			   .ToArray();

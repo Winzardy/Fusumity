@@ -29,6 +29,10 @@ namespace Fusumity.Reactive
 		public static readonly DelayableAction OnGUIEvent = new();
 		public static readonly DelayableAction FixedUpdateEvent = new();
 		public static readonly DelayableAction LateUpdateEvent = new();
+		/// <summary>
+		/// После <see cref="LateUpdateEvent"/>
+		/// </summary>
+		public static readonly DelayableAction EndOfFrameEvent = new();
 
 		public static readonly DelayableAction OnDestroyEvent = new();
 		public static readonly DelayableAction ResolutionChangedEvent = new();
@@ -80,6 +84,8 @@ namespace Fusumity.Reactive
 
 			InvokeEachSecond(EachSecondEvent, ref _timeAccumulator, Time.deltaTime, 1);
 			InvokeEachSecond(UnscaledEachSecondEvent, ref _unscaledTimeAccumulator, Time.unscaledDeltaTime, 1);
+
+			EndOfFrameEvent.ImmediatelyInvoke();
 		}
 
 		private void OnDestroy()
@@ -145,7 +151,7 @@ namespace Fusumity.Reactive
 				return;
 
 			var ticks = (accumulator / interval)
-			   .CeilToInt();
+			   .FloorToInt();
 
 			if (ticks > maxCatchUpTicks)
 				ticks = maxCatchUpTicks;
@@ -153,7 +159,7 @@ namespace Fusumity.Reactive
 			accumulator -= ticks * interval;
 
 			for (int i = 0; i < ticks; i++)
-				action.ImmediatelyInvoke();
+				action?.ImmediatelyInvoke();
 		}
 	}
 }

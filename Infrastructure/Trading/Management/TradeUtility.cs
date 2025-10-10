@@ -8,41 +8,51 @@ namespace Trading
 	public static partial class TradeUtility
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CanPay(this in ContentReference<TradeCost> reference, Tradeboard tradeboard, out TradePayError? error)
+		public static bool CanFetch(this ContentEntry<TradeCost> entry, Tradeboard tradeboard, out TradePayError? error)
+			=> CanFetch(entry.ToReference(), tradeboard, out error);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool CanFetch(this in ContentReference<TradeCost> reference, Tradeboard tradeboard, out TradePayError? error)
 		{
 			tradeboard.Bind(in reference);
-			return TradeManager.CanPay(reference, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(reference, tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CanPay(this TradeCost cost, Tradeboard tradeboard, string tradeId, out TradePayError? error)
+		public static bool CanFetch(this TradeCost cost, Tradeboard tradeboard, string tradeId, out TradePayError? error)
 		{
 			tradeboard.Bind(tradeId);
-			return TradeManager.CanPay(cost, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(cost, tradeboard, out error);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<TradePayError?> PayAsync(this ContentReference<TradeCost> reference, Tradeboard tradeboard,
+		public static Task<TradePayError?> FetchAsync(this ContentEntry<TradeCost> entry, Tradeboard tradeboard,
+			CancellationToken cancellationToken = default)
+		{
+			return FetchAsync(entry.ToReference(), tradeboard, cancellationToken);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Task<TradePayError?> FetchAsync(this in ContentReference<TradeCost> reference, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
 			tradeboard.Bind(in reference);
-			return TradeManager.PayAsync(reference, tradeboard, cancellationToken);
+			return TradeManager.FetchAsync(reference, tradeboard, cancellationToken);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CanExecute(this in ContentReference<TradeEntry> reference, Tradeboard tradeboard, out TradeExecuteError? error)
+		public static bool CanFetch(this in ContentReference<TradeConfig> reference, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			tradeboard.Bind(in reference.Read());
-			return TradeManager.CanExecute(reference, tradeboard, out error);
+			return TradeManager.CanFetchOrExecute(reference, tradeboard, out error);
 		}
 
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<TradeExecuteError?> ExecuteAsync(this in ContentReference<TradeEntry> reference, Tradeboard tradeboard,
+		public static Task<TradeExecuteError?> FetchAsync(this in ContentReference<TradeConfig> reference, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
 			tradeboard.Bind(in reference.Read());
-			return TradeManager.ExecuteAsync(reference, tradeboard, cancellationToken);
+			return TradeManager.FetchAsync(reference, tradeboard, cancellationToken);
 		}
 	}
 }

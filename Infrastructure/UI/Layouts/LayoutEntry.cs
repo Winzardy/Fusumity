@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssetManagement;
+using Sapientia.Extensions;
 using UnityEngine;
 
 namespace UI
@@ -50,6 +51,6 @@ namespace UI
 		[Tooltip("Список ассетов для предзагрузки при использовании этой верстки.")]
 		public List<AssetReferenceEntry> preloadAssets;
 
-		public bool HasFlag(LayoutAutomationMode mode) => automationMode.HasFlag(mode);
+		public bool HasFlag(LayoutAutomationMode mode) => automationMode.Has(mode);
 	}
 }

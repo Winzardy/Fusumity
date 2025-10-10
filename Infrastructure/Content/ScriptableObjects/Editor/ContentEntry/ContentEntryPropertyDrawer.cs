@@ -1,5 +1,6 @@
 using System;
 using Content.ScriptableObjects;
+using Sapientia.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -8,7 +9,7 @@ namespace Content.Editor
 {
 	using UnityObject = UnityEngine.Object;
 
-	public class ContentEntryPropertyDrawer : OdinValueDrawer<IUniqueContentEntry>
+	public class ContentEntryPropertyDrawer : OdinValueDrawer<IUniqueContentEntry>, IDefinesGenericMenuItems
 	{
 		private bool _supported;
 
@@ -53,8 +54,14 @@ namespace Content.Editor
 				if (reference == null)
 					return false;
 
-				//Попытка восстановить или задать новый гуид...
+				if (!scriptableObject.Remember(in entry.Guid))
+				{
+					ForceRegenerate(reference);
+					return false;
+				}
+
 				var key = (asset, reference);
+				//Попытка восстановить или задать новый гуид...
 				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(in entry.Guid, reference))
 				{
 					if (ContentEntryEditorUtility.TryGet(key, out var guid))
@@ -86,18 +93,13 @@ namespace Content.Editor
 					}
 					else if (!scriptableObject.Remember(in entry.Guid))
 					{
-						property.RegenerateGuid(entry, asset);
-
-						if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(in entry.Guid, reference))
-							throw new Exception("Can't register nested entry...");
+						ForceRegenerate(reference);
 					}
 				}
 
 				property.Children.Update();
 				foreach (var child in property.Children.Recurse())
 					Register(child);
-
-				scriptableObject.Remember(in entry.Guid);
 
 				return ContentEntryEditorUtility.Track(key, in entry.Guid);
 			}
@@ -108,6 +110,18 @@ namespace Content.Editor
 			{
 				if (entry.Guid != guid)
 					property.RestoreGuid(entry, in guid);
+			}
+
+			void ForceRegenerate(MemberReflectionReference<IUniqueContentEntry> reference)
+			{
+				var key = (asset, reference);
+				ContentEntryEditorUtility.Untrack(in key);
+				property.RegenerateGuid(entry, asset);
+
+				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(in entry.Guid, reference))
+					throw new Exception("Can't register nested entry...");
+
+				ContentEntryEditorUtility.Track(in key, in entry.Guid);
 			}
 		}
 
@@ -140,7 +154,7 @@ namespace Content.Editor
 			{
 				ContentEntryEditorUtility.RegenerateGuid(entry, property.UnityPropertyPath, targetObject);
 
-				if(entry.Guid != SerializableGuid.Empty)
+				if (entry.Guid != SerializableGuid.Empty)
 					return true;
 
 				ContentDebug.LogError($"Guid is empty by property path [ {property.UnityPropertyPath} ]!", targetObject);
@@ -148,6 +162,12 @@ namespace Content.Editor
 			}
 
 			return true;
+		}
+
+		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
+		{
+			genericMenu.AddSeparator("");
+			genericMenu.AddItem(new GUIContent("Set None"), false, () => property.ValueEntry.WeakSmartValue = null);
 		}
 	}
 }
