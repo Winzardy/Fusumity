@@ -20,7 +20,7 @@ namespace Booting
 	{
 		[SerializeReference]
 #if UNITY_EDITOR
-		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawAutoFillTasksButton))]
+		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawAutoFillTasksButton), NumberOfItemsPerPage = 100)]
 #endif
 		public IBootTask[] tasks;
 

@@ -17,6 +17,13 @@ namespace UI
 		protected override void OnShow(ref UIMarkerArgs<Empty> args)
 		{
 		}
+
+		public void Attach(GameObject gameObject) => Attach(gameObject.transform);
+		public void Attach(Transform transform)
+		{
+			transform.SetParent(RectTransform, false);
+			transform.localPosition = Vector3.zero;
+		}
 	}
 
 	/// <typeparam name="T">Вложенные аргументы</typeparam>

@@ -8,7 +8,8 @@
         "Unity.ResourceManager",
         "Unity.Collections",
         "Unity.Mathematics",
-        "Unity.Burst"
+        "Unity.Burst",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

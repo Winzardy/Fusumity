@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using AssetManagement;
+﻿using AssetManagement;
 using Cysharp.Threading.Tasks;
-using Fusumity.Utility;
 using Sapientia.Collections;
+using Sapientia.Pooling;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Sapientia.Pooling;
 
 namespace UI
 {
@@ -35,6 +34,20 @@ namespace UI
 			_placeholderToEntry = null;
 		}
 
+		public void TrySetSprite(Image image, IAssetReferenceEntry entry, Action callback = null, bool disableDuringLoad = false)
+		{
+			if (image == null || entry.IsEmpty())
+				return;
+
+			if (disableDuringLoad)
+			{
+				image.enabled = false;
+				callback += () => image.enabled = true;
+			}
+
+			SetSprite(image, entry, callback);
+		}
+
 		public void SetSprite(IEnumerable<Image> placeholders, IAssetReferenceEntry entry)
 		{
 			foreach (var placeholder in placeholders)
@@ -61,7 +74,10 @@ namespace UI
 			{
 				//Какой смысл если там и так такой ассет
 				if (entryByPlaceholder == entry)
+				{
+					callback?.Invoke();
 					return;
+				}
 
 				entryByPlaceholder?.Release();
 			}
@@ -76,7 +92,10 @@ namespace UI
 			{
 				//Какой смысл если там и так такой ассет
 				if (_single.entry == entry)
+				{
+					callback?.Invoke();
 					return true;
+				}
 
 				_single.entry?.Release();
 				_single.entry = entry;

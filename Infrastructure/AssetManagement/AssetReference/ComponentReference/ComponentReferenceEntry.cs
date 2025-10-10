@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 namespace AssetManagement
 {
 	[Serializable]
-	public class ComponentReferenceEntry<T> : ComponentReferenceEntry
+	public class ComponentReferenceEntry<T> : ComponentReferenceEntry, IAssetReferenceEntry<T>
 		where T : Component
 	{
 		[SerializeField]

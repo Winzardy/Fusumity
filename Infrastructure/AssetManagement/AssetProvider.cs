@@ -29,6 +29,10 @@ namespace AssetManagement
 		public async UniTask<T> LoadAssetAsync<T>(IAssetReferenceEntry entry, CancellationToken cancellationToken = default)
 		{
 			var assetReference = entry.AssetReference;
+
+			if (typeof(Component).IsAssignableFrom(typeof(T)))
+				return await LoadComponentAsync<T>(assetReference, cancellationToken);
+
 			return await LoadAssetAsync<T>(assetReference, cancellationToken);
 		}
 

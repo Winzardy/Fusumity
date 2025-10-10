@@ -20,7 +20,13 @@ namespace Booting.Input
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
+#if UNITY_EDITOR
 			_inputReader = new DesktopInputReader();
+#else
+			_inputReader = new MobileInputReader();
+#endif
+
+
 			_inputReader.RegisterAsService();
 
 			return UniTask.CompletedTask;

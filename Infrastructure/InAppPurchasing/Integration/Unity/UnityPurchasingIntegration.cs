@@ -218,7 +218,7 @@ namespace InAppPurchasing.Unity
 				_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
 
 				var productsStr = builder.products
-				   .GetCompositeString(true, definition => definition.storeSpecificId);
+				   .GetCompositeString(definition => definition.storeSpecificId, true);
 				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
 
 				UnityPurchasing.Initialize(this, builder);
@@ -235,7 +235,7 @@ namespace InAppPurchasing.Unity
 		{
 			var productsStr = controller.products
 			   .set
-			   .GetCompositeString(true, product => product.definition.storeSpecificId);
+			   .GetCompositeString(product => product.definition.storeSpecificId, true);
 			IAPDebug.Log($"UnityPurchasing successfully initialized, billing: {_billing}, products:{productsStr}");
 
 			_processing = new(2);

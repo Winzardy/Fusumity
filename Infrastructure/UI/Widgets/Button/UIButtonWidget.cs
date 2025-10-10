@@ -60,7 +60,7 @@ namespace UI
 	{
 	}
 
-	public class UIButtonWidget<TLayout, TArgs> : UIWidget<TLayout, TArgs>, IButtonWidget
+	public class UIButtonWidget<TLayout, TArgs> : UIWidget<TLayout, TArgs>, IButtonWidget, IClickable<IButtonWidget>
 		where TLayout : UILabeledButtonLayout
 		where TArgs : struct, IButtonArgs
 	{
@@ -144,6 +144,21 @@ namespace UI
 
 		internal void SetInteractable(bool value) =>
 			_layout.button.interactable = value;
+
+		//TODO: temp?
+		public void SetLabel(LocText locText, string label)
+		{
+			var locLabel = locText.IsEmpty() && _layout.locInfo
+					? _layout.locInfo.value
+					: locText;
+
+			_layout.label.SetTextSafe(
+				_localizationAssigner,
+				locLabel,
+				label,
+				_defaultLabelText,
+				() => _layout.labelGroup.SetActiveSafe(!_layout.label.text.IsNullOrWhiteSpace()));
+		}
 
 		public void SetStyle(string style, bool prefix = true)
 		{

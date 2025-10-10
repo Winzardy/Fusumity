@@ -46,6 +46,11 @@ namespace UI
 
 		protected override void OnDispose()
 		{
+			for (int i = 0; i < _used.Count; i++)
+			{
+				_used[i]?.Dispose();
+			}
+
 			ReleaseTokens();
 			DisposePool();
 		}
@@ -339,6 +344,8 @@ namespace UI
 	{
 		private readonly IWidgetGroupToken<TWidget> _token;
 		private readonly int _generation;
+
+		public TWidget Widget { get { return _token.Widget; } }
 
 		internal WidgetGroupToken(IWidgetGroupToken<TWidget> token, int generation)
 		{

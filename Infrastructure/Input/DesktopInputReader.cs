@@ -15,6 +15,7 @@ namespace InputManagement
 
 		protected override void ReadInput()
 		{
+			TouchCount = 1;
 			var mousePosition = Input.mousePosition;
 
 			if (Input.GetMouseButtonDown(0))
@@ -26,7 +27,7 @@ namespace InputManagement
 				_cacheDownTime = Time.realtimeSinceStartup;
 				_cacheDownTouchCount = Input.touchCount;
 
-				Invoke(CreateTapInfo(TouchPhase.Began, mousePosition));
+				InvokeTap(CreateTapInfo(TouchPhase.Began, mousePosition));
 				RegisterTaps();
 			}
 			else if (Input.GetMouseButton(0))
@@ -35,11 +36,11 @@ namespace InputManagement
 				var isMoved = delta.sqrMagnitude > 0;
 				var touchPhase = isMoved ? TouchPhase.Moved : TouchPhase.Stationary;
 
-				Invoke(CreateTapInfo(touchPhase, mousePosition));
+				InvokeTap(CreateTapInfo(touchPhase, mousePosition));
 
 				if (isMoved)
 				{
-					Invoke(new SwipeInfo
+					InvokeSwipe(new SwipeInfo
 					{
 						position = mousePosition,
 						delta = delta,
@@ -57,7 +58,7 @@ namespace InputManagement
 
 				if (isMoved)
 				{
-					Invoke(new SwipeInfo
+					InvokeSwipe(new SwipeInfo
 					{
 						position = mousePosition,
 						delta = delta,
@@ -68,8 +69,14 @@ namespace InputManagement
 					_cacheDownMousePosition = mousePosition;
 				}
 
-				Invoke(CreateTapInfo(TouchPhase.Ended, mousePosition));
+				InvokeTap(CreateTapInfo(TouchPhase.Ended, mousePosition));
 				_holding = false;
+			}
+
+			var scroll = Input.GetAxis("Mouse ScrollWheel");
+			if(scroll != 0)
+			{
+				InvokeZoom(scroll);
 			}
 		}
 

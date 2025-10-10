@@ -60,8 +60,8 @@ namespace Content.Editor
 
 			if (ContentDebug.Logging.Nested.refresh)
 			{
-				var collection = dictionary.GetCompositeString(true,
-					x => $"[	{x.Key}	 ] {x.Value}");
+				var collection = dictionary.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
+					true);
 				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
 					$" {collection}", scriptableObject);
 			}
