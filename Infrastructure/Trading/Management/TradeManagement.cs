@@ -111,11 +111,11 @@ namespace Trading
 
 			using (ListPool<ITradeReceipt>.Get(out var receipts))
 			{
-				foreach (var t in cost)
+				foreach (var actualCost in cost.EnumerateActual(tradeboard))
 				{
 					try
 					{
-						if (t is not ITradeCostWithReceipt tradeCostWithReceipt)
+						if (actualCost is not ITradeCostWithReceipt tradeCostWithReceipt)
 							continue;
 
 						if (cancellationToken.IsCancellationRequested)
