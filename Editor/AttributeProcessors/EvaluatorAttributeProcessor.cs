@@ -14,13 +14,19 @@ namespace Fusumity.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
+
+			if (typeof(IConstantEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+				return;
+
 			var c = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
 			var color = Color.Lerp(c, Color.white, 0.83f);
 			attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
+
+			color = Color.Lerp(c, Color.black, 0.83f);
 			attributes.Add(new ColorCardBoxAttribute(
-				Color.black.r,
-				Color.black.g,
-				Color.black.b,
+				color.r,
+				color.g,
+				color.b,
 				0.2f));
 		}
 	}

@@ -73,9 +73,7 @@ namespace Content.Editor
 							attributes.Add(new HideLabelAttribute());
 						}
 
-						attributes.Add(new CustomContextMenuAttribute(
-							"Copy Guid",
-							$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(CopyGuid)}($property)"));
+						ContextMenu();
 					}
 
 					break;
@@ -90,25 +88,18 @@ namespace Content.Editor
 					{
 						attributes.Add(new HideInInspector());
 					}
-					else
-					{
-						// if (propertyToGUIContent.TryGetValue(parentProperty, out var label))
-						// {
-						// 	if (!label.text.IsNullOrEmpty())
-						// 		attributes.Add(new LabelTextAttribute(label.text));
-						// 	if (!parentProperty.Attributes.HasAttribute<DisableContentEntryDrawerAttribute>())
-						// 		attributes.Add(new TooltipAttribute(
-						// 			$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(GetTooltip)}($property, \"{label.tooltip}\")"));
-						// }
-						// else
-						// 	attributes.Add(new HideLabelAttribute());
-
-						attributes.Add(new CustomContextMenuAttribute(
-							"Copy Guid",
-							$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(CopyGuid)}($property)"));
-					}
 
 					break;
+			}
+
+			void ContextMenu()
+			{
+				attributes.Add(new CustomContextMenuAttribute(
+					"Guid/Copy",
+					$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(CopyGuid)}($property)"));
+				attributes.Add(new CustomContextMenuAttribute(
+					"Guid/Regenerate",
+					$"@{nameof(ContentEntryAttributeProcessor)}.{nameof(RegenerateGuid)}($property)"));
 			}
 		}
 
@@ -118,6 +109,14 @@ namespace Content.Editor
 				return;
 
 			Clipboard.Copy(contentEntry.Guid.ToString());
+		}
+
+		public static void RegenerateGuid(InspectorProperty property)
+		{
+			if (property.Parent.ValueEntry.WeakSmartValue is not IUniqueContentEntry contentEntry)
+				return;
+
+			contentEntry.RegenerateGuid();
 		}
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)

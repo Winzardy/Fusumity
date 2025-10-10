@@ -23,10 +23,11 @@ namespace Content.ScriptableObjects
 		{
 		}
 
-		public override void RegenerateGuid()
+		public override SerializableGuid RegenerateGuid()
 		{
 			// Guid присваивается от ScriptableObject
 			// Поэтому задать новый Guid для ScriptableContentEntry нельзя!
+			return SerializableGuid.Empty;
 		}
 
 		internal void SetId(string id) => this.id = id;

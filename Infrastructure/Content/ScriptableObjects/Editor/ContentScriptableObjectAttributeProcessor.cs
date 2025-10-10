@@ -64,7 +64,7 @@ namespace Content.ScriptableObjects.Editor
 					//attributes.Add(new SuffixLabelAttribute($"@{rootClass}.{nameof(Suffix)}($property)"));
 
 					attributes.Add(new CustomContextMenuAttribute(
-						$"Copy Guid",
+						$"Copy Guid 2",
 						$"@{rootClass}.{nameof(CopyGuid)}($property)"));
 					attributes.Add(new DelayedPropertyAttribute());
 					attributes.Add(new OnValueChangedAttribute(

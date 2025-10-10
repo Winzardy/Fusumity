@@ -24,8 +24,8 @@ namespace Content.Editor
 
 		private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 
-		//private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 		private static readonly Dictionary<string, SerializableGuid> _tracking = new();
+		private static readonly HashSet<SerializableGuid> _trackingByGuid = new();
 
 		private static bool _scheduledRefreshAndSave;
 
@@ -33,6 +33,7 @@ namespace Content.Editor
 		{
 			_guidToSource.Clear();
 			_tracking.Clear();
+			_trackingByGuid.Clear();
 		}
 
 		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
@@ -139,6 +140,9 @@ namespace Content.Editor
 		public static bool Track(in (ContentScriptableObject target, MemberReflectionReference<IUniqueContentEntry> reference) key,
 			in SerializableGuid guid)
 		{
+			if (!_trackingByGuid.Add(guid))
+				return false;
+
 			var hash = $"{key.target.GetInstanceID()}:{key.reference.Path}";
 			return _tracking.TryAdd(hash, guid);
 		}
@@ -149,6 +153,9 @@ namespace Content.Editor
 				return false;
 
 			var hash = $"{key.asset.GetInstanceID()}:{key.reference.Path}";
+			if (_tracking.TryGetValue(hash, out var guid))
+				_trackingByGuid.Remove(guid);
+
 			return _tracking.Remove(hash);
 		}
 

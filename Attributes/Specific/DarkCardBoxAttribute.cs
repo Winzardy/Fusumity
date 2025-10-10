@@ -8,10 +8,10 @@ namespace Fusumity.Attributes
 	[Conditional("UNITY_EDITOR")]
 	public class ColorCardBoxAttribute : Attribute
 	{
-		public float R { get; }
-		public float G { get; }
-		public float B { get; }
-		public float A { get; }
+		public float R { get; set; }
+		public float G { get; set; }
+		public float B { get; set; }
+		public float A { get; set; }
 
 		public string Label { get; }
 		public bool UseLabelSeparator { get; set; }

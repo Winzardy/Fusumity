@@ -11,11 +11,9 @@ namespace Content.Editor
 {
 	public class ContentSerializeReferenceAttributeProcessor : OdinAttributeProcessor<IContentSerializeReference>
 	{
-
 		private static readonly string LABEL_GUID = "Guid";
 
 		public static readonly string TOOLTIP_PREFIX_GUID = $"{LABEL_GUID}:\n".ColorText(Color.gray).SizeText(12);
-
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -41,11 +39,18 @@ namespace Content.Editor
 					else
 						attributes.Add(new HideLabelAttribute());
 
-					attributes.Add(new CustomContextMenuAttribute(
-						"Copy Guid",
-						$"@{nameof(ContentSerializeReferenceAttributeProcessor)}.{nameof(CopyGuid)}($property)"));
-
+					ContextMenu();
 					break;
+			}
+
+			void ContextMenu()
+			{
+				attributes.Add(new CustomContextMenuAttribute(
+					"Guid/Copy",
+					$"@{nameof(ContentSerializeReferenceAttributeProcessor)}.{nameof(CopyGuid)}($property)"));
+				attributes.Add(new CustomContextMenuAttribute(
+					"Guid/Regenerate",
+					$"@{nameof(ContentSerializeReferenceAttributeProcessor)}.{nameof(RegenerateGuid)}($property)"));
 			}
 		}
 
@@ -65,6 +70,16 @@ namespace Content.Editor
 			Clipboard.Copy(contentEntry.Guid.ToString());
 		}
 
+		public static void RegenerateGuid(InspectorProperty property)
+		{
+			if (property.Parent.Parent.ValueEntry.WeakSmartValue is not IUniqueContentEntry contentEntry)
+				return;
+
+			var oldGuid = contentEntry.Guid;
+			var newGuid = contentEntry.RegenerateGuid();
+
+		}
+
 		public static string GetTooltip(InspectorProperty property, string tooltip)
 		{
 			if (property.Parent?.Parent?.ValueEntry?.WeakSmartValue is IUniqueContentEntry contentEntry)
@@ -77,7 +92,5 @@ namespace Content.Editor
 
 			return tooltip;
 		}
-
-
 	}
 }

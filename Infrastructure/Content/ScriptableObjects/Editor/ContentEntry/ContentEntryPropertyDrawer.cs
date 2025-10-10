@@ -9,7 +9,7 @@ namespace Content.Editor
 {
 	using UnityObject = UnityEngine.Object;
 
-	public class ContentEntryPropertyDrawer : OdinValueDrawer<IUniqueContentEntry>
+	public class ContentEntryPropertyDrawer : OdinValueDrawer<IUniqueContentEntry>, IDefinesGenericMenuItems
 	{
 		private bool _supported;
 
@@ -115,13 +115,13 @@ namespace Content.Editor
 			void ForceRegenerate(MemberReflectionReference<IUniqueContentEntry> reference)
 			{
 				var key = (asset, reference);
-				ContentEntryEditorUtility.Untrack(key);
+				ContentEntryEditorUtility.Untrack(in key);
 				property.RegenerateGuid(entry, asset);
 
 				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(in entry.Guid, reference))
 					throw new Exception("Can't register nested entry...");
 
-				ContentEntryEditorUtility.Track(key, in entry.Guid);
+				ContentEntryEditorUtility.Track(in key, in entry.Guid);
 			}
 		}
 
@@ -162,6 +162,12 @@ namespace Content.Editor
 			}
 
 			return true;
+		}
+
+		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
+		{
+			genericMenu.AddSeparator("");
+			genericMenu.AddItem(new GUIContent("Set None"), false, () => property.ValueEntry.WeakSmartValue = null);
 		}
 	}
 }

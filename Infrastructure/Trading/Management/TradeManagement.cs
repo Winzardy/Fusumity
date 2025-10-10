@@ -31,8 +31,7 @@ namespace Trading
 			if (cost == null)
 				return false;
 
-					//TODO: EnumerateActual
-			foreach (var t in cost)
+			foreach (var t in cost.EnumerateActual(tradeboard))
 			{
 				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
 				{
@@ -54,9 +53,9 @@ namespace Trading
 			error = null;
 
 			TradePayError? payError = null;
-			foreach (var t in trade.cost)
+			foreach (var actualTradeCost in trade.cost.EnumerateActual(tradeboard))
 			{
-				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
+				if (actualTradeCost is ITradeCostWithReceipt tradeCostWithReceipt)
 				{
 					if (!tradeCostWithReceipt.CanFetch(tradeboard, out payError))
 					{
@@ -66,7 +65,7 @@ namespace Trading
 				}
 				else
 				{
-					if (!t.CanExecute(tradeboard, out payError))
+					if (!actualTradeCost.CanExecute(tradeboard, out payError))
 					{
 						payError ??= TradePayError.NotImplemented;
 						break;
