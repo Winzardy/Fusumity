@@ -18,7 +18,7 @@ namespace Fusumity.Editor
 			{
 				case "min":
 				case "max":
-					attributes.Add(new HorizontalGroupAttribute("Random"));
+					attributes.Add(new HorizontalGroupAttribute(nameof(IRandomEvaluator)));
 					attributes.Add(new LabelWidthAttribute(30));
 					break;
 			}
