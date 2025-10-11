@@ -41,7 +41,7 @@ namespace Fusumity.Editor
 				0.2f));
 		}
 
-		// Тут фильт для случая когда корнем древа был Condition
+		// Тут фильтр для случая когда корнем древа был Condition
 		private static bool FilterByConditionRoot(Type type, InspectorProperty property)
 		{
 			if (typeof(IRandomEvaluator).IsAssignableFrom(type))
@@ -57,13 +57,11 @@ namespace Fusumity.Editor
 			for (var p = property; p != null; p = p.Parent)
 			{
 				var t = p.ValueEntry?.BaseValueType;
-				if (t == null) continue;
+				if (t == null)
+					continue;
 
 				if (typeof(IEvaluator).IsAssignableFrom(t) || typeof(IBlackboardCondition).IsAssignableFrom(t))
-				{
-					// Обновляем top — в итоге останется самый верхний по иерархии
 					top = p;
-				}
 			}
 
 			var topType = top?.ValueEntry?.BaseValueType;
