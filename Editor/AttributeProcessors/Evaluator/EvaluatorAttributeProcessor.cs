@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Fusumity.Attributes;
 using Fusumity.Editor.Utility;
 using Sapientia;
-using Sapientia.Evaluator;
+using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
@@ -31,9 +31,16 @@ namespace Fusumity.Editor
 
 			var c = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
 			var color = Color.Lerp(c, Color.white, 0.83f);
+			if (attributes.GetAttribute<GUIColorAttribute>() != null)
+				return;
 			attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
 
+			if (typeof(IProxyEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+				return;
+
 			color = Color.Lerp(c, Color.black, 0.83f);
+			if (attributes.GetAttribute<ColorCardBoxAttribute>() != null)
+				return;
 			attributes.Add(new ColorCardBoxAttribute(
 				color.r,
 				color.g,
@@ -60,12 +67,12 @@ namespace Fusumity.Editor
 				if (t == null)
 					continue;
 
-				if (typeof(IEvaluator).IsAssignableFrom(t) || typeof(IBlackboardCondition).IsAssignableFrom(t))
+				if (typeof(IEvaluator).IsAssignableFrom(t) || typeof(ICondition).IsAssignableFrom(t))
 					top = p;
 			}
 
 			var topType = top?.ValueEntry?.BaseValueType;
-			return topType != null && typeof(IBlackboardCondition).IsAssignableFrom(topType);
+			return topType != null && typeof(ICondition).IsAssignableFrom(topType);
 		}
 	}
 }
