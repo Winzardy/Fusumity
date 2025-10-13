@@ -21,7 +21,7 @@ namespace Fusumity.Editor
 			switch (member.Name)
 			{
 				case "value":
-					attributes.Add(new CustomReferencePickerAttribute());
+					attributes.Add(new CustomReferenceEvaluatorPickerAttribute());
 					break;
 			}
 		}
@@ -48,18 +48,18 @@ namespace Fusumity.Editor
 		}
 	}
 
-	public class CustomReferencePickerAttribute : Attribute
+	public class CustomReferenceEvaluatorPickerAttribute : Attribute
 	{
 	}
 
-	public class CustomDrawerAttribute : OdinAttributeDrawer<CustomReferencePickerAttribute>
+	public class CustomReferenceEvaluatorPickerAttributeDrawer : OdinAttributeDrawer<CustomReferenceEvaluatorPickerAttribute>
 	{
 		private static readonly Rect ONE = new(0, 0, 1, 1);
 		private Rect? _rect;
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			if (FusumityEditorGUILayout.SuffixSDFButton(_rect, Draw, SdfIconType.ArrowRight))
+			if (FusumityEditorGUILayout.SuffixSDFButton(_rect, Draw, SdfIconType.ArrowRight, "Использовать Evaluator"))
 			{
 				Property.Parent.ValueEntry.WeakSmartValue = null;
 				Property.Parent.MarkSerializationRootDirty();

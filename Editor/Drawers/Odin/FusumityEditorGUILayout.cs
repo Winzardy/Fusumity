@@ -25,7 +25,8 @@ namespace Fusumity.Editor
 		/// </summary>
 		public static GUIStyle objectFieldButtonStyle = GUI.skin.FindStyle("ObjectFieldButton");
 
-		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill)
+		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill, string tooltip = null,
+			bool useHover = false)
 		{
 			if (!rect.TryGetValue(out var r))
 			{
@@ -35,13 +36,27 @@ namespace Fusumity.Editor
 			}
 
 			var trianglePosition = r.AlignRight(9f, 5f);
-			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Arrow);
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
 
-			var click = GUI.Button(trianglePosition, GUIContent.none, GUIStyle.none);
+			var content = GUIContent.none;
+			if (tooltip != null)
+				content = new GUIContent(string.Empty, tooltip);
+			var click = GUI.Button(trianglePosition, content, GUIStyle.none);
 
 			body.Invoke();
 
-			SdfIcons.DrawIcon(trianglePosition, icon);
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
+			var origin = GUI.color;
+			{
+				if (useHover)
+				{
+					var isHover = r.Contains(Event.current.mousePosition);
+					GUI.color = isHover ? origin : origin * 0.8f;
+				}
+
+				SdfIcons.DrawIcon(trianglePosition, icon);
+			}
+			GUI.color = origin;
 			return click;
 		}
 

@@ -21,22 +21,14 @@ namespace Fusumity.Editor.Utility
 
 			if (SirenixEditorGUI.BeginFadeGroup(property, _enable))
 			{
-				SirenixEditorGUI.BeginIndentedHorizontal();
 				var originEnabled = GUI.enabled;
 				{
 					GUI.enabled = false;
 
-					if (EditorGUIUtility.hierarchyMode)
-						EditorGUI.indentLevel--;
-
 					if (cache)
 						EditorGUILayout.ObjectField("Script", cache, typeof(MonoScript), false);
-
-					if (EditorGUIUtility.hierarchyMode)
-						EditorGUI.indentLevel++;
 				}
 				GUI.enabled = originEnabled;
-				SirenixEditorGUI.EndIndentedHorizontal();
 			}
 
 			SirenixEditorGUI.EndFadeGroup();
