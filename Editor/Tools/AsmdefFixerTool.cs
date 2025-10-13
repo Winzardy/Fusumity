@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -9,10 +10,21 @@ namespace Fusumity.Editor
 	public class AsmdefFixerTool
 	{
 		//TODO: добавить очистку не использумых...
-		[MenuItem("Tools/Other/Asmdef/Fix Duplicates", priority = 10000)]
-		public static void FixDuplicates()
+		[MenuItem("Tools/Other/Asmdef/Fix Guids & Duplicates", priority = 10000)]
+		public static void FixGuidsAndDuplicates()
 		{
 			var files = Directory.GetFiles(Application.dataPath, "*.asmdef", SearchOption.AllDirectories);
+			var nameToGuid = new Dictionary<string, string>();
+
+			foreach (var file in files)
+			{
+
+				var json = File.ReadAllText(file);
+				var asmdef = JsonUtility.FromJson<AsmdefData>(json);
+
+				var guid = AssetDatabase.AssetPathToGUID(file);
+				nameToGuid.Add(asmdef.name, guid);
+			}
 
 			foreach (var file in files)
 			{
@@ -20,6 +32,24 @@ namespace Fusumity.Editor
 				var asmdef = JsonUtility.FromJson<AsmdefData>(json);
 
 				var modified = false;
+
+				for (var i = 0; i < asmdef.references.Length; i++)
+				{
+					if (nameToGuid.TryGetValue(asmdef.references[i], out var guid))
+					{
+						asmdef.references[i] = guid;
+						modified = true;
+					}
+				}
+
+				for (var i = 0; i < asmdef.optionalReferences.Length; i++)
+				{
+					if (nameToGuid.TryGetValue(asmdef.optionalReferences[i], out var guid))
+					{
+						asmdef.optionalReferences[i] = guid;
+						modified = true;
+					}
+				}
 
 				if (asmdef.references != null)
 				{
@@ -45,7 +75,7 @@ namespace Fusumity.Editor
 				{
 					var newJson = JsonUtility.ToJson(asmdef, true);
 					File.WriteAllText(file, newJson);
-					Debug.Log($"Fixed duplicates in {file}");
+					Debug.Log($"Fixed guids & duplicates in {file}");
 				}
 			}
 
