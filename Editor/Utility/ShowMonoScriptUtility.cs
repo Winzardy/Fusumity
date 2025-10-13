@@ -21,6 +21,7 @@ namespace Fusumity.Editor.Utility
 
 			if (SirenixEditorGUI.BeginFadeGroup(property, _enable))
 			{
+				SirenixEditorGUI.BeginIndentedHorizontal();
 				var originEnabled = GUI.enabled;
 				{
 					GUI.enabled = false;
@@ -35,6 +36,7 @@ namespace Fusumity.Editor.Utility
 						EditorGUI.indentLevel++;
 				}
 				GUI.enabled = originEnabled;
+				SirenixEditorGUI.EndIndentedHorizontal();
 			}
 
 			SirenixEditorGUI.EndFadeGroup();
