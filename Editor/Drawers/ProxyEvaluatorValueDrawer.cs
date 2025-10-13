@@ -30,8 +30,8 @@ namespace Fusumity.Editor
 
 				var guiContent = new GUIContent(string.Empty);
 
-				guiContent.tooltip = $"Прокси на другой тип <u>{ValueEntry.SmartValue.ProxyType.GetNiceName()}</u>\n\n" +
-					$"Нажмите, чтобы вернуть <u>{Property.Info.TypeOfValue.GetNiceName()}</u>";
+				guiContent.tooltip = $"Прокси на другой тип:\n<u>{ValueEntry.SmartValue.ProxyType.GetNiceName()}</u>\n\n" +
+					$"Нажмите, чтобы вернуть:\n<u>{Property.Info.TypeOfValue.GetNiceName()}</u>";
 
 				var b2 = EditorGUI.indentLevel == (b1 ? 1 : 0);
 				if (EditorGUIUtility.hierarchyMode && b2)
