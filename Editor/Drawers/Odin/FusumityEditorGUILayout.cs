@@ -367,12 +367,11 @@ namespace Fusumity.Editor
 		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
 			GUIStyle textStyle = null, float textOffset = 0)
 		{
-			const float SPACING = 1.5f;
 			valueStyle ??= EditorStyles.textField;
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
 			var width = valueStyle.CalcWidth(value.ToString());
-			var offset = width + textOffset + SPACING;
+			var offset = width + textOffset - 0.5f;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
@@ -385,30 +384,26 @@ namespace Fusumity.Editor
 			GUI.Label(labelRect, text, textStyle);
 		}
 
+		private static GUIStyle _suffixLabelStyleCache;
+
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
 		{
-			var style = new GUIStyle(EditorStyles.label)
+			_suffixLabelStyleCache ??= new GUIStyle(EditorStyles.label)
 			{
 				fontSize = EditorStyles.textField.fontSize - 3,
-				normal =
-				{
-					textColor = textColor ?? Color.gray
-				},
-				hover =
-				{
-					textColor = textColor ?? Color.gray
-				}
 			};
+			_suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
+			_suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
 
 			if (overlay)
 			{
 				var lastRect = GUILayoutUtility.GetLastRect();
-				var labelRect = lastRect.AlignRight(style.CalcWidth(text), 4);
-				GUI.Label(labelRect, text, style);
+				var labelRect = lastRect.AlignRight(_suffixLabelStyleCache.CalcWidth(text), 4);
+				GUI.Label(labelRect, text, _suffixLabelStyleCache);
 			}
 			else
 			{
-				GUILayout.Label(text, style);
+				GUILayout.Label(text, _suffixLabelStyleCache);
 			}
 		}
 
