@@ -364,6 +364,19 @@ namespace Fusumity.Editor
 
 		#endregion
 
+		private static readonly GUIStyle _suffixLabelStyleCache = new(EditorStyles.label)
+		{
+			fontSize = EditorStyles.textField.fontSize - 3,
+			normal =
+			{
+				textColor = Color.gray
+			},
+			hover =
+			{
+				textColor = Color.gray
+			}
+		};
+
 		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
 			GUIStyle textStyle = null, float textOffset = 0)
 		{
@@ -371,27 +384,21 @@ namespace Fusumity.Editor
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
 			var width = valueStyle.CalcWidth(value.ToString());
-			var offset = width + textOffset - 0.5f;
+			var offset = width + textOffset + 0.5f;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
 
 			var lastRect = GUILayoutUtility.GetLastRect();
-			textStyle ??= EditorStyles.label;
+			textStyle ??= _suffixLabelStyleCache;
 			width = textStyle.CalcWidth(text);
 
 			var labelRect = lastRect.AlignLeft(width, offset);
 			GUI.Label(labelRect, text, textStyle);
 		}
 
-		private static GUIStyle _suffixLabelStyleCache;
-
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
 		{
-			_suffixLabelStyleCache ??= new GUIStyle(EditorStyles.label)
-			{
-				fontSize = EditorStyles.textField.fontSize - 3,
-			};
 			_suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
 			_suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
 

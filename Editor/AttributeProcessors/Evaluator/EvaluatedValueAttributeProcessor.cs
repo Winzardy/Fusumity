@@ -18,12 +18,12 @@ namespace Fusumity.Editor
 
 			if (member.Name == ValueFieldName)
 			{
-				attributes.Add(new HideIfAttribute("@this.evaluator != null", false));
+				attributes.Add(new HideIfAttribute(nameof(IEvaluatedValue.Evaluator),null, false));
 			}
 
 			if (member.Name == SecondValueFieldName)
 			{
-				attributes.Add(new HideIfAttribute("@this.evaluator == null", false));
+				attributes.Add(new ShowIfAttribute(nameof(IEvaluatedValue.Evaluator),null, false));
 			}
 		}
 	}

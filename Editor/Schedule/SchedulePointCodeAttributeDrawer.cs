@@ -14,6 +14,8 @@ namespace Fusumity.Editor
 	{
 		private const string TYPE_LABEL = "Type";
 		private const string FROM_LABEL = "from";
+
+		private const float SUFFIX_TEXT_OFFSET = -1.5f;
 		private GUIStyle _suffixTextStyle;
 
 		protected override void Initialize()
@@ -64,7 +66,7 @@ namespace Fusumity.Editor
 					: decode.sec <= TimeUtility.SECS_IN_ONE_MINUTE - 1
 						? $"{TimeUtility.SECOND_LABEL}s"
 						: $"{TimeUtility.SECOND_LABEL}s, {timeLabel}";
-				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix, textStyle: _suffixTextStyle);
+				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix, textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 			}
 			else
 			{
@@ -88,7 +90,7 @@ namespace Fusumity.Editor
 
 							displayWeekOfMonth = SirenixEditorFields.IntField(displayWeekOfMonth, GUILayout.MinWidth(58));
 							FusumityEditorGUILayout.SuffixValue(label, displayWeekOfMonth, Suffix(displayWeekOfMonth)
-								+ TimeUtility.WEEK_LABEL, textStyle: _suffixTextStyle);
+								+ TimeUtility.WEEK_LABEL, textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 
 							decode.weekOfMonth = (byte) Math.Clamp(displayWeekOfMonth - 1, 0, 4);
 							FusumityEditorGUILayout.SuffixLabel(FROM_LABEL);
@@ -121,13 +123,13 @@ namespace Fusumity.Editor
 
 					decode.hr = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.hr), 0, 23);
 					FusumityEditorGUILayout.SuffixValue(label, decode.hr, Suffix(decode.hr) + TimeUtility.HOUR_LABEL,
-						textStyle: _suffixTextStyle);
+						textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 					decode.min = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.min), 0, 59);
 					FusumityEditorGUILayout.SuffixValue(label, decode.min, Suffix(decode.min) + TimeUtility.MINUTE_LABEL,
-						textStyle: _suffixTextStyle);
+						textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 					decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 0, 59);
 					FusumityEditorGUILayout.SuffixValue(label, decode.sec, Suffix(decode.sec) + TimeUtility.SECOND_LABEL,
-						textStyle: _suffixTextStyle);
+						textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 
 					if (kind is not SchedulePointKind.Daily
 					    and not SchedulePointKind.Weekly
@@ -137,7 +139,7 @@ namespace Fusumity.Editor
 						var displayDay = decode.day + 1;
 						displayDay = SirenixEditorFields.LongField(displayDay);
 						FusumityEditorGUILayout.SuffixValue(label, displayDay, Suffix(displayDay) + TimeUtility.DAY_LABEL,
-							textStyle: _suffixTextStyle);
+							textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 
 						var dayMax = 30L;
 						switch (kind)
@@ -179,7 +181,7 @@ namespace Fusumity.Editor
 					{
 						decode.yr = SirenixEditorFields.LongField(decode.yr);
 						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL,
-							textStyle: _suffixTextStyle);
+							textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 						decode.sign = decode.yr > DateTime.UnixEpoch.Year;
 					}
 
