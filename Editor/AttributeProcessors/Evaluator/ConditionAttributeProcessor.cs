@@ -5,7 +5,6 @@ using System.Reflection;
 using Fusumity.Attributes;
 using Fusumity.Editor.Utility;
 using Sapientia;
-using Sapientia.Conditions;
 using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -22,7 +21,6 @@ namespace Fusumity.Editor
 			switch (member.Name)
 			{
 				case "invert":
-					//attributes.Add(new BoxGroupAttribute(Condition.BOX_GROUP, false));
 					attributes.Add(new HorizontalGroupAttribute(ICondition.GROUP, 23, marginRight: 2));
 					attributes.Add(new LabelTextAttribute("!"));
 					attributes.Add(new LabelWidthAttribute(8));

@@ -13,12 +13,13 @@ namespace Fusumity.Editor
 		public static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
 
 		protected abstract string ValueFieldName { get; }
+		protected virtual string SecondValueFieldName => string.Empty;
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			if (member.Name == ValueFieldName)
+			if (member.Name == ValueFieldName || member.Name == SecondValueFieldName)
 			{
 				if (propertyToGUIContent.TryGetValue(parentProperty, out var content))
 				{
@@ -29,6 +30,8 @@ namespace Fusumity.Editor
 
 					if (!content.tooltip.IsNullOrEmpty())
 						attributes.Add(new TooltipAttribute(content.tooltip));
+
+					propertyToGUIContent.Remove(parentProperty);
 				}
 				else
 					attributes.Add(new HideLabelAttribute());

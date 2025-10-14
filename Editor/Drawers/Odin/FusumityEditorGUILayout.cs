@@ -18,6 +18,7 @@ namespace Fusumity.Editor
 
 	public static partial class FusumityEditorGUILayout
 	{
+		public static readonly Rect INVALID_RECT = new(0, 0, 0, 0);
 		public const string NONE = "None";
 
 		/// <summary>
@@ -25,32 +26,26 @@ namespace Fusumity.Editor
 		/// </summary>
 		public static GUIStyle objectFieldButtonStyle = GUI.skin.FindStyle("ObjectFieldButton");
 
-		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill, string tooltip = null,
-			bool useHover = false)
+		public static bool SuffixSDFButton(Rect rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill, GUIContent tooltip = null,
+			bool useHover = false, float width = 9, float offset = 5f)
 		{
-			if (!rect.TryGetValue(out var r))
+			if (rect == INVALID_RECT)
 			{
-				body.Invoke();
-
+				body?.Invoke();
 				return false;
 			}
 
-			var trianglePosition = r.AlignRight(9f, 5f);
-			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
+			var trianglePosition = rect.AlignRight(width, offset);
+			var click = GUI.Button(trianglePosition, tooltip ?? GUIContent.none, GUIStyle.none);
 
-			var content = GUIContent.none;
-			if (tooltip != null)
-				content = new GUIContent(string.Empty, tooltip);
-			var click = GUI.Button(trianglePosition, content, GUIStyle.none);
-
-			body.Invoke();
+			body?.Invoke();
 
 			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
 			var origin = GUI.color;
 			{
 				if (useHover)
 				{
-					var isHover = r.Contains(Event.current.mousePosition);
+					var isHover = rect.Contains(Event.current.mousePosition);
 					GUI.color = isHover ? origin : origin * 0.8f;
 				}
 
@@ -58,6 +53,12 @@ namespace Fusumity.Editor
 			}
 			GUI.color = origin;
 			return click;
+		}
+
+		public static bool SuffixSDFButton(Rect rect, SdfIconType icon = SdfIconType.CaretDownFill, GUIContent tooltip = null,
+			bool useHover = false, float width = 9, float offset = 5f)
+		{
+			return SuffixSDFButton(rect, null, icon, tooltip, useHover, width, offset);
 		}
 
 		public static bool ToolbarButton(Rect rect, EditorIcon icon, GUIStyle style = null,

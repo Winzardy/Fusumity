@@ -11,6 +11,7 @@ namespace Fusumity.Editor.Utility
 {
 	public static class ShowMonoScriptForReferenceUtility
 	{
+		private const string LABEL = "Script";
 		private static bool _enable;
 
 		public static bool Enable => _enable;
@@ -26,7 +27,7 @@ namespace Fusumity.Editor.Utility
 					GUI.enabled = false;
 
 					if (cache)
-						EditorGUILayout.ObjectField("Script", cache, typeof(MonoScript), false);
+						EditorGUILayout.ObjectField(LABEL, cache, typeof(MonoScript), false);
 				}
 				GUI.enabled = originEnabled;
 			}

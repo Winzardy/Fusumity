@@ -14,6 +14,13 @@ namespace Fusumity.Editor
 	{
 		private const string TYPE_LABEL = "Type";
 		private const string FROM_LABEL = "from";
+		private GUIStyle _style;
+		protected override void Initialize()
+		{
+			_style = new GUIStyle(SirenixGUIStyles.Label);
+			_style.normal.textColor = _style.normal.textColor.WithAlpha(0.35f);
+			_style.hover.textColor = _style.hover.textColor.WithAlpha(0.35f);
+		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
@@ -25,10 +32,18 @@ namespace Fusumity.Editor
 				? new GUIContent(TYPE_LABEL, tooltip: label?.tooltip)
 				: label;
 
+			EditorGUI.BeginChangeCheck();
 			var newKind = FusumityEditorGUILayout.EnumPopup(enumLabel, decode.kind);
-			if (newKind != decode.kind)
-				decode = SchedulePointDecode.GetDefault(newKind);
 
+			if (EditorGUI.EndChangeCheck() && newKind != decode.kind)
+			{
+				decode = SchedulePointDecode.GetDefault(newKind);
+				ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+				Property.MarkSerializationRootDirty();
+				return;
+			}
+
+			EditorGUI.BeginChangeCheck();
 			var kind = decode.kind;
 			if (kind is SchedulePointKind.Interval)
 			{
@@ -39,8 +54,7 @@ namespace Fusumity.Editor
 					: decode.sec <= TimeUtility.SECS_IN_ONE_MINUTE - 1
 						? $"{TimeUtility.SECOND_LABEL}s"
 						: $"{TimeUtility.SECOND_LABEL}s, {timeLabel}";
-				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix);
-				ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix, textStyle: _style);
 			}
 			else
 			{
@@ -96,11 +110,11 @@ namespace Fusumity.Editor
 					}
 
 					decode.hr = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.hr), 0, 23);
-					FusumityEditorGUILayout.SuffixValue(label, decode.hr, Suffix(decode.hr) + TimeUtility.HOUR_LABEL);
+					FusumityEditorGUILayout.SuffixValue(label, decode.hr, Suffix(decode.hr) + TimeUtility.HOUR_LABEL, textStyle: _style);
 					decode.min = (byte) Math.Clamp(SirenixEditorFields.IntField(decode.min), 0, 59);
-					FusumityEditorGUILayout.SuffixValue(label, decode.min, Suffix(decode.min) + TimeUtility.MINUTE_LABEL);
+					FusumityEditorGUILayout.SuffixValue(label, decode.min, Suffix(decode.min) + TimeUtility.MINUTE_LABEL, textStyle: _style);
 					decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 0, 59);
-					FusumityEditorGUILayout.SuffixValue(label, decode.sec, Suffix(decode.sec) + TimeUtility.SECOND_LABEL);
+					FusumityEditorGUILayout.SuffixValue(label, decode.sec, Suffix(decode.sec) + TimeUtility.SECOND_LABEL, textStyle: _style);
 
 					if (kind is not SchedulePointKind.Daily
 					    and not SchedulePointKind.Weekly
@@ -109,7 +123,7 @@ namespace Fusumity.Editor
 					{
 						var displayDay = decode.day + 1;
 						displayDay = SirenixEditorFields.LongField(displayDay);
-						FusumityEditorGUILayout.SuffixValue(label, displayDay, Suffix(displayDay) + TimeUtility.DAY_LABEL);
+						FusumityEditorGUILayout.SuffixValue(label, displayDay, Suffix(displayDay) + TimeUtility.DAY_LABEL, textStyle: _style);
 
 						var dayMax = 30L;
 						switch (kind)
@@ -120,7 +134,7 @@ namespace Fusumity.Editor
 
 							case SchedulePointKind.Yearly:
 							case SchedulePointKind.Monthly:
-								FusumityEditorGUILayout.SuffixLabel(FROM_LABEL);
+								FusumityEditorGUILayout.SuffixLabel(FROM_LABEL, textColor:_style.normal.textColor);
 								dayMax = DateTime.DaysInMonth(DateTime.Now.Year, decode.mh + 1) - 1;
 								if (decode.mh == 1) // Исключение для Февраля
 									dayMax = Math.Clamp(dayMax, 0, 28);
@@ -150,11 +164,9 @@ namespace Fusumity.Editor
 					if (kind is SchedulePointKind.Date)
 					{
 						decode.yr = SirenixEditorFields.LongField(decode.yr);
-						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL);
+						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL, textStyle: _style);
 						decode.sign = decode.yr > DateTime.UnixEpoch.Year;
 					}
-
-					ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
 
 					void DrawMonth(ref SchedulePointDecode decode)
 					{
@@ -180,6 +192,12 @@ namespace Fusumity.Editor
 				}
 
 				SirenixEditorGUI.EndHorizontalPropertyLayout();
+			}
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+				Property.MarkSerializationRootDirty();
 			}
 
 			var style = new GUIStyle(SirenixGUIStyles.MiniLabelCentered)

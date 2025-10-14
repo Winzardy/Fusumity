@@ -2,7 +2,6 @@ using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,6 +10,19 @@ namespace Fusumity.Editor
 	public class ProxyEvaluatorValueDrawer : OdinValueDrawer<IProxyEvaluator>
 	{
 		private Rect? _iconRect;
+
+		private string _tooltip;
+		private GUIContent _label;
+
+		protected override void Initialize()
+		{
+			_tooltip = $"Прокси на другой тип:\n<u>{ValueEntry.SmartValue.ProxyType.GetNiceName()}</u>\n\n" +
+				$"Нажмите, чтобы вернуть:\n<u>{Property.Info.TypeOfValue.GetNiceName()}</u>";
+			_label = new GUIContent(string.Empty)
+			{
+				tooltip = _tooltip
+			};
+		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
@@ -28,11 +40,6 @@ namespace Fusumity.Editor
 				if (b1)
 					EditorGUI.indentLevel++;
 
-				var guiContent = new GUIContent(string.Empty);
-
-				guiContent.tooltip = $"Прокси на другой тип:\n<u>{ValueEntry.SmartValue.ProxyType.GetNiceName()}</u>\n\n" +
-					$"Нажмите, чтобы вернуть:\n<u>{Property.Info.TypeOfValue.GetNiceName()}</u>";
-
 				var b2 = EditorGUI.indentLevel == (b1 ? 1 : 0);
 				if (EditorGUIUtility.hierarchyMode && b2)
 				{
@@ -46,7 +53,7 @@ namespace Fusumity.Editor
 
 				iconRect.x -= 1.5f;
 				iconRect.width -= useOffset ? 3 : 0;
-				if (GUI.Button(iconRect, guiContent, GUIStyle.none))
+				if (GUI.Button(iconRect, _label, GUIStyle.none))
 				{
 					ValueEntry.WeakSmartValue = null;
 				}

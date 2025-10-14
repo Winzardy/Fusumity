@@ -23,17 +23,24 @@ namespace Fusumity.Editor
 			{
 				// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
 				// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
+
 				var typeConfig = TypeRegistryUserConfig.Instance;
 				var constantType = valueEntryTypeOfValue;
-				typeConfig.SetSettings(constantType, new TypeSettings
+				var settings = typeConfig.TryGetSettings(constantType);
+				if (settings == null)
 				{
-					Name = "\u2009If / else",
-					Category = "/",
-					DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
-					LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
-					Icon = SdfIconType.Alt,
-				});
-				EditorUtility.SetDirty(typeConfig);
+					settings = new TypeSettings();
+					typeConfig.SetSettings(constantType, settings);
+					EditorUtility.SetDirty(typeConfig);
+				}
+
+				settings.Name = "\u2009If / else";
+				settings.Category = "/";
+				settings.DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
+				settings.LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
+				settings.Icon = SdfIconType.Alt;
+
+				typeConfig.SetPriority(constantType, 1, null);
 			}
 		}
 	}

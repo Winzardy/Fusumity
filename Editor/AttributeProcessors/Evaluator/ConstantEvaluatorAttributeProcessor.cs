@@ -18,11 +18,9 @@ namespace Fusumity.Editor
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
-			switch (member.Name)
+			if (member.Name == ValueFieldName)
 			{
-				case "value":
-					attributes.Add(new CustomReferenceEvaluatorPickerAttribute());
-					break;
+				attributes.Add(new CustomReferenceEvaluatorPickerAttribute());
 			}
 		}
 
@@ -35,45 +33,23 @@ namespace Fusumity.Editor
 			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
 			var typeConfig = TypeRegistryUserConfig.Instance;
 			var constantType = property.ValueEntry.TypeOfValue;
-			typeConfig.SetSettings(constantType, new TypeSettings
+			var settings = typeConfig.TryGetSettings(constantType);
+			if (settings == null)
 			{
-				Name = "\u2009Constant",
-				Category = "/",
-				DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
-				LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
-				Icon = SdfIconType.DiamondFill,
-			});
-			typeConfig.SetPriority(constantType, 100, null);
-			EditorUtility.SetDirty(typeConfig);
+				settings = new TypeSettings();
+				typeConfig.SetSettings(constantType, settings);
+				EditorUtility.SetDirty(typeConfig);
+			}
+
+			settings.Name = "\u2009Constant";
+			settings.Category = "/";
+			settings.DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
+			settings.LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
+			settings.Icon = SdfIconType.DiamondFill;
 		}
 	}
 
 	public class CustomReferenceEvaluatorPickerAttribute : Attribute
 	{
-	}
-
-	public class CustomReferenceEvaluatorPickerAttributeDrawer : OdinAttributeDrawer<CustomReferenceEvaluatorPickerAttribute>
-	{
-		private static readonly Rect ONE = new(0, 0, 1, 1);
-		private Rect? _rect;
-
-		protected override void DrawPropertyLayout(GUIContent label)
-		{
-			if (FusumityEditorGUILayout.SuffixSDFButton(_rect, Draw, SdfIconType.ArrowRight, "Использовать Evaluator"))
-			{
-				Property.Parent.ValueEntry.WeakSmartValue = null;
-				Property.Parent.MarkSerializationRootDirty();
-				return;
-			}
-
-			var lastRect = GUILayoutUtility.GetLastRect();
-			if (lastRect != ONE)
-				_rect = lastRect;
-
-			void Draw()
-			{
-				CallNextDrawer(label);
-			}
-		}
 	}
 }
