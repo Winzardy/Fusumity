@@ -19,6 +19,7 @@ namespace Fusumity.Editor
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			SirenixEditorGUI.BeginIndentedHorizontal();
+			EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(0.5f));
 			CallNextDrawer(label);
 
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
