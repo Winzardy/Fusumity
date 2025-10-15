@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace Booting.Analytics
 {
@@ -23,7 +24,8 @@ namespace Booting.Analytics
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AnalyticsSettings>();
-			var router = new AnalyticsManagement(settings);
+			bool isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
+			var router = new AnalyticsManagement(settings, isValidationEnabled);
 
 			if (@await)
 				await router.InitializeAsync(token);
