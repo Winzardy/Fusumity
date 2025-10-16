@@ -2,6 +2,7 @@ using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -36,15 +37,14 @@ namespace Fusumity.Editor
 			{
 				var iconRect = _iconRect.Value;
 				var b = smartValueProxy != null || !EditorGUIUtility.hierarchyMode;
-				var b1 = b && EditorGUI.indentLevel == 0;
+				var isZeroIndent = EditorGUI.indentLevel == 0;
+				var b1 = b && isZeroIndent;
 				if (b1)
 					EditorGUI.indentLevel++;
 
-				var b2 = EditorGUI.indentLevel == (b1 ? 1 : 0);
-				if (EditorGUIUtility.hierarchyMode && b2)
+				if (EditorGUIUtility.hierarchyMode && isZeroIndent)
 				{
 					iconRect.x -= 14;
-					iconRect = iconRect.AlignTop(EditorGUIUtility.singleLineHeight);
 				}
 				else if (useOffset)
 				{
