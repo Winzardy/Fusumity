@@ -30,7 +30,7 @@ namespace Fusumity.Editor
 			var useOffset = EditorGUIUtility.hierarchyMode && smartValueProxy != null;
 
 			if (Property.LastDrawnValueRect.x != 0 && Property.LastDrawnValueRect.y != 20) // Хак, лучше не придумал
-				_iconRect = Property.LastDrawnValueRect.AlignLeft(15).AlignTop(18);
+				_iconRect = Property.LastDrawnValueRect.AlignLeft(15).AlignTop(EditorGUIUtility.singleLineHeight);
 
 			if (_iconRect.HasValue)
 			{
@@ -43,8 +43,8 @@ namespace Fusumity.Editor
 				var b2 = EditorGUI.indentLevel == (b1 ? 1 : 0);
 				if (EditorGUIUtility.hierarchyMode && b2)
 				{
-					iconRect.x -= 11;
-					iconRect = iconRect.AlignTop(23);
+					iconRect.x -= 14;
+					iconRect = iconRect.AlignTop(EditorGUIUtility.singleLineHeight);
 				}
 				else if (useOffset)
 				{

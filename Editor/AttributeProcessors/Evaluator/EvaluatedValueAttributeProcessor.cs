@@ -25,7 +25,6 @@ namespace Fusumity.Editor
 
 			if (member.Name == SecondValueFieldName)
 			{
-				attributes.Add(new LabelTextAttribute(parentProperty.Label.text));
 				attributes.Add(new ShowIfAttribute(nameof(IEvaluatedValue.Evaluator), null, false));
 			}
 		}

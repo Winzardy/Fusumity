@@ -18,7 +18,7 @@ namespace Fusumity.Editor
 				case "min":
 				case "max":
 					attributes.Add(new HorizontalGroupAttribute(nameof(IRandomEvaluator)));
-					attributes.Add(new LabelWidthAttribute(30));
+					attributes.Add(new LabelWidthAttribute(40));
 					break;
 			}
 

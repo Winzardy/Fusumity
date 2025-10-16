@@ -35,8 +35,13 @@ namespace Fusumity.Deterministic
 			var display = GetValue(value);
 
 			var fix64 = (Fix64) display;
+			var suffix = FORMAT.Format(fix64.RawValue);
+			var calcWidth = FusumityEditorGUILayout.suffixLabelStyleCache.CalcWidth(suffix);
 
-			FusumityEditorGUILayout.SuffixLabel(FORMAT.Format(fix64.RawValue), true, _rawSuffixLabelColor);
+			var availableWidth = rect.width - EditorGUIUtility.labelWidth - 20;
+			if (calcWidth <= availableWidth)
+				FusumityEditorGUILayout.SuffixLabel(suffix, true, _rawSuffixLabelColor);
+
 			ValueEntry.SmartValue = fix64;
 		}
 

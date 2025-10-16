@@ -31,7 +31,15 @@ namespace Fusumity.Editor
 					if (!content.tooltip.IsNullOrEmpty())
 						attributes.Add(new TooltipAttribute(content.tooltip));
 
-					propertyToGUIContent.Remove(parentProperty);
+					if (SecondValueFieldName != string.Empty)
+					{
+						if (member.Name == SecondValueFieldName)
+							propertyToGUIContent.Remove(parentProperty);
+					}
+					else
+					{
+						propertyToGUIContent.Remove(parentProperty);
+					}
 				}
 				else
 					attributes.Add(new HideLabelAttribute());
