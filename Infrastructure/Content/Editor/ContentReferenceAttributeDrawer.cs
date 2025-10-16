@@ -105,7 +105,7 @@ namespace Content.Editor
 
 		private bool _nestedFoldout;
 
-		private bool? _found;
+		private (string key, IContentEntrySource source, int contentVersion) _found;
 
 		private Type _valueType;
 
@@ -629,67 +629,70 @@ namespace Content.Editor
 
 		private IContentEntrySource FindSelectedSource(Type type, string id)
 		{
+			if (_found.key == id)
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(type, id, out var source))
 			{
-				_found = true;
+				_found = (id, source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(type, id, out source))
 			{
-				_found = true;
+				_found = (id, source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (id, null, ContentEditorCache.version);
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(Type type, in SerializableGuid guid)
 		{
+			if (_found.key == guid.ToString())
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(type, in guid, out var source))
 			{
-				_found = true;
+				_found = (guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(type, in guid, out source))
 			{
-				_found = true;
+				_found = (guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (guid.ToString(), null, ContentEditorCache.version);
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(IContentReference reference)
 		{
+			if (_found.key == reference.Guid.ToString())
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out var source))
 			{
-				_found = true;
+				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
-				_found = true;
+				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (reference.Guid.ToString(), null, ContentEditorCache.version);
 			return null;
 		}
 	}
