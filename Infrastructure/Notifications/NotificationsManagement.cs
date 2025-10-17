@@ -4,6 +4,7 @@ using System.Linq;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Sapientia.Reflection;
 
 namespace Notifications
@@ -30,6 +31,11 @@ namespace Notifications
 
 			if (_platform == null)
 				return;
+
+			var platformName = _platform.GetType()
+				.Name
+				.Remove("NotificationPlatform");
+			NotificationsDebug.Log($"Target platform: {platformName}");
 
 			_platform.NotificationReceived += OnNotificationReceived;
 
