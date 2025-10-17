@@ -27,7 +27,7 @@ namespace Booting.Notifications
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
 			_platform = new EditorNotificationPlatform();
 #elif UNITY_ANDROID
 			_platform = new AndroidNotificationPlatform();

@@ -1,4 +1,5 @@
 ﻿using System;
+using Unity.Android.Gradle.Manifest;
 using Unity.Notifications.iOS;
 using UnityEngine.Scripting;
 
@@ -44,7 +45,6 @@ namespace Notifications.iOS
 			{
 				NotificationsDebug.LogError(
 					$"Trying to schedule notification by id [ {args.id} ] in the past, date: {date.ToShortDateString()}");
-
 				return;
 			}
 
@@ -77,8 +77,6 @@ namespace Notifications.iOS
 			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
-
-			NotificationsDebug.LogError($"IOS Schedule {args.id}, date:{date.ToShortDateString()}");
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);
