@@ -534,8 +534,15 @@ namespace Advertising.UnityLevelPlay
 
 		private static void SetUserId(string userId)
 		{
-			IronSource.Agent.setUserId(userId);
-			AdsDebug.Log($"Set userId: {userId}");
+			if (userId != null)
+			{
+				AdsDebug.Log($"Set userId: {userId}");
+				IronSource.Agent.setUserId(userId);
+			}
+			else
+			{
+				AdsDebug.LogWarning($"userId is empty");
+			}
 		}
 
 		private void SetPause(bool value) => IronSource.Agent.onApplicationPause(value);
