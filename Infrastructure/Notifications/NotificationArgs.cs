@@ -9,7 +9,7 @@ namespace Notifications
 	{
 		public readonly string id;
 
-		public NotificationEntry entry;
+		public NotificationConfig config;
 
 		public string title;
 		public string message;
@@ -31,10 +31,10 @@ namespace Notifications
 
 		public IPlatformNotificationArgs platform;
 
-		public NotificationArgs(string id, NotificationEntry entry) : this()
+		public NotificationArgs(string id, NotificationConfig config) : this()
 		{
 			this.id = id;
-			this.entry = entry;
+			this.config = config;
 		}
 
 		public override string ToString()

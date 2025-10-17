@@ -1,5 +1,5 @@
 {
-    "name": "Notifications.Android.Entry",
+    "name": "Notifications.Android.Config",
     "rootNamespace": "",
     "references": [
         "Notifications",

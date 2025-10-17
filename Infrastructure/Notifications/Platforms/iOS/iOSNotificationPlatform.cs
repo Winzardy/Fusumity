@@ -38,6 +38,18 @@ namespace Notifications.iOS
 			};
 
 			var date = args.deliveryTime!.Value;
+
+			var isUtc = date.Kind == DateTimeKind.Utc;
+			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
+			{
+				NotificationsDebug.LogError(
+					$"Trying to schedule notification by id [ {args.id} ] in the past, date: {date.ToShortDateString()}");
+
+				return;
+			}
+
+			date = isUtc ? date : date.ToLocalTime();
+
 			notification.Trigger = new iOSNotificationCalendarTrigger
 			{
 				Year = date.Year,
@@ -47,12 +59,13 @@ namespace Notifications.iOS
 				Minute = date.Minute,
 				Second = date.Second,
 				Repeats = false,
-				UtcTime = false
+				UtcTime = isUtc
 			};
 
-			var notificationEntry = args.entry;
+			var notificationEntry = args.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
-			notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
+			if (notification.ShowInForeground)
+				notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
 
 			if (args.TryGet<IOSPlatformNotificationArgs>(out var platformArgs))
 				notification.Subtitle = platformArgs.subtitle;
@@ -64,6 +77,8 @@ namespace Notifications.iOS
 			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
+
+			NotificationsDebug.LogError($"IOS Schedule {args.id}, date:{date.ToShortDateString()}");
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);
@@ -85,7 +100,7 @@ namespace Notifications.iOS
 		public void OpenApplicationSettings() => iOSNotificationCenter.OpenNotificationSettings();
 
 		public string GetLastIntentNotificationId() => iOSNotificationCenter.QueryLastRespondedNotification()
-		   .Notification?.Identifier;
+			.Notification?.Identifier;
 
 		private void SetBadge(int amount) => iOSNotificationCenter.ApplicationBadge = amount;
 	}

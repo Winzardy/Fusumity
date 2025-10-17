@@ -4,15 +4,15 @@ namespace Notifications
 {
 	public static class NotificationPlatformUtility
 	{
-		public static bool TryGet<T>(this NotificationEntry entry, out T platformEntry)
-			where T : IPlatformNotificationEntry
+		public static bool TryGet<T>(this NotificationConfig config, out T platformEntry)
+			where T : IPlatformNotificationConfig
 		{
 			platformEntry = default;
 
-			if (entry.platformEntries.IsNullOrEmpty())
+			if (config.platformEntries.IsNullOrEmpty())
 				return false;
 
-			foreach (var x in entry.platformEntries)
+			foreach (var x in config.platformEntries)
 			{
 				if (x is not T cast)
 					continue;

@@ -1,5 +1,5 @@
 {
-    "name": "Notifications.iOS.Entry",
+    "name": "Notifications.iOS.Config",
     "rootNamespace": "",
     "references": [
         "Notifications",

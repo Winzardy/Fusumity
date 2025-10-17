@@ -4,10 +4,10 @@ using Sirenix.OdinInspector;
 using Unity.Notifications.Android;
 #endif
 
-namespace Notifications.Android.Entry
+namespace Notifications.Android.Config
 {
 	[System.Serializable]
-	public class AndroidNotificationChannelEntry
+	public class AndroidNotificationChannelConfig
 	{
 #if UNITY_ANDROID || UNITY_EDITOR
 		/// <summary>
