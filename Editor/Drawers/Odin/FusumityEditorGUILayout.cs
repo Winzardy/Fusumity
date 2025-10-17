@@ -18,6 +18,7 @@ namespace Fusumity.Editor
 
 	public static partial class FusumityEditorGUILayout
 	{
+		public static readonly Rect INVALID_RECT = new(0, 0, 0, 0);
 		public const string NONE = "None";
 
 		/// <summary>
@@ -25,24 +26,39 @@ namespace Fusumity.Editor
 		/// </summary>
 		public static GUIStyle objectFieldButtonStyle = GUI.skin.FindStyle("ObjectFieldButton");
 
-		public static bool SuffixSDFButton(Rect? rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill)
+		public static bool SuffixSDFButton(Rect rect, Action body, SdfIconType icon = SdfIconType.CaretDownFill, GUIContent tooltip = null,
+			bool useHover = false, float width = 9, float offset = 5f)
 		{
-			if (!rect.TryGetValue(out var r))
+			if (rect == INVALID_RECT)
 			{
-				body.Invoke();
-
+				body?.Invoke();
 				return false;
 			}
 
-			var trianglePosition = r.AlignRight(9f, 5f);
-			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Arrow);
+			var trianglePosition = rect.AlignRight(width, offset);
+			var click = GUI.Button(trianglePosition, tooltip ?? GUIContent.none, GUIStyle.none);
 
-			var click = GUI.Button(trianglePosition, GUIContent.none, GUIStyle.none);
+			body?.Invoke();
 
-			body.Invoke();
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
+			var origin = GUI.color;
+			{
+				if (useHover)
+				{
+					var isHover = rect.Contains(Event.current.mousePosition);
+					GUI.color = isHover ? origin : origin * 0.8f;
+				}
 
-			SdfIcons.DrawIcon(trianglePosition, icon);
+				SdfIcons.DrawIcon(trianglePosition, icon);
+			}
+			GUI.color = origin;
 			return click;
+		}
+
+		public static bool SuffixSDFButton(Rect rect, SdfIconType icon = SdfIconType.CaretDownFill, GUIContent tooltip = null,
+			bool useHover = false, float width = 9, float offset = 5f)
+		{
+			return SuffixSDFButton(rect, null, icon, tooltip, useHover, width, offset);
 		}
 
 		public static bool ToolbarButton(Rect rect, EditorIcon icon, GUIStyle style = null,
@@ -348,21 +364,33 @@ namespace Fusumity.Editor
 
 		#endregion
 
+		public static readonly GUIStyle suffixLabelStyleCache = new(EditorStyles.label)
+		{
+			fontSize = EditorStyles.textField.fontSize - 3,
+			normal =
+			{
+				textColor = Color.gray
+			},
+			hover =
+			{
+				textColor = Color.gray
+			}
+		};
+
 		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
 			GUIStyle textStyle = null, float textOffset = 0)
 		{
-			const float SPACING = 1.5f;
 			valueStyle ??= EditorStyles.textField;
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
 			var width = valueStyle.CalcWidth(value.ToString());
-			var offset = width + textOffset + SPACING;
+			var offset = width + textOffset + 0.5f;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
 
 			var lastRect = GUILayoutUtility.GetLastRect();
-			textStyle ??= EditorStyles.label;
+			textStyle ??= suffixLabelStyleCache;
 			width = textStyle.CalcWidth(text);
 
 			var labelRect = lastRect.AlignLeft(width, offset);
@@ -371,28 +399,18 @@ namespace Fusumity.Editor
 
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
 		{
-			var style = new GUIStyle(EditorStyles.label)
-			{
-				fontSize = EditorStyles.textField.fontSize - 3,
-				normal =
-				{
-					textColor = textColor ?? Color.gray
-				},
-				hover =
-				{
-					textColor = textColor ?? Color.gray
-				}
-			};
+			suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
+			suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
 
 			if (overlay)
 			{
 				var lastRect = GUILayoutUtility.GetLastRect();
-				var labelRect = lastRect.AlignRight(style.CalcWidth(text), 4);
-				GUI.Label(labelRect, text, style);
+				var labelRect = lastRect.AlignRight(suffixLabelStyleCache.CalcWidth(text), 4);
+				GUI.Label(labelRect, text, suffixLabelStyleCache);
 			}
 			else
 			{
-				GUILayout.Label(text, style);
+				GUILayout.Label(text, suffixLabelStyleCache);
 			}
 		}
 

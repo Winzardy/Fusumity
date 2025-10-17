@@ -16,9 +16,6 @@ namespace Advertising.Editor
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 			switch (member.Name)
 			{
-				case nameof(RewardedAdTradeCost.count):
-					attributes.Add(new MinimumAttribute(1));
-					break;
 				case nameof(RewardedAdTradeCost.group):
 					attributes.Add(new ContextLabelAttribute("AdTokenGroup"));
 					attributes.Add(new TooltipAttribute(

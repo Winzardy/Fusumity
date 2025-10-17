@@ -26,6 +26,9 @@ namespace Trading
 
 		public bool CanFetchOrExecute([CanBeNull] TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
 		{
+			if (!tradeboard.IsFetchMode)
+				throw new ArgumentException("Tradeboard will be fetched!");
+
 			error = null;
 
 			if (cost == null)
@@ -50,6 +53,9 @@ namespace Trading
 
 		public bool CanFetchOrExecute(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
+			if (!tradeboard.IsFetchMode)
+				throw new ArgumentException("Tradeboard will be fetched!");
+
 			error = null;
 
 			TradePayError? payError = null;
@@ -93,12 +99,16 @@ namespace Trading
 		public async Task<TradeExecuteError?> FetchAsync(TradeConfig trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{
-			if (!CanFetchOrExecute(in trade, tradeboard, out var error))
-				return error;
+			using (tradeboard.FetchModeScope())
+			{
+				if (!CanFetchOrExecute(in trade, tradeboard, out var error))
+					return error;
+			}
 
 			var payError = await FetchAsync(trade.cost, tradeboard, cancellationToken);
 			if (payError != null)
 				return new TradeExecuteError(payError, null);
+
 			return null;
 		}
 
@@ -106,66 +116,64 @@ namespace Trading
 		public async Task<TradePayError?> FetchAsync(TradeCost cost, Tradeboard tradeboard,
 			CancellationToken cancellationToken)
 		{
-			if (!CanFetchOrExecute(cost, tradeboard, out var error))
-				return error;
-
-			using (ListPool<ITradeReceipt>.Get(out var receipts))
+			TradePayError? error;
+			using (tradeboard.FetchModeScope())
 			{
-				foreach (var actualCost in cost.EnumerateActual(tradeboard))
-				{
-					try
-					{
-						if (actualCost is not ITradeCostWithReceipt tradeCostWithReceipt)
-							continue;
-
-						if (cancellationToken.IsCancellationRequested)
-							return TradePayError.NotImplemented; //TODO: остановка
-
-						var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
-
-						if (cancellationToken.IsCancellationRequested)
-							return TradePayError.NotImplemented; //TODO: остановка
-
-						if (receipt != null)
-						{
-							if (receipt.NeedPush())
-								receipts.Add(receipt);
-						}
-						else
-							return TradePayError.NotImplemented; //TODO: ошибка получения чека
-					}
-					catch (OperationCanceledException)
-					{
-						return TradePayError.Cancelled;
-					}
-					catch (Exception e)
-					{
-						throw TradingDebug.Exception(e.Message);
-					}
-				}
-
-				if (receipts.Count > 0)
-				{
-					using var _ = tradeboard.Register(receipts.ToArray());
-
-					_service.PushReceipts(tradeboard);
-
-					var cStr = receipts.GetCompositeString(true, getter:
-						receipt => receipt.ToString(), numerate: receipts.Count > 1);
-					TradingDebug.Log($"{tradeboard.Id}, receipts:{cStr}");
-				}
+				if (!CanFetchOrExecute(cost, tradeboard, out error))
+					return error;
 			}
 
-			return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
+			using (tradeboard.FetchModeScope())
+			{
+				using (ListPool<ITradeReceipt>.Get(out var receipts))
+				{
+					foreach (var actualCost in cost.EnumerateActual(tradeboard))
+					{
+						try
+						{
+							if (actualCost is not ITradeCostWithReceipt tradeCostWithReceipt)
+								continue;
 
-			// _dummyNode ??= new DummyTradingNode();
-			// using var __ = tradeboard.Register(_dummyNode);
-			//
-			// // Если Verification не задан значит нет предварительных этапов и так далее, грубо говоря оффлайн режим
-			// if (TradeAccess.Pay(cost, tradeboard))
-			// 	return TradePayError.NotError;
-			//
-			// return TradePayError.NotImplemented;
+							if (cancellationToken.IsCancellationRequested)
+								return TradePayError.NotImplemented; //TODO: остановка
+
+							var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
+
+							if (cancellationToken.IsCancellationRequested)
+								return TradePayError.NotImplemented; //TODO: остановка
+
+							if (receipt != null)
+							{
+								if (receipt.NeedPush())
+									receipts.Add(receipt);
+							}
+							else
+								return TradePayError.NotImplemented; //TODO: ошибка получения чека
+						}
+						catch (OperationCanceledException)
+						{
+							return TradePayError.Cancelled;
+						}
+						catch (Exception e)
+						{
+							throw TradingDebug.Exception(e.Message);
+						}
+					}
+
+					if (receipts.Count > 0)
+					{
+						using var _ = tradeboard.Register(receipts.ToArray());
+
+						_service.PushReceipts(tradeboard);
+
+						var cStr = receipts.GetCompositeString(true, getter:
+							receipt => receipt.ToString(), numerate: receipts.Count > 1);
+						TradingDebug.Log($"{tradeboard.Id}, receipts:{cStr}");
+					}
+				}
+
+				return TradeAccess.CanPay(cost, tradeboard, out error) ? null : error;
+			}
 		}
 	}
 }

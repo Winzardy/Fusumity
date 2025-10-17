@@ -27,6 +27,7 @@ namespace Content.Editor
 					if (propertyToContentReferenceAttribute.TryGetValue(parentProperty, out var contentReferenceAttribute))
 					{
 						attributes.Add(contentReferenceAttribute);
+						propertyToContentReferenceAttribute.Remove(parentProperty);
 					}
 
 					var type = parentProperty.ValueEntry.TypeOfValue;
@@ -41,6 +42,8 @@ namespace Content.Editor
 
 							if (!content.tooltip.IsNullOrEmpty())
 								attributes.Add(new TooltipAttribute(content.tooltip));
+
+							propertyToGUIContent.Remove(parentProperty);
 						}
 						else
 							attributes.Add(new HideLabelAttribute());

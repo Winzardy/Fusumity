@@ -26,6 +26,8 @@ namespace Content.Editor
 			}
 		}
 
+		public static int version => _cache.Count;
+
 		public static void Refresh()
 		{
 			_cache ??= new();

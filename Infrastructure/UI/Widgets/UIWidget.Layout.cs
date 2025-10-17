@@ -158,7 +158,7 @@ namespace UI
 				_layout.rectTransform.SetAsLastSibling();
 
 			var withoutAnimation = _animator == null ||
-				_suppressFlag.Has(SuppressFlag.Animation);
+				_suppressFlag.HasFlags(SuppressFlag.Animation);
 
 			OnPrepareOpening();
 

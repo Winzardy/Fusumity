@@ -2,6 +2,7 @@ using System;
 using Fusumity.Editor;
 using Fusumity.Utility;
 using Sapientia.Deterministic;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.ValueResolvers;
@@ -13,6 +14,7 @@ namespace Fusumity.Deterministic
 {
 	public class Fix64PropertyDrawer : OdinValueDrawer<Fix64>
 	{
+		private const string FORMAT = "raw: {0}";
 		private static readonly Color _rawSuffixLabelColor = Color.gray.WithAlpha(0.6f);
 
 		protected override void DrawPropertyLayout(GUIContent label)
@@ -33,8 +35,13 @@ namespace Fusumity.Deterministic
 			var display = GetValue(value);
 
 			var fix64 = (Fix64) display;
+			var suffix = FORMAT.Format(fix64.RawValue);
+			var calcWidth = FusumityEditorGUILayout.suffixLabelStyleCache.CalcWidth(suffix);
 
-			FusumityEditorGUILayout.SuffixLabel("raw: " + fix64.RawValue, true, _rawSuffixLabelColor);
+			var availableWidth = rect.width - EditorGUIUtility.labelWidth - 20;
+			if (calcWidth <= availableWidth)
+				FusumityEditorGUILayout.SuffixLabel(suffix, true, _rawSuffixLabelColor);
+
 			ValueEntry.SmartValue = fix64;
 		}
 

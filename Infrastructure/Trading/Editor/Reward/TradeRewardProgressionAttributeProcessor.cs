@@ -27,12 +27,17 @@ namespace Trading.Editor
 					};
 
 					attributes.Add(typeSelectorSettingsAttribute);
+					attributes.Add(new PropertySpaceAttribute(0, 1));
 
 					break;
 
 				case nameof(TradeRewardProgression.condition):
-					attributes.Add(new PropertySpaceAttribute(1, 5));
+
 					attributes.Add(new LabelTextAttribute("Increment Condition"));
+					break;
+
+				case nameof(TradeRewardProgression.group):
+					attributes.Add(new PropertySpaceAttribute(5));
 					break;
 			}
 
