@@ -1,5 +1,4 @@
 ﻿using System;
-using Unity.Android.Gradle.Manifest;
 using Unity.Notifications.iOS;
 using UnityEngine.Scripting;
 
