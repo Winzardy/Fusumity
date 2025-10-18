@@ -6,7 +6,6 @@ using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
-using Unity.Android.Gradle.Manifest;
 
 namespace Notifications
 {
