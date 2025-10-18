@@ -29,7 +29,7 @@ namespace Notifications.iOS
 			NotificationReceived?.Invoke(notification.Identifier, notification.Data);
 		}
 
-		public void Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationArgs args)
 		{
 			var notification = new iOSNotification(args.id)
 			{
@@ -38,17 +38,7 @@ namespace Notifications.iOS
 			};
 
 			var date = args.deliveryTime!.Value;
-
 			var isUtc = date.Kind == DateTimeKind.Utc;
-			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
-			{
-				NotificationsDebug.LogError(
-					$"Trying to schedule notification by id [ {args.id} ] in the past, date: {date.ToShortDateString()}");
-				return;
-			}
-
-			date = isUtc ? date : date.ToLocalTime();
-
 			notification.Trigger = new iOSNotificationCalendarTrigger
 			{
 				Year = date.Year,
@@ -60,6 +50,9 @@ namespace Notifications.iOS
 				Repeats = false,
 				UtcTime = isUtc
 			};
+
+			//TODO: доработать кейс с бейджами (R&D)
+			notification.Badge = 1;
 
 			var notificationEntry = args.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
@@ -76,6 +69,7 @@ namespace Notifications.iOS
 			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
+			return true;
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);

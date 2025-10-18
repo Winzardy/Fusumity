@@ -6,12 +6,15 @@ using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
+using Unity.Android.Gradle.Manifest;
 
 namespace Notifications
 {
 	public class NotificationsManagement : IDisposable
 	{
 		private const int DEFAULT_DELAY_MIN = 5;
+		private const string SCHEDULED_LOG_MESSAGE_FORMAT = "Scheduled notification: {0}";
+		private const string INVALID_ARGS_BY_TIME_LOGS_MESSAGE = "RemainingTime or deliveryTime can't be null at the same time";
 
 		private readonly INotificationPlatform _platform;
 		private readonly NotificationsSettings _settings;
@@ -47,11 +50,13 @@ namespace Notifications
 			}
 
 			_schedulerToOverrider = ReflectionUtility.GetAllTypes<ISchedulerOverrider>(false)
-			   .Where(type => typeof(IPlatformNotification<>).MakeGenericType(PlatformType).IsAssignableFrom(type))
-			   .ToDictionary(
+				.Where(type => typeof(IPlatformNotification<>).MakeGenericType(PlatformType).IsAssignableFrom(type))
+				.ToDictionary(
 					type => type,
 					type => type.GetInterface(typeof(ISchedulerOverrider<>).Name)!.GetGenericArguments().First()
 				);
+
+			UnityLifecycle.ApplicationFocusEvent += OnApplicationFocus;
 		}
 
 		public void Dispose()
@@ -62,6 +67,17 @@ namespace Notifications
 			_schedulerToOverrider = null;
 
 			_platform.NotificationReceived -= OnNotificationReceived;
+
+			UnityLifecycle.ApplicationFocusEvent -= OnApplicationFocus;
+		}
+
+		private void OnApplicationFocus()
+		{
+			var lastIntentNotificationId = GetLastIntentNotificationId();
+			if (lastIntentNotificationId == null)
+				return;
+
+			Remove(lastIntentNotificationId);
 		}
 
 		internal bool TryCreateOrRegister(Type type, out NotificationScheduler scheduler)
@@ -87,13 +103,22 @@ namespace Notifications
 		internal void Schedule(ref NotificationArgs args)
 		{
 			if (!args.remainingTime.HasValue && !args.deliveryTime.HasValue)
-				throw new ArgumentException("RemainingTime or deliveryTime can't be null at the same time");
+				throw NotificationsDebug.Exception(INVALID_ARGS_BY_TIME_LOGS_MESSAGE);
 
 			args.deliveryTime ??= DateTime.Now + args.remainingTime.Value;
 
-			_platform.Schedule(in args);
+			var date = args.deliveryTime!.Value;
+			var isUtc = date.Kind == DateTimeKind.Utc;
+			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
+			{
+				NotificationsDebug.LogError(
+					$"Trying to schedule notification by id [ {args.id} ] in the past, " +
+					$"date: {date.ToShortTimeString()}, {date.ToShortDateString()} (kind:{date.Kind})");
+				return;
+			}
 
-			NotificationsDebug.Log($"Schedule notification: {args}");
+			if (_platform.Schedule(in args))
+				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(args));
 		}
 
 		internal void Cancel(string id) => _platform?.Cancel(id);
@@ -110,9 +135,6 @@ namespace Notifications
 
 		private void OnNotificationReceived(string id, string data)
 		{
-			// Очищаем уведомление на которое тыкнули во включенном приложении
-			// Remove(id);
-
 			// TODO: Добавить по надобности Receivers..
 		}
 	}

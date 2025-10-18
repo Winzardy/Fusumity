@@ -51,7 +51,7 @@ namespace Notifications.Android
 			//TODO: как вариант записывать string айди в IntentData. Так же могут быть нотификации не "игровые"
 		}
 
-		public void Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationArgs args)
 		{
 			TryRequestUserPermission();
 
@@ -99,11 +99,13 @@ namespace Notifications.Android
 				AndroidNotificationCenter.SendNotificationWithExplicitID(notification, channel, androidId);
 			else
 				_ids[args.id] = AndroidNotificationCenter.SendNotification(notification, channel);
+
+			return true;
 		}
 
 		private static void TryRequestUserPermission()
 		{
-			if(AndroidNotificationCenter.UserPermissionToPost == PermissionStatus.Allowed)
+			if (AndroidNotificationCenter.UserPermissionToPost == PermissionStatus.Allowed)
 				return;
 
 			if (!Permission.HasUserAuthorizedPermission(PERMISSION))
