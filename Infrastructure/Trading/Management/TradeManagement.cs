@@ -135,12 +135,12 @@ namespace Trading
 								continue;
 
 							if (cancellationToken.IsCancellationRequested)
-								return TradePayError.NotImplemented; //TODO: остановка
+								return TradePayError.Cancelled;
 
 							var receipt = await tradeCostWithReceipt.FetchAsync(tradeboard, cancellationToken);
 
 							if (cancellationToken.IsCancellationRequested)
-								return TradePayError.NotImplemented; //TODO: остановка
+								return TradePayError.Cancelled;
 
 							if (receipt != null)
 							{
