@@ -17,7 +17,7 @@ namespace UI
 			if (!placeholder)
 				return;
 
-			if (!reference.IsEmpty())
+			if (!reference.IsEmptyOrInvalid())
 			{
 				assigner.SetSprite(placeholder, reference, callback);
 			}

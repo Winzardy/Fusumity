@@ -120,15 +120,15 @@ namespace Audio
 
 			if (definition.playlist.IsNullOrEmpty())
 			{
-				if (definition.entry == null)
+				if (definition.config == null)
 				{
-					if (!ContentManager.Contains<AudioEventEntry>(definition.id))
+					if (!ContentManager.Contains<AudioEventConfig>(definition.id))
 					{
 						errorCode = PlayErrorCode.NotEventEntry;
 						return false;
 					}
 
-					definition.entry = ContentManager.Get<AudioEventEntry>(definition.id);
+					definition.config = ContentManager.Get<AudioEventConfig>(definition.id);
 				}
 
 				definition.RollPlaylist();
@@ -141,8 +141,8 @@ namespace Audio
 			}
 
 			if (definition.mixer.IsNullOrEmpty())
-				definition.mixer = definition.entry != null
-					? definition.entry.mixer.IsNullOrEmpty() ? _masterMixer.id : definition.entry.mixer
+				definition.mixer = definition.config != null
+					? definition.config.mixer.IsNullOrEmpty() ? _masterMixer.id : definition.config.mixer
 					: _masterMixer.id;
 
 			if (!TryGetAudioMixerGroup(definition.mixer, out var mixerGroup))
@@ -152,36 +152,36 @@ namespace Audio
 				return false;
 			}
 
-			var rolloffMode = definition.entry?.spatial.rolloffMode ?? AudioRolloffMode.Linear;
-			var customRolloffCurve = rolloffMode == AudioRolloffMode.Custom ? definition.entry?.spatial.customRolloffCurve : null;
+			var rolloffMode = definition.config?.spatial.rolloffMode ?? AudioRolloffMode.Linear;
+			var customRolloffCurve = rolloffMode == AudioRolloffMode.Custom ? definition.config?.spatial.customRolloffCurve : null;
 
 			var audioSourceSettings = new AudioSourceSettings(
 				mixerGroup,
 				rolloffMode: rolloffMode,
 				customRolloffCurve: customRolloffCurve,
-				timeScaledPitch: definition.entry?.timeScaledPitch ?? false);
+				timeScaledPitch: definition.config?.timeScaledPitch ?? false);
 
 			if (!definition.isSpatial.HasValue)
 			{
-				if (definition.entry != null)
-					definition.isSpatial = definition.entry.isSpatial;
+				if (definition.config != null)
+					definition.isSpatial = definition.config.isSpatial;
 			}
 
 			if (definition.transform || definition.position.HasValue)
 			{
 				if (definition.isSpatial.HasValue && definition.isSpatial.Value)
 				{
-					audioSourceSettings.priority = definition.priority ?? (definition.entry?.priority ?? AudioEventEntry.DEFAULT_PRIORITY);
+					audioSourceSettings.priority = definition.priority ?? (definition.config?.priority ?? AudioEventConfig.DEFAULT_PRIORITY);
 					audioSourceSettings.spatialBlend =
-						definition.spatialBlend ?? (definition.entry?.spatial.spatialBlend ?? AudioSpatialEntry.DEFAULT_SPATIAL_BLEND);
+						definition.spatialBlend ?? (definition.config?.spatial.spatialBlend ?? AudioSpatialScheme.DEFAULT_SPATIAL_BLEND);
 					audioSourceSettings.dopplerLevel =
-						definition.dopplerLevel ?? (definition.entry?.spatial.dopplerLevel ?? AudioSpatialEntry.DEFAULT_DOPPLER_LEVEL);
-					audioSourceSettings.spread = definition.spread ?? (definition.entry?.spatial.spread ?? AudioSpatialEntry.DEFAULT_SPREAD);
+						definition.dopplerLevel ?? (definition.config?.spatial.dopplerLevel ?? AudioSpatialScheme.DEFAULT_DOPPLER_LEVEL);
+					audioSourceSettings.spread = definition.spread ?? (definition.config?.spatial.spread ?? AudioSpatialScheme.DEFAULT_SPREAD);
 					audioSourceSettings.minDistance =
-						definition.distance?.min ?? (definition.entry?.spatial.distance.min ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN);
+						definition.distance?.min ?? (definition.config?.spatial.distance.min ?? AudioSpatialScheme.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN);
 					audioSourceSettings.maxDistance =
-						definition.distance?.max ?? (definition.entry?.spatial.distance.max ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MAX);
-					audioSourceSettings.stereoPan = definition.stereoPan ?? (definition.entry?.stereoPan ?? AudioEventEntry.DEFAULT_STEREO_PAN);
+						definition.distance?.max ?? (definition.config?.spatial.distance.max ?? AudioSpatialScheme.DEFAULT_AUDIO_SPATIAL_DISTANCE_MAX);
+					audioSourceSettings.stereoPan = definition.stereoPan ?? (definition.config?.stereoPan ?? AudioEventConfig.DEFAULT_STEREO_PAN);
 				}
 				else
 				{
@@ -197,7 +197,7 @@ namespace Audio
 			}
 
 			definition.settings = audioSourceSettings;
-			definition.mode = definition.entry?.playMode ?? AudioPlayMode.SameTime;
+			definition.mode = definition.config?.playMode ?? AudioPlayMode.SameTime;
 			return true;
 		}
 
@@ -259,14 +259,14 @@ namespace Audio
 
 		internal void Preload(string eventId)
 		{
-			var entry = ContentManager.Get<AudioEventEntry>(eventId);
+			var entry = ContentManager.Get<AudioEventConfig>(eventId);
 			foreach (var track in entry.tracks)
 				track.clipReference.Preload();
 		}
 
 		internal void Release(string eventId)
 		{
-			var entry = ContentManager.Get<AudioEventEntry>(eventId);
+			var entry = ContentManager.Get<AudioEventConfig>(eventId);
 			foreach (var track in entry.tracks)
 				track.clipReference.Release();
 		}

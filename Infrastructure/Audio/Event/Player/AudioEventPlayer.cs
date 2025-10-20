@@ -37,7 +37,7 @@ namespace Audio
 		[ShowInInspector, ReadOnly, ShowIf(nameof(ShowCurrentTrack)), PropertyOrder(-1)]
 		private int _currentTrack;
 
-		private HashSet<AudioTrackEntry> _loadingTracks;
+		private HashSet<AudioTrackScheme> _loadingTracks;
 
 		public bool IsPlaying => IsLoaded || GetUsedSources().Any(source => source.isPlaying);
 
@@ -73,7 +73,7 @@ namespace Audio
 			else
 				_rectTransform = null;
 
-			if (_current.mode == AudioPlayMode.Sequence && _current.entry.tracks.Length > 1)
+			if (_current.mode == AudioPlayMode.Sequence && _current.config.tracks.Length > 1)
 				AudioManager.Subscribe(EventsType.Update, OnSequenceUpdate);
 
 			AudioManager.Subscribe(EventsType.LateUpdate, OnLateUpdate);
@@ -129,8 +129,23 @@ namespace Audio
 					break;
 			}
 
-			foreach (var track in _current.playlist)
-				LoadTrackAndTryPlayAsync(track).Forget();
+			foreach (var (track, i) in _current.playlist.WithIndex())
+			{
+				LoadTrackAndTryPlayAsync(track)
+					.Forget(
+#if DEBUG
+						OnException(i)
+#endif
+					);
+			}
+
+			Action<Exception> OnException(int index)
+			{
+				return exp =>
+					AudioDebug.LogError(
+						$"Invalid clip by index [ {index} ] from config by id [ {_current.config.Id} ]\n" +
+						$"Exception: {exp.Message}");
+			}
 		}
 
 		public void Release()
@@ -151,7 +166,7 @@ namespace Audio
 					ClearAndDisableSource(source);
 			}
 
-			if (_current.mode == AudioPlayMode.Sequence && _current.entry.tracks.Length > 1)
+			if (_current.mode == AudioPlayMode.Sequence && _current.config.tracks.Length > 1)
 				AudioManager.Unsubscribe(EventsType.Update, OnSequenceUpdate);
 
 			AudioManager.Unsubscribe(EventsType.LateUpdate, OnLateUpdate);
@@ -254,13 +269,13 @@ namespace Audio
 
 #if DebugLog
 					var sourceCount = GetUsedSources()
-					   .Count();
+						.Count();
 					if (sourceCount != _current.playlist.Length)
 						AudioDebug.LogError(
 							$"[ TASK-1964 ] AudioSource count != playlist length (count: {sourceCount}, lenght: {_current.playlist.Length})");
 #endif
 					foreach (var (source, index) in GetUsedSources()
-						        .WithIndexSafe())
+						.WithIndexSafe())
 					{
 						if (_current.fadeIn.HasValue)
 							sequence ??= DOTween.Sequence();
@@ -377,8 +392,8 @@ namespace Audio
 					{
 						var track = _current.playlist[index];
 						source.pitch = Mathf.Clamp(track.pitch * Time.timeScale,
-							AudioTrackEntry.MIN_PITCH,
-							AudioTrackEntry.MAX_PITCH);
+							AudioTrackScheme.MIN_PITCH,
+							AudioTrackScheme.MAX_PITCH);
 					}
 				}
 
@@ -391,7 +406,7 @@ namespace Audio
 			{
 				if (_current.repeat == 0 || _playCount < _current.repeat)
 				{
-					if (_current is {rerollOnRepeat: true, entry: not null})
+					if (_current is {rerollOnRepeat: true, config: not null})
 						RollPlaylist();
 
 					Restart();
@@ -425,7 +440,7 @@ namespace Audio
 			Play();
 		}
 
-		private async UniTaskVoid LoadTrackAndTryPlayAsync(AudioTrackEntry track)
+		private async UniTask LoadTrackAndTryPlayAsync(AudioTrackScheme track)
 		{
 			if (!track.clipReference)
 			{
@@ -435,10 +450,11 @@ namespace Audio
 				return;
 			}
 
-			_loadingTracks ??= HashSetPool<AudioTrackEntry>.Get();
+			_loadingTracks ??= HashSetPool<AudioTrackScheme>.Get();
 			_loadingTracks.Add(track);
 
-			track.clip = await track.clipReference.LoadAsync();
+			if (!track.clip)
+				track.clip = await track.clipReference.LoadAsync();
 
 			if (track.clip.loadState != AudioDataLoadState.Loaded)
 			{

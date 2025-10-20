@@ -142,7 +142,7 @@ namespace UI
 
 			var prefab = Value.prefab;
 
-			if (prefab == null && !Value.reference.IsEmpty())
+			if (prefab == null && !Value.reference.IsEmptyOrInvalid())
 			{
 				spinner?.SetActive(true);
 				prefab = await LoadAsync(Value.reference, DisposeCancellationToken);

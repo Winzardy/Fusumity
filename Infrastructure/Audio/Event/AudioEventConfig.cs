@@ -30,7 +30,7 @@ namespace Audio
 	[Serializable]
 	[Documentation("https://www.notion.so/winzardy/13f1c74f154380c19420c23fdd0bc3c4?pvs=4")]
 	[Constants(filterOut: new[] {"Migrated"})]
-	public partial class AudioEventEntry
+	public partial class AudioEventConfig : IdentifiableConfig
 	{
 		public const float DEFAULT_STEREO_PAN = 0;
 		public const float MIN_STEREO_PAN = -1;
@@ -61,7 +61,7 @@ namespace Audio
 		[Tooltip("Диапозон выборки, например выбрать 1 из списка")]
 		public int selectionRange = 1;
 
-		public AudioTrackEntry[] tracks;
+		public AudioTrackScheme[] tracks;
 
 		[Tooltip("Будет ли <b>Pitch</b> зависить от Time Scale (грубо говоря меняет скорость воспроизведения клипа)")]
 		public bool timeScaledPitch;
@@ -78,11 +78,11 @@ namespace Audio
 			"Зависит ли звук от положения в пространстве. Игнорируется если не будет назначен 'источник' или позиция звука при вызове события")]
 		public bool isSpatial;
 
-		public AudioSpatialEntry spatial;
+		public AudioSpatialScheme spatial;
 	}
 
 	[Serializable]
-	public class AudioSpatialEntry
+	public class AudioSpatialScheme
 	{
 		#region Constants
 
@@ -117,7 +117,7 @@ namespace Audio
 	}
 
 	[Serializable]
-	public partial class AudioTrackEntry : IWeightable
+	public partial class AudioTrackScheme : IWeightable
 	{
 		public const float DEFAULT_VOLUME = 1;
 

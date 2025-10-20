@@ -6,12 +6,12 @@ namespace Audio
 {
 	public static class AudioSourceUtility
 	{
-		public static Tween Play(this AudioSource source, AudioTrackEntry track,
+		public static Tween Play(this AudioSource source, AudioTrackScheme track,
 			AudioEventDefinition definition,
 			bool editor = false) =>
 			Play(source, track, definition.fadeIn, definition.volume, definition.pitch, editor);
 
-		public static Tween Play(this AudioSource source, AudioTrackEntry track,
+		public static Tween Play(this AudioSource source, AudioTrackScheme track,
 			float? fade = null,
 			float? volume = null,
 			float? pitch = null,

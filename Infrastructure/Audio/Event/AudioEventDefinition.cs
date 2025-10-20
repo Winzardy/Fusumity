@@ -10,12 +10,12 @@ namespace Audio
 		/// </summary>
 		public string id;
 
-		public AudioEventEntry entry;
+		public AudioEventConfig config;
 
 		public string mixer;
 
 		public AudioPlayMode mode;
-		public AudioTrackEntry[] playlist;
+		public AudioTrackScheme[] playlist;
 
 		public bool? isSpatial;
 

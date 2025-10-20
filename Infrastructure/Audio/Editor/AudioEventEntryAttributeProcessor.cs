@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Audio.Editor
 {
-	public class AudioEventEntryAttributeProcessor : OdinAttributeProcessor<AudioEventEntry>
+	public class AudioEventEntryAttributeProcessor : OdinAttributeProcessor<AudioEventConfig>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -24,14 +24,14 @@ namespace Audio.Editor
 			var verticalGroup = $"{horizontalGroup}/vertical";
 			switch (member.Name)
 			{
-				case nameof(AudioEventEntry.mixer):
+				case nameof(AudioEventConfig.mixer):
 
 					attributes.Add(new PropertySpaceAttribute(0, 5));
 					attributes.Add(new ContentReferenceAttribute(typeof(AudioMixerGroupEntry)));
 					break;
 
-				case nameof(AudioEventEntry.playMode):
-					attributes.Add(new DisableIfAttribute(nameof(AudioEventEntry.EditorIsPlay)));
+				case nameof(AudioEventConfig.playMode):
+					attributes.Add(new DisableIfAttribute(nameof(AudioEventConfig.EditorIsPlay)));
 					attributes.Add(new BoxGroupAttribute(boxGroup, false));
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventEntryAttributeProcessor)}." +
 						$"{nameof(ShowPlayMode)}($property)"));
@@ -41,26 +41,26 @@ namespace Audio.Editor
 
 					break;
 
-				case nameof(AudioEventEntry.priority):
+				case nameof(AudioEventConfig.priority):
 					attributes.Add(new SpaceAttribute());
-					attributes.Add(new LabeledPropertyRangeAttribute(AudioEventEntry.MIN_PRIORITY, AudioEventEntry.MAX_PRIORITY,
+					attributes.Add(new LabeledPropertyRangeAttribute(AudioEventConfig.MIN_PRIORITY, AudioEventConfig.MAX_PRIORITY,
 						"High", "Low"));
 					break;
 
-				case nameof(AudioEventEntry.stereoPan):
-					attributes.Add(new LabeledPropertyRangeAttribute(AudioEventEntry.MIN_STEREO_PAN, AudioEventEntry.MAX_STEREO_PAN,
+				case nameof(AudioEventConfig.stereoPan):
+					attributes.Add(new LabeledPropertyRangeAttribute(AudioEventConfig.MIN_STEREO_PAN, AudioEventConfig.MAX_STEREO_PAN,
 						"Left", "Right"));
 					break;
 
-				case nameof(AudioEventEntry.selection):
-					attributes.Add(new DisableIfAttribute(nameof(AudioEventEntry.EditorIsPlay)));
+				case nameof(AudioEventConfig.selection):
+					attributes.Add(new DisableIfAttribute(nameof(AudioEventConfig.EditorIsPlay)));
 					attributes.Add(new VerticalGroupAttribute(verticalGroup));
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventEntryAttributeProcessor)}." +
 						$"{nameof(ShowSelection)}($property)"));
 					break;
 
-				case nameof(AudioEventEntry.selectionRange):
-					attributes.Add(new DisableIfAttribute(nameof(AudioEventEntry.EditorIsPlay)));
+				case nameof(AudioEventConfig.selectionRange):
+					attributes.Add(new DisableIfAttribute(nameof(AudioEventConfig.EditorIsPlay)));
 					attributes.Add(new VerticalGroupAttribute(verticalGroup));
 					attributes.Add(new IndentAttribute());
 					attributes.Add(new LabelTextAttribute("Range"));
@@ -70,8 +70,8 @@ namespace Audio.Editor
 						$"{nameof(GetMax)}($property)"));
 					break;
 
-				case nameof(AudioEventEntry.sequenceType):
-					attributes.Add(new DisableIfAttribute(nameof(AudioEventEntry.EditorIsPlay)));
+				case nameof(AudioEventConfig.sequenceType):
+					attributes.Add(new DisableIfAttribute(nameof(AudioEventConfig.EditorIsPlay)));
 					attributes.Add(new VerticalGroupAttribute(verticalGroup));
 					attributes.Add(new IndentAttribute());
 					attributes.Add(new LabelTextAttribute("Type"));
@@ -79,7 +79,7 @@ namespace Audio.Editor
 						$"{nameof(ShowSequenceType)}($property)"));
 					break;
 
-				case nameof(AudioEventEntry.PlayEditor):
+				case nameof(AudioEventConfig.PlayEditor):
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventEntryAttributeProcessor)}." +
 						$"{nameof(ShowPlayEditor)}($property)"));
 
@@ -93,7 +93,7 @@ namespace Audio.Editor
 					});
 					break;
 
-				case nameof(AudioEventEntry.StopEditor):
+				case nameof(AudioEventConfig.StopEditor):
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioEventEntryAttributeProcessor)}." +
 						$"{nameof(ShowStopEditor)}($property)"));
 
@@ -107,56 +107,56 @@ namespace Audio.Editor
 					});
 					break;
 
-				case nameof(AudioEventEntry.tracks):
-					attributes.Add(new DisableIfAttribute(nameof(AudioEventEntry.EditorIsPlay)));
+				case nameof(AudioEventConfig.tracks):
+					attributes.Add(new DisableIfAttribute(nameof(AudioEventConfig.EditorIsPlay)));
 					attributes.Add(new PropertySpaceAttribute(2, 0));
 					attributes.Add(new BoxGroupAttribute(boxGroup));
 					break;
 
-				case nameof(AudioEventEntry.timeScaledPitch):
-				case nameof(AudioEventEntry.isSpatial):
+				case nameof(AudioEventConfig.timeScaledPitch):
+				case nameof(AudioEventConfig.isSpatial):
 					attributes.Add(new PropertySpaceAttribute(5, 0));
 					break;
 
-				case nameof(AudioEventEntry.spatial):
+				case nameof(AudioEventConfig.spatial):
 					attributes.Add(new HideLabelAttribute());
-					attributes.Add(new EnableIfAttribute(nameof(AudioEventEntry.isSpatial)));
+					attributes.Add(new EnableIfAttribute(nameof(AudioEventConfig.isSpatial)));
 					break;
 			}
 		}
 
 		public static bool ShowSelectionRange(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowSelectionRange(entry);
 
 			return false;
 		}
 
-		public static bool ShowSelectionRange(AudioEventEntry entry)
+		public static bool ShowSelectionRange(AudioEventConfig config)
 		{
-			if (!ShowSelection(entry))
+			if (!ShowSelection(config))
 				return false;
 
-			if (entry.tracks.Length <= 2)
+			if (config.tracks.Length <= 2)
 				return false;
 
-			return entry.selection != SelectionMode.None;
+			return config.selection != SelectionMode.None;
 		}
 
 		public static bool ShowSelection(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowSelection(entry);
 
 			return false;
 		}
 
-		public static bool ShowSelection(AudioEventEntry entry) => ShowPlayMode(entry);
+		public static bool ShowSelection(AudioEventConfig config) => ShowPlayMode(config);
 
 		public static bool ShowPlayMode(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowPlayMode(entry);
 
 			return false;
@@ -164,7 +164,7 @@ namespace Audio.Editor
 
 		public static bool ShowPlayEditor(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowPlayMode(entry) && !entry.EditorIsPlay;
 
 			return false;
@@ -172,45 +172,45 @@ namespace Audio.Editor
 
 		public static bool ShowStopEditor(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowPlayMode(entry) && entry.EditorIsPlay;
 
 			return false;
 		}
 
-		public static bool ShowPlayMode(AudioEventEntry entry)
+		public static bool ShowPlayMode(AudioEventConfig config)
 		{
-			if (entry.tracks.IsNullOrEmpty())
+			if (config.tracks.IsNullOrEmpty())
 				return false;
 
-			return entry.tracks.Length > 1;
+			return config.tracks.Length > 1;
 		}
 
 		public static bool ShowSequenceType(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return ShowSequenceType(entry);
 
 			return false;
 		}
 
-		public static bool ShowSequenceType(AudioEventEntry entry)
+		public static bool ShowSequenceType(AudioEventConfig config)
 		{
-			if (!ShowPlayMode(entry))
+			if (!ShowPlayMode(config))
 				return false;
 
-			if (entry.selection == SelectionMode.None)
-				return entry.playMode == AudioPlayMode.Sequence;
+			if (config.selection == SelectionMode.None)
+				return config.playMode == AudioPlayMode.Sequence;
 
-			if (entry.selectionRange <= 1)
+			if (config.selectionRange <= 1)
 				return false;
 
-			return entry.playMode == AudioPlayMode.Sequence;
+			return config.playMode == AudioPlayMode.Sequence;
 		}
 
 		public static int GetMax(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
 				return entry.tracks.Length - 1;
 
 			return 1;

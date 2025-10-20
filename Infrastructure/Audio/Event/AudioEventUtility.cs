@@ -18,10 +18,10 @@ namespace Audio
 
 		public static void RollPlaylist(this ref AudioEventDefinition definition)
 		{
-			if (definition.entry == null)
+			if (definition.config == null)
 				throw new Exception("Entry is null!");
 
-			definition.playlist = definition.entry.RollPlaylist(definition.GetHashCode());
+			definition.playlist = definition.config.RollPlaylist(definition.GetHashCode());
 		}
 
 		public static void ReleasePlaylist(this ref AudioEventDefinition definition)

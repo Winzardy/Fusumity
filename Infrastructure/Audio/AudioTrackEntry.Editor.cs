@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace Audio
 {
 #if UNITY_EDITOR
-	public partial class AudioTrackEntry : ISerializationCallbackReceiver
+	public partial class AudioTrackScheme : ISerializationCallbackReceiver
 	{
 		public const string PLAY_GROUP_EDITOR = "PlayGroup";
 

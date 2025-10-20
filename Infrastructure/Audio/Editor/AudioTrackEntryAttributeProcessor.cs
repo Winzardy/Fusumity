@@ -10,7 +10,7 @@ using RangeAttribute = UnityEngine.RangeAttribute;
 
 namespace Audio.Editor
 {
-	public class AudioTrackEntryAttributeProcessor : OdinAttributeProcessor<AudioTrackEntry>
+	public class AudioTrackEntryAttributeProcessor : OdinAttributeProcessor<AudioTrackScheme>
 	{
 		private static Color WEIGHT_COLOR = new(153 / 256f, 153 / 256f, 153 / 256f, 1);
 
@@ -21,23 +21,23 @@ namespace Audio.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AudioTrackEntry.delay):
+				case nameof(AudioTrackScheme.delay):
 					attributes.Add(new UnitAttribute(Units.Second));
 					attributes.Add(new MinimumAttribute(0));
 
 					break;
 
-				case nameof(AudioTrackEntry.clipReference):
+				case nameof(AudioTrackScheme.clipReference):
 					attributes.Add(new PropertyOrderAttribute(0));
-					attributes.Add(new VerticalGroupAttribute(AudioTrackEntry.PLAY_GROUP_EDITOR));
+					attributes.Add(new VerticalGroupAttribute(AudioTrackScheme.PLAY_GROUP_EDITOR));
 					attributes.Add(new EditorAudioPlayAttribute());
 					break;
 
-				case nameof(AudioTrackEntry.volume):
+				case nameof(AudioTrackScheme.volume):
 					attributes.Add(new RangeAttribute(0, 1));
 					break;
 
-				case nameof(AudioTrackEntry.pitch):
+				case nameof(AudioTrackScheme.pitch):
 					const string ATTEMP_PITCH_MESSAGE =
 						"Отрицательный <b>pitch</b> не поддерживается.";
 
@@ -47,10 +47,10 @@ namespace Audio.Editor
 					attributes.Add(new DetailedInfoBoxAttribute(ATTEMP_PITCH_MESSAGE,ATTEMP_PITCH_FULL_MESSAGE,InfoMessageType.Warning,
 						$"@{nameof(AudioTrackEntryAttributeProcessor)}." +
 						$"{nameof(ShowInfoBoxPitch)}($property)"));
-					attributes.Add(new RangeAttribute(AudioTrackEntry.MIN_PITCH, AudioTrackEntry.MAX_PITCH));
+					attributes.Add(new RangeAttribute(AudioTrackScheme.MIN_PITCH, AudioTrackScheme.MAX_PITCH));
 					break;
 
-				case nameof(AudioTrackEntry.weight):
+				case nameof(AudioTrackScheme.weight):
 
 					attributes.Add(new GUIColorAttribute($"@{nameof(AudioTrackEntryAttributeProcessor)}." +
 						$"{nameof(GetWeightColorEditor)}($property)"));
@@ -63,9 +63,9 @@ namespace Audio.Editor
 
 				case "_normalizedTime":
 					attributes.Add(new PropertyOrderAttribute(1));
-					attributes.Add(new VerticalGroupAttribute(AudioTrackEntry.PLAY_GROUP_EDITOR));
+					attributes.Add(new VerticalGroupAttribute(AudioTrackScheme.PLAY_GROUP_EDITOR));
 					attributes.Add(new PropertySpaceAttribute(-7, -6));
-					attributes.Add(new ShowIfAttribute(nameof(AudioTrackEntry.IsPlayEditor)));
+					attributes.Add(new ShowIfAttribute(nameof(AudioTrackScheme.IsPlayEditor)));
 					attributes.Add(new ProgressBarAttribute(0, 1)
 					{
 						DrawValueLabel = false, Height = 4, BackgroundColorGetter = "clear"
@@ -86,7 +86,7 @@ namespace Audio.Editor
 
 		public static Color GetColorEditor(InspectorProperty property)
 		{
-			if (property.ValueEntry.WeakSmartValue is AudioTrackEntry entry)
+			if (property.ValueEntry.WeakSmartValue is AudioTrackScheme entry)
 				return entry.SelectedEditor.HasValue ? entry.SelectedEditor.Value ? Color.white : Color.gray.WithAlpha(0.25f) : Color.white;
 
 			return Color.white;
@@ -94,7 +94,7 @@ namespace Audio.Editor
 
 		public static Color GetWeightColorEditor(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioTrackEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioTrackScheme entry)
 				return entry.SelectedEditor.HasValue
 					? entry.SelectedEditor.Value ? WEIGHT_COLOR : Color.gray.WithAlpha(0.25f)
 					: WEIGHT_COLOR;
@@ -108,7 +108,7 @@ namespace Audio.Editor
 				   .ParentValueProperty
 				   .ParentValueProperty
 				   .ParentValueProperty
-				   .ValueEntry.WeakSmartValue is AudioEventEntry entry)
+				   .ValueEntry.WeakSmartValue is AudioEventConfig entry)
 			{
 				return ShowWeight(entry);
 			}
@@ -118,14 +118,14 @@ namespace Audio.Editor
 
 		public static bool ShowInfoBoxPitch(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioTrackEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioTrackScheme entry)
 				return entry.pitch < 0 && entry.clipReference.editorAsset.loadType is AudioClipLoadType.Streaming or AudioClipLoadType.CompressedInMemory;
 
 			return false;
 		}
 
-		public static bool ShowWeight(AudioEventEntry entry) =>
-			AudioEventEntryAttributeProcessor.ShowPlayMode(entry) && entry.selection == SelectionMode.Random;
+		public static bool ShowWeight(AudioEventConfig config) =>
+			AudioEventEntryAttributeProcessor.ShowPlayMode(config) && config.selection == SelectionMode.Random;
 	}
 
 	public class EditorAudioPlayAttribute : Attribute

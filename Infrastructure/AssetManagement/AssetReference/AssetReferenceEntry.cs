@@ -18,7 +18,7 @@ namespace AssetManagement
 		AssetReference IAssetReferenceEntry.AssetReference => assetReference;
 		int IAssetReferenceEntry.ReleaseDelayMs => releaseDelayMs;
 
-		public static implicit operator bool(AssetReferenceEntry<T> entry) => !entry.IsEmpty();
+		public static implicit operator bool(AssetReferenceEntry<T> entry) => !entry.IsEmptyOrInvalid();
 
 		public T editorAsset
 		{
@@ -42,7 +42,8 @@ namespace AssetManagement
 
 		AssetReference IAssetReferenceEntry.AssetReference => assetReference;
 		int IAssetReferenceEntry.ReleaseDelayMs => releaseDelayMs;
-		public static implicit operator bool(AssetReferenceEntry entry) => !entry.IsEmpty();
+
+		public static implicit operator bool(AssetReferenceEntry entry) => !entry.IsEmptyOrInvalid();
 
 		public Object editorAsset
 		{

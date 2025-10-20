@@ -81,7 +81,7 @@ namespace AssetManagement
 		/// - Eсли назначен, возмет максимальное из entry </param>
 		public static void ReleaseSafe<T>(this T asset, int? delayMs = 0) where T : IAssetReferenceEntry
 		{
-			if (asset.IsEmpty())
+			if (asset.IsEmptyOrInvalid())
 				return;
 
 			asset.Release(delayMs);
@@ -137,7 +137,7 @@ namespace AssetManagement
 			return await LoadComponentsAsync<T>(entries, cancellationToken);
 		}
 
-		public static bool IsEmpty(this IAssetReferenceEntry entry) =>
+		public static bool IsEmptyOrInvalid(this IAssetReferenceEntry entry) =>
 			entry == null || !(entry.AssetReference?.RuntimeKeyIsValid() ?? false);
 
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReferenceEntry> entries,

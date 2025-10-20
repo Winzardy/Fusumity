@@ -42,7 +42,7 @@ namespace UI
 
 		private void UpdateIcon(IAssetReferenceEntry icon)
 		{
-			if (!icon.IsEmpty())
+			if (!icon.IsEmptyOrInvalid())
 			{
 				_iconAssigner.SetSprite(_layout.icon, icon);
 			}

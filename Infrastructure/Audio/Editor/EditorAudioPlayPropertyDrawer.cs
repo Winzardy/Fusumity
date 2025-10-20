@@ -21,25 +21,25 @@ namespace Audio.Editor
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			AudioTrackEntry entry = null;
-			if (Property.ParentValueProperty?.ValueEntry?.WeakSmartValue is AudioTrackEntry value)
+			AudioTrackScheme scheme = null;
+			if (Property.ParentValueProperty?.ValueEntry?.WeakSmartValue is AudioTrackScheme value)
 			{
-				if (!value.clipReference.IsEmpty())
+				if (!value.clipReference.IsEmptyOrInvalid())
 				{
-					entry = value;
+					scheme = value;
 
 					if (GUI.Button(_playPosition, GUIContent.none, GUIStyle.none))
 					{
-						if (!entry.IsPlayEditor)
-							entry.PlayEditor(_loop);
+						if (!scheme.IsPlayEditor)
+							scheme.PlayEditor(_loop);
 						else
-							entry.ClearPlayEditor();
+							scheme.ClearPlayEditor();
 					}
 
 					if (GUI.Button(_loopPosition, GUIContent.none, GUIStyle.none))
 					{
 						if (_loop)
-							entry.DisableLoopEditor();
+							scheme.DisableLoopEditor();
 
 						_loop = !_loop;
 					}
@@ -47,13 +47,13 @@ namespace Audio.Editor
 			}
 
 			var originGUIEnabled = GUI.enabled;
-			if (entry != null) GUI.enabled = !entry.IsPlayEditor && originGUIEnabled;
+			if (scheme != null) GUI.enabled = !scheme.IsPlayEditor && originGUIEnabled;
 
 			CallNextDrawer(label);
 
 			GUI.enabled = originGUIEnabled;
 
-			if (entry == null)
+			if (scheme == null)
 				return;
 
 			var origin = Property.Children.FirstOrDefault()?.LastDrawnValueRect ?? Property.LastDrawnValueRect;
@@ -63,7 +63,7 @@ namespace Audio.Editor
 			_playPosition = origin;
 			_playPosition.y += 3f;
 
-			if (entry.IsPlayEditor)
+			if (scheme.IsPlayEditor)
 			{
 				_playPosition = AlignRight(_playPosition, 13, 17f+offset);
 				_playPosition.height = 13;
