@@ -16,7 +16,7 @@ namespace UI.Popovers
 
 		internal event Action<IPopover> RequestedClose;
 
-		internal void Initialize(in UIPopoverEntry entry);
+		internal void Initialize(in UIPopoverConfig config);
 
 		internal void Show(IPopoverArgs args);
 
@@ -32,7 +32,7 @@ namespace UI.Popovers
 
 	public abstract class UIPopover<TLayout, TArgs> : UIBasePopover<TLayout, TArgs>
 		where TLayout : UIBasePopoverLayout
-		where TArgs : struct, IPopoverArgs
+		where TArgs : IPopoverArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -49,7 +49,7 @@ namespace UI.Popovers
 
 	public abstract class UIBasePopover<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopover
 		where TLayout : UIBasePopoverLayout
-		where TArgs : struct, IPopoverArgs
+		where TArgs : IPopoverArgs
 	{
 		protected internal UIWidget _host;
 
@@ -58,7 +58,7 @@ namespace UI.Popovers
 
 		private const string LAYOUT_PREFIX_NAME = "[Popover] ";
 
-		private UIPopoverEntry _entry;
+		private UIPopoverConfig _config;
 
 		private bool? _resetting;
 
@@ -86,10 +86,10 @@ namespace UI.Popovers
 			}
 		}
 
-		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
-		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
+		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
@@ -101,9 +101,9 @@ namespace UI.Popovers
 		public sealed override void Initialize() =>
 			throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IPopover.Initialize(in UIPopoverEntry entry)
+		void IPopover.Initialize(in UIPopoverConfig config)
 		{
-			_entry = entry;
+			_config = config;
 			base.Initialize();
 		}
 
@@ -213,11 +213,11 @@ namespace UI.Popovers
 				parentRectTransform = _host?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
 
 			_layout.transform
-			   .SetParent(parentRectTransform, false);
+				.SetParent(parentRectTransform, false);
 		}
 	}
 
-	public struct EmptyPopoverArgs : IPopoverArgs
+	public class EmptyPopoverArgs : IPopoverArgs
 	{
 	}
 

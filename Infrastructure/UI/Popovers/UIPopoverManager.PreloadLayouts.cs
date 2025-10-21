@@ -12,7 +12,7 @@ namespace UI.Popovers
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAllEntries<UIPopoverEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIPopoverConfig>())
 				{
 					ref readonly var popover = ref entry.Value;
 
@@ -34,7 +34,7 @@ namespace UI.Popovers
 
 		private void TryReleasePreloadedLayout(IPopover popup)
 		{
-			var entry = ContentManager.Get<UIPopoverEntry>(popup.Id);
+			var entry = ContentManager.Get<UIPopoverConfig>(popup.Id);
 			if (entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy))
 				_preloader.TryRelease(entry.layout.LayoutReference);
 		}

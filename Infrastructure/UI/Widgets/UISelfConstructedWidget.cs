@@ -228,7 +228,8 @@ namespace UI
 
 		protected IDisposable Prepare(Action callback)
 		{
-			PreloadAsync(callback).Forget();
+			PreloadAsync(callback)
+				.Forget();
 			return new PrepareDisposer(Release);
 			void Release() => LayoutReference.Release();
 		}
@@ -236,8 +237,11 @@ namespace UI
 		private async UniTaskVoid PreloadAsync(Action callback)
 		{
 			await LayoutReference.PreloadAsync();
+			await OnPreloadAsync();
 			callback?.Invoke();
 		}
+
+		protected virtual UniTask OnPreloadAsync() => UniTask.CompletedTask;
 
 		private class PrepareDisposer : IDisposable
 		{

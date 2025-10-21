@@ -13,7 +13,7 @@ namespace UI.Popups
 
 		internal event Action<IPopup> RequestedClose;
 
-		internal void Initialize(in UIPopupEntry entry);
+		internal void Initialize(in UIPopupConfig config);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования попапа!
 		/// При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
@@ -28,7 +28,7 @@ namespace UI.Popups
 		internal IPopupArgs GetArgs();
 	}
 
-	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyPopupArgs>, IPopup
+	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyPopupArgs>
 		where TLayout : UIBasePopupLayout
 	{
 		private protected sealed override IPopupArgs GetArgs() => null;
@@ -44,7 +44,7 @@ namespace UI.Popups
 
 	public abstract class UIPopup<TLayout, TArgs> : UIBasePopup<TLayout, TArgs>
 		where TLayout : UIBasePopupLayout
-		where TArgs : struct, IPopupArgs
+		where TArgs : IPopupArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -61,11 +61,11 @@ namespace UI.Popups
 
 	public abstract class UIBasePopup<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopup
 		where TLayout : UIBasePopupLayout
-		where TArgs : struct, IPopupArgs
+		where TArgs : IPopupArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Popup] ";
 
-		private UIPopupEntry _entry;
+		private UIPopupConfig _config;
 
 		private bool? _resetting;
 
@@ -80,10 +80,10 @@ namespace UI.Popups
 
 		protected override string Layer => LayerType.POPUPS;
 
-		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
-		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
+		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
@@ -96,9 +96,9 @@ namespace UI.Popups
 		public sealed override void Initialize() =>
 			throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IPopup.Initialize(in UIPopupEntry entry)
+		void IPopup.Initialize(in UIPopupConfig config)
 		{
-			_entry = entry;
+			_config = config;
 
 			base.Initialize();
 		}
@@ -206,7 +206,7 @@ namespace UI.Popups
 		}
 	}
 
-	public struct EmptyPopupArgs : IPopupArgs
+	public class EmptyPopupArgs : IPopupArgs
 	{
 	}
 

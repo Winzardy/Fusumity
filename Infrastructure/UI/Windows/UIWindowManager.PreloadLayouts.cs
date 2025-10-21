@@ -13,7 +13,7 @@ namespace UI.Windows
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAllEntries<UIWindowEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIWindowConfig>())
 				{
 					ref readonly var window = ref entry.Value;
 
@@ -35,7 +35,7 @@ namespace UI.Windows
 
 		private void TryReleasePreloadedLayout(IWindow window)
 		{
-			var entry = ContentManager.Get<UIWindowEntry>(window.Id);
+			var entry = ContentManager.Get<UIWindowConfig>(window.Id);
 
 			if (entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy))
 				_preloader.TryRelease(entry.layout.LayoutReference);

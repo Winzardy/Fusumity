@@ -6,7 +6,7 @@ namespace UI.Windows
 	/// <summary>
 	/// Для управления используйте <see cref="UIWindowDispatcher"/>
 	/// </summary>
-	public partial class UIWindowManager : IDisposable
+	public partial class UIWindowManager : IInitializable, IDisposable
 	{
 		private Dictionary<Type, IWindow> _windows = new(8);
 		private IWindow _current;
@@ -24,9 +24,12 @@ namespace UI.Windows
 		{
 			_factory = new();
 
-			InitializeAssetsPreloader();
-
 			_queue = new();
+		}
+
+		void IInitializable.Initialize()
+		{
+			InitializeAssetsPreloader();
 		}
 
 		void IDisposable.Dispose()

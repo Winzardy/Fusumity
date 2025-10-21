@@ -16,15 +16,15 @@ namespace SceneManagement
 			get => _instance;
 		}
 
-		public static void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
-			Action interruptLoadingCallback = null, Action completeUnloadCallback = null) =>
-			hub.ReloadSceneAsync(sceneName, activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
-
 		public static void LoadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
 			Action interruptLoadingCallback = null, Action completeUnloadCallback = null) =>
-			hub.LoadSceneAsync(sceneName, activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
+			hub.LoadScene(sceneName, activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 
 		public static void UnloadScene(string sceneName, Action completeUnloadCallback = null) =>
-			hub.UnloadSceneAsync(sceneName, completeUnloadCallback);
+			hub.UnloadScene(sceneName, completeUnloadCallback);
+
+		public static void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
+			Action interruptLoadingCallback = null, Action completeUnloadCallback = null) =>
+			hub.ReloadScene(sceneName, activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 	}
 }

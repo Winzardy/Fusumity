@@ -66,6 +66,12 @@ namespace UI
 			return true;
 		}
 
+		public void Clear()
+		{
+			_queue.Clear();
+			_args.Clear();
+		}
+
 		public bool Contains(TWidget widget) => _queue.Contains(widget);
 
 		IEnumerator<TWidget> IEnumerable<TWidget>.GetEnumerator() => _queue.GetEnumerator();

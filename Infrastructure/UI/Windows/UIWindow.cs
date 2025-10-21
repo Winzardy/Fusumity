@@ -13,7 +13,7 @@ namespace UI.Windows
 
 		internal event Action<IWindow> RequestedClose;
 
-		internal void Initialize(UIWindowEntry entry);
+		internal void Initialize(UIWindowConfig config);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования окна!
 		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
@@ -44,7 +44,7 @@ namespace UI.Windows
 
 	public abstract class UIWindow<TLayout, TArgs> : UIBaseWindow<TLayout, TArgs>
 		where TLayout : UIBaseWindowLayout
-		where TArgs : struct, IWindowArgs
+		where TArgs : IWindowArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -59,13 +59,13 @@ namespace UI.Windows
 
 	public abstract class UIBaseWindow<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IWindow
 		where TLayout : UIBaseWindowLayout
-		where TArgs : struct, IWindowArgs
+		where TArgs : IWindowArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Window] ";
 
 		private bool? _resetting;
 
-		protected UIWindowEntry _entry;
+		protected UIWindowConfig _config;
 
 		protected TArgs _args;
 
@@ -75,10 +75,10 @@ namespace UI.Windows
 
 		event Action<IWindow> IWindow.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
-		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
-		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
+		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		protected override string Layer => LayerType.WINDOWS;
 
@@ -93,9 +93,9 @@ namespace UI.Windows
 		public sealed override void Initialize()
 			=> throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IWindow.Initialize(UIWindowEntry entry)
+		void IWindow.Initialize(UIWindowConfig config)
 		{
-			_entry = entry;
+			_config = config;
 
 			base.Initialize();
 		}
@@ -222,7 +222,7 @@ namespace UI.Windows
 		}
 	}
 
-	public struct EmptyWindowArgs : IWindowArgs
+	public class EmptyWindowArgs : IWindowArgs
 	{
 	}
 

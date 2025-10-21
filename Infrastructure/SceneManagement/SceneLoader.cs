@@ -45,15 +45,15 @@ namespace SceneManagement
 				_scene = UnitySceneManager.GetSceneByName(sceneName);
 		}
 
-		public void ReloadSceneAsync(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		public void ReloadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
 		{
-			UnloadSceneAsync(() =>
+			UnloadScene(() =>
 			{
-				LoadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback);
+				LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback);
 			});
 		}
 
-		public void LoadSceneAsync(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		public void LoadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
 		{
 			_activateScene = activateScene;
 			CompleteLoadCallback += completeLoadCallback;
@@ -70,7 +70,7 @@ namespace SceneManagement
 					CompleteUnloadCallback += completeUnloadCallback;
 					return;
 				case GameSceneState.Unloading:
-					CompleteUnloadCallback = () => LoadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
+					CompleteUnloadCallback = () => LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 					return;
 			}
 
@@ -103,7 +103,7 @@ namespace SceneManagement
 			}
 		}
 
-		public void UnloadSceneAsync(Action completeUnloadCallback = null)
+		public void UnloadScene(Action completeUnloadCallback = null)
 		{
 			CompleteUnloadCallback += completeUnloadCallback;
 
@@ -138,7 +138,7 @@ namespace SceneManagement
 			if (_shouldInterruptLoading)
 			{
 				_currentState = GameSceneState.Loaded;
-				UnloadSceneAsync();
+				UnloadScene();
 				return;
 			}
 			InterruptLoadingCallback = null;

@@ -9,23 +9,68 @@ namespace UI.Screens
 {
 	public interface IScreen : IWidget, IIdentifiable
 	{
-		internal void Initialize(UIScreenEntry entry);
+		public void RequestClose();
 
-		internal void Show();
+		internal event Action<IScreen> RequestedClose;
+
+		internal void Initialize(UIScreenConfig config);
+
+		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования окна!
+		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
+		///получить через GetArgs() в своих целях (скрыть окно на время).
+		///Получается аргументы задают состояние окна от начала до конца использования.</param>
+		internal void Show(IScreenArgs args);
+
+		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseScreen)
+		internal bool CanShow(IScreenArgs args, out string error);
+
 		internal void Hide(bool reset);
+		internal IScreenArgs GetArgs();
 
 		internal IDisposable Prepare(Action callback);
+	}
+
+	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyScreenArgs>
+		where TLayout : UIBaseScreenLayout
+	{
+		private protected sealed override IScreenArgs GetArgs() => null;
+
+		protected sealed override bool CanShow(ref EmptyScreenArgs _, out string error) => CanShow(out error);
+
+		protected virtual bool CanShow(out string error)
+		{
+			error = string.Empty;
+			return true;
+		}
+	}
+
+	public abstract class UIScreen<TLayout, TArgs> : UIBaseScreen<TLayout, TArgs>
+		where TLayout : UIBaseScreenLayout
+		where TArgs : IScreenArgs
+	{
+		protected sealed override void OnShow() => OnShow(ref _args);
+
+		protected abstract void OnShow(ref TArgs args);
+
+		protected sealed override void OnHide() => OnHide(ref _args);
+
+		protected virtual void OnHide(ref TArgs args)
+		{
+		}
 	}
 
 	/// <summary>
 	/// Название типа Screen должно соотвествовать его конфигу (Entry)!
 	/// </summary>
-	public abstract class UIScreen<TLayout> : UIBaseRootWidget<TLayout>, IScreen
+	public abstract class UIBaseScreen<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IScreen
 		where TLayout : UIBaseScreenLayout
+		where TArgs : IScreenArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Screen] ";
 
-		private UIScreenEntry _entry;
+		protected TArgs _args;
+
+		private UIScreenConfig _config;
 
 		private bool? _resetting;
 
@@ -33,16 +78,20 @@ namespace UI.Screens
 
 		#region Layout
 
-		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
-		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
+		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		#endregion
 
 		protected override string Layer => LayerType.SCREENS;
 
 		protected override bool UseSetAsLastSibling => false;
+
+		private event Action<IScreen> RequestedClose;
+
+		event Action<IScreen> IScreen.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
@@ -56,28 +105,49 @@ namespace UI.Screens
 		public sealed override void Initialize() =>
 			throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IScreen.Initialize(UIScreenEntry entry)
+		IDisposable IScreen.Prepare(Action callback) => Prepare(callback);
+
+		void IScreen.Initialize(UIScreenConfig config)
 		{
-			_entry = entry;
+			_config = config;
 
 			base.Initialize();
 		}
 
-		void IScreen.Show()
+		void IScreen.Show(IScreenArgs boxedArgs)
 		{
-			if (Active)
+			if (boxedArgs != null)
 			{
-				EnableSuppress();
+				var args = UnboxedArgs(boxedArgs);
 
-				//Неявное поведение...
-				//Нужно вызывать OnHide если хотим
-				//переоткрыть экран
-				SetActive(false, true, false);
+				if (Active)
+				{
+					if (_args.Equals(args))
+						return;
+
+					EnableSuppress();
+
+					//Неявное поведение...
+					//Нужно вызывать OnHide у окна если хотим
+					//переоткрыть окно с новыми аргументами
+					SetActive(false, true, false);
+				}
+
+				_args = args;
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
 			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
+		}
+
+		IScreenArgs IScreen.GetArgs() => GetArgs();
+		private protected virtual IScreenArgs GetArgs() => _args;
+
+		bool IScreen.CanShow(IScreenArgs boxedArgs, out string error)
+		{
+			var args = UnboxedArgs(boxedArgs);
+			return CanShow(ref args, out error);
 		}
 
 		void IScreen.Hide(bool reset)
@@ -86,7 +156,7 @@ namespace UI.Screens
 			SetActive(false);
 		}
 
-		protected override void OnEndedClosingInternal()
+		protected sealed override void OnEndedClosingInternal()
 		{
 			if (_resetting.HasValue)
 			{
@@ -99,29 +169,58 @@ namespace UI.Screens
 			base.OnEndedClosingInternal();
 		}
 
-		IDisposable IScreen.Prepare(Action callback) => Prepare(callback);
-
-		protected override void OnUpdateVisibleInternal(bool value)
-		{
-			//TODO: очень многое оказалось завязано на SetActive... Нельзя просто выключать рендер канваса,
-			//начинается некорректая отработка
-// 			if (_layout.canvas)
-// 			{
-// 				_layout.canvas.enabled = Visible;
-//
-// #if UNITY_EDITOR
-// 				const string DISABLE_STATUS = " (disabled)";
-//
-// 				_layout.name = Visible ? _layout.name.Replace(DISABLE_STATUS, string.Empty) :
-// 					_layout.name.Contains(DISABLE_STATUS) ? _layout.name :
-// 					_layout.name + DISABLE_STATUS;
-// #endif
-// 				return;
-// 			}
-
-			base.OnUpdateVisibleInternal(value);
-		}
+		public override void RequestClose() => RequestedClose?.Invoke(this);
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
+
+		protected virtual void OnSetupDefaultAnimator()
+		{
+			if (_animator == null)
+				SetAnimator<DefaultScreenAnimator>();
+		}
+
+		protected sealed override void OnLayoutInstalledInternal()
+		{
+			if (_layout.close)
+				_layout.close.Subscribe(OnCloseClicked);
+
+			base.OnLayoutInstalledInternal();
+		}
+
+		protected sealed override void OnLayoutClearedInternal()
+		{
+			if (_layout.close)
+				_layout.close.Unsubscribe(OnCloseClicked);
+
+			base.OnLayoutClearedInternal();
+		}
+
+		protected virtual void OnCloseClicked() => RequestClose();
+
+		protected virtual bool CanShow(ref TArgs args, out string error)
+		{
+			error = string.Empty;
+			return true;
+		}
+
+		private TArgs UnboxedArgs(IScreenArgs boxedArgs)
+		{
+			if (boxedArgs == null)
+				throw new ArgumentException($"Passed null args ({typeof(TArgs)}) to screen of type [{GetType()}]");
+
+			if (boxedArgs is not TArgs args)
+				throw new Exception(
+					$"Passed wrong args ({boxedArgs.GetType()}) to screen of type [{GetType()}] (need type: {typeof(TArgs)})");
+
+			return args;
+		}
+	}
+
+	public class EmptyScreenArgs : IScreenArgs
+	{
+	}
+
+	public interface IScreenArgs
+	{
 	}
 }
