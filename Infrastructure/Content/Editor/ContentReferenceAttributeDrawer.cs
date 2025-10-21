@@ -26,30 +26,10 @@ namespace Content.Editor
 		Reference
 	}
 
-	public class ContentReferenceDrawer : OdinValueDrawer<ContentReference>
+	public static class ContentReferenceConstants
 	{
 		public const string TOOLTIP_SPACE = "\n\n";
 		public const string TOOLTIP_SINGLE_SPACE = "\n";
-
-		private bool _guidRawMode;
-
-		protected override bool CanDrawValueProperty(InspectorProperty property)
-		{
-			if (ContentReferenceAttributeProcessor.propertyToContentReferenceAttribute.ContainsKey(property))
-				return false;
-
-			return base.CanDrawValueProperty(property);
-		}
-
-		protected override void DrawPropertyLayout(GUIContent label)
-		{
-			var output = FusumityEditorGUILayout.DrawGuidField(ValueEntry.SmartValue, label, ref _guidRawMode);
-
-			if (!GUI.enabled)
-				return;
-
-			ValueEntry.SmartValue = output;
-		}
 	}
 
 	public class ContentReferenceArrayAttributeDrawer : OdinAttributeDrawer<ContentReferenceAttribute, ContentReference[]>
@@ -240,7 +220,7 @@ namespace Content.Editor
 						guidStr = unique.Guid.ToString();
 
 						if (!targetLabel.tooltip.IsNullOrEmpty())
-							targetLabel.tooltip += ContentReferenceDrawer.TOOLTIP_SPACE;
+							targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 
 						targetLabel.tooltip += $"{TOOLTIP_PREFIX_GUID}{guidStr}";
 					}
@@ -252,8 +232,8 @@ namespace Content.Editor
 						{
 							if (!targetLabel.tooltip.IsNullOrEmpty())
 								targetLabel.tooltip += guidStr == string.Empty
-									? ContentReferenceDrawer.TOOLTIP_SPACE
-									: ContentReferenceDrawer.TOOLTIP_SINGLE_SPACE;
+									? ContentReferenceConstants.TOOLTIP_SPACE
+									: ContentReferenceConstants.TOOLTIP_SINGLE_SPACE;
 
 							targetLabel.tooltip += $"{TOOLTIP_PREFIX}{uniqueId}";
 						}

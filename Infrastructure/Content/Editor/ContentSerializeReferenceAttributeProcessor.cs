@@ -85,7 +85,7 @@ namespace Content.Editor
 			if (property.Parent?.Parent?.ValueEntry?.WeakSmartValue is IUniqueContentEntry contentEntry)
 			{
 				if (!tooltip.IsNullOrEmpty())
-					tooltip += ContentReferenceDrawer.TOOLTIP_SPACE;
+					tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 
 				tooltip += $"{TOOLTIP_PREFIX_GUID}{contentEntry.Guid}";
 			}
