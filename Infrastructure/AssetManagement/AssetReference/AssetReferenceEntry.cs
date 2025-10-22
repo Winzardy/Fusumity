@@ -1,13 +1,14 @@
 ﻿using System;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
-using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
+	using UnityObject = UnityEngine.Object;
+
 	[Serializable]
-	public class AssetReferenceEntry<T> : IAssetReferenceEntry, IAssetReferenceEntry<T>
-		where T : Object
+	public class AssetReferenceEntry<T> : IAssetReferenceEntry<T>
+		where T : UnityObject
 	{
 		[FormerlySerializedAs("_assetReference")]
 		public AssetReferenceT<T> assetReference;
@@ -45,7 +46,7 @@ namespace AssetManagement
 
 		public static implicit operator bool(AssetReferenceEntry entry) => !entry.IsEmptyOrInvalid();
 
-		public Object editorAsset
+		public UnityObject editorAsset
 		{
 #if UNITY_EDITOR
 			get => assetReference?.editorAsset;
@@ -68,7 +69,7 @@ namespace AssetManagement
 
 		public int ReleaseDelayMs => 0;
 
-		public Object EditorAsset =>
+		public UnityObject EditorAsset =>
 #if UNITY_EDITOR
 			AssetReference?.editorAsset;
 #else
@@ -76,7 +77,7 @@ namespace AssetManagement
 #endif
 	}
 
-	public interface IAssetReferenceEntry<T> : IAssetReferenceEntry where T : Object
+	public interface IAssetReferenceEntry<T> : IAssetReferenceEntry where T : UnityObject
 	{
 	}
 }
