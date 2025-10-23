@@ -49,6 +49,8 @@ namespace UI
 		/// </summary>
 		public override bool Open => _open;
 
+		public TLayout Layout => _layout;
+
 		public IWidgetAnimator<TLayout> Animator => _animator;
 
 		public sealed override event WidgetShownDelegate Shown;
@@ -497,8 +499,6 @@ namespace UI
 		protected virtual void OnEndedClosing()
 		{
 		}
-
-		TLayout IWidget<TLayout>.Layout => _layout;
 
 		private void TrySetDefaultAnimator(TLayout layout)
 		{

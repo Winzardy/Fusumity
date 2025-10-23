@@ -210,7 +210,7 @@ namespace UI.Popovers
 
 			var parentRectTransform = _customAnchor;
 			if (!_customAnchor)
-				parentRectTransform = _host?.RectTransform ?? UIDispatcher.Get(Layer).rectTransform;
+				parentRectTransform = _host?.RectTransform ?? UIDispatcher.GetLayer(Layer).rectTransform;
 
 			_layout.transform
 			   .SetParent(parentRectTransform, false);

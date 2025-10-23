@@ -123,7 +123,7 @@ namespace UI.Popups.Editor
 					_getBaseMethodInfo ??= typeof(UIDispatcher)
 					   .GetMethods(BindingFlags.Public | BindingFlags.Static)
 					   .First(m =>
-							m.Name == nameof(UIDispatcher.Get) &&
+							m.Name == nameof(UIDispatcher.GetLayer) &&
 							m.IsGenericMethodDefinition &&
 							m.GetGenericArguments().Length == 1 &&
 							m.GetParameters().Length == 0);

@@ -185,7 +185,7 @@ namespace UI
 			if(layer.IsNullOrEmpty())
 				throw new Exception("Layer can't be null or empty!");
 
-			layout.SetParent(UIDispatcher.Get(layer).canvas);
+			layout.SetParent(UIDispatcher.GetLayer(layer).canvas);
 		}
 	}
 }

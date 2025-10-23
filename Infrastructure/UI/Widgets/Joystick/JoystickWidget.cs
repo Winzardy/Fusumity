@@ -16,6 +16,7 @@ namespace UI.Joystick
 		private Sequence _pressAnimation;
 
 		private float _radius;
+
 		public Vector2 Axes => _axes;
 		public bool IsStickUsed => _lastPointerId.HasValue;
 
