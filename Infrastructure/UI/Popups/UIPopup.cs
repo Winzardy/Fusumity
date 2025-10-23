@@ -19,21 +19,21 @@ namespace UI.Popups
 		/// При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		/// получить через GetArgs() в своих целях (скрыть попап на время).
 		/// Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(IPopupArgs args);
+		internal void Show(object args);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
-		internal bool CanShow(IPopupArgs args, out string error);
+		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset);
-		internal IPopupArgs GetArgs();
+		internal object GetArgs();
 	}
 
-	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyPopupArgs>
+	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyArgs>
 		where TLayout : UIBasePopupLayout
 	{
-		private protected sealed override IPopupArgs GetArgs() => null;
+		private protected sealed override object GetArgs() => null;
 
-		protected sealed override bool CanShow(ref EmptyPopupArgs _, out string error) => CanShow(out error);
+		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
 		{
@@ -44,7 +44,6 @@ namespace UI.Popups
 
 	public abstract class UIPopup<TLayout, TArgs> : UIBasePopup<TLayout, TArgs>
 		where TLayout : UIBasePopupLayout
-		where TArgs : IPopupArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -61,7 +60,6 @@ namespace UI.Popups
 
 	public abstract class UIBasePopup<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopup
 		where TLayout : UIBasePopupLayout
-		where TArgs : IPopupArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Popup] ";
 
@@ -103,7 +101,7 @@ namespace UI.Popups
 			base.Initialize();
 		}
 
-		void IPopup.Show(IPopupArgs boxedArgs)
+		void IPopup.Show(object boxedArgs)
 		{
 			if (boxedArgs != null)
 			{
@@ -130,7 +128,7 @@ namespace UI.Popups
 			DisableSuppress();
 		}
 
-		bool IPopup.CanShow(IPopupArgs boxedArgs, out string error)
+		bool IPopup.CanShow(object boxedArgs, out string error)
 		{
 			var args = UnboxedArgs(boxedArgs);
 			return CanShow(ref args, out error);
@@ -155,9 +153,9 @@ namespace UI.Popups
 			base.OnEndedClosingInternal();
 		}
 
-		IPopupArgs IPopup.GetArgs() => GetArgs();
+		object IPopup.GetArgs() => GetArgs();
 
-		private protected virtual IPopupArgs GetArgs() => _args;
+		private protected virtual object GetArgs() => _args;
 
 		public override void RequestClose() => RequestedClose?.Invoke(this);
 
@@ -187,7 +185,7 @@ namespace UI.Popups
 
 		protected virtual void OnCloseClicked() => RequestClose();
 
-		private TArgs UnboxedArgs(IPopupArgs boxedArgs)
+		private TArgs UnboxedArgs(object boxedArgs)
 		{
 			if (boxedArgs == null)
 				throw new ArgumentException($"Passed null args ({typeof(TArgs)}) to popup of type [{GetType()}]");
@@ -204,13 +202,5 @@ namespace UI.Popups
 			error = string.Empty;
 			return true;
 		}
-	}
-
-	public class EmptyPopupArgs : IPopupArgs
-	{
-	}
-
-	public interface IPopupArgs
-	{
 	}
 }

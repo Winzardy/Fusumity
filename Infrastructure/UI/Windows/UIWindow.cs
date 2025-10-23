@@ -19,21 +19,21 @@ namespace UI.Windows
 		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		///получить через GetArgs() в своих целях (скрыть окно на время).
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(IWindowArgs args);
+		internal void Show(object args);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
-		internal bool CanShow(IWindowArgs args, out string error);
+		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset);
-		internal IWindowArgs GetArgs();
+		internal object GetArgs();
 	}
 
-	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyWindowArgs>
+	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
 		where TLayout : UIBaseWindowLayout
 	{
-		private protected sealed override IWindowArgs GetArgs() => null;
+		private protected sealed override object GetArgs() => null;
 
-		protected sealed override bool CanShow(ref EmptyWindowArgs _, out string error) => CanShow(out error);
+		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
 		{
@@ -44,7 +44,6 @@ namespace UI.Windows
 
 	public abstract class UIWindow<TLayout, TArgs> : UIBaseWindow<TLayout, TArgs>
 		where TLayout : UIBaseWindowLayout
-		where TArgs : IWindowArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -59,7 +58,6 @@ namespace UI.Windows
 
 	public abstract class UIBaseWindow<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IWindow
 		where TLayout : UIBaseWindowLayout
-		where TArgs : IWindowArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Window] ";
 
@@ -100,7 +98,7 @@ namespace UI.Windows
 			base.Initialize();
 		}
 
-		void IWindow.Show(IWindowArgs boxedArgs)
+		void IWindow.Show(object boxedArgs)
 		{
 			if (boxedArgs != null)
 			{
@@ -127,10 +125,10 @@ namespace UI.Windows
 			DisableSuppress();
 		}
 
-		IWindowArgs IWindow.GetArgs() => GetArgs();
-		private protected virtual IWindowArgs GetArgs() => _args;
+		object IWindow.GetArgs() => GetArgs();
+		private protected virtual object GetArgs() => _args;
 
-		bool IWindow.CanShow(IWindowArgs boxedArgs, out string error)
+		bool IWindow.CanShow(object boxedArgs, out string error)
 		{
 			var args = UnboxedArgs(boxedArgs);
 			return CanShow(ref args, out error);
@@ -209,7 +207,7 @@ namespace UI.Windows
 			return true;
 		}
 
-		private TArgs UnboxedArgs(IWindowArgs boxedArgs)
+		private TArgs UnboxedArgs(object boxedArgs)
 		{
 			if (boxedArgs == null)
 				throw new ArgumentException($"Passed null args ({typeof(TArgs)}) to window of type [{GetType()}]");
@@ -220,13 +218,5 @@ namespace UI.Windows
 
 			return args;
 		}
-	}
-
-	public class EmptyWindowArgs : IWindowArgs
-	{
-	}
-
-	public interface IWindowArgs
-	{
 	}
 }

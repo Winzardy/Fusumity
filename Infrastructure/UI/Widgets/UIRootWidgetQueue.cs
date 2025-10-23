@@ -8,7 +8,7 @@ namespace UI
 	/// Кастомная очередь для Window и Popup, в случае Windows новые элементы встают в начале (Stack),
 	/// а у Popup в конце (Queue)
 	/// </summary>
-	public class UIRootWidgetQueue<TWidget, TArgs> : IDisposable, IEnumerable<TWidget>
+	public class UIRootWidgetQueue<TWidget, TArgs> : IDisposable, IEnumerable<KeyValuePair<TWidget, TArgs>>
 	{
 		private readonly bool _addToLast;
 
@@ -74,7 +74,7 @@ namespace UI
 
 		public bool Contains(TWidget widget) => _queue.Contains(widget);
 
-		IEnumerator<TWidget> IEnumerable<TWidget>.GetEnumerator() => _queue.GetEnumerator();
+		IEnumerator<KeyValuePair<TWidget, TArgs>> IEnumerable<KeyValuePair<TWidget, TArgs>>.GetEnumerator() => _args.GetEnumerator();
 		IEnumerator IEnumerable.GetEnumerator() => _queue.GetEnumerator();
 	}
 }

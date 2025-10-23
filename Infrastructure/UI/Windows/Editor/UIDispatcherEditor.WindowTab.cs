@@ -5,7 +5,7 @@ using UI.Editor;
 
 namespace UI.Windows.Editor
 {
-	public class UIDispatcherEditorWindowTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorWindowTab : IUIDispatcherEditorTab
 	{
 		private UIWindowDispatcher _dispatcher => UIDispatcher.Get<UIWindowDispatcher>();
 		int IUIDispatcherEditorTab.Order => 0;
@@ -15,7 +15,7 @@ namespace UI.Windows.Editor
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
-		public IWindowArgs args;
+		public object args;
 
 		internal void Show()
 		{
@@ -50,18 +50,10 @@ namespace UI.Windows.Editor
 
 			var type = arguments[1];
 
-			if (type == typeof(EmptyWindowArgs))
+			if (type == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IWindowArgs>();
-		}
-
-		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Current")]
-		private void HideWindowEditor()
-		{
-			_dispatcher.TryHideCurrent();
+			args = type.CreateInstance<object>();
 		}
 	}
 }

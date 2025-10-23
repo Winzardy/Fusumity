@@ -15,12 +15,16 @@ namespace UI.Popups
 
 		private readonly PopupPool _pool;
 
-		private readonly UIRootWidgetQueue<IPopup, IPopupArgs> _queue;
+		private readonly UIRootWidgetQueue<IPopup, object> _queue;
 		private readonly CancellationTokenSource _cts = new();
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
 		internal event EnqueuedDelegate Enqueued;
+
+		internal (IPopup, object) Current => (_current, _current?.GetArgs());
+
+		internal IEnumerable<KeyValuePair<IPopup, object>> Queue => _queue;
 
 		public UIPopupManager()
 		{
@@ -45,7 +49,7 @@ namespace UI.Popups
 			_cts?.Trigger();
 		}
 
-		internal T Show<T>(IPopupArgs args, bool force = false)
+		internal T Show<T>(object args, bool force = false)
 			where T : UIWidget, IPopup
 		{
 			var popup = Get<T>();
@@ -75,7 +79,7 @@ namespace UI.Popups
 			if (_current.Id == id && _current.Active)
 				return true;
 
-			foreach (var popup in _queue)
+			foreach (var (popup, _) in _queue)
 				if (popup.Id == id)
 					return true;
 
@@ -88,8 +92,31 @@ namespace UI.Popups
 				yield return castCurrent;
 		}
 
+		internal void TryHide(IPopup popup)
+		{
+			_queue.TryRemove(popup);
+
+			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущий активный попап
+			if (_current != popup)
+			{
+				Release(popup);
+				return;
+			}
+
+			TryReleasePreloadedLayout(popup);
+
+			HideInternal(popup, false);
+
+			//Нужно подождать пока отыграется анимация и только потом возвращать в пул
+			WaitHideAndReleaseAsync(popup, _cts.Token).Forget();
+
+			_current = null;
+
+			TryShowNext();
+		}
+
 		//TODO: добавить приоритет вместо force
-		private void Show(IPopup popup, IPopupArgs args, bool fromQueue, bool force = false)
+		private void Show(IPopup popup, object args, bool fromQueue, bool force = false)
 		{
 			if (_current != null)
 			{
@@ -112,34 +139,11 @@ namespace UI.Popups
 			_current = popup;
 		}
 
-		private void Enqueue(IPopup popup, IPopupArgs args = null, bool addToLast = false)
+		private void Enqueue(IPopup popup, object args = null, bool addToLast = false)
 		{
 			args ??= popup.GetArgs();
 			_queue.Enqueue(popup, args, addToLast);
 			Enqueued?.Invoke(popup, args, addToLast);
-		}
-
-		private void TryHide(IPopup popup)
-		{
-			_queue.TryRemove(popup);
-
-			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущий активный попап
-			if (_current != popup)
-			{
-				Release(popup);
-				return;
-			}
-
-			TryReleasePreloadedLayout(popup);
-
-			HideInternal(popup, false);
-
-			//Нужно подождать пока отыграется анимация и только потом возвращать в пул
-			WaitHideAndReleaseAsync(popup, _cts.Token).Forget();
-
-			_current = null;
-
-			TryShowNext();
 		}
 
 		private void TryShowNext()
@@ -169,7 +173,7 @@ namespace UI.Popups
 			Release(popup);
 		}
 
-		private void ShowInternal(IPopup popup, IPopupArgs args, bool fromQueue)
+		private void ShowInternal(IPopup popup, object args, bool fromQueue)
 		{
 			popup.Show(args);
 			Shown?.Invoke(popup, fromQueue);
@@ -193,7 +197,7 @@ namespace UI.Popups
 
 		public delegate void HiddenDelegate(IPopup popup, bool fromQueue);
 
-		public delegate void EnqueuedDelegate(IPopup popup, IPopupArgs args, bool addToLast);
+		public delegate void EnqueuedDelegate(IPopup popup, object args, bool addToLast);
 
 		#endregion
 	}

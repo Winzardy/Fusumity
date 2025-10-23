@@ -29,7 +29,9 @@ namespace UI.Screens
 		/// </summary>
 		public event Action<IScreen> Hidden;
 
-		public IScreen Current => _manager.Current;
+		public (IScreen screen, object args) Current => _manager.Current;
+		public (IScreen screen, object args) Default => _manager.Default;
+		public IEnumerable<KeyValuePair<IScreen, object>> Queue => _manager.Queue;
 
 		public UIScreenDispatcher(UIScreenManager manager)
 		{
@@ -99,7 +101,7 @@ namespace UI.Screens
 		/// <summary>
 		/// Показать экран по типу (убирает в очередь текущее)
 		/// </summary>
-		public T Show<T>(IScreenArgs args = null)
+		public T Show<T>(object args = null)
 			where T : UIWidget, IScreen
 			=> _manager.Show<T>(args);
 
@@ -109,6 +111,9 @@ namespace UI.Screens
 		public bool TryHide<T>()
 			where T : UIWidget, IScreen
 			=> _manager.TryHide<T>();
+
+		public void TryHide(IScreen screen)
+			=> _manager.TryHide(screen);
 
 		public void TryHideAll() => _manager.TryHideAll();
 

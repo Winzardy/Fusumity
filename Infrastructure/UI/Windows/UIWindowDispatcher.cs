@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace UI.Windows
@@ -29,7 +30,8 @@ namespace UI.Windows
 		/// </summary>
 		public event Action<IWindow> Hidden;
 
-		public IWindow Current => _manager.Current;
+		public (IWindow window, object args) Current => _manager.Current;
+		public IEnumerable<KeyValuePair<IWindow, object>> Queue => _manager.Queue;
 
 		public UIWindowDispatcher(UIWindowManager manager)
 		{
@@ -75,7 +77,7 @@ namespace UI.Windows
 		/// <summary>
 		/// Показать экран по типу (убирает в очередь текущее)
 		/// </summary>
-		public T Show<T>(IWindowArgs args = null)
+		public T Show<T>(object args = null)
 			where T : UIWidget, IWindow
 			=> _manager.Show<T>(args);
 
@@ -85,6 +87,9 @@ namespace UI.Windows
 		public bool TryHide<T>()
 			where T : UIWidget, IWindow
 			=> _manager.TryHide<T>();
+
+		public void TryHide(IWindow window)
+			=> _manager.TryHide(window);
 
 		/// <summary>
 		/// Попробовать закрыть текущее окно

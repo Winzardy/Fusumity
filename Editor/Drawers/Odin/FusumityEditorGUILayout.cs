@@ -83,9 +83,9 @@ namespace Fusumity.Editor
 			}
 
 			if (!ignoreGUIEnabled ||
-			    Event.current.button != 0 ||
-			    Event.current.rawType != EventType.MouseDown ||
-			    !GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+				Event.current.button != 0 ||
+				Event.current.rawType != EventType.MouseDown ||
+				!GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
 			{
 				return false;
 			}
@@ -98,11 +98,11 @@ namespace Fusumity.Editor
 			return true;
 		}
 
-		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey, bool useIndent = false)
+		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey, bool useIndentBody = false, bool useIndent = true)
 		{
 			var originalIndent = EditorGUI.indentLevel;
 
-			if (!EditorGUIUtility.hierarchyMode)
+			if (!EditorGUIUtility.hierarchyMode && useIndent)
 				EditorGUI.indentLevel += 1;
 
 			var rect = header();
@@ -111,15 +111,19 @@ namespace Fusumity.Editor
 				return;
 
 			var position = rect.AlignBottom(EditorGUIUtility.singleLineHeight);
+
 			position.width = SirenixEditorGUI.FoldoutWidth;
-			if (!EditorGUIUtility.hierarchyMode)
+			if (!EditorGUIUtility.hierarchyMode && useIndent)
 			{
 				var offset = SirenixEditorGUI.FoldoutWidth + 3;
 				position.x -= offset;
 				position.width += offset;
 			}
 
+			var origin = GUI.enabled;
+			GUI.enabled = true;
 			foldout = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
+			GUI.enabled = origin;
 			if (SirenixEditorGUI.BeginFadeGroup(fadeGroupKey, foldout))
 			{
 				using (new GUILayout.VerticalScope())
@@ -129,10 +133,10 @@ namespace Fusumity.Editor
 					var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
 					FusumityEditorGUIHelper.drawAssetReference = false;
 					{
-						if (useIndent)
+						if (useIndentBody)
 							EditorGUI.indentLevel++;
 						body();
-						if (useIndent)
+						if (useIndentBody)
 							EditorGUI.indentLevel--;
 					}
 					FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
@@ -397,7 +401,7 @@ namespace Fusumity.Editor
 			GUI.Label(labelRect, text, textStyle);
 		}
 
-		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null)
+		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null, float offset = 4f)
 		{
 			suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
 			suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
@@ -405,7 +409,7 @@ namespace Fusumity.Editor
 			if (overlay)
 			{
 				var lastRect = GUILayoutUtility.GetLastRect();
-				var labelRect = lastRect.AlignRight(suffixLabelStyleCache.CalcWidth(text), 4);
+				var labelRect = lastRect.AlignRight(suffixLabelStyleCache.CalcWidth(text), offset);
 				GUI.Label(labelRect, text, suffixLabelStyleCache);
 			}
 			else

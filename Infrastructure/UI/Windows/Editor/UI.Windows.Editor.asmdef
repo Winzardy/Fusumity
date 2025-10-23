@@ -6,7 +6,8 @@
         "UI.Editor",
         "UI.Windows",
         "Sapientia",
-        "Fusumity"
+        "Fusumity",
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"

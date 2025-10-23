@@ -5,7 +5,7 @@ using UI.Editor;
 
 namespace UI.Screens.Editor
 {
-	public class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
 	{
 		private UIScreenDispatcher _dispatcher => UIDispatcher.Get<UIScreenDispatcher>();
 		int IUIDispatcherEditorTab.Order => 3;
@@ -15,7 +15,7 @@ namespace UI.Screens.Editor
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
-		public IScreenArgs args;
+		public object args;
 
 		internal void Show()
 		{
@@ -50,40 +50,10 @@ namespace UI.Screens.Editor
 
 			var type = arguments[1];
 
-			if (type == typeof(EmptyScreenArgs))
+			if (type == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IScreenArgs>();
-		}
-
-		// [Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		// [Button("Try Show Default")]
-		// [PropertySpace(10)]
-		// private void TryShowDefaultScreenEditor()
-		// {
-		// 	_dispatcher.TryShowDefault(false);
-		// }
-		//
-		// [HorizontalGroup("Blockers")]
-		// [Button("Add Show Blocker")]
-		// private void AddShowBlockerEditor()
-		// {
-		// 	_dispatcher.AddShowBlocker(this);
-		// }
-		//
-		// [HorizontalGroup("Blockers")]
-		// [Button("Remove Show Blocker")]
-		// private void RemoveShowBlockerEditor()
-		// {
-		// 	_dispatcher.RemoveShowBlocker(this);
-		// }
-
-		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Current")]
-		private void HideScreenEditor()
-		{
-			_dispatcher.TryHideCurrent();
+			args = type.CreateInstance<object>();
 		}
 	}
 }

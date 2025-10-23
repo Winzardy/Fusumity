@@ -5,7 +5,7 @@ using UI.Editor;
 
 namespace UI.Popups.Editor
 {
-	public class UIDispatcherEditorPopupTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorPopupTab : IUIDispatcherEditorTab
 	{
 		private UIPopupDispatcher _dispatcher => UIDispatcher.Get<UIPopupDispatcher>();
 		int IUIDispatcherEditorTab.Order => 2;
@@ -13,7 +13,8 @@ namespace UI.Popups.Editor
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
-		public IPopupArgs args;
+
+		public object args;
 
 		internal void Show(bool force = false)
 		{
@@ -24,9 +25,9 @@ namespace UI.Popups.Editor
 			}
 
 			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.GetMethod(nameof(_dispatcher.Show))?
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new object[]
 				{
 					args,
 					force
@@ -49,18 +50,10 @@ namespace UI.Popups.Editor
 
 			var type = arguments[1];
 
-			if (type == typeof(EmptyPopupArgs))
+			if (type == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IPopupArgs>();
-		}
-
-		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Current")]
-		private void HidePopupEditor()
-		{
-			_dispatcher.TryHideCurrent();
+			args = type.CreateInstance<object>();
 		}
 	}
 }

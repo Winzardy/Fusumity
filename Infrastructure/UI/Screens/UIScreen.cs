@@ -19,23 +19,23 @@ namespace UI.Screens
 		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		///получить через GetArgs() в своих целях (скрыть окно на время).
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(IScreenArgs args);
+		internal void Show(object args);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseScreen)
-		internal bool CanShow(IScreenArgs args, out string error);
+		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset);
-		internal IScreenArgs GetArgs();
+		internal object GetArgs();
 
 		internal IDisposable Prepare(Action callback);
 	}
 
-	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyScreenArgs>
+	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyArgs>
 		where TLayout : UIBaseScreenLayout
 	{
-		private protected sealed override IScreenArgs GetArgs() => null;
+		private protected sealed override object GetArgs() => null;
 
-		protected sealed override bool CanShow(ref EmptyScreenArgs _, out string error) => CanShow(out error);
+		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
 		{
@@ -46,7 +46,6 @@ namespace UI.Screens
 
 	public abstract class UIScreen<TLayout, TArgs> : UIBaseScreen<TLayout, TArgs>
 		where TLayout : UIBaseScreenLayout
-		where TArgs : IScreenArgs
 	{
 		protected sealed override void OnShow() => OnShow(ref _args);
 
@@ -64,7 +63,6 @@ namespace UI.Screens
 	/// </summary>
 	public abstract class UIBaseScreen<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IScreen
 		where TLayout : UIBaseScreenLayout
-		where TArgs : IScreenArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Screen] ";
 
@@ -114,7 +112,7 @@ namespace UI.Screens
 			base.Initialize();
 		}
 
-		void IScreen.Show(IScreenArgs boxedArgs)
+		void IScreen.Show(object boxedArgs)
 		{
 			if (boxedArgs != null)
 			{
@@ -141,10 +139,10 @@ namespace UI.Screens
 			DisableSuppress();
 		}
 
-		IScreenArgs IScreen.GetArgs() => GetArgs();
-		private protected virtual IScreenArgs GetArgs() => _args;
+		object IScreen.GetArgs() => GetArgs();
+		private protected virtual object GetArgs() => _args;
 
-		bool IScreen.CanShow(IScreenArgs boxedArgs, out string error)
+		bool IScreen.CanShow(object boxedArgs, out string error)
 		{
 			var args = UnboxedArgs(boxedArgs);
 			return CanShow(ref args, out error);
@@ -203,7 +201,7 @@ namespace UI.Screens
 			return true;
 		}
 
-		private TArgs UnboxedArgs(IScreenArgs boxedArgs)
+		private TArgs UnboxedArgs(object boxedArgs)
 		{
 			if (boxedArgs == null)
 				throw new ArgumentException($"Passed null args ({typeof(TArgs)}) to screen of type [{GetType()}]");
@@ -214,13 +212,5 @@ namespace UI.Screens
 
 			return args;
 		}
-	}
-
-	public class EmptyScreenArgs : IScreenArgs
-	{
-	}
-
-	public interface IScreenArgs
-	{
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Attributes;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -29,6 +30,16 @@ namespace UI.Screens.Editor
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
+				case nameof(UIDispatcherEditorScreenTab.args):
+					attributes.Add(new HideReferenceObjectPickerAttribute());
+					attributes.Add(new HideLabelAttribute());
+					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
+					attributes.Add(new DarkCardBoxAttribute());
+					attributes.Add(new ShowInInspectorAttribute());
+					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.args), null));
+
+					break;
+
 				case nameof(UIDispatcherEditorScreenTab.Show):
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 80));
 					var buttonAttribute = new ButtonAttribute(ButtonSizes.Large)
@@ -47,7 +58,7 @@ namespace UI.Screens.Editor
 			foreach (var type in types)
 			{
 				var name = type.Name
-				   .Replace("Screen", string.Empty);
+					.Replace("Screen", string.Empty);
 
 				yield return new ValueDropdownItem(name, type);
 			}

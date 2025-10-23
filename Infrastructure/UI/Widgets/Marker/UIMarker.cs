@@ -8,13 +8,9 @@ using UnityEngine;
 
 namespace UI
 {
-	public struct Empty
+	public class UIMarker : UIMarker<EmptyArgs>
 	{
-	}
-
-	public class UIMarker : UIMarker<Empty>
-	{
-		protected override void OnShow(ref UIMarkerArgs<Empty> args)
+		protected override void OnShow(ref UIMarkerArgs<EmptyArgs> args)
 		{
 		}
 
@@ -82,7 +78,6 @@ namespace UI
 
 	//TODO: добавить разные состояние при маркер над объектом или в режиме offscreen
 	public abstract class UIMarker<TArgs> : UIWidget<UIMarkerLayout, UIMarkerArgs<TArgs>>
-		where TArgs : struct
 	{
 		private const float MOVE_DURATION = 0.35f;
 

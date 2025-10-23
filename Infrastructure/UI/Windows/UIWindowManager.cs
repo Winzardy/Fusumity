@@ -13,9 +13,11 @@ namespace UI.Windows
 
 		private readonly UIWindowFactory _factory;
 
-		private readonly UIRootWidgetQueue<IWindow, IWindowArgs> _queue;
+		private readonly UIRootWidgetQueue<IWindow, object> _queue;
 
-		internal IWindow Current => _current;
+		internal (IWindow, object) Current => (_current, _current?.GetArgs());
+
+		internal IEnumerable<KeyValuePair<IWindow, object>> Queue => _queue;
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
@@ -43,7 +45,7 @@ namespace UI.Windows
 			_windows = null;
 		}
 
-		internal T Show<T>(IWindowArgs args)
+		internal T Show<T>(object args)
 			where T : UIWidget, IWindow
 		{
 			if (!TryGet<T>(out var window))
@@ -82,6 +84,11 @@ namespace UI.Windows
 			return false;
 		}
 
+		internal void TryHide(IWindow window)
+		{
+			TryHide(window, false);
+		}
+
 		internal void ClearAll()
 		{
 			foreach (var window in _windows.Values)
@@ -116,7 +123,7 @@ namespace UI.Windows
 			if (_current?.Id == id)
 				return true;
 
-			foreach (var window in _queue)
+			foreach (var (window, _) in _queue)
 				if (window.Id == id)
 					return true;
 
@@ -170,7 +177,7 @@ namespace UI.Windows
 
 		private void OnRequestedClose(IWindow window) => TryHide(window);
 
-		private void Show(IWindow window, IWindowArgs args, bool fromQueue = false)
+		private void Show(IWindow window, object args, bool fromQueue = false)
 		{
 			window.Show(args);
 
@@ -182,7 +189,7 @@ namespace UI.Windows
 			Shown?.Invoke(window, fromQueue);
 		}
 
-		private void TryHide(IWindow window, bool fromQueue = false)
+		private void TryHide(IWindow window, bool fromQueue)
 		{
 			_queue.TryRemove(window);
 
@@ -196,6 +203,8 @@ namespace UI.Windows
 			TryReleasePreloadedLayout(window);
 
 			Hide(window, fromQueue);
+			_current = null;
+
 			TryShowNext();
 		}
 
