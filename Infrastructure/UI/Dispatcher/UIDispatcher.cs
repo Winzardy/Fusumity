@@ -21,14 +21,24 @@ namespace UI
 			where T : class, IWidgetDispatcher
 			=> dispatcher = Get<T>();
 
+		public static bool TryGet<T>(out T dispatcher)
+			where T : class, IWidgetDispatcher
+		{
+			dispatcher = null;
+			if (!IsInitialized)
+				return false;
+			dispatcher = Get<T>();
+			return dispatcher != null;
+		}
+
 		/// <summary>
 		/// Возвращает слой по айди (если его нет создаст)
 		/// </summary>
-		public static UILayerLayout Get(string id) => management[id];
+		public static UILayerLayout GetLayer(string id) => management[id];
 
 		/// <summary>
 		/// Возвращает слой по айди (без создания)
 		/// </summary>
-		public static bool TryGet(string id, out UILayerLayout layer) => management.TryGet(id, out layer);
+		public static bool TryGetLayer(string id, out UILayerLayout layer) => management.TryGet(id, out layer);
 	}
 }
