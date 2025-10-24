@@ -12,6 +12,8 @@ namespace UI
 		public event Action<IPopover> Shown;
 		public event Action<IPopover> Hidden;
 
+		public IEnumerable<KeyValuePair<IPopover, object>> Active => _manager.Active;
+
 		public UIPopoverDispatcher(UIPopoverManager manager)
 		{
 			_manager = manager;
@@ -33,7 +35,7 @@ namespace UI
 		/// <paramref name="host"/>'а.
 		/// </param>
 		public PopoverToken<T> Show<T>(UIWidget host,
-			IPopoverArgs args = null,
+			object args = null,
 			RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 		{
@@ -53,7 +55,7 @@ namespace UI
 		/// </param>
 		public void Show<T>(ref PopoverToken<T> token,
 			UIWidget host,
-			IPopoverArgs args = null,
+			object args = null,
 			RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 			=> _manager.Show(ref token, host, args, customAnchor);

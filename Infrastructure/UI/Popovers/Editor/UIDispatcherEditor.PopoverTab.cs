@@ -4,16 +4,19 @@ using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
 using Sapientia;
+using Sapientia.Extensions.Reflection;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
 using UI.Editor;
-using UI.Popovers;
 using UnityEngine;
 
-namespace UI.Popups.Editor
+namespace UI.Popovers.Editor
 {
-	public class UIDispatcherEditorPopoverTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorPopoverTab : IUIDispatcherEditorTab
 	{
+		private Type _argsType;
 		private UIPopoverDispatcher _dispatcher => UIDispatcher.Get<UIPopoverDispatcher>();
 
 		public string Title => "Popovers";
@@ -26,7 +29,45 @@ namespace UI.Popups.Editor
 
 		public Toggle<RectTransform> customAnchor;
 
-		public IPopoverArgs args;
+		[HideInInspector]
+		public object args;
+
+		private (Type type, PropertyTree tree) _typeArgsToTree;
+
+		[OnInspectorGUI]
+		internal void OnArgsInspectorGUI()
+		{
+			if (_argsType == null)
+			{
+				TryClearTree();
+				return;
+			}
+
+			if (_typeArgsToTree.type != null && _argsType != _typeArgsToTree.type)
+			{
+				TryClearTree();
+				return;
+			}
+
+			_typeArgsToTree.type = _argsType;
+			args ??= System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+			_typeArgsToTree.tree ??= PropertyTree.Create(args, SerializationBackend.Odin);
+
+			_typeArgsToTree.tree?.Draw(false);
+
+			if (_typeArgsToTree.tree != null)
+			{
+				args = _typeArgsToTree.tree.RootProperty.ValueEntry.WeakSmartValue;
+			}
+		}
+
+		private void TryClearTree()
+		{
+			args = null;
+			_typeArgsToTree.tree?.Dispose();
+			_typeArgsToTree.tree = null;
+			_typeArgsToTree.type = null;
+		}
 
 		internal void Show()
 		{
@@ -44,14 +85,14 @@ namespace UI.Popups.Editor
 
 			RectTransform anchor = customAnchor ? customAnchor : null;
 			_dispatcher?.GetType()
-			   .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-			   .First(m =>
+				.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.First(m =>
 					m.Name == nameof(UIPopoverDispatcher.Show) &&
 					m.IsGenericMethodDefinition &&
 					m.GetGenericArguments().Length == 1 &&
 					m.GetParameters().Length == 3)
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new object[]
 				{
 					hostEntry.widget,
 					args,
@@ -62,6 +103,7 @@ namespace UI.Popups.Editor
 		private void OnTypeChanged()
 		{
 			args = null;
+			_argsType = null;
 
 			var baseType = this.type?.BaseType;
 
@@ -73,25 +115,17 @@ namespace UI.Popups.Editor
 			if (arguments.Length < 2)
 				return;
 
-			var type = arguments[1];
+			var argsType = arguments[1];
 
-			if (type == typeof(EmptyPopoverArgs))
+			if (argsType == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IPopoverArgs>();
+			_argsType = argsType;
 		}
 
 		private void OnHostChanged()
 		{
 			customAnchor = hostEntry.widget.RectTransform;
-		}
-
-		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Last")]
-		private void HideLastEditor()
-		{
-			_dispatcher.TryHideLast();
 		}
 
 		[Serializable]
@@ -121,8 +155,8 @@ namespace UI.Popups.Editor
 				foreach (var type in allDispatcherTypes)
 				{
 					_getBaseMethodInfo ??= typeof(UIDispatcher)
-					   .GetMethods(BindingFlags.Public | BindingFlags.Static)
-					   .First(m =>
+						.GetMethods(BindingFlags.Public | BindingFlags.Static)
+						.First(m =>
 							m.Name == nameof(UIDispatcher.Get) &&
 							m.IsGenericMethodDefinition &&
 							m.GetGenericArguments().Length == 1 &&
@@ -132,7 +166,7 @@ namespace UI.Popups.Editor
 						continue;
 
 					var totalMethodInfo = _getBaseMethodInfo
-					   .MakeGenericMethod(type);
+						.MakeGenericMethod(type);
 
 					if (totalMethodInfo.Invoke(null, null) is not IWidgetDispatcher dispatcher)
 						continue;

@@ -13,7 +13,7 @@ namespace UI.Popovers
 	/// </summary>
 	public partial class UIPopoverManager : IDisposable
 	{
-		private LinkedList<UIWidget> _active = new();
+		private readonly LinkedList<IPopover> _active = new();
 
 		private readonly PopoverPool _pool;
 
@@ -21,6 +21,8 @@ namespace UI.Popovers
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
+
+		internal IEnumerable<KeyValuePair<IPopover, object>> Active => EnumerateActive();
 
 		public UIPopoverManager()
 		{
@@ -40,7 +42,7 @@ namespace UI.Popovers
 		}
 
 		/// <param name="host">Виджет к которому привязан поповер</param>
-		internal void Show<T>(ref PopoverToken<T> token, UIWidget host, IPopoverArgs args, RectTransform customAnchor = null)
+		internal void Show<T>(ref PopoverToken<T> token, UIWidget host, object args, RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 		{
 			if (token.IsValid() && token.Popover.Visible)
@@ -118,6 +120,21 @@ namespace UI.Popovers
 			return true;
 		}
 
+		internal IEnumerable<UIWidget> GetAllActive()
+		{
+			foreach (var popover in _active)
+			{
+				if (popover is UIWidget widget)
+					yield return widget;
+			}
+		}
+
+		private IEnumerable<KeyValuePair<IPopover, object>> EnumerateActive()
+		{
+			foreach (var popover in _active)
+				yield return new KeyValuePair<IPopover, object>(popover, popover.GetArgs());
+		}
+
 		#region Delegates
 
 		public delegate void ShownDelegate(UIWidget root, IPopover popover);
@@ -125,7 +142,5 @@ namespace UI.Popovers
 		public delegate void HiddenDelegate(UIWidget root, IPopover popover);
 
 		#endregion
-
-		internal IEnumerable<UIWidget> GetAllActive() => _active;
 	}
 }

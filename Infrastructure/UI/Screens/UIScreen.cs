@@ -26,7 +26,7 @@ namespace UI.Screens
 
 		internal void Hide(bool reset);
 		internal object GetArgs();
-
+		public Type GetArgsType();
 		internal IDisposable Prepare(Action callback);
 	}
 
@@ -47,15 +47,36 @@ namespace UI.Screens
 	public abstract class UIScreen<TLayout, TArgs> : UIBaseScreen<TLayout, TArgs>
 		where TLayout : UIBaseScreenLayout
 	{
+		private bool _suppressHide;
+
 		protected sealed override void OnShow() => OnShow(ref _args);
 
 		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (_suppressHide)
+				return;
+
+			OnHide(ref _args);
+		}
 
 		protected virtual void OnHide(ref TArgs args)
 		{
 		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	/// <summary>
@@ -168,6 +189,7 @@ namespace UI.Screens
 		}
 
 		public override void RequestClose() => RequestedClose?.Invoke(this);
+		public Type GetArgsType() => typeof(TArgs);
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

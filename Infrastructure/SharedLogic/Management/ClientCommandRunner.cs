@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using ILogger = Sapientia.ILogger;
 
 namespace SharedLogic

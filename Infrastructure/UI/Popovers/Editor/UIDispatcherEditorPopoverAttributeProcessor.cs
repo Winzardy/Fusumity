@@ -10,7 +10,7 @@ using Sirenix.OdinInspector.Editor;
 using UI.Popovers;
 using UnityEngine;
 
-namespace UI.Popups.Editor
+namespace UI.Popovers.Editor
 {
 	public class UIDispatcherEditorPopoverAttributeProcessor : OdinAttributeProcessor<UIDispatcherEditorPopoverTab>
 	{
@@ -34,14 +34,14 @@ namespace UI.Popups.Editor
 					attributes.Add(new ValueDropdownAttribute(typeExp));
 					break;
 
-				case nameof(UIDispatcherEditorPopoverTab.args):
+				case nameof(UIDispatcherEditorPopoverTab.OnArgsInspectorGUI):
 					AddToGroup();
-					attributes.Add(new SpaceAttribute());
-					attributes.Add(new HideReferenceObjectPickerAttribute());
-					attributes.Add(new HideLabelAttribute());
-					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorPopoverTab.args), null));
-
+					// attributes.Add(new SpaceAttribute());
+					// attributes.Add(new HideReferenceObjectPickerAttribute());
+					// attributes.Add(new HideLabelAttribute());
+					// attributes.Add(new ShowInInspectorAttribute());
+					// attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorPopoverTab.args), null));
+					//
 					break;
 
 				case nameof(UIDispatcherEditorPopoverTab.hostEntry):
@@ -63,11 +63,7 @@ namespace UI.Popups.Editor
 					break;
 			}
 
-			void AddToGroup()
-			{
-				attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-				attributes.Add(new DarkCardBoxAttribute());
-			}
+			void AddToGroup() => attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/color"));
 		}
 
 		private static IEnumerable GetAllTypes()

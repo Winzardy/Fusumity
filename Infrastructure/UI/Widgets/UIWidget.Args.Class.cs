@@ -6,6 +6,7 @@ namespace UI
 	/// <summary>
 	/// Обертка для виджета, чтобы передавать class вместо struct
 	/// </summary>
+	[Obsolete("Используйте обычный UIWidget, этот костыль был создан когда UIWidget требовал аргументы в виде структуры")]
 	public struct WidgetСArgs<TValue> : IEquatable<WidgetСArgs<TValue>>
 		where TValue : class
 	{
@@ -30,6 +31,7 @@ namespace UI
 	/// <summary>
 	/// Обертка для виджета, чтобы передавать class вместо struct
 	/// </summary>
+	[Obsolete("Используйте обычный UIWidget, этот костыль был создан когда UIWidget требовал аргументы в виде структуры")]
 	public abstract class UIWidgetC<TLayout, TValue> : UIWidget<TLayout, WidgetСArgs<TValue>>
 		where TLayout : UIBaseLayout
 		where TValue : class
@@ -45,7 +47,6 @@ namespace UI
 
 		public bool IsEmpty => _args;
 
-		//TODO: тупо что прыгает сюда, было бы прикольно что при попытке сюда прыгнуть прыгал бы на OnShow() хотя... чисто мысль
 		public void Show(TValue value, bool immediate = false, bool equals = true)
 		{
 			Update(value, equals);

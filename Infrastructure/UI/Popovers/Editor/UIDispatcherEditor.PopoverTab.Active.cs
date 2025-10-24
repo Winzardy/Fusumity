@@ -7,16 +7,16 @@ using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace UI.Screens.Editor
+namespace UI.Popovers.Editor
 {
-	public partial class UIDispatcherEditorScreenTab
+	public partial class UIDispatcherEditorPopoverTab
 	{
-		private (IScreen widget, PropertyTree tree) _widgetToTree;
+		private (IPopover widget, PropertyTree tree) _widgetToTree;
 
 		[OnInspectorGUI]
 		private void OnInspectorGUI()
 		{
-			if (!_dispatcher.Queue.Any() && _dispatcher.Current.screen == null)
+			if (!_dispatcher.Active.Any())
 				return;
 
 			GUILayout.Space(12);
@@ -24,72 +24,52 @@ namespace UI.Screens.Editor
 			var color = Color.black.WithAlpha(0.2f);
 			FusumityEditorGUILayout.BeginCardBox(color);
 
-			GUILayout.Label("Queue", SirenixGUIStyles.CenteredGreyMiniLabel);
+			GUILayout.Label("Active", SirenixGUIStyles.CenteredGreyMiniLabel);
 			SirenixEditorGUI.HorizontalLineSeparator(Color.gray.WithAlpha(0.1f));
 			var i = 0;
-			foreach (var (screen, args) in _dispatcher.Queue)
+			foreach (var (popover, args) in _dispatcher.Active)
 			{
 				FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
-				if (!Draw(i, screen, args))
+				if (!Draw(i, popover, args))
 					break;
 				FusumityEditorGUILayout.EndCardBox();
 				i++;
 			}
 
-			if (_dispatcher.Current.screen != null)
-			{
-				FusumityEditorGUILayout.BeginCardBox(Color.Lerp(Color.blue, Color.white, 0.8f).WithAlpha(0.3f));
-				Draw(i, _dispatcher.Current.screen, _dispatcher.Current.args, true);
-				FusumityEditorGUILayout.EndCardBox();
-			}
-
 			FusumityEditorGUILayout.EndCardBox();
 
-			bool Draw(int i, IScreen screen, object screenArgs, bool current = false)
+			bool Draw(int i, IPopover popover, object popoverArgs)
 			{
 				const string BUTTON_HIDE_LABEL = "Hide";
 				const int BUTTON_HIDE_WIDTH = 44;
 
-				const string CURRENT_SUFFIX = "current";
-				const float SUFFIX_OFFSET_WIDTH = 17.2f;
-				var isDefault = _dispatcher.Default.screen == screen && i == 0;
-
 				GUIHelper.PushLabelWidth(13);
 				EditorGUILayout.BeginHorizontal();
 				{
-					SirenixEditorFields.PolymorphicObjectField(i + ":", screen, typeof(IScreen), false);
-					if (!isDefault)
+					SirenixEditorFields.PolymorphicObjectField(i + ":", popover, typeof(IPopover), false);
+
+					if (GUILayout.Button(BUTTON_HIDE_LABEL, GUILayout.Width(BUTTON_HIDE_WIDTH)))
 					{
-						if (GUILayout.Button(BUTTON_HIDE_LABEL, GUILayout.Width(BUTTON_HIDE_WIDTH)))
-						{
-							_dispatcher.TryHide(screen);
-							return false;
-						}
+						//_dispatcher.TryHide(popover);
+						return false;
 					}
 				}
 				EditorGUILayout.EndHorizontal();
 
 				GUIHelper.PopLabelWidth();
-				if (current)
-				{
-					var offset = SUFFIX_OFFSET_WIDTH;
-					if (!isDefault)
-						offset += BUTTON_HIDE_WIDTH + 4f;
-					FusumityEditorGUILayout.SuffixLabel(CURRENT_SUFFIX, offset: offset);
-				}
 
-				if (screenArgs != null)
+				if (popoverArgs != null)
 				{
-					var foldout = _widgetToTree.widget == screen;
+					var foldout = _widgetToTree.widget == popover;
 
 					if (foldout && _widgetToTree.tree == null)
 					{
-						_widgetToTree.tree = PropertyTree.Create(screenArgs, SerializationBackend.Odin);
+						_widgetToTree.tree = PropertyTree.Create(popoverArgs, SerializationBackend.Odin);
 					}
 
 					var prevFoldout = foldout;
 					if (_widgetToTree.tree != null && _widgetToTree.tree.RootProperty.DrawCount > 0)
-						FusumityEditorGUILayout.FoldoutContainer(Header, Body, ref foldout, screen, useIndent: false);
+						FusumityEditorGUILayout.FoldoutContainer(Header, Body, ref foldout, popover, useIndent: false);
 					else
 						DrawArgsField();
 
@@ -98,7 +78,7 @@ namespace UI.Screens.Editor
 						Clear();
 						if (foldout)
 						{
-							_widgetToTree.widget = screen;
+							_widgetToTree.widget = popover;
 						}
 					}
 				}
@@ -117,7 +97,7 @@ namespace UI.Screens.Editor
 
 				void DrawArgsField()
 				{
-					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, screenArgs, screen.GetArgsType(), false);
+					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, popoverArgs, popover.GetArgsType(), false);
 				}
 
 				void Body()

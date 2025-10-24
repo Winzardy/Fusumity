@@ -13,43 +13,63 @@ namespace UI.Popovers
 	public interface IPopover : IWidget, IIdentifiable
 	{
 		public void RequestClose();
+		public Type GetArgsType();
+		internal object GetArgs();
 
 		internal event Action<IPopover> RequestedClose;
 
 		internal void Initialize(in UIPopoverConfig config);
 
-		internal void Show(IPopoverArgs args);
+		internal void Show(object args);
 
 		protected internal UIWidget Host { get; }
 		internal void Attach(UIWidget parent, RectTransform customAnchor = null);
 		internal void Detach();
 	}
 
-	public abstract class UIPopover<TLayout> : UIBasePopover<TLayout, EmptyPopoverArgs>
+	public abstract class UIPopover<TLayout> : UIBasePopover<TLayout, EmptyArgs>
 		where TLayout : UIBasePopoverLayout
 	{
 	}
 
 	public abstract class UIPopover<TLayout, TArgs> : UIBasePopover<TLayout, TArgs>
 		where TLayout : UIBasePopoverLayout
-		where TArgs : IPopoverArgs
+
 	{
+		private bool _suppressHide;
+
 		protected sealed override void OnShow() => OnShow(ref _args);
 
-		protected virtual void OnShow(ref TArgs args)
-		{
-		}
+		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (_suppressHide)
+				return;
+
+			OnHide(ref _args);
+		}
 
 		protected virtual void OnHide(ref TArgs args)
 		{
 		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	public abstract class UIBasePopover<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopover
 		where TLayout : UIBasePopoverLayout
-		where TArgs : IPopoverArgs
 	{
 		protected internal UIWidget _host;
 
@@ -141,7 +161,7 @@ namespace UI.Popovers
 			SetActive(false, true, false);
 		}
 
-		void IPopover.Show(IPopoverArgs boxedArgs)
+		void IPopover.Show(object boxedArgs)
 		{
 			if (boxedArgs != null)
 			{
@@ -181,6 +201,10 @@ namespace UI.Popovers
 			base.OnEndedClosingInternal();
 		}
 
+		public Type GetArgsType() => typeof(TArgs);
+
+		object IPopover.GetArgs() => _args;
+
 		public override void RequestClose() => RequestedClose?.Invoke(this);
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
@@ -191,7 +215,7 @@ namespace UI.Popovers
 				SetAnimator<DefaultPopoverAnimator<UIBasePopover<TLayout, TArgs>>>();
 		}
 
-		private TArgs UnboxedArgs(IPopoverArgs boxedArgs)
+		private TArgs UnboxedArgs(object boxedArgs)
 		{
 			if (boxedArgs == null)
 				throw GUIDebug.NullException($"Passed null args ({typeof(TArgs)}) to popup of type [{GetType()}]");
@@ -215,13 +239,5 @@ namespace UI.Popovers
 			_layout.transform
 				.SetParent(parentRectTransform, false);
 		}
-	}
-
-	public class EmptyPopoverArgs : IPopoverArgs
-	{
-	}
-
-	public interface IPopoverArgs
-	{
 	}
 }

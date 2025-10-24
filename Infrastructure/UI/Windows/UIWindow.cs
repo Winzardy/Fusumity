@@ -45,15 +45,36 @@ namespace UI.Windows
 	public abstract class UIWindow<TLayout, TArgs> : UIBaseWindow<TLayout, TArgs>
 		where TLayout : UIBaseWindowLayout
 	{
+		private bool _suppressHide;
+
 		protected sealed override void OnShow() => OnShow(ref _args);
 
 		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (_suppressHide)
+				return;
+
+			OnHide(ref _args);
+		}
 
 		protected virtual void OnHide(ref TArgs args)
 		{
 		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	public abstract class UIBaseWindow<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IWindow

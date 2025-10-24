@@ -9,7 +9,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace UI.Screens.Editor
 {
-	public class UIDispatcherEditorWindowTabAttributeProcessor : OdinAttributeProcessor<UIDispatcherEditorScreenTab>
+	public class UIDispatcherEditorScreenTabAttributeProcessor : OdinAttributeProcessor<UIDispatcherEditorScreenTab>
 	{
 		private static List<Type> _cachedExporterTypes;
 
@@ -26,17 +26,18 @@ namespace UI.Screens.Editor
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
 					attributes.Add(new HideLabelAttribute());
 
-					var className = nameof(UIDispatcherEditorWindowTabAttributeProcessor);
+					var className = nameof(UIDispatcherEditorScreenTabAttributeProcessor);
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
 				case nameof(UIDispatcherEditorScreenTab.args):
-					attributes.Add(new HideReferenceObjectPickerAttribute());
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
 					attributes.Add(new DarkCardBoxAttribute());
 					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.args), null));
+					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.ArgsVisible)));
+					//attributes.Add(new HideReferenceObjectPickerAttribute());
+					//attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.args), null));
 
 					break;
 

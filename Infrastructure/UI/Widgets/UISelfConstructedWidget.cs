@@ -106,7 +106,7 @@ namespace UI
 
 			_setupTemplateCts = new CancellationTokenSource();
 			_setupTemplateCts.Token
-			   .Register(OnTriggered);
+				.Register(OnTriggered);
 
 			try
 			{
@@ -162,12 +162,14 @@ namespace UI
 
 		private async UniTask SetupTemplateAndActivateAsync(bool immediate, CancellationToken cancellationToken)
 		{
+			OnBeforeSetupTemplate();
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested();
 
 			ClearTemplateSafe();
 
 			await SetupTemplateAsync(template, cancellationToken);
+			OnAfterSetupTemplate();
 			cancellationToken.ThrowIfCancellationRequested();
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
@@ -208,6 +210,14 @@ namespace UI
 				SetVisibleInternal(false);
 			}
 			DisableSuppress();
+		}
+
+		protected virtual void OnBeforeSetupTemplate()
+		{
+		}
+
+		protected virtual void OnAfterSetupTemplate()
+		{
 		}
 
 		private void ClearTemplateSafe()

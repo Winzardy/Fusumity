@@ -45,17 +45,36 @@ namespace UI.Popups
 	public abstract class UIPopup<TLayout, TArgs> : UIBasePopup<TLayout, TArgs>
 		where TLayout : UIBasePopupLayout
 	{
+		private bool _suppressHide;
+
 		protected sealed override void OnShow() => OnShow(ref _args);
 
-		protected virtual void OnShow(ref TArgs args)
-		{
-		}
+		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (_suppressHide)
+				return;
+
+			OnHide(ref _args);
+		}
 
 		protected virtual void OnHide(ref TArgs args)
 		{
 		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	public abstract class UIBasePopup<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopup
