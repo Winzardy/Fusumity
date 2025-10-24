@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Fusumity.Editor.Extensions;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
@@ -8,8 +6,6 @@ namespace UI.Screens.Editor
 {
 	public partial class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
 	{
-		private Type _argsType;
-
 		private UIScreenDispatcher _dispatcher => UIDispatcher.Get<UIScreenDispatcher>();
 		int IUIDispatcherEditorTab.Order => 3;
 
@@ -18,19 +14,7 @@ namespace UI.Screens.Editor
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
-		[TypeFilter(nameof(Args))]
-		public object args;
-
-		public bool ArgsVisible => _argsType != null;
-
-		private IEnumerable<Type> Args()
-		{
-			if (_argsType == null)
-				yield break;
-
-			foreach (var type in _argsType.GetInheritorTypes())
-				yield return type;
-		}
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -45,14 +29,13 @@ namespace UI.Screens.Editor
 				.MakeGenericMethod(type)
 				.Invoke(_dispatcher, new object[]
 				{
-					args
+					argsInspector.GetArgs()
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
-			_argsType = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -69,7 +52,7 @@ namespace UI.Screens.Editor
 			if (argsType == typeof(EmptyArgs))
 				return;
 
-			_argsType = argsType;
+			argsInspector.SetType(argsType);
 		}
 	}
 }

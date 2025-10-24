@@ -4,11 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
 using Sapientia;
-using Sapientia.Extensions.Reflection;
-using Sapientia.Reflection;
 using Sirenix.OdinInspector;
-using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities.Editor;
 using UI.Editor;
 using UnityEngine;
 
@@ -16,7 +12,6 @@ namespace UI.Popovers.Editor
 {
 	public partial class UIDispatcherEditorPopoverTab : IUIDispatcherEditorTab
 	{
-		private Type _argsType;
 		private UIPopoverDispatcher _dispatcher => UIDispatcher.Get<UIPopoverDispatcher>();
 
 		public string Title => "Popovers";
@@ -29,45 +24,7 @@ namespace UI.Popovers.Editor
 
 		public Toggle<RectTransform> customAnchor;
 
-		[HideInInspector]
-		public object args;
-
-		private (Type type, PropertyTree tree) _typeArgsToTree;
-
-		[OnInspectorGUI]
-		internal void OnArgsInspectorGUI()
-		{
-			if (_argsType == null)
-			{
-				TryClearTree();
-				return;
-			}
-
-			if (_typeArgsToTree.type != null && _argsType != _typeArgsToTree.type)
-			{
-				TryClearTree();
-				return;
-			}
-
-			_typeArgsToTree.type = _argsType;
-			args ??= System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
-			_typeArgsToTree.tree ??= PropertyTree.Create(args, SerializationBackend.Odin);
-
-			_typeArgsToTree.tree?.Draw(false);
-
-			if (_typeArgsToTree.tree != null)
-			{
-				args = _typeArgsToTree.tree.RootProperty.ValueEntry.WeakSmartValue;
-			}
-		}
-
-		private void TryClearTree()
-		{
-			args = null;
-			_typeArgsToTree.tree?.Dispose();
-			_typeArgsToTree.tree = null;
-			_typeArgsToTree.type = null;
-		}
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -92,18 +49,17 @@ namespace UI.Popovers.Editor
 					m.GetGenericArguments().Length == 1 &&
 					m.GetParameters().Length == 3)
 				.MakeGenericMethod(type)
-				.Invoke(_dispatcher, new object[]
+				.Invoke(_dispatcher, new[]
 				{
 					hostEntry.widget,
-					args,
+					argsInspector.GetArgs(),
 					anchor
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
-			_argsType = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -120,7 +76,7 @@ namespace UI.Popovers.Editor
 			if (argsType == typeof(EmptyArgs))
 				return;
 
-			_argsType = argsType;
+			argsInspector.SetType(argsType, true);
 		}
 
 		private void OnHostChanged()

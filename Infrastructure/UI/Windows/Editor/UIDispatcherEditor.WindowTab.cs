@@ -15,7 +15,7 @@ namespace UI.Windows.Editor
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
-		public object args;
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -26,17 +26,17 @@ namespace UI.Windows.Editor
 			}
 
 			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.GetMethod(nameof(_dispatcher.Show))?
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new object[]
 				{
-					args
+					argsInspector.GetArgs()
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -48,12 +48,12 @@ namespace UI.Windows.Editor
 			if (arguments.Length < 2)
 				return;
 
-			var type = arguments[1];
+			var argsType = arguments[1];
 
-			if (type == typeof(EmptyArgs))
+			if (argsType == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<object>();
+			argsInspector.SetType(argsType);
 		}
 	}
 }

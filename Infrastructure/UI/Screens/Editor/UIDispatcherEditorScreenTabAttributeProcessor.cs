@@ -6,6 +6,9 @@ using Fusumity.Attributes;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UI.Editor;
+using UnityEngine;
+using HideIfAttribute = Sirenix.OdinInspector.HideIfAttribute;
 
 namespace UI.Screens.Editor
 {
@@ -30,14 +33,12 @@ namespace UI.Screens.Editor
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
-				case nameof(UIDispatcherEditorScreenTab.args):
+				case nameof(UIDispatcherEditorScreenTab.argsInspector):
 					attributes.Add(new HideLabelAttribute());
-					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new DarkCardBoxAttribute());
-					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.ArgsVisible)));
-					//attributes.Add(new HideReferenceObjectPickerAttribute());
-					//attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorScreenTab.args), null));
+					attributes.Add(new HideIfAttribute(nameof(UIDispatcherEditorScreenTab.argsInspector),
+						UIWidgetArgsInspector.Empty));
+
+					attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/color"));
 
 					break;
 

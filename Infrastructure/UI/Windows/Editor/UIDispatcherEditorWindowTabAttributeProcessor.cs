@@ -31,13 +31,11 @@ namespace UI.Windows.Editor
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
-				case nameof(UIDispatcherEditorWindowTab.args):
-					attributes.Add(new HideReferenceObjectPickerAttribute());
+				case nameof(UIDispatcherEditorWindowTab.argsInspector):
 					attributes.Add(new HideLabelAttribute());
-					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new DarkCardBoxAttribute());
-					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorWindowTab.args), null));
+					attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/color"));
+					attributes.Add(new HideIfAttribute(nameof(UIDispatcherEditorWindowTab.argsInspector),
+						UIWidgetArgsInspector.Empty));
 
 					break;
 
@@ -59,7 +57,7 @@ namespace UI.Windows.Editor
 			foreach (var type in types)
 			{
 				var name = type.Name
-				   .Replace("Window", string.Empty);
+					.Replace("Window", string.Empty);
 
 				yield return new ValueDropdownItem(name, type);
 			}

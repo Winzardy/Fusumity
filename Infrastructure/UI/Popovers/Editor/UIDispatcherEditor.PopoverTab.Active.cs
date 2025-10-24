@@ -16,7 +16,10 @@ namespace UI.Popovers.Editor
 		[OnInspectorGUI]
 		private void OnInspectorGUI()
 		{
-			if (!_dispatcher.Active.Any())
+			if(!UIDispatcher.IsInitialized)
+				return;
+
+			if (_dispatcher == null || !_dispatcher.Active.Any())
 				return;
 
 			GUILayout.Space(12);

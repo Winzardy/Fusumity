@@ -7,6 +7,7 @@ using Fusumity.Utility;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UI.Editor;
 
 namespace UI.Popups.Editor
 {
@@ -31,14 +32,11 @@ namespace UI.Popups.Editor
 					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
-				case nameof(UIDispatcherEditorPopupTab.args):
-					attributes.Add(new HideReferenceObjectPickerAttribute());
+				case nameof(UIDispatcherEditorPopupTab.argsInspector):
 					attributes.Add(new HideLabelAttribute());
-					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new DarkCardBoxAttribute());
-					attributes.Add(new ShowInInspectorAttribute());
-					attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorPopupTab.args), null));
-
+					attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/color"));
+					attributes.Add(new HideIfAttribute(nameof(UIDispatcherEditorPopupTab.argsInspector),
+						UIWidgetArgsInspector.Empty));
 					break;
 
 				case nameof(UIDispatcherEditorPopupTab.Show):
@@ -59,7 +57,7 @@ namespace UI.Popups.Editor
 			foreach (var type in types)
 			{
 				var name = type.Name
-				   .Remove("Popup");
+					.Remove("Popup");
 
 				yield return new ValueDropdownItem(name, type);
 			}

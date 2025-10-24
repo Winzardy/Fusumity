@@ -7,6 +7,7 @@ using Fusumity.Utility;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UI.Editor;
 using UI.Popovers;
 using UnityEngine;
 
@@ -34,14 +35,12 @@ namespace UI.Popovers.Editor
 					attributes.Add(new ValueDropdownAttribute(typeExp));
 					break;
 
-				case nameof(UIDispatcherEditorPopoverTab.OnArgsInspectorGUI):
+				case nameof(UIDispatcherEditorPopoverTab.argsInspector):
+					attributes.Add(new HideLabelAttribute());
+					attributes.Add(new HideIfAttribute(nameof(UIDispatcherEditorPopoverTab.argsInspector),
+						UIWidgetArgsInspector.Empty));
+
 					AddToGroup();
-					// attributes.Add(new SpaceAttribute());
-					// attributes.Add(new HideReferenceObjectPickerAttribute());
-					// attributes.Add(new HideLabelAttribute());
-					// attributes.Add(new ShowInInspectorAttribute());
-					// attributes.Add(new ShowIfAttribute(nameof(UIDispatcherEditorPopoverTab.args), null));
-					//
 					break;
 
 				case nameof(UIDispatcherEditorPopoverTab.hostEntry):
@@ -72,7 +71,7 @@ namespace UI.Popovers.Editor
 			foreach (var type in types)
 			{
 				var name = type.Name
-				   .Remove("Popover");
+					.Remove("Popover");
 
 				yield return new ValueDropdownItem(name, type);
 			}
