@@ -9,7 +9,7 @@ namespace Notifications.iOS
 #if UNITY_IOS || UNITY_EDITOR
 	[TypeRegistryItem("iOS", icon: SdfIconType.Apple)]
 #endif
-	public class IOSPlatformNotificationEntry : IPlatformNotificationEntry
+	public class IOSPlatformNotificationConfig : IPlatformNotificationConfig
 	{
 #if UNITY_IOS || UNITY_EDITOR
 		//TODO: добавить категории

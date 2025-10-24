@@ -8,13 +8,13 @@ namespace Notifications
 	/// <summary>
 	/// Важно чтобы наследники этого интерфейса были доступны с любой платформы иначе сломается ассет!
 	/// </summary>
-	public interface IPlatformNotificationEntry
+	public interface IPlatformNotificationConfig
 	{
 	}
 
 	[Serializable]
 	[Constants]
-	public struct NotificationEntry
+	public struct NotificationConfig
 	{
 		[LocKey]
 		public string titleLocKey;
@@ -27,6 +27,6 @@ namespace Notifications
 
 		[Space]
 		[SerializeReference]
-		public IPlatformNotificationEntry[] platformEntries;
+		public IPlatformNotificationConfig[] platformEntries;
 	}
 }

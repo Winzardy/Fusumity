@@ -7,7 +7,7 @@ namespace Notifications
 		/// <summary>
 		/// Запланировать уведомление
 		/// </summary>
-		public void Schedule(in NotificationArgs args);
+		public bool Schedule(in NotificationArgs args);
 
 		/// <summary>
 		/// Отменить запланированное (scheduled) уведомление

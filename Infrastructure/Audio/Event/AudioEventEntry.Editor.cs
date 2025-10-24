@@ -7,7 +7,7 @@ using Sapientia.Pooling;
 namespace Audio
 {
 #if UNITY_EDITOR
-	public partial class AudioEventEntry
+	public partial class AudioEventConfig
 	{
 		public bool EditorIsPlay => _playCts != null;
 

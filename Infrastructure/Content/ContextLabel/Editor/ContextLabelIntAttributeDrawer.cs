@@ -108,7 +108,7 @@ namespace Content.ContextLabel.Editor
 			GUI.color = originalColor;
 
 			if (currentCatalog.TryGet(selectedKey, out var labelByKey))
-				FusumityEditorGUILayout.SuffixValue(label, selectedKey, labelByKey, style);
+				FusumityEditorGUILayout.SuffixValue(label, selectedKey, labelByKey, style, EditorStyles.label);
 
 			if (!_selector.show)
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretDownFill);

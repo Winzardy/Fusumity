@@ -51,6 +51,6 @@ namespace UI
 		[Tooltip("Список ассетов для предзагрузки при использовании этой верстки.")]
 		public List<AssetReferenceEntry> preloadAssets;
 
-		public bool HasFlag(LayoutAutomationMode mode) => automationMode.Has(mode);
+		public bool HasFlag(LayoutAutomationMode mode) => automationMode.HasFlags(mode);
 	}
 }

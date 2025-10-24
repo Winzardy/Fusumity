@@ -1,7 +1,7 @@
 ﻿using System;
 using Content;
 using Localization;
-using Notifications.Android.Entry;
+using Notifications.Android.Config;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Unity.Notifications.Android;
@@ -51,7 +51,7 @@ namespace Notifications.Android
 			//TODO: как вариант записывать string айди в IntentData. Так же могут быть нотификации не "игровые"
 		}
 
-		public void Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationArgs args)
 		{
 			TryRequestUserPermission();
 
@@ -60,7 +60,7 @@ namespace Notifications.Android
 			//TODO: Важно отметить что IntentData используется как контейнер для хранения айди, возможно надо будет это убрать
 			notification.IntentData = args.id;
 
-			var notificationEntry = args.entry;
+			var notificationEntry = args.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
 
 			var channel = AndroidNotificationChannelType.DEFAULT;
@@ -68,7 +68,7 @@ namespace Notifications.Android
 			if (args.repeatInterval.HasValue)
 				notification.RepeatInterval = args.repeatInterval.Value;
 
-			if (notificationEntry.TryGet<AndroidPlatformNotificationEntry>(out var platformEntry))
+			if (notificationEntry.TryGet<AndroidPlatformNotificationConfig>(out var platformEntry))
 			{
 				if (!platformEntry.channel.IsEmpty())
 					channel = platformEntry.channel.ToId();
@@ -99,11 +99,13 @@ namespace Notifications.Android
 				AndroidNotificationCenter.SendNotificationWithExplicitID(notification, channel, androidId);
 			else
 				_ids[args.id] = AndroidNotificationCenter.SendNotification(notification, channel);
+
+			return true;
 		}
 
 		private static void TryRequestUserPermission()
 		{
-			if(AndroidNotificationCenter.UserPermissionToPost == PermissionStatus.Allowed)
+			if (AndroidNotificationCenter.UserPermissionToPost == PermissionStatus.Allowed)
 				return;
 
 			if (!Permission.HasUserAuthorizedPermission(PERMISSION))
@@ -139,14 +141,14 @@ namespace Notifications.Android
 		{
 			//TODO: есть еще какие-то AndroidNotificationChannelGroup...
 
-			foreach (var (id, contentEntry) in ContentManager.GetAllEntries<AndroidNotificationChannelEntry>())
+			foreach (var (id, contentEntry) in ContentManager.GetAllEntries<AndroidNotificationChannelConfig>())
 			{
 				if (id.IsNullOrEmpty())
 					continue;
 
-				AndroidNotificationChannelEntry entry = contentEntry;
-				var name = entry.nameLocKey.IsNullOrEmpty() ? id : LocManager.Get(entry.nameLocKey);
-				var description = entry.descriptionLocKey.IsNullOrEmpty() ? name : LocManager.Get(entry.descriptionLocKey);
+				AndroidNotificationChannelConfig config = contentEntry;
+				var name = config.nameLocKey.IsNullOrEmpty() ? id : LocManager.Get(config.nameLocKey);
+				var description = config.descriptionLocKey.IsNullOrEmpty() ? name : LocManager.Get(config.descriptionLocKey);
 				var channel = new AndroidNotificationChannel()
 				{
 					Id = id,
@@ -154,14 +156,14 @@ namespace Notifications.Android
 					Name = name,
 					Description = description,
 
-					CanShowBadge = entry.canShowBadge,
-					CanBypassDnd = entry.canBypassDnd,
-					EnableLights = entry.enableLights,
-					EnableVibration = entry.enableVibration,
+					CanShowBadge = config.canShowBadge,
+					CanBypassDnd = config.canBypassDnd,
+					EnableLights = config.enableLights,
+					EnableVibration = config.enableVibration,
 					//TODO: добавить какие-нибудь темплейты...
-					VibrationPattern = entry.vibrationPattern,
-					Importance = entry.importance,
-					LockScreenVisibility = entry.lockScreenVisibility,
+					VibrationPattern = config.vibrationPattern,
+					Importance = config.importance,
+					LockScreenVisibility = config.lockScreenVisibility,
 				};
 
 				AndroidNotificationCenter.RegisterNotificationChannel(channel);

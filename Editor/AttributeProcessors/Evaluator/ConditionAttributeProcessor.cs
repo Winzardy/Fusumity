@@ -4,14 +4,15 @@ using System.Linq;
 using System.Reflection;
 using Fusumity.Attributes;
 using Fusumity.Editor.Utility;
-using Sapientia.Conditions;
+using Sapientia;
+using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 
 namespace Fusumity.Editor
 {
-	public class BlackboardConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<BlackboardCondition>
+	public class ConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<ICondition>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -19,16 +20,15 @@ namespace Fusumity.Editor
 
 			switch (member.Name)
 			{
-				case nameof(InvertableBlackboardCondition.invert):
-					//attributes.Add(new BoxGroupAttribute(Condition.BOX_GROUP, false));
-					attributes.Add(new HorizontalGroupAttribute(BlackboardCondition.GROUP, 23, marginRight: 2));
+				case "invert":
+					attributes.Add(new HorizontalGroupAttribute(ICondition.GROUP, 23, marginRight: 2));
 					attributes.Add(new LabelTextAttribute("!"));
 					attributes.Add(new LabelWidthAttribute(8));
 					attributes.Add(new TooltipAttribute("Инвертировать результат"));
 					break;
 
-				case nameof(CollectionCondition.mode):
-					attributes.Add(new HorizontalGroupAttribute(BlackboardCondition.GROUP));
+				case "mode":
+					attributes.Add(new HorizontalGroupAttribute(ICondition.GROUP));
 					break;
 			}
 		}
@@ -47,6 +47,9 @@ namespace Fusumity.Editor
 			{
 				attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
 			}
+
+			if (typeof(IProxyEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+				return;
 
 			color = Color.Lerp(Color.blue, Color.black, 0.83f);
 			if (attributes.FirstOrDefault(a => a is ColorCardBoxAttribute) is ColorCardBoxAttribute box)

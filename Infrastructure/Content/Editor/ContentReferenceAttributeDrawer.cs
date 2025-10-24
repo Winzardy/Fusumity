@@ -26,30 +26,10 @@ namespace Content.Editor
 		Reference
 	}
 
-	public class ContentReferenceDrawer : OdinValueDrawer<ContentReference>
+	public static class ContentReferenceConstants
 	{
 		public const string TOOLTIP_SPACE = "\n\n";
 		public const string TOOLTIP_SINGLE_SPACE = "\n";
-
-		private bool _guidRawMode;
-
-		protected override bool CanDrawValueProperty(InspectorProperty property)
-		{
-			if (ContentReferenceAttributeProcessor.propertyToContentReferenceAttribute.ContainsKey(property))
-				return false;
-
-			return base.CanDrawValueProperty(property);
-		}
-
-		protected override void DrawPropertyLayout(GUIContent label)
-		{
-			var output = FusumityEditorGUILayout.DrawGuidField(ValueEntry.SmartValue, label, ref _guidRawMode);
-
-			if (!GUI.enabled)
-				return;
-
-			ValueEntry.SmartValue = output;
-		}
 	}
 
 	public class ContentReferenceArrayAttributeDrawer : OdinAttributeDrawer<ContentReferenceAttribute, ContentReference[]>
@@ -105,7 +85,7 @@ namespace Content.Editor
 
 		private bool _nestedFoldout;
 
-		private bool? _found;
+		private (string key, IContentEntrySource source, int contentVersion) _found;
 
 		private Type _valueType;
 
@@ -240,7 +220,7 @@ namespace Content.Editor
 						guidStr = unique.Guid.ToString();
 
 						if (!targetLabel.tooltip.IsNullOrEmpty())
-							targetLabel.tooltip += ContentReferenceDrawer.TOOLTIP_SPACE;
+							targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 
 						targetLabel.tooltip += $"{TOOLTIP_PREFIX_GUID}{guidStr}";
 					}
@@ -252,8 +232,8 @@ namespace Content.Editor
 						{
 							if (!targetLabel.tooltip.IsNullOrEmpty())
 								targetLabel.tooltip += guidStr == string.Empty
-									? ContentReferenceDrawer.TOOLTIP_SPACE
-									: ContentReferenceDrawer.TOOLTIP_SINGLE_SPACE;
+									? ContentReferenceConstants.TOOLTIP_SPACE
+									: ContentReferenceConstants.TOOLTIP_SINGLE_SPACE;
 
 							targetLabel.tooltip += $"{TOOLTIP_PREFIX}{uniqueId}";
 						}
@@ -629,67 +609,70 @@ namespace Content.Editor
 
 		private IContentEntrySource FindSelectedSource(Type type, string id)
 		{
+			if (_found.key == id)
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(type, id, out var source))
 			{
-				_found = true;
+				_found = (id, source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(type, id, out source))
 			{
-				_found = true;
+				_found = (id, source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (id, null, ContentEditorCache.version);
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(Type type, in SerializableGuid guid)
 		{
+			if (_found.key == guid.ToString())
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(type, in guid, out var source))
 			{
-				_found = true;
+				_found = (guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(type, in guid, out source))
 			{
-				_found = true;
+				_found = (guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (guid.ToString(), null, ContentEditorCache.version);
 			return null;
 		}
 
 		private IContentEntrySource FindSelectedSource(IContentReference reference)
 		{
+			if (_found.key == reference.Guid.ToString())
+				if (_found.contentVersion == ContentEditorCache.version)
+					return _found.source;
+
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out var source))
 			{
-				_found = true;
+				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
-
-			if (_found ?? false)
-				return null;
 
 			ContentEditorCache.Refresh();
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
-				_found = true;
+				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
 				return source;
 			}
 
-			_found = false;
+			_found = (reference.Guid.ToString(), null, ContentEditorCache.version);
 			return null;
 		}
 	}

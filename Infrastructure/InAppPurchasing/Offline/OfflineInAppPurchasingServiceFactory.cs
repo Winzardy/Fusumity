@@ -64,7 +64,7 @@ namespace InAppPurchasing.Offline
 		}
 
 		public IEnumerable<string> GetAllTransactions() => LocalSave.Load(ALL_SAVE_KEY, new List<string>(0))
-		   .ToArray();
+			.ToArray();
 
 		private async UniTaskVoid SaveTransactionAsync()
 		{

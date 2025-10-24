@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace AssetManagement
@@ -10,15 +11,16 @@ namespace AssetManagement
 		where T : Component
 	{
 		[SerializeField]
-		private ComponentReference<T> _assetReference;
+		[FormerlySerializedAs("_assetReference")]
+		private ComponentReference<T> assetReference;
 
-		public override AssetReference AssetReference => _assetReference;
-		public static implicit operator bool(ComponentReferenceEntry<T> entry) => !entry.IsEmpty();
+		public override AssetReference AssetReference => assetReference;
+		public static implicit operator bool(ComponentReferenceEntry<T> entry) => !entry.IsEmptyOrInvalid();
 
 		public GameObject editorAsset
 		{
 #if UNITY_EDITOR
-			get => _assetReference.editorAsset;
+			get => assetReference.editorAsset;
 			set { this.SetEditorAsset(value); }
 #else
 			get => null;
@@ -37,7 +39,7 @@ namespace AssetManagement
 		public abstract AssetReference AssetReference { get; }
 
 		int IAssetReferenceEntry.ReleaseDelayMs => _releaseDelayMs;
-		public static implicit operator bool(ComponentReferenceEntry entry) => !entry.IsEmpty();
+		public static implicit operator bool(ComponentReferenceEntry entry) => !entry.IsEmptyOrInvalid();
 
 		public virtual Type AssetType => null;
 		public Object EditorAsset =>

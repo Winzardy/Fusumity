@@ -12,21 +12,21 @@ namespace Audio
 		/// </summary>
 		private static Dictionary<int, int> eventToPosition = new(8);
 
-		public static AudioTrackEntry[] RollPlaylist(this AudioEventEntry entry, int? hash = null)
+		public static AudioTrackScheme[] RollPlaylist(this AudioEventConfig config, int? hash = null)
 		{
-			if (entry.tracks.Length > 1)
+			if (config.tracks.Length > 1)
 			{
-				using (ListPool<AudioTrackEntry>.Get(out var result))
+				using (ListPool<AudioTrackScheme>.Get(out var result))
 				{
-					var range = entry.selectionRange;
+					var range = config.selectionRange;
 
-					switch (entry.selection)
+					switch (config.selection)
 					{
 						case SelectionMode.Random:
 
-							using (ListPool<AudioTrackEntry>.Get(out var list))
+							using (ListPool<AudioTrackScheme>.Get(out var list))
 							{
-								list.AddRange(entry.tracks);
+								list.AddRange(config.tracks);
 
 								for (int i = 0; i < range; i++)
 								{
@@ -41,37 +41,37 @@ namespace Audio
 							break;
 						case SelectionMode.ByOrder:
 
-							eventToPosition.TryGetValue(entry.GetHashCode(), out var globalPosition);
+							eventToPosition.TryGetValue(config.GetHashCode(), out var globalPosition);
 							for (int i = 0; i < range; i++)
 							{
-								result.Add(entry.tracks[globalPosition]);
+								result.Add(config.tracks[globalPosition]);
 								globalPosition++;
-								globalPosition = globalPosition >= entry.tracks.Length ? 0 : globalPosition;
-								eventToPosition[entry.GetHashCode()] = globalPosition;
+								globalPosition = globalPosition >= config.tracks.Length ? 0 : globalPosition;
+								eventToPosition[config.GetHashCode()] = globalPosition;
 							}
 
 							break;
 						case SelectionMode.ByLocalOrder:
-							var x = hash ?? entry.GetHashCode();
+							var x = hash ?? config.GetHashCode();
 
 							eventToPosition.TryGetValue(x, out var localPosition);
 							for (int i = 0; i < range; i++)
 							{
-								result.Add(entry.tracks[localPosition]);
+								result.Add(config.tracks[localPosition]);
 								localPosition++;
-								localPosition = localPosition >= entry.tracks.Length ? 0 : localPosition;
+								localPosition = localPosition >= config.tracks.Length ? 0 : localPosition;
 								eventToPosition[x] = localPosition;
 							}
 
 							break;
 
 						default:
-							result.AddRange(entry.tracks);
+							result.AddRange(config.tracks);
 							break;
 					}
 
-					if (entry.playMode == AudioPlayMode.Sequence &&
-					    entry.sequenceType == SequenceType.Shuffle &&
+					if (config.playMode == AudioPlayMode.Sequence &&
+					    config.sequenceType == SequenceType.Shuffle &&
 					    result.Count > 1)
 					{
 						result.Shuffle();
@@ -81,7 +81,7 @@ namespace Audio
 				}
 			}
 
-			return entry.tracks;
+			return config.tracks;
 		}
 	}
 }

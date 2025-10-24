@@ -89,7 +89,7 @@ namespace Trading.InAppPurchasing
 						var tradeEntry = offerEntry.trade.Read();
 						foreach (var cost in tradeEntry.cost)
 						{
-							if (cost is not IAPTradeCost iapTradeCost)
+							if (cost is not IInAppPurchasingTradeCost iapTradeCost)
 								continue;
 
 							var productEntry = iapTradeCost.GetProductEntry();

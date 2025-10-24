@@ -116,14 +116,14 @@ namespace UI
 				| DrivenTransformProperties.SizeDelta
 				| DrivenTransformProperties.Pivot);
 
-			var safeAreaXMin = _adjustEdges.Has(EdgeFlags.Left) ? _leftEdgesFactor * safeArea.xMin / width : 0;
-			var safeAreaYMin = _adjustEdges.Has(EdgeFlags.Bottom) ? _bottomEdgesFactor * safeArea.yMin / height : 0;
+			var safeAreaXMin = _adjustEdges.HasFlags(EdgeFlags.Left) ? _leftEdgesFactor * safeArea.xMin / width : 0;
+			var safeAreaYMin = _adjustEdges.HasFlags(EdgeFlags.Bottom) ? _bottomEdgesFactor * safeArea.yMin / height : 0;
 			var normalizedMin = new Vector2(safeAreaXMin, safeAreaYMin);
 
-			var safeAreaXMax = _adjustEdges.Has(EdgeFlags.Right)
+			var safeAreaXMax = _adjustEdges.HasFlags(EdgeFlags.Right)
 				? 1 - _rightEdgesFactor * (1 - safeArea.xMax / width)
 				: 1;
-			var safeAreaYMax = _adjustEdges.Has(EdgeFlags.Top)
+			var safeAreaYMax = _adjustEdges.HasFlags(EdgeFlags.Top)
 				? 1 - _topEdgesFactor * (1 - safeArea.yMax / height)
 				: 1;
 			var normalizedMax = new Vector2(safeAreaXMax, safeAreaYMax);

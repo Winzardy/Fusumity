@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Audio.Editor
 {
-	public class AudioSpatialEntryAttributeProcessor : OdinAttributeProcessor<AudioSpatialEntry>
+	public class AudioSpatialEntryAttributeProcessor : OdinAttributeProcessor<AudioSpatialScheme>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -20,24 +20,24 @@ namespace Audio.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AudioSpatialEntry.spread):
-					attributes.Add(new RangeAttribute(AudioSpatialEntry.SPREAD_MIN, AudioSpatialEntry.SPREAD_MAX));
+				case nameof(AudioSpatialScheme.spread):
+					attributes.Add(new RangeAttribute(AudioSpatialScheme.SPREAD_MIN, AudioSpatialScheme.SPREAD_MAX));
 					break;
 
-				case nameof(AudioSpatialEntry.dopplerLevel):
-					attributes.Add(new RangeAttribute(AudioSpatialEntry.DOPPLER_LEVEL_MIN, AudioSpatialEntry.DOPPLER_LEVEL_MAX));
+				case nameof(AudioSpatialScheme.dopplerLevel):
+					attributes.Add(new RangeAttribute(AudioSpatialScheme.DOPPLER_LEVEL_MIN, AudioSpatialScheme.DOPPLER_LEVEL_MAX));
 					break;
 
-				case nameof(AudioSpatialEntry.customRolloffCurve):
+				case nameof(AudioSpatialScheme.customRolloffCurve):
 					attributes.Add(new ShowIfAttribute($"@{nameof(AudioSpatialEntryAttributeProcessor)}." +
 						$"{nameof(IsCustomRolloffCurve)}($property)"));
 					break;
 
-				case nameof(AudioSpatialEntry.spatialBlend):
+				case nameof(AudioSpatialScheme.spatialBlend):
 					attributes.Add(new LabeledPropertyRangeAttribute(0, 1, "2D", "3D"));
 					break;
 
-				case nameof(AudioSpatialEntry.distance):
+				case nameof(AudioSpatialScheme.distance):
 					attributes.Add(new UnitParentAttribute(Units.Meter));
 					attributes.Add(new MinimumParentAttribute(0));
 					break;
@@ -46,7 +46,7 @@ namespace Audio.Editor
 
 		public static bool IsCustomRolloffCurve(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioSpatialEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioSpatialScheme entry)
 				return entry.rolloffMode == AudioRolloffMode.Custom;
 
 			return false;

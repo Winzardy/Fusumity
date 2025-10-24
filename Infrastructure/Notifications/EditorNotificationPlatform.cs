@@ -9,8 +9,13 @@ namespace Notifications
 	{
 		public event Action<string, string> NotificationReceived;
 
-		public void Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationArgs args)
 		{
+#if UNITY_EDITOR
+			return true;
+#else
+			return false;
+#endif
 		}
 
 		public void Cancel(string id)

@@ -26,7 +26,7 @@ namespace Notifications.Cheats
 
 		public override void Execute()
 		{
-			var entry = ContentManager.Get<NotificationEntry>(target);
+			var entry = ContentManager.Get<NotificationConfig>(target);
 
 			if (forceShowInForeground)
 				entry.showInForeground = true;
@@ -44,7 +44,7 @@ namespace Notifications.Cheats
 
 		private string[] GetNotifications()
 		{
-			return ContentManager.GetAllEntries<NotificationEntry>()
+			return ContentManager.GetAllEntries<NotificationConfig>()
 			   .Where(x => x is IUniqueContentEntry)
 			   .Select(x => ((IUniqueContentEntry) x).Id)
 			   .ToArray();

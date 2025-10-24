@@ -51,7 +51,7 @@ namespace Advertising.Fake
 			if (!_overlay)
 				return;
 
-			_overlay.CloseClicked += OnOverlayCloseClicked;
+			_overlay.CloseClicked -= OnOverlayCloseClicked;
 		}
 
 		public bool CanShowRewarded(AdPlacementEntry placement, out AdShowError? error)

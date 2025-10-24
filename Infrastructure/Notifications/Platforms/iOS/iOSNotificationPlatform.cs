@@ -29,7 +29,7 @@ namespace Notifications.iOS
 			NotificationReceived?.Invoke(notification.Identifier, notification.Data);
 		}
 
-		public void Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationArgs args)
 		{
 			var notification = new iOSNotification(args.id)
 			{
@@ -38,6 +38,7 @@ namespace Notifications.iOS
 			};
 
 			var date = args.deliveryTime!.Value;
+			var isUtc = date.Kind == DateTimeKind.Utc;
 			notification.Trigger = new iOSNotificationCalendarTrigger
 			{
 				Year = date.Year,
@@ -47,12 +48,16 @@ namespace Notifications.iOS
 				Minute = date.Minute,
 				Second = date.Second,
 				Repeats = false,
-				UtcTime = false
+				UtcTime = isUtc
 			};
 
-			var notificationEntry = args.entry;
+			//TODO: доработать кейс с бейджами (R&D)
+			notification.Badge = 1;
+
+			var notificationEntry = args.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
-			notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
+			if (notification.ShowInForeground)
+				notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
 
 			if (args.TryGet<IOSPlatformNotificationArgs>(out var platformArgs))
 				notification.Subtitle = platformArgs.subtitle;
@@ -64,6 +69,7 @@ namespace Notifications.iOS
 			//	notification.Attachments.Add(iconAttachment);
 
 			iOSNotificationCenter.ScheduleNotification(notification);
+			return true;
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);
@@ -85,7 +91,7 @@ namespace Notifications.iOS
 		public void OpenApplicationSettings() => iOSNotificationCenter.OpenNotificationSettings();
 
 		public string GetLastIntentNotificationId() => iOSNotificationCenter.QueryLastRespondedNotification()
-		   .Notification?.Identifier;
+			.Notification?.Identifier;
 
 		private void SetBadge(int amount) => iOSNotificationCenter.ApplicationBadge = amount;
 	}

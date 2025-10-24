@@ -27,24 +27,28 @@ namespace Content.Editor
 					if (propertyToContentReferenceAttribute.TryGetValue(parentProperty, out var contentReferenceAttribute))
 					{
 						attributes.Add(contentReferenceAttribute);
+						propertyToContentReferenceAttribute.Remove(parentProperty);
 					}
 
 					var type = parentProperty.ValueEntry.TypeOfValue;
-					if (type.IsGenericType || propertyToContentReferenceAttribute.ContainsKey(parentProperty))
-					{
-						if (propertyToGUIContent.TryGetValue(parentProperty, out var content))
-						{
-							if (!content.text.IsNullOrEmpty())
-								attributes.Add(new LabelTextAttribute(content.text));
-							else
-								attributes.Add(new HideLabelAttribute());
 
-							if (!content.tooltip.IsNullOrEmpty())
-								attributes.Add(new TooltipAttribute(content.tooltip));
-						}
+					if (propertyToGUIContent.TryGetValue(parentProperty, out var content))
+					{
+						if (!content.text.IsNullOrEmpty())
+							attributes.Add(new LabelTextAttribute(content.text));
 						else
 							attributes.Add(new HideLabelAttribute());
 
+						if (!content.tooltip.IsNullOrEmpty())
+							attributes.Add(new TooltipAttribute(content.tooltip));
+
+						propertyToGUIContent.Remove(parentProperty);
+					}
+					else
+						attributes.Add(new HideLabelAttribute());
+
+					if (type.IsGenericType)
+					{
 						var arguments = type.GetGenericArguments();
 						if (arguments.IsNullOrEmpty())
 							break;

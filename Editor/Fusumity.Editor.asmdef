@@ -5,7 +5,8 @@
         "Fusumity",
         "Sapientia",
         "Content",
-        "Unity.Addressables"
+        "Unity.Addressables",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor"

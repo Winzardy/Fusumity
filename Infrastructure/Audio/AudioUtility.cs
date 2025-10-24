@@ -26,8 +26,8 @@ namespace Audio
 			var x = (screenPoint.x / screenX) - 0.5f;
 			var y = (screenPoint.y / screenY) - 0.5f;
 
-			x *= minDistance ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN;
-			y *= minDistance ?? AudioSpatialEntry.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN;
+			x *= minDistance ?? AudioSpatialScheme.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN;
+			y *= minDistance ?? AudioSpatialScheme.DEFAULT_AUDIO_SPATIAL_DISTANCE_MIN;
 
 			var vector3 = new Vector3(x, y, 0);
 

@@ -5,17 +5,17 @@ using Unity.Notifications.Android;
 using Sirenix.OdinInspector;
 #endif
 
-namespace Notifications.Android.Entry
+namespace Notifications.Android.Config
 {
 	[System.Serializable]
 #if UNITY_ANDROID || UNITY_EDITOR
 	[TypeRegistryItem("Android", icon: SdfIconType.Robot)]
 #endif
-	public class AndroidPlatformNotificationEntry : IPlatformNotificationEntry
+	public class AndroidPlatformNotificationConfig : IPlatformNotificationConfig
 	{
 #if UNITY_ANDROID || UNITY_EDITOR
 		[InfoBox("Если не выбран, выбирается канал по дефолту")]
-		public ContentReference<AndroidNotificationChannelEntry> channel;
+		public ContentReference<AndroidNotificationChannelConfig> channel;
 
 		public NotificationStyle style;
 

@@ -7,7 +7,8 @@
         "Notifications.Android",
         "Generic",
         "Notification.Android.Entry",
-        "Notifications.Android.Entry"
+        "Notifications.Android.Entry",
+        "Notifications.Android.Config"
     ],
     "includePlatforms": [
         "Android",

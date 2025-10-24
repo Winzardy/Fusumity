@@ -36,7 +36,7 @@ namespace UI
 
 		public void TrySetSprite(Image image, IAssetReferenceEntry entry, Action callback = null, bool disableDuringLoad = false)
 		{
-			if (image == null || entry.IsEmpty())
+			if (image == null || entry.IsEmptyOrInvalid())
 				return;
 
 			if (disableDuringLoad)

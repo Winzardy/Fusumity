@@ -69,7 +69,20 @@ namespace Fusumity.Editor
 			}
 #endif
 
-			Process.Start(editorPath, fullPath);
+			try
+			{
+				var psi = new ProcessStartInfo
+				{
+					FileName = editorPath,
+					Arguments = $"\"{fullPath}\"",
+					UseShellExecute = false
+				};
+				Process.Start(psi);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError($"Failed to open file in IDE:\n{ex}");
+			}
 		}
 	}
 }
