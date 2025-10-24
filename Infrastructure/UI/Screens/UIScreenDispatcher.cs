@@ -121,6 +121,10 @@ namespace UI.Screens
 			where T : UIWidget, IScreen =>
 			_manager.Get<T>();
 
+		public bool TryGet<T>(out T screen)
+			where T : UIWidget, IScreen =>
+			_manager.TryGet(out screen);
+
 		/// <summary>
 		/// Попробовать закрыть текущее окно
 		/// </summary>

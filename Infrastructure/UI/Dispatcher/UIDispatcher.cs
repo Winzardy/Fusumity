@@ -3,7 +3,7 @@ using Sapientia;
 
 namespace UI
 {
-	public partial class UIDispatcher : StaticProvider<UIManagement>
+	public class UIDispatcher : StaticProvider<UIManagement>
 	{
 		private static UIManagement management
 		{

@@ -205,7 +205,7 @@ namespace UI.Screens
 				_screens.Remove(screen.GetType());
 		}
 
-		private bool TryGet<T>(out T screen)
+		internal bool TryGet<T>(out T screen)
 			where T : UIWidget, IScreen
 		{
 			screen = null;
