@@ -18,9 +18,9 @@ namespace UI
 		private HashSet<object> _requesters;
 		private HashSet<object> _blockers;
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _requesters);
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _blockers);

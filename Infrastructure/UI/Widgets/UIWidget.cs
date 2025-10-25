@@ -130,12 +130,6 @@ namespace UI
 		[EditorBrowsable(EditorBrowsableState.Advanced)]
 		public abstract void Initialize();
 
-		public sealed override void Dispose()
-		{
-			base.Dispose();
-			OnDisposeInternal();
-		}
-
 		public virtual void Reset(bool deactivate = true)
 		{
 			if (!UseCustomReset)
@@ -149,14 +143,17 @@ namespace UI
 		protected virtual void OnReset(bool deactivate)
 		{
 		}
-		
-		private protected virtual void OnDisposeInternal()
+
+		protected sealed override void OnDisposeInternal() => OnDisposedInternal();
+
+		private protected virtual void OnDisposedInternal()
 		{
 			DisposeChildren();
 
 			AsyncUtility.Trigger(ref _disposeCts);
 
 			GC.SuppressFinalize(this);
+			OnDispose();
 		}
 
 		public void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true)
@@ -273,7 +270,10 @@ namespace UI
 	}
 
 	public delegate void WidgetShownDelegate(IWidget widget);
+
 	public delegate void WidgetHiddenDelegate(IWidget widget);
+
 	public delegate void WidgetLayoutClearedDelegate([CanBeNull] UIBaseLayout layout);
+
 	public delegate void WidgetLayoutInstalledDelegate(UIBaseLayout layout);
 }

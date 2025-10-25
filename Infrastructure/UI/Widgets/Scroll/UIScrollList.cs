@@ -51,9 +51,9 @@ namespace UI.Scroll
 			OnItemInitialized(item);
 		}
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 
 			_data = null;
 			_cells = null;

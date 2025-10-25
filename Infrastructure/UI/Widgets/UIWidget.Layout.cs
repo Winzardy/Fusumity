@@ -102,14 +102,13 @@ namespace UI
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
 		/// обязательно нужно вызывать если переопределяем!
 		/// </remarks>
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
 			LayoutClearingInternal();
 
 			DisposeAndSetNullSafe(ref _animator);
 
-			OnDispose();
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 		}
 
 		public void SetSiblingIndex(int siblingIndex)

@@ -32,12 +32,12 @@ namespace UI
 
 		protected virtual string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
 			CancelSetupLayout();
 			LayoutClearingAndReleaseTemplateSafe();
 
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 		}
 
 		protected sealed override void OnActivatedInternal(bool immediate)

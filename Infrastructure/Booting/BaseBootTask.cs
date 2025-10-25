@@ -24,11 +24,6 @@ namespace Booting
 				return;
 
 			base.Dispose();
-			OnDispose();
-		}
-
-		protected virtual void OnDispose()
-		{
 		}
 
 		public virtual bool Active => true;

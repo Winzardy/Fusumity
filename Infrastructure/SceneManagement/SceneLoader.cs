@@ -19,8 +19,8 @@ namespace SceneManagement
 			Loading,
 		}
 
-		private const string ADDITIVE_SCENE_MARKER = "+";
-		private const string EMPTY_SCENE_MARKER = "\u2610";
+		private const string ADDITIVE_SCENE_MARKER = "additive";
+		private const string EMPTY_SCENE_MARKER = "empty";
 
 		public const string SUB_SCENE_POSTFIX = " (" + ADDITIVE_SCENE_MARKER + ")";
 		public const string EMPTY_SCENE_POSTFIX = " (" + ADDITIVE_SCENE_MARKER + ", " + EMPTY_SCENE_MARKER + ")";

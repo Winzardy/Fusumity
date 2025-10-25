@@ -52,9 +52,9 @@ namespace UI
 			_selection = new Selection<TToggleWidgetArgs>(OnSelected);
 		}
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 
 			_selection?.Dispose();
 		}
