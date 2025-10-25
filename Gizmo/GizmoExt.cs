@@ -14,9 +14,9 @@ namespace Game.Logic.Gizmo
 {
 	public static class GizmoExt
 	{
-		private const float HEIGHT = 0.5f;
+		private const float DEFAULT_HEIGHT = 0.5f;
 		private const int CIRCLE_PRECISE = 60;
-		private const int FRAMES_FOR_ONCE_DRAWING = 10;
+		public const int FRAMES_FOR_ONCE_DRAWING = 10;
 
 		private const float ARROW_HANDLE_ANGLE_RAD = FloatMathExt.DEG_TO_RAD * 20f;
 		private static readonly float3 ARROW_RIGHT_DIR = (new Rotation(ARROW_HANDLE_ANGLE_RAD).ToDirection() * 0.5f).XZ();
@@ -24,21 +24,11 @@ namespace Game.Logic.Gizmo
 
 		private static readonly Vector3[] CIRCLE_POINTS = new Vector3[CIRCLE_PRECISE];
 
-		private static readonly SimpleList<(float2 positionA, float2 positionB, Color color, int frames)> DRAW_LINES = new();
-		private static readonly SimpleList<(float2 basePos, float2[] points, Rotation rotation, Color color, int frames)> DRAW_POLYGONS = new();
-		private static readonly SimpleList<(float2 position, float radius, Color color, int frames)> DRAW_CIRCLES = new();
-		private static readonly SimpleList<(float2 position, float3 size, Color color, bool wire, int frames)> DRAW_SPHERES = new();
-		private static readonly SimpleList<(float2 position, Rotation rotation, float radius, float rad, Color color, int frames)> DRAW_SECTORS = new();
-		private static readonly SimpleList<(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color, int frames)> DRAW_CUT_SECTORS = new();
-		private static readonly SimpleList<(float2 position, Rotation rotation, float2 size, Color color, int frames)> DRAW_BOXES = new();
-		private static readonly SimpleList<(float2 position, Rotation rotation, float3 size, Color color, bool wire, int frames)> DRAW_CUBES = new();
-		private static readonly SimpleList<(float2 position, Rotation rotation, float2 size, Color color, int frames)> DRAW_ARROWS = new();
-
 		public static readonly Color ORANGE = new (1f, 0.5f, 0f, 1f);
 		public static readonly Color PURPLE = new (0.5f, 0f, 1f, 1f);
 		public static readonly Color JADE_WHISPER = new (0.3f, 0.8f, 0.6f, 1f);
 
-		public static bool IsEnabled { get; internal set; }
+		public static float Height => GizmoDrawer.Current == null ? DEFAULT_HEIGHT : GizmoDrawer.Current.Height;
 
 		public static Color GetRandomDebugColor()
 		{
@@ -83,275 +73,6 @@ namespace Game.Logic.Gizmo
 			gameObject.AddComponent<GizmoDrawer>();
 		}
 
-		public static void ClearGizmo()
-		{
-			for (var i = 0; i < DRAW_LINES.Count;)
-			{
-				var circle = DRAW_LINES[i];
-				if (circle.frames-- < 1)
-				{
-					DRAW_LINES.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_LINES[i] = circle;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_POLYGONS.Count;)
-			{
-				var circle = DRAW_POLYGONS[i];
-				if (circle.frames-- < 1)
-				{
-					DRAW_POLYGONS.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_POLYGONS[i] = circle;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_CIRCLES.Count;)
-			{
-				var circle = DRAW_CIRCLES[i];
-				if (circle.frames-- < 1)
-				{
-					DRAW_CIRCLES.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_CIRCLES[i] = circle;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_SPHERES.Count;)
-			{
-				var sphere = DRAW_SPHERES[i];
-				if (sphere.frames-- < 1)
-				{
-					DRAW_SPHERES.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_SPHERES[i] = sphere;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_SECTORS.Count;)
-			{
-				var sector = DRAW_SECTORS[i];
-				if (sector.frames-- < 1)
-				{
-					DRAW_SECTORS.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_SECTORS[i] = sector;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_CUT_SECTORS.Count;)
-			{
-				var sector = DRAW_CUT_SECTORS[i];
-				if (sector.frames-- < 1)
-				{
-					DRAW_CUT_SECTORS.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_CUT_SECTORS[i] = sector;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_BOXES.Count;)
-			{
-				var box = DRAW_BOXES[i];
-				if (box.frames-- < 1)
-				{
-					DRAW_BOXES.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_BOXES[i] = box;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_CUBES.Count;)
-			{
-				var cube = DRAW_CUBES[i];
-				if (cube.frames-- < 1)
-				{
-					DRAW_CUBES.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_CUBES[i] = cube;
-					i++;
-				}
-			}
-			for (var i = 0; i < DRAW_ARROWS.Count;)
-			{
-				var arrow = DRAW_ARROWS[i];
-				if (arrow.frames-- < 1)
-				{
-					DRAW_ARROWS.RemoveAtSwapBack(i);
-				}
-				else
-				{
-					DRAW_ARROWS[i] = arrow;
-					i++;
-				}
-			}
-		}
-
-		public static void DrawGizmo()
-		{
-			foreach (var line in DRAW_LINES)
-			{
-				DrawLine_TopDown(line.positionA, line.positionB, line.color);
-			}
-			foreach (var polygon in DRAW_POLYGONS)
-			{
-				DrawPolygon_TopDown(polygon.basePos, polygon.points, polygon.rotation, polygon.color);
-			}
-			foreach (var circle in DRAW_CIRCLES)
-			{
-				DrawCircle_TopDown(circle.position, circle.radius, circle.color);
-			}
-			foreach (var sphere in DRAW_SPHERES)
-			{
-				DrawSphere_TopDown(sphere.position, sphere.size, sphere.color, sphere.wire);
-			}
-			foreach (var sector in DRAW_SECTORS)
-			{
-				DrawSector_TopDown(sector.position, sector.rotation, sector.radius, sector.rad, sector.color);
-			}
-			foreach (var sector in DRAW_CUT_SECTORS)
-			{
-				DrawCutSector_TopDown(sector.position, sector.rotation, sector.minRadius, sector.maxRadius, sector.rad, sector.color);
-			}
-			foreach (var box in DRAW_BOXES)
-			{
-				DrawBox_TopDown(box.position, box.rotation, box.size, box.color);
-			}
-			foreach (var box in DRAW_CUBES)
-			{
-				DrawCube_TopDown(box.position, box.rotation, box.size, box.color, box.wire);
-			}
-			foreach (var arrow in DRAW_ARROWS)
-			{
-				DrawArrow_TopDown(arrow.position, arrow.rotation, arrow.size, arrow.color);
-			}
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawLineOnce_TopDown(float2 positionA, float2 positionB, Color color)
-		{
-			RequestDrawLine_TopDown(positionA, positionB, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawLine_TopDown(float2 positionA, float2 positionB, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_LINES.Add((positionA, positionB, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawPolygon_TopDown(float2 basePos, Span<float2> pointsSpan, Rotation rotation, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_POLYGONS.Add((basePos, pointsSpan.ToArray(), rotation, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawCircleOnce_TopDown(float2 position, float radius, Color color)
-		{
-			RequestDrawCircle_TopDown(position, radius, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawCircle_TopDown(float2 position, float radius, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_CIRCLES.Add((position, radius, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawSphere_TopDown(float2 position, float3 size, Color color, bool wire = false, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_SPHERES.Add((position, size, color, wire, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawCube_TopDown(float2 position, Rotation rotation, float3 size, Color color, bool wire = false, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_CUBES.Add((position, rotation, size, color, wire, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawSectorOnce_TopDown(float2 position, Rotation rotation, float radius, float rad, Color color)
-		{
-			RequestDrawSector_TopDown(position, rotation, radius, rad, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawSector_TopDown(float2 position, Rotation rotation, float radius, float rad, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_SECTORS.Add((position, rotation, radius, rad, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawCutSectorOnce_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color)
-		{
-			RequestDrawCutSector_TopDown(position, rotation, minRadius, maxRadius, rad, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawCutSector_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_CUT_SECTORS.Add((position, rotation, minRadius, maxRadius, rad, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawBoxOnce_TopDown(float2 position, Rotation rotation, float2 size, Color color)
-		{
-			RequestDrawBox_TopDown(position, rotation, size, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawBox_TopDown(float2 position, Rotation rotation, float2 size, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_BOXES.Add((position, rotation, size, color, frames));
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawArrowOnce_TopDown(float2 position, Rotation rotation, float2 size, Color color)
-		{
-			RequestDrawArrow_TopDown(position, rotation, size, color, FRAMES_FOR_ONCE_DRAWING);
-		}
-
-		[Conditional(E.UNITY_EDITOR)]
-		public static void RequestDrawArrow_TopDown(float2 position, Rotation rotation, float2 size, Color color, int frames = 1)
-		{
-			if (!IsEnabled)
-				return;
-			DRAW_ARROWS.Add((position, rotation, size, color, frames));
-		}
-
 		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawLine_TopDown(float2 positionA, float2 positionB, Color color)
 		{
@@ -359,7 +80,7 @@ namespace Game.Logic.Gizmo
 
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(positionA.XZ(HEIGHT), Quaternion.identity, new Vector3(delta.x, 1f, delta.y));
+			Gizmos.matrix = Matrix4x4.TRS(positionA.XZ(Height), Quaternion.identity, new Vector3(delta.x, 1f, delta.y));
 
 			var from = new Vector3(0, 0f, 0);
 			var to = new Vector3(1f, 0f, 1f);
@@ -380,7 +101,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(basePos.XZ(HEIGHT), rotation.ToQuaternion(), new Vector3(scale.x, scale.x, scale.y));
+			Gizmos.matrix = Matrix4x4.TRS(basePos.XZ(Height), rotation.ToQuaternion(), new Vector3(scale.x, scale.x, scale.y));
 
 			Span<Vector3> vectors = stackalloc Vector3[points.Count];
 			for (var i = 0; i < points.Count; i++)
@@ -398,7 +119,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), Quaternion.identity, new Vector3(radius, 1f, radius));
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, new Vector3(radius, 1f, radius));
 
 			Gizmos.DrawLineStrip(CIRCLE_POINTS, true);
 
@@ -410,7 +131,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), Quaternion.identity, size);
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, size);
 
 			if (wire)
 				Gizmos.DrawWireSphere(Vector3.zero, 0.5f);
@@ -427,7 +148,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.color = color;
 			// Don't use rotation.ToQuaternion because subsequent code calculates points in 2D.
 			// If we use rotation.ToQuaternion so we need to work with vector float2(0, 1) as rotation pivot point
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), quaternion.RotateY(-rotation), new Vector3(radius, 1f, radius));
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), quaternion.RotateY(-rotation), new Vector3(radius, 1f, radius));
 
 			var halfRad = rad / 2;
 			var precise = (CIRCLE_PRECISE * (rad / FloatMathExt.TWO_PI)).FloorToInt_Positive();
@@ -471,7 +192,7 @@ namespace Game.Logic.Gizmo
 			Gizmos.color = color;
 			// Don't use rotation.ToQuaternion because subsequent code calculates points in 2D.
 			// If we use rotation.ToQuaternion so we need to work with vector float2(0, 1) as rotation pivot point
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), quaternion.RotateY(-rotation), new Vector3(maxRadius, 1f, maxRadius));
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), quaternion.RotateY(-rotation), new Vector3(maxRadius, 1f, maxRadius));
 
 			var halfRad = rad / 2;
 			var minRadiusCoef = minRadius / maxRadius;
@@ -519,7 +240,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), rotation.ToQuaternion(), size.XZ(1f));
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), rotation.ToQuaternion(), size.XZ(1f));
 
 			var leftUp = new Vector3(-1f, 0f, 1f);
 			var rightUp = new Vector3(1f, 0f, 1f);
@@ -544,7 +265,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), rotation.ToQuaternion(), size);
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), rotation.ToQuaternion(), size);
 
 			if (wire)
 				Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
@@ -559,7 +280,7 @@ namespace Game.Logic.Gizmo
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(HEIGHT), rotation.ToQuaternion(), size.XZ(0f));
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), rotation.ToQuaternion(), size.XZ(0f));
 
 			var arrowHandle = (Span<Vector3>)stackalloc Vector3[3];
 			arrowHandle[0] = new float3(0.5f, 0f, 0f) - ARROW_RIGHT_DIR;
