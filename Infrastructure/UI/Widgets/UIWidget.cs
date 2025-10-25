@@ -149,7 +149,7 @@ namespace UI
 		protected virtual void OnReset(bool deactivate)
 		{
 		}
-
+		
 		private protected virtual void OnDisposeInternal()
 		{
 			DisposeChildren();
