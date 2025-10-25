@@ -8,20 +8,21 @@ namespace SceneManagement
 	{
 		private readonly Dictionary<string, SceneLoader> _nameToLoader = new();
 
-		public void LoadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
+		internal void LoadScene(string sceneName, bool activateScene,
+			Action<Scene> completeLoadCallback = null,
 			Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
 		{
 			var loader = GetOrCreateLoader(sceneName);
 			loader.LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 		}
 
-		public void UnloadScene(string sceneName, Action completeUnloadCallback = null)
+		internal void UnloadScene(string sceneName, Action completeUnloadCallback = null)
 		{
 			var loader = GetOrCreateLoader(sceneName);
 			loader.UnloadScene(completeUnloadCallback);
 		}
 
-		public void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
+		internal void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
 			Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
 		{
 			var loader = GetOrCreateLoader(sceneName);

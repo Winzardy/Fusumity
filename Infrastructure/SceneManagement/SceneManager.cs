@@ -23,7 +23,8 @@ namespace SceneManagement
 		public static void UnloadScene(string sceneName, Action completeUnloadCallback = null) =>
 			hub.UnloadScene(sceneName, completeUnloadCallback);
 
-		public static void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
+		public static void ReloadScene(string sceneName, bool activateScene, bool additive = false, bool empty = false,
+			Action<Scene> completeLoadCallback = null,
 			Action interruptLoadingCallback = null, Action completeUnloadCallback = null) =>
 			hub.ReloadScene(sceneName, activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 	}
