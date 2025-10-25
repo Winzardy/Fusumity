@@ -7,7 +7,7 @@ namespace Content
 	public static class UnityContentEntryExtensions
 	{
 		[CanBeNull]
-		public static UnityObject ToUnityContext<T>(this in ContentReference<T> reference)
+		public static UnityObject ToDebugContext<T>(this in ContentReference<T> reference)
 		{
 			if (!reference.IsValid())
 				return null;
