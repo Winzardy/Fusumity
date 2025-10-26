@@ -7,7 +7,7 @@ namespace Fusumity
 {
 	[Constants]
 	[Serializable]
-	public struct CameraRenderEntry
+	public struct CameraRenderSettings
 	{
 		public LayerMask cullingMask;
 

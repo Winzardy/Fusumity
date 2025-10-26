@@ -24,13 +24,13 @@ namespace UI
 		public static int DEFAULT_LAYER => LayerMask.NameToLayer(DEFAULT_LAYER_NAME);
 
 		public RenderTextureArgs renderTexture;
-		public CameraRenderEntry cameraRender;
+		public CameraRenderSettings cameraRender;
 
 		public int layer;
 
 		public static UITextureRendererArgs GetDefault(int layer)
 		{
-			var cameraEntry = ContentManager.Get<CameraRenderEntry>(DEFAULT_CAMERA_RENDER_ID);
+			var cameraEntry = ContentManager.Get<CameraRenderSettings>(DEFAULT_CAMERA_RENDER_ID);
 			cameraEntry.cullingMask |= 1 << layer;
 
 			return new()
@@ -48,6 +48,8 @@ namespace UI
 		private const string FOCUS_NAME = "Focus Point";
 
 		private UITextureRendererArgs _args;
+
+		private Camera _externalCamera;
 
 		private Camera _camera;
 		private RenderTexture _texture;
@@ -69,6 +71,9 @@ namespace UI
 		{
 			get
 			{
+				if (_externalCamera)
+					return _externalCamera;
+
 				if (_camera == null)
 					_camera = GetCameraAndSetup();
 
@@ -101,8 +106,10 @@ namespace UI
 			target.transform.SetLayerRecursive(_args.layer);
 		}
 
-		public RenderTexture Show()
+		public RenderTexture Show(Camera externalCamera = null)
 		{
+			_externalCamera = externalCamera;
+
 			if (!_texture)
 			{
 				_texture = new RenderTexture
@@ -129,6 +136,12 @@ namespace UI
 
 		public void Hide()
 		{
+			if (_externalCamera != null)
+			{
+				_externalCamera.targetTexture = null;
+				_externalCamera = null;
+			}
+
 			if (_camera)
 				_camera.enabled = false;
 		}
@@ -149,7 +162,6 @@ namespace UI
 		{
 			var camera = UICameraPool.Get();
 			camera.Setup(_args.cameraRender);
-
 			return camera;
 		}
 

@@ -10,7 +10,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Fusumity.Utility.Camera.Editor
 {
-	public class CameraEntryAttributeProcessor : OdinAttributeProcessor<CameraRenderEntry>
+	public class CameraEntryAttributeProcessor : OdinAttributeProcessor<CameraRenderSettings>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -18,8 +18,8 @@ namespace Fusumity.Utility.Camera.Editor
 
 			switch (member.Name)
 			{
-				case nameof(CameraRenderEntry.renderIndex):
-					attributes.Add(new ShowIfAttribute(nameof(CameraRenderEntry.useRenderIndex)));
+				case nameof(CameraRenderSettings.renderIndex):
+					attributes.Add(new ShowIfAttribute(nameof(CameraRenderSettings.useRenderIndex)));
 
 					var className = nameof(CameraEntryAttributeProcessor);
 					var methodName = nameof(GetURPRenderers);
