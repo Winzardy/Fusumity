@@ -19,11 +19,18 @@ namespace SceneManagement
 			Loading,
 		}
 
-		private const string ADDITIVE_SCENE_MARKER = "additive";
+		/// <summary>
+		/// Аддитивная сцена
+		/// </summary>
+		private const string SUB_SCENE_MARKER = "sub";
+
+		/// <summary>
+		/// Пустая значит, была создана в рантайме
+		/// </summary>
 		private const string EMPTY_SCENE_MARKER = "empty";
 
-		public const string SUB_SCENE_POSTFIX = " (" + ADDITIVE_SCENE_MARKER + ")";
-		public const string EMPTY_SCENE_POSTFIX = " (" + ADDITIVE_SCENE_MARKER + ", " + EMPTY_SCENE_MARKER + ")";
+		public const string SUB_SCENE_POSTFIX = " (" + SUB_SCENE_MARKER + ")";
+		public const string EMPTY_SCENE_POSTFIX = " (" + SUB_SCENE_MARKER + ", " + EMPTY_SCENE_MARKER + ")";
 
 		public readonly string sceneName;
 		public readonly LoadSceneMode loadSceneMode;
@@ -41,7 +48,7 @@ namespace SceneManagement
 		public SceneLoader(string sceneName)
 		{
 			this.sceneName = sceneName;
-			loadSceneMode = sceneName.Contains(ADDITIVE_SCENE_MARKER) ? LoadSceneMode.Additive : LoadSceneMode.Single;
+			loadSceneMode = sceneName.Contains(SUB_SCENE_MARKER) ? LoadSceneMode.Additive : LoadSceneMode.Single;
 			isEmptyScene = sceneName.Contains(EMPTY_SCENE_MARKER);
 
 			if (!isEmptyScene)
@@ -51,7 +58,13 @@ namespace SceneManagement
 		public void ReloadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null,
 			Action completeUnloadCallback = null)
 		{
-			UnloadScene(() => { LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback); });
+			UnloadScene(OnUnloaded);
+
+			void OnUnloaded()
+			{
+				completeUnloadCallback?.Invoke();
+				LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback);
+			}
 		}
 
 		public void LoadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null,
