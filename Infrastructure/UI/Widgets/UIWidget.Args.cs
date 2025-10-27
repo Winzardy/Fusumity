@@ -5,13 +5,23 @@ namespace UI
 {
 	public abstract class UIWidget<TLayout, TArgs> : UIWidget<TLayout>
 		where TLayout : UIBaseLayout
-		//where TArgs : struct
 	{
 		protected TArgs _args;
+
+		protected bool _equals;
 
 		private bool _clearedArgs = true;
 
 		public ref readonly TArgs args => ref _args;
+
+		public UIWidget()
+		{
+		}
+
+		public UIWidget(TLayout layout)
+		{
+			SetupLayout(layout);
+		}
 
 		public override void SetupLayout(TLayout layout)
 		{
@@ -61,8 +71,12 @@ namespace UI
 		/// <param name="equals">Проверяет новые аргументы с предыдущими, если они равны, то не обновляет</param>
 		public void Update(in TArgs args, bool equals = true)
 		{
+			_equals = equals;
+
 			//Зачем обновлять если там одно и тоже
-			if (equals && _args.Equals(args))
+			if (equals &&
+				_args != null &&
+				_args.Equals(args))
 				return;
 
 			var cacheActive = Active;
@@ -96,12 +110,26 @@ namespace UI
 		protected sealed override void OnShow()
 		{
 			_clearedArgs = false;
+
+			if (ShouldSkipActivation(in _args, out var reset))
+			{
+				if (reset)
+					Reset(false);
+				return;
+			}
+
 			OnShow(ref _args);
 		}
 
 		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (ShouldSkipActivation(in _args, out _))
+				return;
+
+			OnHide(ref _args);
+		}
 
 		/// <summary>
 		/// OnHide с аргументом, чтобы произвести отписку на данные из аргументов (по надобности),
@@ -127,5 +155,13 @@ namespace UI
 		protected virtual void OnSetupDefaultAnimator()
 		{
 		}
+
+		protected virtual bool ShouldSkipActivation(in TArgs args, out bool reset)
+		{
+			reset = true;
+			return args == null;
+		}
+
+		public static implicit operator TArgs(UIWidget<TLayout, TArgs> widget) => widget.args;
 	}
 }

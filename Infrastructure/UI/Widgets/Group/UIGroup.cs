@@ -9,7 +9,6 @@ namespace UI
 	public partial class UIGroup<TWidget, TWidgetLayout, TWidgetArgs> : UIWidget<UIGroupLayout>
 		where TWidget : UIWidget<TWidgetLayout, TWidgetArgs>
 		where TWidgetLayout : UIBaseLayout
-		where TWidgetArgs : struct
 	{
 		protected SimpleList<TWidgetArgs> _args;
 

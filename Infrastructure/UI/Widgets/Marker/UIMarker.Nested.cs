@@ -3,7 +3,6 @@ namespace UI
 	public class UIMarker<TWidget, TLayout, TArgs> : UIMarker<TArgs>
 		where TWidget : UIWidget<TLayout, TArgs>
 		where TLayout : UIBaseLayout
-		where TArgs : struct
 	{
 		private TWidget _widget;
 

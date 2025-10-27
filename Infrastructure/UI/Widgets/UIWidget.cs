@@ -10,57 +10,11 @@ using UnityEngine;
 
 namespace UI
 {
-	public interface IWidget : IDisposable
-	{
-		public event WidgetShownDelegate Shown;
-		public event WidgetHiddenDelegate Hidden;
-		public event WidgetLayoutInstalledDelegate LayoutInstalled;
-		public event WidgetLayoutClearedDelegate LayoutCleared;
-
-		/// <summary>
-		///Когда виджет активирован (начало анимации - начало закрывание)
-		/// </summary>
-		public bool Active { get; }
-
-		/// <summary>
-		///Когда виджет вообще виден на экране (начало анимации - конец анимации)
-		/// </summary>
-		public bool Visible { get; }
-
-		/// <summary>
-		/// Когда виджет проиграл анимацию открытия и уже полностью открыт
-		/// </summary>
-		public bool Open { get; }
-
-		public void Initialize()
-		{
-		}
-
-		public void Reset()
-		{
-		}
-
-		public void Refresh()
-		{
-		}
-
-		public void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true)
-		{
-		}
-
-		protected internal void SetVisible(bool value)
-		{
-		}
-
-		public bool IsActive() => Active;
-		public bool IsVisible() => Visible;
-		public bool IsOpen() => Open;
-	}
-
 	/// <summary>
-	/// Cтроительный блок-кирпичик, который может иметь внутри себя такие же вложенные Widget<br/>
-	/// Widget = Controller (MVC family) название взято для удобства, чтобы при использовании
-	/// было сразу ясно что идет речь именно о UI контроллере<br/>
+	/// Строительный блок-кирпичик, который может содержать вложенные Widget.<br/>
+	/// Widget совмещает роли View и Controller (MVC-семейство), но при передаче ViewModel извне
+	/// может выступать как чистая View<br/>
+	/// Название выбрано для удобства, чтобы сразу было понятно, что речь идёт о UI view<br/>
 	/// </summary>
 	public abstract partial class UIWidget : CompositeDisposable, IWidget
 	{
