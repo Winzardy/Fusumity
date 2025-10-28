@@ -61,7 +61,7 @@ namespace AssetManagement
 	{
 #if UNITY_EDITOR
 		/// <summary>
-		/// <see cref="AssetReferenceEntry{T}.AssetReferenceEditor"/>
+		/// <see cref="AssetReferenceEntry{T}.editorAsset"/>
 		/// </summary>
 		public const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif

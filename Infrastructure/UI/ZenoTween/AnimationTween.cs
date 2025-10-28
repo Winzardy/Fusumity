@@ -13,6 +13,7 @@ namespace ZenoTween
 	[Serializable]
 	public abstract class AnimationTween : SequenceParticipant
 	{
+		public const string CATEGORY_PATH = "Tween";
 		public enum Type
 		{
 			Join = 0,

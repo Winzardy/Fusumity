@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using AssetManagement.AddressableAssets.Editor;
 using Fusumity.Attributes;
-using Fusumity.Editor;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -91,11 +90,17 @@ namespace AssetManagement.Editor
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			if (Property.ParentValueProperty.ValueEntry.WeakSmartValue is not IAssetReferenceEntry assetReferenceEntry)
+			{
+				CallNextDrawer(label);
 				return;
+			}
 
 			var value = assetReferenceEntry.EditorAsset;
 			if (value == null)
+			{
+				CallNextDrawer(label);
 				return;
+			}
 
 			var originColor = GUI.color;
 			if (!assetReferenceEntry.AssetReference.IsPopulated())
