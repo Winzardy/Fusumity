@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UI
 {
-	public interface IWidget : IDisposable
+	public partial interface IWidget : IDisposable
 	{
 		/// <summary>
 		///Когда виджет активирован (начало анимации - начало закрывание)

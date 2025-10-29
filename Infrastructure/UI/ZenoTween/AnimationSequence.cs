@@ -10,7 +10,7 @@ namespace ZenoTween
 {
 	[Serializable]
 	[MovedFrom(true, sourceNamespace: "AnimationSequence", sourceAssembly: "Generic")]
-	[TypeRegistryItem(Icon = SdfIconType.CollectionPlayFill)]
+	[TypeRegistryItem(Icon = SdfIconType.CollectionPlayFill, CategoryPath = "/")]
 	public class AnimationSequence : AnimationTween
 	{
 		public enum TimeScaleMode

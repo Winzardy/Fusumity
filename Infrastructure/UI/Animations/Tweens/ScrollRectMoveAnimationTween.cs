@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace ZenoTween.Participant.Tweens.UI
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.SortDown)]
+	[TypeRegistryItem(Icon = SdfIconType.SortDown, CategoryPath = UIAnimationTweenConstants.TWEEN_CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens.UI",
@@ -18,7 +18,7 @@ namespace ZenoTween.Participant.Tweens.UI
 	{
 		public ScrollRect scroll;
 
-		[Minimum(0),Maximum(1)]
+		[Minimum(0), Maximum(1)]
 		public Vector2 to;
 
 		public Toggle<Vector2> from;
@@ -36,7 +36,7 @@ namespace ZenoTween.Participant.Tweens.UI
 					to,
 					duration
 				)
-			   .SetEase(ease);
+				.SetEase(ease);
 
 			if (from.enable)
 			{

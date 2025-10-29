@@ -9,6 +9,7 @@ namespace UI.Popups.Editor
 		private UIPopupDispatcher _dispatcher => UIDispatcher.Get<UIPopupDispatcher>();
 		int IUIDispatcherEditorTab.Order => 2;
 		public string Title => "Popups";
+		public SdfIconType? Icon => SdfIconType.ChatRightDots;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;

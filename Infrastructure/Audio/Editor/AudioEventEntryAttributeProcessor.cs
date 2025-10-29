@@ -27,7 +27,7 @@ namespace Audio.Editor
 				case nameof(AudioEventConfig.mixer):
 
 					attributes.Add(new PropertySpaceAttribute(0, 5));
-					attributes.Add(new ContentReferenceAttribute(typeof(AudioMixerGroupEntry)));
+					attributes.Add(new ContentReferenceAttribute(typeof(AudioMixerGroupConfig)));
 					break;
 
 				case nameof(AudioEventConfig.playMode):

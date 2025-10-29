@@ -11,6 +11,7 @@ namespace UI.Windows.Editor
 		int IUIDispatcherEditorTab.Order => 0;
 
 		public string Title => "Windows";
+		public SdfIconType? Icon => SdfIconType.Window;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;

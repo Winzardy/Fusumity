@@ -43,7 +43,7 @@ namespace UI.Popovers.Editor
 					AddToGroup();
 					break;
 
-				case nameof(UIDispatcherEditorPopoverTab.hostEntry):
+				case nameof(UIDispatcherEditorPopoverTab.host):
 					attributes.Add(new LabelTextAttribute("Host"));
 					AddToGroup();
 					break;

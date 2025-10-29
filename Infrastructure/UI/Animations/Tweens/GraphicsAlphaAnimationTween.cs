@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace ZenoTween.Participant.Tweens.UI
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.Grid)]
+	[TypeRegistryItem(Icon = SdfIconType.Grid, CategoryPath = UIAnimationTweenConstants.TWEEN_CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens.UI",

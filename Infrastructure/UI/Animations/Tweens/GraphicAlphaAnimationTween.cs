@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace ZenoTween.Participant.Tweens.UI
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.DiamondHalf)]
+	[TypeRegistryItem(Icon = SdfIconType.DiamondHalf, CategoryPath = UIAnimationTweenConstants.TWEEN_CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens.UI",

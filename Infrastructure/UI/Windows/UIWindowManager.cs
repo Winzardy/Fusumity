@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UI.Windows
 {
@@ -184,7 +185,7 @@ namespace UI.Windows
 			if (_current != window)
 				TryHideAndAddToQueue(_current);
 
-			_current = window;
+			SetCurrent(window);
 
 			Shown?.Invoke(window, fromQueue);
 		}
@@ -203,7 +204,7 @@ namespace UI.Windows
 			TryReleasePreloadedLayout(window);
 
 			Hide(window, fromQueue);
-			_current = null;
+			SetCurrent(null);
 
 			TryShowNext();
 		}
@@ -215,6 +216,14 @@ namespace UI.Windows
 
 			var (window, args) = _queue.Dequeue();
 			Show(window, args, true);
+		}
+
+		public void TryHideAll()
+		{
+			_queue.Clear();
+
+			_current?.Hide(false);
+			SetCurrent(null);
 		}
 
 		private void TryHideAndAddToQueue(IWindow window)
@@ -237,6 +246,11 @@ namespace UI.Windows
 			window.Hide(!fromQueue);
 
 			Hidden?.Invoke(window, fromQueue);
+		}
+
+		private void SetCurrent(IWindow window)
+		{
+			_current = window;
 		}
 
 		#region Delegates

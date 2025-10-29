@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Fusumity.Editor;
 using Fusumity.Utility;
+using Sapientia;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector.Editor;
@@ -47,7 +48,10 @@ namespace UI.Editor
 			using (ListPool<IUIDispatcherEditorTab>.Get(out var list))
 			{
 				foreach (var type in types)
-					list.Add(type.CreateInstance<IUIDispatcherEditorTab>());
+				{
+					var tab = type.CreateInstance<IUIDispatcherEditorTab>();
+					list.Add(tab);
+				}
 
 				list.Sort(Comparison);
 
@@ -69,7 +73,12 @@ namespace UI.Editor
 			var tree = new OdinMenuTree();
 
 			foreach (var tab in _tabs)
-				tree.Add(tab.Title, tab);
+			{
+				if (tab.Icon.TryGetValue(out var icon))
+					tree.Add(tab.Title, tab, icon);
+				else
+					tree.Add(tab.Title, tab);
+			}
 
 			return tree;
 		}

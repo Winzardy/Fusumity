@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AssetManagement;
 using Sirenix.OdinInspector;
 using UnityEngine.Audio;
+using UnityEngine.Serialization;
 
 namespace Audio
 {
@@ -27,7 +28,8 @@ namespace Audio
 		/// </summary>
 		public ResourceReferenceEntry<AudioMixer> reference;
 
+		[FormerlySerializedAs("entry")]
 		[HideLabel]
-		public AudioMixerGroupEntry entry;
+		public AudioMixerGroupConfig config;
 	}
 }

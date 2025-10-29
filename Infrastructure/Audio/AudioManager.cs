@@ -41,7 +41,7 @@ namespace Audio
 
 		public static AudioListener GetListener() => management.GetListener();
 
-		public static IEnumerable<(string, AudioMixerGroupEntry)> GetConfigurableMixers() => management.GetConfigurableMixer();
+		public static IEnumerable<(string, AudioMixerGroupConfig)> GetConfigurableMixers() => management.GetConfigurableMixer();
 
 		internal static void Subscribe(EventsType type, Action action) => management.Subscribe(type, action);
 		internal static void Unsubscribe(EventsType type, Action action) => management.Unsubscribe(type, action);

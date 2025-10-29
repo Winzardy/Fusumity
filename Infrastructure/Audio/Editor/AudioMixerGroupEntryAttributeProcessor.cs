@@ -8,7 +8,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace Audio.Editor
 {
-	public class AudioMixerGroupEntryAttributeProcessor : OdinAttributeProcessor<AudioMixerGroupEntry>
+	public class AudioMixerGroupEntryAttributeProcessor : OdinAttributeProcessor<AudioMixerGroupConfig>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -17,24 +17,24 @@ namespace Audio.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AudioMixerGroupEntry.useCustomPath):
+				case nameof(AudioMixerGroupConfig.useCustomPath):
 					attributes.Add(new PropertySpaceAttribute(10));
 					attributes.Add(new VerticalGroupAttribute("1"));
 					attributes.Add(new InfoBoxAttribute($"@{nameof(AudioMixerGroupEntryAttributeProcessor)}." +
 						$"{nameof(GetMessageCustomPath)}($property)", $"@{nameof(AudioMixerGroupEntryAttributeProcessor)}." +
 						$"{nameof(IsVisibleCustomMixerPath)}($property)"));
 					break;
-				case nameof(AudioMixerGroupEntry.customMixerPath):
+				case nameof(AudioMixerGroupConfig.customMixerPath):
 					attributes.Add(new VerticalGroupAttribute("1"));
-					attributes.Add(new ShowIfAttribute(nameof(AudioMixerGroupEntry.useCustomPath)));
+					attributes.Add(new ShowIfAttribute(nameof(AudioMixerGroupConfig.useCustomPath)));
 					break;
 
-				case nameof(AudioMixerGroupEntry.icon):
-				case nameof(AudioMixerGroupEntry.priority):
-					attributes.Add(new EnableIfAttribute(nameof(AudioMixerGroupEntry.configurable)));
+				case nameof(AudioMixerGroupConfig.icon):
+				case nameof(AudioMixerGroupConfig.priority):
+					attributes.Add(new EnableIfAttribute(nameof(AudioMixerGroupConfig.configurable)));
 					break;
 
-				case nameof(AudioMixerGroupEntry.useCustomVolumeExposedParameterName):
+				case nameof(AudioMixerGroupConfig.useCustomVolumeExposedParameterName):
 					attributes.Add(new PropertySpaceAttribute(10));
 					attributes.Add(new VerticalGroupAttribute("2"));
 					attributes.Add(new InfoBoxAttribute($"@{nameof(AudioMixerGroupEntryAttributeProcessor)}." +
@@ -43,9 +43,9 @@ namespace Audio.Editor
 						$"{nameof(IsVisibleCustomVolumeExposedParameterName)}($property)"));
 					break;
 
-				case nameof(AudioMixerGroupEntry.customVolumeExposedParameterName):
+				case nameof(AudioMixerGroupConfig.customVolumeExposedParameterName):
 					attributes.Add(new VerticalGroupAttribute("2"));
-					attributes.Add(new ShowIfAttribute(nameof(AudioMixerGroupEntry.useCustomVolumeExposedParameterName)));
+					attributes.Add(new ShowIfAttribute(nameof(AudioMixerGroupConfig.useCustomVolumeExposedParameterName)));
 					break;
 			}
 		}
@@ -60,9 +60,9 @@ namespace Audio.Editor
 
 		public static bool IsVisibleCustomMixerPath(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioMixerGroupEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioMixerGroupConfig entry)
 			{
-				if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IUniqueContentEntry<AudioMixerGroupEntry>
+				if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IUniqueContentEntry<AudioMixerGroupConfig>
 				    _)
 					return !entry.useCustomPath;
 
@@ -75,16 +75,16 @@ namespace Audio.Editor
 		public static string GetMessageCustomVolumeExposedParameterName(InspectorProperty property)
 		{
 			if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IIdentifiable identifiable)
-				return "Текущий путь: " + AudioMixerGroupEntry.GetExposedParameterName(identifiable.Id);
+				return "Текущий путь: " + AudioMixerGroupConfig.GetExposedParameterName(identifiable.Id);
 
 			return string.Empty;
 		}
 
 		public static bool IsVisibleCustomVolumeExposedParameterName(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioMixerGroupEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioMixerGroupConfig entry)
 			{
-				if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IUniqueContentEntry<AudioMixerGroupEntry>
+				if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IUniqueContentEntry<AudioMixerGroupConfig>
 				    _)
 					return !entry.useCustomVolumeExposedParameterName;
 

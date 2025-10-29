@@ -15,12 +15,13 @@ namespace UI.Popovers.Editor
 		private UIPopoverDispatcher _dispatcher => UIDispatcher.Get<UIPopoverDispatcher>();
 
 		public string Title => "Popovers";
+		public SdfIconType? Icon => SdfIconType.ChatSquareText;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
 		[OnValueChanged(nameof(OnHostChanged))]
-		public HostEntry hostEntry;
+		public UIWidgetInspector host;
 
 		public Toggle<RectTransform> customAnchor;
 
@@ -34,7 +35,7 @@ namespace UI.Popovers.Editor
 				return;
 			}
 
-			if (hostEntry.IsEmpty)
+			if (host.IsEmpty)
 			{
 				GUIDebug.LogError("Выберите хоста!");
 				return;
@@ -51,7 +52,7 @@ namespace UI.Popovers.Editor
 				.MakeGenericMethod(type)
 				.Invoke(_dispatcher, new[]
 				{
-					hostEntry.widget,
+					host.widget,
 					argsInspector.GetArgs(),
 					anchor
 				});
@@ -81,90 +82,7 @@ namespace UI.Popovers.Editor
 
 		private void OnHostChanged()
 		{
-			customAnchor = hostEntry.widget.RectTransform;
-		}
-
-		[Serializable]
-		[InlineProperty]
-		public struct HostEntry
-		{
-			private const char ZWSP = '\u200B'; // zero width space
-
-			private static MethodInfo _getBaseMethodInfo;
-
-			private static Dictionary<string, int> _pathToMatchCount = new();
-
-			[ShowInInspector, HideLabel, HorizontalGroup]
-			[ValueDropdown("@" + nameof(HostEntry) + "." + nameof(CollectAllWidgets) + "()")]
-			public UIWidget widget;
-
-			[ShowInInspector, HideLabel, HorizontalGroup(0.35f)]
-			public RectTransform Layout => widget?.RectTransform;
-
-			public bool IsEmpty => widget == null;
-			public static implicit operator UIWidget(HostEntry entry) => entry.widget;
-
-			private static IEnumerable<ValueDropdownItem<UIWidget>> CollectAllWidgets()
-			{
-				var allDispatcherTypes = ReflectionUtility.GetAllTypes<IWidgetDispatcher>();
-
-				foreach (var type in allDispatcherTypes)
-				{
-					_getBaseMethodInfo ??= typeof(UIDispatcher)
-						.GetMethods(BindingFlags.Public | BindingFlags.Static)
-						.First(m =>
-							m.Name == nameof(UIDispatcher.Get) &&
-							m.IsGenericMethodDefinition &&
-							m.GetGenericArguments().Length == 1 &&
-							m.GetParameters().Length == 0);
-
-					if (_getBaseMethodInfo == null)
-						continue;
-
-					var totalMethodInfo = _getBaseMethodInfo
-						.MakeGenericMethod(type);
-
-					if (totalMethodInfo.Invoke(null, null) is not IWidgetDispatcher dispatcher)
-						continue;
-
-					_pathToMatchCount.Clear();
-
-					foreach (var root in dispatcher.GetAllActive())
-					{
-						foreach (var item in EnumerateWithPaths(root, null))
-							yield return item;
-					}
-				}
-			}
-
-			private static IEnumerable<ValueDropdownItem<UIWidget>> EnumerateWithPaths(UIWidget node, string prefix)
-			{
-				if (node == null || !node.RectTransform)
-					yield break;
-
-				var postfix = node.Active
-					? ""
-					: " (inactive)";
-				var name = $"{node.RectTransform.name.Trim()}{postfix}";
-				var path = string.IsNullOrEmpty(prefix) ? name : $"{prefix}/{name}";
-
-				if (!_pathToMatchCount.TryAdd(path, 0))
-				{
-					_pathToMatchCount[path]++;
-					path += new string(ZWSP, _pathToMatchCount[path]);
-				}
-
-				yield return new ValueDropdownItem<UIWidget>(path, node);
-
-				if (node.Children != null)
-				{
-					foreach (var child in node.Children)
-					{
-						foreach (var item in EnumerateWithPaths(child, path))
-							yield return item;
-					}
-				}
-			}
+			customAnchor = host.Layout;
 		}
 	}
 }

@@ -18,7 +18,7 @@ namespace UI
 	}
 
 	/// <typeparam name="TLayout">Тип верстки</typeparam>
-	public abstract class UIWidget<TLayout> : UIWidget, IWidget<TLayout>
+	public abstract partial class UIWidget<TLayout> : UIWidget, IWidget<TLayout>
 		where TLayout : UIBaseLayout
 	{
 		private int _siblingIndex = -1;
@@ -427,7 +427,11 @@ namespace UI
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
 		/// обязательно нужно вызывать если переопределяем!
 		/// </remarks>
-		protected internal virtual void OnLayoutInstalledInternal() => OnLayoutInstalled();
+		protected internal virtual void OnLayoutInstalledInternal()
+		{
+			_layout.SignalReceived += OnLayoutSignalReceivedInternal;
+			OnLayoutInstalled();
+		}
 
 		/// <remarks>
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
@@ -435,6 +439,7 @@ namespace UI
 		/// </remarks>
 		protected internal virtual void OnLayoutClearedInternal()
 		{
+			_layout.SignalReceived -= OnLayoutSignalReceivedInternal;
 			LayoutCleared?.Invoke(_layout);
 			OnLayoutCleared();
 		}

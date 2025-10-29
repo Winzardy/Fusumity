@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace UI.Windows
@@ -90,6 +89,8 @@ namespace UI.Windows
 
 		public void TryHide(IWindow window)
 			=> _manager.TryHide(window);
+
+		public void TryHideAll() => _manager.TryHideAll();
 
 		/// <summary>
 		/// Попробовать закрыть текущее окно

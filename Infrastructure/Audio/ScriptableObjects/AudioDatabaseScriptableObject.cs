@@ -23,7 +23,7 @@ namespace Content.ScriptableObjects.Audio
 		{
 			foreach (var scriptableObject in scriptableObjects)
 			{
-				if (scriptableObject is not ContentEntryScriptableObject<AudioMixerGroupEntry> cast)
+				if (scriptableObject is not ContentEntryScriptableObject<AudioMixerGroupConfig> cast)
 					continue;
 
 				if (cast.Id != Value.MasterMixerName)

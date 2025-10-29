@@ -38,7 +38,7 @@ namespace Audio
 
 		private AudioMixer _master;
 
-		private (string id, AudioMixerGroupEntry entry) _masterMixer;
+		private (string id, AudioMixerGroupConfig entry) _masterMixer;
 
 		private Dictionary<string, AudioMixerGroupContainer> _idToMixerGroup = new();
 
@@ -84,11 +84,11 @@ namespace Audio
 			//Нужно подгрузить основной миксер и через Addressable он не работает, пришлось пойти через Resource
 			_master = await _settings.masterMixer.reference.LoadAsync(cancellationToken);
 
-			_masterMixer = (_master.name, _settings.masterMixer.entry);
+			_masterMixer = (_master.name, _settings.masterMixer.config);
 
 			SetVolume(_masterMixer.id, LoadMixerVolume(_masterMixer.id));
 
-			foreach (var (id, _) in ContentManager.GetAllEntries<AudioMixerGroupEntry>())
+			foreach (var (id, _) in ContentManager.GetAllEntries<AudioMixerGroupConfig>())
 				SetVolume(id, LoadMixerVolume(id));
 		}
 
@@ -236,9 +236,9 @@ namespace Audio
 		}
 
 		/// <returns>Normalized value (from 0 to 1)</returns>
-		private float GetVolume(string mixerId, AudioMixerGroupEntry entry)
+		private float GetVolume(string mixerId, AudioMixerGroupConfig config)
 		{
-			var parameterName = entry.GetVolumeExposedParameterName(mixerId);
+			var parameterName = config.GetVolumeExposedParameterName(mixerId);
 			if (_master.GetFloat(parameterName, out var volume))
 			{
 				var value = volume / 20;
@@ -271,10 +271,10 @@ namespace Audio
 				track.clipReference.Release();
 		}
 
-		private void SetVolume(string mixerId, AudioMixerGroupEntry entry, float normalizedValue, bool save = true)
+		private void SetVolume(string mixerId, AudioMixerGroupConfig config, float normalizedValue, bool save = true)
 		{
 			var clampedValue = Mathf.Clamp(normalizedValue, MIN_VOLUME_VALUE, 1);
-			var parameterName = entry.GetVolumeExposedParameterName(mixerId);
+			var parameterName = config.GetVolumeExposedParameterName(mixerId);
 			var db = IsMute(mixerId) ? MIN_VOLUME_VALUE_DB : Mathf.Log10(clampedValue) * 20;
 
 			if (!_master.SetFloat(parameterName, db))
@@ -305,8 +305,8 @@ namespace Audio
 			   .FirstOrDefault();
 		}
 
-		private AudioMixerGroupEntry GetMixerEntry(string mixerId) =>
-			mixerId == _masterMixer.id ? _masterMixer.entry : ContentManager.Get<AudioMixerGroupEntry>(mixerId);
+		private AudioMixerGroupConfig GetMixerEntry(string mixerId) =>
+			mixerId == _masterMixer.id ? _masterMixer.entry : ContentManager.Get<AudioMixerGroupConfig>(mixerId);
 
 		#region Engine
 
@@ -315,9 +315,9 @@ namespace Audio
 
 		#endregion
 
-		internal IEnumerable<(string, AudioMixerGroupEntry)> GetConfigurableMixer()
+		internal IEnumerable<(string, AudioMixerGroupConfig)> GetConfigurableMixer()
 		{
-			foreach (var (id, mixer) in ContentManager.GetAllEntries<AudioMixerGroupEntry>())
+			foreach (var (id, mixer) in ContentManager.GetAllEntries<AudioMixerGroupConfig>())
 			{
 				if (mixer.configurable)
 					yield return (id, mixer);

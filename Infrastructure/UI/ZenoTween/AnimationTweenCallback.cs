@@ -7,6 +7,8 @@ namespace ZenoTween.Participant.Callbacks
 	[Serializable]
 	public abstract class AnimationTweenCallback : SequenceParticipant
 	{
+		public const string CATEGORY_PATH = "Callback";
+
 		/// <summary>
 		/// Хак чтобы не вызывать некоторые калбеки при immediate
 		/// </summary>

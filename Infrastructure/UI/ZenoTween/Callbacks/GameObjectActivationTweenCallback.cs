@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ZenoTween.Participant.Callbacks
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.Toggles)]
+	[TypeRegistryItem(Icon = SdfIconType.Toggles, CategoryPath = CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Callbacks",

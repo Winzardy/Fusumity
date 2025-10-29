@@ -10,6 +10,7 @@ namespace UI.Screens.Editor
 		int IUIDispatcherEditorTab.Order => 3;
 
 		public string Title => "Screens";
+		public SdfIconType? Icon => SdfIconType.Display;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;

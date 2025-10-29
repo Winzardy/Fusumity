@@ -109,7 +109,7 @@ namespace UI
 		/// <summary>
 		/// Аналог SetActive(false), но дополнительно сбрасывает аргументы
 		/// </summary>
-		public void Hide(bool reset = true, bool immediate = false)
+		public void Hide(bool reset = false, bool immediate = false)
 		{
 			if (!Active)
 				return;

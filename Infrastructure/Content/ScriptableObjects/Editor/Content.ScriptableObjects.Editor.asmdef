@@ -18,7 +18,8 @@
         "Generic",
         "Fusumity.Editor",
         "Fusumity",
-        "Content.ScriptableObjects.Importer"
+        "Content.ScriptableObjects.Importer",
+        "UI"
     ],
     "includePlatforms": [
         "Editor"
