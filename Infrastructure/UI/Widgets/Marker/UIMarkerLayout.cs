@@ -10,8 +10,10 @@ namespace UI
 
 		[Space]
 		public RectTransform arrow;
-
 		public RectTransform pivot;
+
+		[Space]
+		public StateSwitcher<bool> offscreenStateSwitcher;
 
 		[Space]
 		public UIBaseLayout nested;
