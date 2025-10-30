@@ -39,7 +39,8 @@ namespace Content.ScriptableObjects.Editor
 
 			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
 			[ShowInInspector, LabelText("Result")]
-			[SerializeReference, ReadOnly]
+			[SerializeReference, Indent(-1)]
+			[Searchable]
 			public List<IContentEntry> deserializeResult;
 
 			public string BuildOutputPath { get; set; }
