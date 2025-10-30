@@ -92,8 +92,8 @@ namespace Content
 	internal class SerializeReference<T> : ISerializeReference<T>
 	{
 		[FormerlySerializedAs("_value")]
-		[SerializeField, SerializeReference, ClientOnly]
-		private T value;
+		[SerializeReference, ClientOnly]
+		public T value;
 
 		ref T ISerializeReference<T>.Value => ref value;
 	}
