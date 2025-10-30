@@ -54,27 +54,28 @@ namespace Content.ScriptableObjects.Editor
 			foreach (var (database, index) in dbs.WithIndex())
 			{
 				var moduleName = database.ToLabel();
-				var list = new List<IContentEntry>();
-
-				EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, moduleName, index / (float) dbs.Count);
-
-				database.Fill(list, true, Filter);
-
-				using (ListPool<IContentEntry>.Get(out var nested))
+				using (ListPool<IContentEntry>.Get(out var list))
 				{
-					database.Fill(nested); // TODO: вернуть Filter, убрал на время пока
-					for (int j = 0; j < nested.Count; j++)
-						if (!nested[j].Nested.IsNullOrEmpty())
-							foreach (var (_, member) in nested[j].Nested)
-							{
-								var uniqueContentEntry = member.Resolve(nested[j]);
-								if (Filter(uniqueContentEntry))
-									list.Add(uniqueContentEntry);
-							}
-				}
+					EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, moduleName, index / (float) dbs.Count);
 
-				if (list.Count > 0)
-					contentJsonObject.Add(moduleName, list);
+					database.Fill(list, true, Filter);
+
+					using (ListPool<IContentEntry>.Get(out var nested))
+					{
+						database.Fill(nested); // TODO: вернуть Filter, убрал на время пока
+						for (int j = 0; j < nested.Count; j++)
+							if (!nested[j].Nested.IsNullOrEmpty())
+								foreach (var (_, member) in nested[j].Nested)
+								{
+									var uniqueContentEntry = member.Resolve(nested[j]);
+									if (Filter(uniqueContentEntry))
+										list.Add(uniqueContentEntry);
+								}
+					}
+
+					if (list.Count > 0)
+						contentJsonObject.Add(moduleName, list);
+				}
 			}
 
 			EditorUtility.DisplayProgressBar(ContentDatabaseExport.DISPLAY_PROGRESS_TITLE, "Json File", 0.9f);
