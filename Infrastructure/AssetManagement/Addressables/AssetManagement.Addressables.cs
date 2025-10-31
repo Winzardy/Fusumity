@@ -58,38 +58,42 @@ namespace AssetManagement
 
 		private async UniTask<T> LoadAssetAsync<T>(AssetReference assetReference, CancellationToken cancellationToken)
 		{
-			if (!assetReference.RuntimeKeyIsValid())
+			var context = assetReference.GetEditorAssetSafe();
+			if (!assetReference.IsRuntimeValid())
 			{
-				AssetManagementDebug.LogError("Asset Reference invalid");
-				return default;
+				var exception = AssetManagementDebug.Exception($"Invalid asset reference by type [ {typeof(T)} ]");
+				AssetManagementDebug.LogException(exception, context);
+				throw exception;
 			}
 
 			var key = assetReference.RuntimeKey;
-			return await LoadAssetAsyncByKey<T>(key, cancellationToken);
+			return await LoadAssetAsyncByKey<T>(key, cancellationToken, context);
 		}
 
 		private async UniTask<T> LoadComponentAsync<T>(AssetReference assetReference, CancellationToken cancellationToken)
 		{
-			if (!assetReference.RuntimeKeyIsValid())
+			var context = assetReference.GetEditorAssetSafe();
+			if (!assetReference.IsRuntimeValid())
 			{
-				AssetManagementDebug.LogError("Component reference invalid");
-				return default;
+				var exception = AssetManagementDebug.Exception($"Invalid component reference by type [ {typeof(T)} ]");
+				AssetManagementDebug.LogException(exception, context);
+				throw exception;
 			}
 
 			var key = assetReference.RuntimeKey;
-			return await LoadComponentByKeyAsync<T>(key, cancellationToken, assetReference.GetEditorAssetSafe());
+			return await LoadComponentByKeyAsync<T>(key, cancellationToken, context);
 		}
 
-		private async UniTask<T> LoadComponentByKeyAsync<T>(object key, CancellationToken cancellationToken, UnityObject debugObj = null)
+		private async UniTask<T> LoadComponentByKeyAsync<T>(object key, CancellationToken cancellationToken, UnityObject context = null)
 		{
-			var asset = await LoadAssetAsyncByKey<GameObject>(key, cancellationToken);
+			var asset = await LoadAssetAsyncByKey<GameObject>(key, cancellationToken, context);
 
 			if (!asset.TryGetComponent(out T component))
 			{
-				AssetManagementDebug.LogError($"Component reference invalid (missing type: {typeof(T)})", debugObj);
-
+				var exception = AssetManagementDebug.Exception($"Invalid component reference by type [ {typeof(T)} ]");
+				AssetManagementDebug.LogException(exception, context);
 				ReleaseAssetByKey(key);
-				return default;
+				throw exception;
 			}
 
 			return component;
@@ -103,7 +107,7 @@ namespace AssetManagement
 			return default;
 		}
 
-		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken)
+		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken, UnityObject context = null)
 		{
 			var usedAsset = await FindOrWaitUsedAssetByKeyAsync<T>(key, cancellationToken);
 
@@ -111,18 +115,18 @@ namespace AssetManagement
 				return usedAsset;
 
 			var handle = Addressables.LoadAssetAsync<T>(key);
+
 			if (!handle.IsValid())
 			{
-				AssetManagementDebug.LogError($"Failed to load asset: handle by key [ {key} ] is invalid.");
+				AssetManagementDebug.LogError($"Failed to load asset: handle by key [ {key} ] is invalid", context);
 				return default;
 			}
 
 			_keyToAssetContainer[key] = new AssetContainer(key, handle);
 
-
 			var (isCanceled, asset) = await handle
-			   .WithCancellation(cancellationToken)
-			   .SuppressCancellationThrow();
+				.WithCancellation(cancellationToken)
+				.SuppressCancellationThrow();
 
 			if (isCanceled)
 			{
@@ -132,7 +136,7 @@ namespace AssetManagement
 					$"\n	Exception: {handle.OperationException}" +
 					$"\n	Status: {handle.Status}" +
 					$"\n	Debug: {handle.DebugName}"
-				);
+					, context);
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
@@ -144,8 +148,8 @@ namespace AssetManagement
 					$"\n	Exception: {handle.OperationException}" +
 					$"\n	Status: {handle.Status}" +
 					$"\n	Debug: {handle.DebugName}"
-				);
-				throw new Exception("Failed to load asset");
+					, context);
+				throw AssetManagementDebug.Exception("Failed to load asset");
 			}
 
 			return asset;
@@ -174,7 +178,7 @@ namespace AssetManagement
 			_keyToAssetCollectionContainer[key] = new AssetsContainer(key, handle);
 
 			var (isCanceled, assets) = await handle.WithCancellation(cancellationToken)
-			   .SuppressCancellationThrow();
+				.SuppressCancellationThrow();
 
 			if (isCanceled)
 			{
