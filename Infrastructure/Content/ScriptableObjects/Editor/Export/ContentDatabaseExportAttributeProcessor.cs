@@ -41,7 +41,7 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new HideReferenceObjectPickerAttribute());
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-
+					attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/card"));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new ShowIfAttribute(ContentDatabaseExport.ARGS_FIELD_NAME, null));
 
