@@ -1,6 +1,8 @@
 using System.Linq;
 using System.Reflection;
+using Messaging;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 
 namespace UI.Editor.Signal
@@ -11,12 +13,18 @@ namespace UI.Editor.Signal
 		public int Order => -100;
 		public SdfIconType? Icon => SdfIconType.Wifi;
 
-		public UIWidgetInspector inspector;
-
 		public string signalName;
+		public UIWidgetInspector inspector;
 
 		internal void Send()
 		{
+			if (inspector.IsEmpty)
+			{
+				new SignalMessage(signalName)
+					.Send();
+				return;
+			}
+
 			var type = inspector.widget?.GetType();
 			type?.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 				.First(m =>
@@ -28,6 +36,6 @@ namespace UI.Editor.Signal
 				});
 		}
 
-		internal bool CanSend => !signalName.IsNullOrEmpty() && !inspector.IsEmpty;
+		internal bool CanSend => !signalName.IsNullOrEmpty();
 	}
 }

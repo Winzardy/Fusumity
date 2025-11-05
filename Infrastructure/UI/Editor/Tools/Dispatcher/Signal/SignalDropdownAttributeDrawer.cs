@@ -10,7 +10,6 @@ using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.ValueResolvers;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace UI.Editor.Signal

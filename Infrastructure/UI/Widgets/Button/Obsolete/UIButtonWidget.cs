@@ -11,9 +11,11 @@ namespace UI
 	/// <summary>
 	/// Дефолтный виджет, для сложных кейсов есть Generic
 	/// </summary>
+
+	[Obsolete("Используйте UIButton")]
 	public class UIButtonWidget : UIButtonWidget<UILabeledButtonLayout, UIButtonWidget.Args>
 	{
-		public struct Args : IButtonArgs
+		public struct Args : IObseleteButtonViewModel
 		{
 			public AssetReferenceEntry<Sprite> IconReference { get; set; }
 
@@ -37,7 +39,7 @@ namespace UI
 		}
 	}
 
-	public interface IButtonArgs
+	public interface IObseleteButtonViewModel
 	{
 		public AssetReferenceEntry<Sprite> IconReference { get; }
 
@@ -62,7 +64,7 @@ namespace UI
 
 	public class UIButtonWidget<TLayout, TArgs> : UIWidget<TLayout, TArgs>, IButtonWidget, IClickable<IButtonWidget>
 		where TLayout : UILabeledButtonLayout
-		where TArgs : struct, IButtonArgs
+		where TArgs : IObseleteButtonViewModel
 	{
 		private Sprite _defaultIconSprite;
 		private string _defaultLabelText;
@@ -80,11 +82,19 @@ namespace UI
 
 		public event Action<IButtonWidget> Clicked;
 
+		public UIButtonWidget() : base()
+		{
+		}
+
+		public UIButtonWidget(TLayout layout) : base(layout)
+		{
+		}
+
 		protected internal sealed override void OnLayoutInstalledInternal()
 		{
 			Create(out _spriteAssigner);
 			Create(out _localizationAssigner)
-			   .Updated += OnPlaceholderUpdated;
+				.Updated += OnPlaceholderUpdated;
 
 			_localizationAssigner.SetTextSafe(_layout);
 
@@ -138,7 +148,7 @@ namespace UI
 		//Если вопрос почему internal? разная подсветка Extensions и обычных методов :P
 		internal void Subscribe(Action action) => _clicked += action;
 
-		internal void Unsubscribe(Action action) => _clicked += action;
+		internal void Unsubscribe(Action action) => _clicked -= action;
 
 		internal void SetAction(Action action) => _action = action;
 
@@ -149,8 +159,8 @@ namespace UI
 		public void SetLabel(LocText locText, string label)
 		{
 			var locLabel = locText.IsEmpty() && _layout.locInfo
-					? _layout.locInfo.value
-					: locText;
+				? _layout.locInfo.value
+				: locText;
 
 			_layout.label.SetTextSafe(
 				_localizationAssigner,

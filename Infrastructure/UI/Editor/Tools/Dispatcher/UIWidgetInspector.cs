@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
+using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -54,7 +55,18 @@ namespace UI.Editor
 						return selector;
 					});
 
-				widget = selected?.FirstOrDefault() ?? current;
+				if (selected == null)
+				{
+				}
+				else if (!selected.Any())
+				{
+					widget = null;
+				}
+				else
+				{
+					widget = selected.FirstOrDefault();
+				}
+
 				GUIHelper.PushGUIEnabled(false);
 				{
 					EditorGUILayout.ObjectField(Layout, typeof(RectTransform));
@@ -66,6 +78,7 @@ namespace UI.Editor
 
 		private static IEnumerable<GenericSelectorItem<UIWidget>> CollectAllWidgets()
 		{
+			yield return new GenericSelectorItem<UIWidget>("None", null);
 			var allDispatcherTypes = ReflectionUtility.GetAllTypes<IWidgetDispatcher>();
 
 			foreach (var type in allDispatcherTypes)

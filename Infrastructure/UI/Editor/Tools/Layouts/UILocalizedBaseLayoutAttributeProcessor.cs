@@ -16,7 +16,7 @@ namespace UI.Editor
 
 			var target = parentProperty.ValueEntry.WeakSmartValue as UILocalizedBaseLayout;
 
-			if (target!.Placeholder && ReferenceEquals(target.GetReflectionValue(member.Name), target!.Placeholder))
+			if (target!.Label && ReferenceEquals(target.GetReflectionValue(member.Name), target!.Label))
 				attributes.Add(new VerticalGroupAttribute(nameof(UILocalizedBaseLayout)));
 
 			switch (member.Name)
@@ -35,7 +35,7 @@ namespace UI.Editor
 		public static bool ShowLocInfo(InspectorProperty property)
 		{
 			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is UILocalizedBaseLayout layout)
-				return layout.Placeholder;
+				return layout.Label;
 			return false;
 		}
 	}

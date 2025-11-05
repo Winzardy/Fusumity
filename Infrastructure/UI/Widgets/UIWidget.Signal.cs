@@ -1,8 +1,9 @@
-﻿namespace UI
+﻿using Sapientia.Utility;
+
+namespace UI
 {
-	public partial interface IWidget
+	public partial interface IWidget : ISignalReceiver
 	{
-		public bool Signal(string name);
 	}
 
 	public abstract partial class UIWidget

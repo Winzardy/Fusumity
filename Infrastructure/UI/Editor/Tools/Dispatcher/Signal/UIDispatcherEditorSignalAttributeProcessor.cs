@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Game;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
@@ -21,8 +22,10 @@ namespace UI.Editor.Signal
 					attributes.Add(new BoxGroupAttribute("Box", showLabel: false));
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal"));
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
-					attributes.Add(new HideLabelAttribute());
-
+					attributes.Add(new LabelTextAttribute("Target"));
+					attributes.Add(new InfoBoxAttribute(
+						"При пустом Target сигнал перехватывает системная логика; " +
+						"если выбран виджет — он становится получателем."));
 					break;
 
 				case nameof(UIDispatcherEditorSignalTab.signalName):
@@ -50,7 +53,11 @@ namespace UI.Editor.Signal
 			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is UIDispatcherEditorSignalTab tab)
 			{
 				if (tab.inspector.IsEmpty)
+				{
+					foreach (var p in EnumerateDefaultSignals())
+						yield return p;
 					yield break;
+				}
 
 				var widgetType = tab.inspector.widget.GetType();
 
@@ -90,6 +97,28 @@ namespace UI.Editor.Signal
 					if (!string.IsNullOrEmpty(value) && seen.Add(value))
 						yield return value!;
 				}
+			}
+		}
+
+		private static IEnumerable<string> EnumerateDefaultSignals()
+		{
+			var seen = new HashSet<string>(StringComparer.Ordinal);
+
+			foreach (var f in typeof(Signals).GetFields(
+				BindingFlags.Public | BindingFlags.NonPublic |
+				BindingFlags.Static | BindingFlags.FlattenHierarchy))
+			{
+				if (f.FieldType != typeof(string)) continue;
+
+				string value = null;
+
+				if (f.IsLiteral && !f.IsInitOnly)
+					value = (string) f.GetRawConstantValue();
+				else if (f.IsStatic)
+					value = (string) f.GetValue(null);
+
+				if (!string.IsNullOrEmpty(value) && seen.Add(value))
+					yield return value!;
 			}
 		}
 	}

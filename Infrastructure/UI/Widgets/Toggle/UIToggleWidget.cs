@@ -26,7 +26,7 @@ namespace UI
 		}
 	}
 
-	public interface IToggleArgs : IButtonArgs
+	public interface IToggleArgs : IObseleteButtonViewModel
 	{
 		public bool IsOn { get; set; }
 

@@ -46,13 +46,35 @@ namespace UI.Popups
 		where TLayout : UIBasePopupLayout
 	{
 		private bool _suppressHide;
+		private bool _clearedArgs;
 
-		protected sealed override void OnShow() => OnShow(ref _args);
+		protected sealed override void OnShow()
+		{
+			_clearedArgs = false;
+
+			if (ShouldSkipActivation(in _args, out var reset))
+			{
+				if (reset)
+					Reset(false);
+				return;
+			}
+
+			if (_args is IRequestClose closable)
+				closable.RequestedClose += RequestClose;
+
+			OnShow(ref _args);
+		}
 
 		protected abstract void OnShow(ref TArgs args);
 
 		protected sealed override void OnHide()
 		{
+			if (ShouldSkipActivation(in _args, out _))
+				return;
+
+			if (_args is IRequestClose closable)
+				closable.RequestedClose -= RequestClose;
+
 			if (_suppressHide)
 				return;
 
@@ -72,6 +94,25 @@ namespace UI.Popups
 			}
 
 			_suppressHide = _args == null;
+		}
+
+		protected override void OnReset(bool deactivate)
+		{
+			if (deactivate)
+				SetActive(false, true);
+			else if (Active && !_clearedArgs)
+				OnHide(); //Отписка со старым args!
+
+			_args = default;
+			_clearedArgs = true;
+
+			base.OnReset(deactivate);
+		}
+
+		protected virtual bool ShouldSkipActivation(in TArgs args, out bool reset)
+		{
+			reset = true;
+			return args == null;
 		}
 
 		protected override void OnAfterSetupTemplate() => _suppressHide = false;
@@ -96,6 +137,8 @@ namespace UI.Popups
 		event Action<IPopup> IPopup.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
 		protected override string Layer => LayerType.POPUPS;
+
+		protected ref TArgs vm => ref _args;
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);

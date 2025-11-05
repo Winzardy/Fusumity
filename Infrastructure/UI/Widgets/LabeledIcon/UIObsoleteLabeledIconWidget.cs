@@ -1,10 +1,12 @@
-﻿using AssetManagement;
+﻿using System;
+using AssetManagement;
 using Localization;
 using UnityEngine;
 
 namespace UI
 {
-	public class UILabeledIconWidget : UIWidget<UILabeledIconWidgetLayout, UILabeledIconWidget.Args>
+	[Obsolete("Лучше использовать UILabeledIcon")]
+	public class UIObsoleteLabeledIconWidget : UIWidget<UIObsoleteLabeledIconWidgetLayout, UIObsoleteLabeledIconWidget.Args>
 	{
 		public struct Args
 		{

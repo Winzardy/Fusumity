@@ -13,6 +13,7 @@ namespace UI
 		private bool _clearedArgs = true;
 
 		public ref readonly TArgs args => ref _args;
+		public ref readonly TArgs vm => ref _args;
 
 		public UIWidget()
 		{

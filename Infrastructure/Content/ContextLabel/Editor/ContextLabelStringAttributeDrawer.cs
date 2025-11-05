@@ -106,7 +106,7 @@ namespace Content.ContextLabel.Editor
 			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.TextField(textFieldPosition, label, selectedKey, style);
 			GUI.color = originalColor;
 
-			if (currentCatalog.TryGet(selectedKey, out var labelByKey))
+			if (!selectedKey.IsNullOrEmpty() && currentCatalog.TryGet(selectedKey, out var labelByKey))
 				FusumityEditorGUILayout.SuffixValue(label, selectedKey, labelByKey, style,EditorStyles.label);
 
 			if (!_selector.show)

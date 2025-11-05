@@ -47,12 +47,21 @@ namespace UI.Windows
 	{
 		private bool _suppressHide;
 
-		protected sealed override void OnShow() => OnShow(ref _args);
+		protected sealed override void OnShow()
+		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose += RequestClose;
+
+			OnShow(ref _args);
+		}
 
 		protected abstract void OnShow(ref TArgs args);
 
 		protected sealed override void OnHide()
 		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose -= RequestClose;
+
 			if (_suppressHide)
 				return;
 

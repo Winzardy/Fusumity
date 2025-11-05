@@ -17,21 +17,25 @@ namespace UI
 		private ISpinner _spinner;
 
 		//Чтобы не аллоцировать Dictionary для единичных случаев!
-		private (Image placeholder, IAssetReferenceEntry entry) _single;
-		private Dictionary<Image, IAssetReferenceEntry> _placeholderToEntry;
+		private (Image image, IAssetReferenceEntry assetRef) _single;
+		private Dictionary<Image, IAssetReferenceEntry> _imageToAssetRef;
+
+		private bool _disposed;
 
 		public void Dispose()
 		{
-			_single.entry?.Release();
+			_disposed = true;
 
-			if (_placeholderToEntry.IsNullOrEmpty())
+			_single.assetRef?.Release();
+
+			if (_imageToAssetRef.IsNullOrEmpty())
 				return;
 
-			foreach (var entry in _placeholderToEntry.Values)
+			foreach (var entry in _imageToAssetRef.Values)
 				entry.Release();
 
-			_placeholderToEntry?.ReleaseToStaticPool();
-			_placeholderToEntry = null;
+			_imageToAssetRef?.ReleaseToStaticPool();
+			_imageToAssetRef = null;
 		}
 
 		public void TrySetSprite(Image image, IAssetReferenceEntry entry, Action callback = null, bool disableDuringLoad = false)
@@ -48,29 +52,29 @@ namespace UI
 			SetSprite(image, entry, callback);
 		}
 
-		public void SetSprite(IEnumerable<Image> placeholders, IAssetReferenceEntry entry)
+		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry entry)
 		{
-			foreach (var placeholder in placeholders)
+			foreach (var placeholder in images)
 				SetSprite(placeholder, entry);
 		}
 
-		public void SetSprite(Image placeholder, IAssetReferenceEntry entry, Action callback = null)
+		public void SetSprite(Image image, IAssetReferenceEntry entry, Action callback = null)
 		{
-			if (_single.placeholder != null)
+			if (_single.image != null)
 			{
-				if (TryUpdateSingle(placeholder, entry, callback))
+				if (TryUpdateSingle(image, entry, callback))
 					return;
 			}
 			else
 			{
-				_single = (placeholder, entry);
-				LoadAndPlaceAsync(placeholder, entry, callback).Forget();
+				_single = (image, assetRef: entry);
+				LoadAndPlaceAsync(image, entry, callback).Forget();
 				return;
 			}
 
-			_placeholderToEntry ??= DictionaryPool<Image, IAssetReferenceEntry>.Get();
+			_imageToAssetRef ??= DictionaryPool<Image, IAssetReferenceEntry>.Get();
 
-			if (_placeholderToEntry.TryGetValue(placeholder, out var entryByPlaceholder))
+			if (_imageToAssetRef.TryGetValue(image, out var entryByPlaceholder))
 			{
 				//Какой смысл если там и так такой ассет
 				if (entryByPlaceholder == entry)
@@ -82,24 +86,25 @@ namespace UI
 				entryByPlaceholder?.Release();
 			}
 
-			_placeholderToEntry[placeholder] = entry;
-			LoadAndPlaceAsync(placeholder, entry, callback).Forget();
+			_imageToAssetRef[image] = entry;
+			LoadAndPlaceAsync(image, entry, callback).Forget();
 		}
 
-		private bool TryUpdateSingle(Image placeholder, IAssetReferenceEntry entry, Action callback = null)
+		private bool TryUpdateSingle(Image image, IAssetReferenceEntry entry, Action callback = null)
 		{
-			if (_single.placeholder == placeholder)
+			if (_single.image == image)
 			{
 				//Какой смысл если там и так такой ассет
-				if (_single.entry == entry)
+				if (_single.assetRef == entry)
 				{
 					callback?.Invoke();
 					return true;
 				}
 
-				_single.entry?.Release();
-				_single.entry = entry;
-				LoadAndPlaceAsync(placeholder, entry, callback).Forget();
+				_single.assetRef?.Release();
+				_single.assetRef = entry;
+				LoadAndPlaceAsync(image, entry, callback)
+					.Forget();
 				return true;
 			}
 
@@ -111,32 +116,39 @@ namespace UI
 			_spinner = spinner;
 		}
 
-		public void TryCancelOrClear(Image placeholder)
+		public void TryCancelOrClear(Image image)
 		{
-			if (_single.placeholder == placeholder)
+			if (_single.image == image)
 			{
-				_single.entry?.Release();
-				_single.entry = null;
+				_single.assetRef?.Release();
+				_single.assetRef = null;
 
-				_single.placeholder = null;
+				_single.image = null;
 				return;
 			}
 
-			if (_placeholderToEntry.IsNullOrEmpty())
+			if (_imageToAssetRef.IsNullOrEmpty())
 				return;
 
-			if (!_placeholderToEntry.TryGetValue(placeholder, out var entryByPlaceholder))
+			if (!_imageToAssetRef.TryGetValue(image, out var entryByPlaceholder))
 				return;
 
 			entryByPlaceholder?.Release();
-			_placeholderToEntry.Remove(placeholder);
+			_imageToAssetRef.Remove(image);
 		}
 
-		private async UniTaskVoid LoadAndPlaceAsync(Image placeholder, IAssetReferenceEntry entry, Action callback = null)
+		private async UniTaskVoid LoadAndPlaceAsync(Image image, IAssetReferenceEntry entry, Action callback = null)
 		{
 			_spinner?.SetActive(true);
 			var sprite = await entry.LoadAsync<Sprite>();
-			placeholder.sprite = sprite;
+
+			if (_disposed || !image)
+			{
+				_spinner?.SetActive(false);
+				return;
+			}
+
+			image.sprite = sprite;
 			callback?.Invoke();
 			_spinner?.SetActive(false);
 		}

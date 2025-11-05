@@ -27,17 +27,17 @@ namespace ZenoTween.Participant.Tweens
 		[Space]
 		public float duration = 0.5f;
 
+		[PropertySpace(0,10)]
 		public Ease ease = Ease.Linear;
 
-		[Space]
-		[ReadOnly, Obsolete]
+		[FoldoutGroup("Obsolete"), Obsolete]
 		public Transform target;
 
-		[ReadOnly, Obsolete]
+		[FoldoutGroup("Obsolete"), Obsolete]
 		public bool useStartTarget;
 
 		[ShowIf(nameof(useStartTarget))]
-		[ReadOnly, Obsolete]
+		[FoldoutGroup("Obsolete"), Obsolete]
 		public Transform startTarget;
 
 		protected override Tween Create()

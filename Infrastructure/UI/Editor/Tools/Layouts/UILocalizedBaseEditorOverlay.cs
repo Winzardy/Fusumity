@@ -13,7 +13,7 @@ namespace UI.Editor
 	{
 		private UILocalizedBaseLayout _target;
 
-		public bool visible => _target && _target.Placeholder && _target.locInfo;
+		public bool visible => _target && _target.Label && _target.locInfo;
 
 		public override void OnGUI()
 		{

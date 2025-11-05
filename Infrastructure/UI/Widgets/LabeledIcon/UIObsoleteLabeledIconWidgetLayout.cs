@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace UI
 {
-	public class UILabeledIconWidgetLayout : UILocalizedBaseLayout
+	public class UIObsoleteLabeledIconWidgetLayout : UILocalizedBaseLayout
 	{
 		public bool useLayoutAnimations;
 		public Image icon;
@@ -11,7 +11,7 @@ namespace UI
 
 		public StateSwitcher<string> stateSwitcher;
 
-		public override TMP_Text Placeholder => label;
+		public override TMP_Text Label => label;
 		public override bool UseLayoutAnimations => useLayoutAnimations;
 	}
 }

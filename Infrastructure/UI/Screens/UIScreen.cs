@@ -49,12 +49,21 @@ namespace UI.Screens
 	{
 		private bool _suppressHide;
 
-		protected sealed override void OnShow() => OnShow(ref _args);
+		protected sealed override void OnShow()
+		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose += RequestClose;
+
+			OnShow(ref _args);
+		}
 
 		protected abstract void OnShow(ref TArgs args);
 
 		protected sealed override void OnHide()
 		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose -= RequestClose;
+
 			if (_suppressHide)
 				return;
 
@@ -94,6 +103,8 @@ namespace UI.Screens
 		private bool? _resetting;
 
 		string IIdentifiable.Id => Id;
+
+		public ref TArgs vm => ref _args;
 
 		#region Layout
 

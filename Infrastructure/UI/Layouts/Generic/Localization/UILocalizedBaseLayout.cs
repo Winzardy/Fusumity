@@ -9,6 +9,6 @@ namespace UI
 		[LocKeyParent, ToggleOffset(11)]
 		public Toggle<string> locInfo;
 
-		public abstract TMP_Text Placeholder { get; }
+		public abstract TMP_Text Label { get; }
 	}
 }

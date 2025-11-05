@@ -14,13 +14,13 @@ namespace UI
 	{
 		public struct Args
 		{
-			public UILabeledIconWidget.Args? banner;
-			public UILabeledIconWidget.Args[] items;
+			public UIObsoleteLabeledIconWidget.Args? banner;
+			public UIObsoleteLabeledIconWidget.Args[] items;
 
 			/// <summary>
 			/// Блок-группа предметов над кнопкой
 			/// </summary>
-			public UILabeledIconWidget.Args[] miniItems;
+			public UIObsoleteLabeledIconWidget.Args[] miniItems;
 
 			public LocText locBadge;
 			public string badge;
@@ -29,11 +29,11 @@ namespace UI
 			public string label;
 		}
 
-		private UILabeledIconWidget _banner;
+		private UIObsoleteLabeledIconWidget _banner;
 
-		private UILabeledIconWidget _single;
-		private UIGroup<UILabeledIconWidget, UILabeledIconWidgetLayout, UILabeledIconWidget.Args> _group;
-		private UIGroup<UILabeledIconWidget, UILabeledIconWidgetLayout, UILabeledIconWidget.Args> _miniGroup;
+		private UIObsoleteLabeledIconWidget _single;
+		private UIGroup<UIObsoleteLabeledIconWidget, UIObsoleteLabeledIconWidgetLayout, UIObsoleteLabeledIconWidget.Args> _group;
+		private UIGroup<UIObsoleteLabeledIconWidget, UIObsoleteLabeledIconWidgetLayout, UIObsoleteLabeledIconWidget.Args> _miniGroup;
 
 		private UITextLocalizationAssigner _localizationAssigner;
 

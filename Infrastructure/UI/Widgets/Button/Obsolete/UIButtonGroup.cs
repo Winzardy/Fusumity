@@ -10,7 +10,7 @@ namespace UI
 		UIGroup<TButtonWidget, TButtonLayout, TButtonArgs>
 		where TButtonWidget : UIButtonWidget<TButtonLayout, TButtonArgs>
 		where TButtonLayout : UILabeledButtonLayout
-		where TButtonArgs : struct, IButtonArgs
+		where TButtonArgs : struct, IObseleteButtonViewModel
 	{
 		public event Action<TButtonWidget, int> Clicked;
 

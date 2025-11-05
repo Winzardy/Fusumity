@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UI
 {
-	public class UIInputFieldWidgetLayout : UIBaseLayout
+	public class UIInputFieldLayout : UIBaseLayout
 	{
 		public TMP_InputField inputField;
 
@@ -11,6 +11,10 @@ namespace UI
 
 		public GameObject[] invalidGroup;
 		public TMP_Text errorMsg;
+
+		public UILocalizedTextLayout placeholder;
+
+		public StateSwitcher<string> styleSwitcher;
 
 		protected override void Reset()
 		{

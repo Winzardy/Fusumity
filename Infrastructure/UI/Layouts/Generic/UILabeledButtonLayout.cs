@@ -8,6 +8,7 @@ using ZenoTween;
 
 namespace UI
 {
+	//[Obsolete("Используйте UIButtonLayout")]
 	public class UILabeledButtonLayout : UILocalizedBaseLayout
 	{
 		public const string ANIMATION_KEY_PREFIX = "style/";
@@ -50,7 +51,7 @@ namespace UI
 
 		public void Unsubscribe(UnityAction action) => button.onClick.RemoveListener(action);
 
-		public override TMP_Text Placeholder => label;
+		public override TMP_Text Label => label;
 
 		protected override void Reset()
 		{
