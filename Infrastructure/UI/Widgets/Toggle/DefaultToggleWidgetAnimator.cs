@@ -15,14 +15,14 @@ namespace UI
 		private Sequence CreateEnablingSequence()
 		{
 			Sequence sequence = null;
-			_layout.onSequence?.Participate(ref sequence);
+			_layout.onSequence?.Participate(ref sequence, _layout);
 			return sequence;
 		}
 
 		private Sequence CreateDisablingSequence()
 		{
 			Sequence sequence = null;
-			_layout.offSequence?.Participate(ref sequence);
+			_layout.offSequence?.Participate(ref sequence, _layout);
 			return sequence;
 		}
 	}

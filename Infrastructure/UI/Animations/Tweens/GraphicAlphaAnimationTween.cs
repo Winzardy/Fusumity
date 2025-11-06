@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		sourceAssembly: "UI")]
 	public class GraphicAlphaAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Graphic graphic;
 
 		[PropertyRange(0, 1)]

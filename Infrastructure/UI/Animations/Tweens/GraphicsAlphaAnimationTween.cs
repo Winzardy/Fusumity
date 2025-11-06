@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace ZenoTween.Participant.Tweens.UI
 	public class GraphicsAlphaAnimationTween : AnimationTween
 	{
 		[FormerlySerializedAs("graphic")]
+		[NotNull]
 		public Graphic[] graphics;
 
 		[PropertyRange(0, 1)]

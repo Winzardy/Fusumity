@@ -35,7 +35,7 @@ namespace UI
 			if (!gameObject.IsActive())
 			{
 				_dictionary.GetValueOrDefaultSafe(state, _default)
-				   .ToTween()
+				   .ToTween(this)
 				   .Kill(true);
 
 				return;
@@ -45,7 +45,7 @@ namespace UI
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
 				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
-				   .ToTween()
+				   .ToTween(this)
 				   .SetAutoKill(false);
 			}
 
