@@ -3,11 +3,14 @@ using UI.Popovers;
 
 namespace UI
 {
-	public class DefaultPopoverAnimator<TPopover> : BaseWidgetAnimator<UIBaseCanvasGroupLayout, TPopover>
+	public class DefaultPopoverAnimator<TLayout, TPopover> : BaseWidgetAnimator<TLayout, TPopover>
+		where TLayout : UIBaseCanvasGroupLayout
 		where TPopover : UIWidget, IPopover
 	{
 		private const float OPENING_TIME = 0.5f;
 		private const float CLOSING_TIME = 0.3f;
+
+		protected TPopover popover => _widget;
 
 		protected override void OnCreateOpeningSequence(ref Sequence sequence)
 		{
@@ -16,12 +19,12 @@ namespace UI
 			if (_layout.canvasGroup)
 			{
 				sequence.Join(_layout.canvasGroup
-				   .DOFade(1f, OPENING_TIME));
+					.DOFade(1f, OPENING_TIME));
 			}
 
 			sequence.Join(_layout.rectTransform
-			   .DOLocalMoveY(100, OPENING_TIME)
-			   .SetEase(Ease.OutBack));
+				.DOLocalMoveY(100, OPENING_TIME)
+				.SetEase(Ease.OutBack));
 		}
 
 		protected override void OnCreateClosingSequence(ref Sequence sequence)
@@ -31,12 +34,12 @@ namespace UI
 			if (_layout.canvasGroup)
 			{
 				sequence.Join(_layout.canvasGroup
-				   .DOFade(0f, CLOSING_TIME));
+					.DOFade(0f, CLOSING_TIME));
 			}
 
 			sequence.Join(_layout.rectTransform
-			   .DOLocalMoveY(25, CLOSING_TIME)
-			   .SetEase(Ease.OutCubic));
+				.DOLocalMoveY(25, CLOSING_TIME)
+				.SetEase(Ease.OutCubic));
 		}
 	}
 }

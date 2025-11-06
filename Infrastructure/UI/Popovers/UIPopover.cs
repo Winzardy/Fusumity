@@ -69,6 +69,8 @@ namespace UI.Popovers
 
 		string IIdentifiable.Id => Id;
 
+		public ref TArgs vm => ref _args;
+
 		private event Action<IPopover> RequestedClose;
 
 		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
@@ -188,7 +190,7 @@ namespace UI.Popovers
 		protected virtual void OnSetupDefaultAnimator()
 		{
 			if (_animator == null)
-				SetAnimator<DefaultPopoverAnimator<UIBasePopover<TLayout, TArgs>>>();
+				SetAnimator<DefaultPopoverAnimator<TLayout, UIBasePopover<TLayout, TArgs>>>();
 		}
 
 		private TArgs UnboxedArgs(IPopoverArgs boxedArgs)
@@ -213,7 +215,7 @@ namespace UI.Popovers
 				parentRectTransform = _host?.RectTransform ?? UIDispatcher.GetLayer(Layer).rectTransform;
 
 			_layout.transform
-			   .SetParent(parentRectTransform, false);
+				.SetParent(parentRectTransform, false);
 		}
 	}
 

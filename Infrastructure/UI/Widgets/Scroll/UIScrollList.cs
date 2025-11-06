@@ -83,13 +83,13 @@ namespace UI.Scroll
 		public async UniTask ShowAsync(TItemArgs[] data, bool preservePosition = false, bool immediate = false)
 		{
 			Show(data, preservePosition, immediate: immediate);
-			await WaitUntilIsVisible();
+			await WaitOpening();
 		}
 
 		public async UniTask HideAsync(bool reset = true)
 		{
 			Hide();
-			await WaitUntilIsNotVisible();
+			await WaitClosing();
 			if (reset)
 				Reset();
 		}
