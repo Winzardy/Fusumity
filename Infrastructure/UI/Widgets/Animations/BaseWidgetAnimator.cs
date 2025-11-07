@@ -204,6 +204,8 @@ namespace UI
 				return;
 			}
 
+			sequence.SetTarget(_layout);
+
 			if (!debug && !immediate)
 			{
 				sequence.PrependCallback(OnPrepend);

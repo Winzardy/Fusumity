@@ -14,7 +14,7 @@ namespace ZenoTween
 
 		private Tween _tween;
 
-		private void Start() => _tween = sequence.ToTween();
+		private void Start() => _tween = sequence.ToTween(this);
 
 		private void OnDestroy() => _tween?.KillSafe();
 
@@ -32,7 +32,7 @@ namespace ZenoTween
 		public void Reconstruct()
 		{
 			_tween?.KillSafe();
-			_tween = sequence.ToTween();
+			_tween = sequence.ToTween(this);
 		}
 #endif
 	}

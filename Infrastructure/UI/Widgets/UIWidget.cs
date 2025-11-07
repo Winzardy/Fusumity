@@ -219,7 +219,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет станет видимым
 		/// </summary>
-		public async UniTask WaitUntilIsVisible(CancellationToken? cancellationToken = null)
+		public async UniTask WaitOpening(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{
@@ -242,7 +242,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет скроется
 		/// </summary>
-		public async UniTask WaitUntilIsNotVisible(CancellationToken? cancellationToken = null)
+		public async UniTask WaitClosing(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{
