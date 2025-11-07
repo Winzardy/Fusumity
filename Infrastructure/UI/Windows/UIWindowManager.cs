@@ -110,7 +110,7 @@ namespace UI.Windows
 
 		internal bool IsActive(string id)
 		{
-			if (_current?.Id == id)
+			if (_current?.Id == id && _current!.IsActive())
 				return true;
 
 			foreach (var window in _queue)
