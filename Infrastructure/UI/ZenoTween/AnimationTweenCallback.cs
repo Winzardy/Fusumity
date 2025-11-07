@@ -29,9 +29,14 @@ namespace ZenoTween.Participant.Callbacks
 		[HorizontalGroup(nameof(AnimationTweenCallback)), PropertyOrder(99), PropertySpace(5)]
 		public Type type = Type.Append;
 
-		public override void Participate(ref Sequence sequence)
+		public override void Participate(ref Sequence sequence, object target = null)
 		{
-			sequence ??= DOTween.Sequence();
+			if (sequence == null)
+			{
+				sequence = DOTween.Sequence();
+				if (target != null)
+					sequence.SetTarget(target);
+			}
 
 			switch (type)
 			{

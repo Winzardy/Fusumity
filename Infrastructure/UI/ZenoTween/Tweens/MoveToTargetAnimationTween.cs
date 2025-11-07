@@ -2,6 +2,7 @@
 using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using JetBrains.Annotations;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -17,9 +18,12 @@ namespace ZenoTween.Participant.Tweens
 		sourceAssembly: "Generic")]
 	public class MoveToTargetAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Transform root;
 
+		[NotNull]
 		public Transform to;
+
 		public Toggle<Transform> from;
 
 		public bool useLocal;
@@ -44,18 +48,17 @@ namespace ZenoTween.Participant.Tweens
 		{
 			var tween = MoveTween().SetEase(ease);
 
-			if (useStartTarget)
-				tween.From(useLocal ? startTarget.localPosition : startTarget.position);
-
 			if (from.enable)
 				tween.From(useLocal ? from.value.localPosition : from.value.position);
+			else if (useStartTarget)
+				tween.From(useLocal ? startTarget.localPosition : startTarget.position);
 
 			return tween;
 		}
 
 		private TweenerCore<Vector3, Vector3, VectorOptions> MoveTween()
 		{
-			if (target)
+			if (!to && target)
 				return useLocal ? root.DOLocalMove(target.localPosition, duration) : root.DOMove(target.position, duration);
 
 			return useLocal ? root.DOLocalMove(to.localPosition, duration) : root.DOMove(to.position, duration);

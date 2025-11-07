@@ -22,6 +22,7 @@ namespace UI.Popovers
 
 		internal void Show(object args);
 
+		//TODO: -> UIWidget
 		protected internal UIWidget Host { get; }
 		internal void Attach(UIWidget parent, RectTransform customAnchor = null);
 		internal void Detach();
@@ -97,6 +98,8 @@ namespace UI.Popovers
 		private bool _layoutResetRequest;
 
 		string IIdentifiable.Id => Id;
+
+		public ref TArgs vm => ref _args;
 
 		private event Action<IPopover> RequestedClose;
 
@@ -221,7 +224,7 @@ namespace UI.Popovers
 		protected virtual void OnSetupDefaultAnimator()
 		{
 			if (_animator == null)
-				SetAnimator<DefaultPopoverAnimator<UIBasePopover<TLayout, TArgs>>>();
+				SetAnimator<DefaultPopoverAnimator<TLayout, UIBasePopover<TLayout, TArgs>>>();
 		}
 
 		private TArgs UnboxedArgs(object boxedArgs)

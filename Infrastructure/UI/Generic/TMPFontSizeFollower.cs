@@ -42,10 +42,8 @@ namespace UI
 
 		private void OnLateUpdate()
 		{
-#if DEBUG
 			if (!_target)
 				return;
-#endif
 			_self.fontSize = _target.fontSize;
 		}
 
