@@ -32,6 +32,8 @@ namespace UI
 		/// </summary>
 		public bool Open { get; }
 
+		public RectTransform RectTransform { get; }
+
 		public void Initialize()
 		{
 		}
