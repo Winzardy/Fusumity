@@ -33,21 +33,27 @@ namespace Fusumity.Editor
 
 				var modified = false;
 
-				for (var i = 0; i < asmdef.references.Length; i++)
+				if (asmdef.references != null)
 				{
-					if (nameToGuid.TryGetValue(asmdef.references[i], out var guid))
+					for (var i = 0; i < asmdef.references.Length; i++)
 					{
-						asmdef.references[i] = guid;
-						modified = true;
+						if (nameToGuid.TryGetValue(asmdef.references[i], out var guid))
+						{
+							asmdef.references[i] = guid;
+							modified = true;
+						}
 					}
 				}
 
-				for (var i = 0; i < asmdef.optionalReferences.Length; i++)
+				if (asmdef.optionalReferences != null)
 				{
-					if (nameToGuid.TryGetValue(asmdef.optionalReferences[i], out var guid))
+					for (var i = 0; i < asmdef.optionalReferences.Length; i++)
 					{
-						asmdef.optionalReferences[i] = guid;
-						modified = true;
+						if (nameToGuid.TryGetValue(asmdef.optionalReferences[i], out var guid))
+						{
+							asmdef.optionalReferences[i] = guid;
+							modified = true;
+						}
 					}
 				}
 
