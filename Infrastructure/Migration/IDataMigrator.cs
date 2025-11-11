@@ -15,9 +15,11 @@ namespace Submodules.Fusumity.Infrastructure.Migration
 		public bool IsMigrated { get; set; }
 
 		// В наследниках необходимо написать следующий код:
-		/*public bool IsMigrated { get => isMigrated; set => isMigrated = value; }
+		/*
+		public bool IsMigrated { get => isMigrated; set => isMigrated = value; }
 		[SerializeField, ReadOnly]
-		private bool isMigrated;*/
+		private bool isMigrated;
+		*/
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
