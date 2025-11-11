@@ -31,8 +31,10 @@ namespace Content.ScriptableObjects.Editor
 				name = "Content"
 			};
 
-			[PropertySpace(2, 10)]
 			public Formatting formatting = Formatting.None;
+
+			[PropertySpace(2, 10)]
+			public bool revealInFinder = true;
 
 			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
 			public bool useDeserializeTesting;
@@ -131,6 +133,9 @@ namespace Content.ScriptableObjects.Editor
 
 				if (writing)
 					File.WriteAllText(fullPath, text);
+
+				if (args.revealInFinder)
+					EditorUtility.RevealInFinder(fullPath);
 
 				TextAsset textAsset = null;
 				if (fullPath.Contains(ASSETS_FOLDER_NAME) && path != null)
