@@ -13,8 +13,13 @@ namespace ZenoTween
 		public AnimationSequence sequence;
 
 		private Tween _tween;
+		private float _duration;
 
-		private void Start() => _tween = sequence.ToTween(this);
+		private void Start()
+		{
+			_tween = sequence.ToTween(this);
+			_duration = _tween.Duration();
+		}
 
 		private void OnDestroy() => _tween?.KillSafe();
 
@@ -24,7 +29,7 @@ namespace ZenoTween
 			if (!Application.isPlaying)
 				return;
 #endif
-			_tween?.Goto(normalizedValue);
+			_tween?.Goto(normalizedValue * _duration);
 		}
 
 #if UNITY_EDITOR

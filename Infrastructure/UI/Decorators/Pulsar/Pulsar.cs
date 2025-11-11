@@ -15,7 +15,7 @@ namespace UI
 	{
 		[SerializeField]
 		[Minimum(0), Unit(Units.Second)]
-		private float _interval = 1;
+		protected float _interval = 1;
 
 		[SerializeField]
 		private AnimationCurve _curve = AnimationCurve.Linear(0, 0, 1, 1);
