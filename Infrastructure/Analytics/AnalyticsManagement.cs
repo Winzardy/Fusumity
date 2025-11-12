@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Utility;
@@ -16,6 +17,8 @@ namespace Analytics
 		private string _cachedIntegrationsDebugMessage;
 
 		private readonly AnalyticsSettings _settings;
+		private readonly bool _isValidationEnabled;
+
 
 		private List<AnalyticsAggregator> _registeredAggregators;
 
@@ -25,9 +28,10 @@ namespace Analytics
 
 		public bool Active => !_integrations.IsNullOrEmpty();
 
-		public AnalyticsManagement(AnalyticsSettings settings)
+		public AnalyticsManagement(AnalyticsSettings settings, bool isValidationEnabled)
 		{
 			_settings = settings;
+			_isValidationEnabled = isValidationEnabled;
 
 			_cts = new CancellationTokenSource();
 		}
@@ -80,7 +84,15 @@ namespace Analytics
 			BeforeSend?.Invoke(args);
 
 			foreach (var integration in _integrations)
+			{
+				if (_isValidationEnabled && !integration.IsValid(in args, out var error))
+				{
+					// даже если была ошибка при валидации, то все равно отправляем событие, вдруг мы просто неправильно написали правила валидации
+					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}");
+				}
+
 				integration.SendEvent(in args);
+			}
 
 			AnalyticsDebug.Log($"Sent event: {args}\n{_cachedIntegrationsDebugMessage}");
 		}
@@ -105,6 +117,7 @@ namespace Analytics
 			}
 		}
 
+		[MustUseReturnValue]
 		private string GetDebugNameIntegration(IAnalyticsIntegration integration) =>
 			integration.GetType().Name.Replace("AnalyticsIntegration", string.Empty);
 	}
