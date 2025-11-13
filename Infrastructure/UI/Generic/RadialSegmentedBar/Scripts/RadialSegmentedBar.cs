@@ -847,12 +847,12 @@ namespace UI.RadialBar
 				image.material = currentMaterial;
 				materialAssigned = true;
 				ApplyToShader(true);
-#if UNITY_EDITOR
-				//the scene needs to be saved
-				if (!Application.isPlaying)
-					EditorSceneManager.MarkSceneDirty(SceneManager
-					   .GetActiveScene());
-#endif
+// #if UNITY_EDITOR
+// 				//the scene needs to be saved
+// 				if (!Application.isPlaying)
+// 					EditorSceneManager.MarkSceneDirty(SceneManager
+// 					   .GetActiveScene());
+// #endif
 			}
 		}
 
@@ -885,12 +885,12 @@ namespace UI.RadialBar
 				r.sharedMaterial = currentMaterial;
 				materialAssigned = true;
 				ApplyToShader(true);
-#if UNITY_EDITOR
-				//the scene needs to be saved
-				if (!Application.isPlaying && !EditorUtility.IsPersistent(this))
-					EditorSceneManager.MarkSceneDirty(SceneManager
-					   .GetActiveScene());
-#endif
+// #if UNITY_EDITOR
+// 				//the scene needs to be saved
+// 				if (!Application.isPlaying && !EditorUtility.IsPersistent(this))
+// 					EditorSceneManager.MarkSceneDirty(SceneManager
+// 					   .GetActiveScene());
+// #endif
 			}
 		}
 
