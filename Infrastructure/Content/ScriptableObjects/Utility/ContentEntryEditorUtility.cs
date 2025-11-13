@@ -17,11 +17,6 @@ namespace Content.Editor
 
 	public static partial class ContentEntryEditorUtility
 	{
-		/// <summary>
-		/// <see cref="ContentEntry{T}"/>
-		/// </summary>
-		private const string CONTENT_ENTRY_PREFIX = "ContentEntry";
-
 		private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 
 		private static readonly Dictionary<string, SerializableGuid> _tracking = new();
@@ -53,7 +48,6 @@ namespace Content.Editor
 				return;
 
 			var so = new SerializedObject(asset);
-
 			scriptableObject.ScriptableContentEntry.ClearNested();
 			Refresh(asset, so, refreshAndSave);
 			SetDirty(so, refreshAndSave);
@@ -77,7 +71,7 @@ namespace Content.Editor
 				return;
 			do
 			{
-				using var modification = iterator.TryStartModificationEntry(out var entry);
+				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
 				if (!modification)
 					continue;
 
@@ -103,7 +97,7 @@ namespace Content.Editor
 
 			bool IsValid(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
 				=> entry.Guid != SerializableGuid.Empty && scriptableObject.ScriptableContentEntry
-				   .RegisterNestedEntry(entry.Guid, reference);
+					.RegisterNestedEntry(entry.Guid, reference);
 
 			void ForceRegenerate(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
 			{
@@ -240,7 +234,7 @@ namespace Content.Editor
 				return;
 			do
 			{
-				using var modification = iterator.TryStartModificationEntry(out var entry);
+				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
 				if (!modification || entry is IScriptableContentEntry)
 					continue;
 
@@ -294,7 +288,7 @@ namespace Content.Editor
 				if (iterator.depth <= depth)
 					break;
 
-				using var modification = iterator.TryStartModificationEntry(out var entry);
+				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
 				// Попробуем получить объект из property
 				if (!modification)
 					continue;
@@ -359,22 +353,29 @@ namespace Content.Editor
 			}
 		}
 
-		private static SerializedPropertyModification TryStartModificationEntry(this SerializedProperty property,
+		private static SerializedPropertyModification TryStartModificationNestedContentEntry(this SerializedProperty property,
 			out IUniqueContentEntry entry)
 		{
 			entry = null;
-			if (!property.type.StartsWith(CONTENT_ENTRY_PREFIX))
+
+			if (property == null)
 				return null;
 
 			if (property.isArray)
 				return null;
 
-			var propertyValue = property.GetValueByReflection();
-			if (propertyValue is not IUniqueContentEntry uniqueContentEntry)
+			if (property.propertyType != SerializedPropertyType.Generic)
+				return null;
+
+			if (!property.type.StartsWith("ContentEntry")) // фильтруем только ContentEntry
+				return null;
+
+			var value = property.GetValueByReflectionSafe();
+			if (value is not IUniqueContentEntry uniqueContentEntry)
 				return null;
 
 			entry = uniqueContentEntry;
-			return entry == null ? null : new SerializedPropertyModification(property);
+			return new SerializedPropertyModification(property);
 		}
 
 		private class SerializedPropertyModification : IDisposable

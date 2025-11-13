@@ -177,7 +177,9 @@ namespace Fusumity.Editor.Utility
 		public static object GetValueByReflection(this SerializedProperty property)
 		{
 			object obj = property.serializedObject.targetObject;
-			var path = property.propertyPath.Replace(".Array.data[", "[").Split('.');
+			var path = property.propertyPath
+				.Replace(".Array.data[", "[")
+				.Split('.');
 
 			foreach (var part in path)
 			{
@@ -199,6 +201,49 @@ namespace Fusumity.Editor.Utility
 			}
 
 			return obj;
+		}
+
+		public static object GetValueByReflectionSafe(this SerializedProperty property)
+		{
+			try
+			{
+				return property.boxedValue;
+			}
+			catch (InvalidOperationException)
+			{
+				return ValueByReflectionSafe();
+			}
+
+			object ValueByReflectionSafe()
+			{
+				object obj = property.serializedObject.targetObject;
+				var path = property.propertyPath
+					.Replace(".Array.data[", "[")
+					.Split('.');
+
+				foreach (var part in path)
+				{
+					if (part.Contains("["))
+					{
+						var fieldName = part[..part.IndexOf('[')];
+						var index = int.Parse(part[(part.IndexOf('[') + 1)..^1]);
+
+						if (obj.GetValueByReflectionSafe(fieldName) is not IList list)
+							return null;
+
+						obj = list![index];
+					}
+					else
+					{
+						obj = obj.GetValueByReflectionSafe(part);
+					}
+
+					if (obj == null)
+						break;
+				}
+
+				return obj;
+			}
 		}
 	}
 }
