@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Booting.Trading
 {
+	// TODO: под снос
 	[TypeRegistryItem(
 		"\u2009Trading", //В начале делаем отступ из-за отрисовки...
 		"",

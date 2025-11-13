@@ -23,6 +23,7 @@ namespace Trading
 		#endregion
 	}
 
+	// TODO: убрать
 	public interface ITradingServiceFactory
 	{
 		ITradingService Create();

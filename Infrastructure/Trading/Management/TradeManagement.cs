@@ -9,6 +9,7 @@ using Sapientia.Pooling;
 
 namespace Trading
 {
+	// TODO: Убрать TradeManager. Нужную часть кода перенести в TradeUtility
 	/// <summary>
 	/// Только для Client'a
 	/// </summary>

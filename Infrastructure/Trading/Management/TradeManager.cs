@@ -19,6 +19,7 @@ namespace Trading
 		public void GetService(out ITradingService service);
 	}
 
+	// TODO: Убрать TradeManager. Нужную часть кода перенести в TradeUtility
 	/// <summary>
 	/// Только на стороне клиента
 	/// </summary>
