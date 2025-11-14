@@ -1,8 +1,5 @@
-﻿using AssetManagement;
-using Fusumity.MVVM.UI;
-using Localization;
+﻿using Fusumity.MVVM.UI;
 using System;
-using UnityEngine;
 
 namespace UI
 {
