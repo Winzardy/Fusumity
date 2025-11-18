@@ -73,6 +73,6 @@ namespace Content.ScriptableObjects
 		public void Sort() => scriptableObjects.Sort(SortByCreationTime);
 
 		private static int SortByCreationTime(ContentScriptableObject x, ContentScriptableObject y)
-			=> x.creationTime.CompareTo(y.creationTime);
+			=> x.CreationTime.CompareTo(y.CreationTime);
 	}
 }

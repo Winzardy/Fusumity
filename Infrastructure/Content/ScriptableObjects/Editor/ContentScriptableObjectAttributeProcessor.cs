@@ -71,9 +71,9 @@ namespace Content.ScriptableObjects.Editor
 						$"@{rootClass}.{nameof(OnIdChanged)}($property)"));
 					break;
 
-				case nameof(ContentScriptableObject.creationTimeStr):
+				case nameof(ContentScriptableObject.CreationTimeStr):
 					attributes.Add(new TooltipAttribute(ContentScriptableObject.CREATION_TIME_TOOLTIP));
-					attributes.Add(new LabelTextAttribute(nameof(ContentScriptableObject.creationTime), true));
+					attributes.Add(new LabelTextAttribute(nameof(ContentScriptableObject.CreationTime), true));
 					attributes.Add(new PropertyOrderAttribute(-1));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new ShowIfAttribute($"@{nameof(ContentScriptableObjectAttributeProcessor)}.{nameof(IsDebugMode)}()"));
