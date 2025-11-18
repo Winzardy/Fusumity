@@ -5,6 +5,7 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
+using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -25,18 +26,30 @@ namespace Content.ScriptableObjects.Editor
 					{
 						IsReadOnly = true,
 						OnTitleBarGUI = $"@{nameof(ContentDatabaseScriptableObjectAttributeProcessor)}." +
-							$"{nameof(DrawSyncContent)}($property)"
+							$"{nameof(DrawTitlebar)}($property)"
 					});
 					break;
 			}
 		}
 
-		private static void DrawSyncContent(InspectorProperty property)
+		private static void DrawTitlebar(InspectorProperty property)
 		{
-			if (!SirenixEditorGUI.ToolbarButton(EditorIcons.Refresh))
-				return;
 			if (property.Parent.ValueEntry.WeakSmartValue is not ContentDatabaseScriptableObject database)
 				return;
+
+			if (SirenixEditorGUI.ToolbarButton(EditorIcons.Refresh))
+			{
+				Sync(database);
+			}
+
+			if (SirenixEditorGUI.ToolbarButton(SdfIconType.SortNumericDown))
+			{
+				database.Sort();
+			}
+		}
+
+		private static void Sync(ContentDatabaseScriptableObject database)
+		{
 			EditorApplication.delayCall += OnDelayCall;
 
 			void OnDelayCall()
