@@ -38,8 +38,8 @@ namespace UI
 			if (UnityEngine.Application.isPlaying)
 				return;
 
-			if (Placeholder && locInfo.enable)
-				Placeholder.text = LocManager.GetEditor(locInfo, _languageEditor.IsNullOrEmpty() ? null : _languageEditor);
+			if (Label && locInfo.enable)
+				Label.text = LocManager.GetEditor(locInfo, _languageEditor.IsNullOrEmpty() ? null : _languageEditor);
 		}
 #endif
 	}

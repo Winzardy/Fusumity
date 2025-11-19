@@ -29,8 +29,8 @@ namespace UI
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
-			if (Value.Settings.useCustomRotation)
-				_gameObject.transform.localRotation = Quaternion.Euler(Value.Settings.rotation);
+			if (_args.Settings.useCustomRotation)
+				_gameObject.transform.localRotation = Quaternion.Euler(_args.Settings.rotation);
 
 			return _gameObject;
 		}

@@ -209,9 +209,9 @@ namespace Content.Editor
 			if (!_typeToMethod.TryGetValue(type, out var methodInfo))
 			{
 				methodInfo = typeof(EditorSingleContentEntryShortcut<>)
-				   .MakeGenericType(type)
+					.MakeGenericType(type)
 					// EditorSingleContentEntryShortcut<object> - object выбран первый попавшийся тип
-				   .GetMethod(nameof(EditorSingleContentEntryShortcut<object>.RegisterRaw),
+					.GetMethod(nameof(EditorSingleContentEntryShortcut<object>.RegisterRaw),
 						BindingFlags.NonPublic | BindingFlags.Static);
 				_typeToMethod[type] = methodInfo;
 			}
@@ -326,8 +326,8 @@ namespace Content.Editor
 			if (!_typeToMethod.TryGetValue(type, out var methodInfo))
 			{
 				methodInfo = typeof(EditorContentEntryMap<>)
-				   .MakeGenericType(type)
-				   .GetMethod("RegisterRaw", BindingFlags.NonPublic | BindingFlags.Static);
+					.MakeGenericType(type)
+					.GetMethod("RegisterRaw", BindingFlags.NonPublic | BindingFlags.Static);
 				_typeToMethod[type] = methodInfo;
 			}
 
@@ -445,8 +445,15 @@ namespace Content.Editor
 		public IContentEntrySource Source => source;
 
 		public IUniqueContentEntry UniqueContentEntry
-			=> source.ContentEntry.Nested[guid]
-			   .Resolve(source.ContentEntry, true);
+		{
+			get
+			{
+				var uniqueContentEntry = source.ContentEntry.Nested[guid]
+					.Resolve(source.ContentEntry, true);
+				uniqueContentEntry?.SetParent(source.ContentEntry);
+				return uniqueContentEntry;
+			}
+		}
 
 		public bool Validate() => source.Validate();
 	}

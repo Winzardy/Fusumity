@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ZenoTween.Participant.Callbacks.Audio
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.MusicNote)]
+	[TypeRegistryItem(Icon = SdfIconType.MusicNote, CategoryPath = CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Callbacks.Audio",

@@ -32,12 +32,12 @@ namespace UI
 
 		protected virtual string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
 			CancelSetupLayout();
 			LayoutClearingAndReleaseTemplateSafe();
 
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 		}
 
 		protected sealed override void OnActivatedInternal(bool immediate)
@@ -106,7 +106,7 @@ namespace UI
 
 			_setupTemplateCts = new CancellationTokenSource();
 			_setupTemplateCts.Token
-			   .Register(OnTriggered);
+				.Register(OnTriggered);
 
 			try
 			{
@@ -162,12 +162,14 @@ namespace UI
 
 		private async UniTask SetupTemplateAndActivateAsync(bool immediate, CancellationToken cancellationToken)
 		{
+			OnBeforeSetupTemplate();
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
 			cancellationToken.ThrowIfCancellationRequested();
 
 			ClearTemplateSafe();
 
 			await SetupTemplateAsync(template, cancellationToken);
+			OnAfterSetupTemplate();
 			cancellationToken.ThrowIfCancellationRequested();
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
@@ -210,6 +212,14 @@ namespace UI
 			DisableSuppress();
 		}
 
+		protected virtual void OnBeforeSetupTemplate()
+		{
+		}
+
+		protected virtual void OnAfterSetupTemplate()
+		{
+		}
+
 		private void ClearTemplateSafe()
 		{
 			if (!_template)
@@ -228,7 +238,8 @@ namespace UI
 
 		protected IDisposable Prepare(Action callback)
 		{
-			PreloadAsync(callback).Forget();
+			PreloadAsync(callback)
+				.Forget();
 			return new PrepareDisposer(Release);
 			void Release() => LayoutReference.Release();
 		}
@@ -236,8 +247,11 @@ namespace UI
 		private async UniTaskVoid PreloadAsync(Action callback)
 		{
 			await LayoutReference.PreloadAsync();
+			await OnPreloadAsync();
 			callback?.Invoke();
 		}
+
+		protected virtual UniTask OnPreloadAsync() => UniTask.CompletedTask;
 
 		private class PrepareDisposer : IDisposable
 		{

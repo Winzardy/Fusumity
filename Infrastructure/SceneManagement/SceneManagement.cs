@@ -6,10 +6,28 @@ namespace SceneManagement
 {
 	public class SceneLoaderHub
 	{
-		public const string SUB_SCENE_POSTFIX = SceneLoader.SUB_SCENE_POSTFIX;
-		public const string EMPTY_SCENE_POSTFIX = SceneLoader.EMPTY_SCENE_POSTFIX;
+		private readonly Dictionary<string, SceneLoader> _nameToLoader = new();
 
-		private Dictionary<string, SceneLoader> _nameToLoader = new Dictionary<string, SceneLoader>();
+		internal void LoadScene(string sceneName, bool activateScene,
+			Action<Scene> completeLoadCallback = null,
+			Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		{
+			var loader = GetOrCreateLoader(sceneName);
+			loader.LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
+		}
+
+		internal void UnloadScene(string sceneName, Action completeUnloadCallback = null)
+		{
+			var loader = GetOrCreateLoader(sceneName);
+			loader.UnloadScene(completeUnloadCallback);
+		}
+
+		internal void ReloadScene(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null,
+			Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		{
+			var loader = GetOrCreateLoader(sceneName);
+			loader.ReloadScene(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
+		}
 
 		private SceneLoader GetOrCreateLoader(string sceneName)
 		{
@@ -20,24 +38,6 @@ namespace SceneManagement
 			}
 
 			return loader;
-		}
-
-		public void ReloadSceneAsync(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
-		{
-			var loader = GetOrCreateLoader(sceneName);
-			loader.ReloadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
-		}
-
-		public void LoadSceneAsync(string sceneName, bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
-		{
-			var loader = GetOrCreateLoader(sceneName);
-			loader.LoadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
-		}
-
-		public void UnloadSceneAsync(string sceneName, Action completeUnloadCallback = null)
-		{
-			var loader = GetOrCreateLoader(sceneName);
-			loader.UnloadSceneAsync(completeUnloadCallback);
 		}
 	}
 }

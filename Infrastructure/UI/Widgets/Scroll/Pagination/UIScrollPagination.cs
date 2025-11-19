@@ -21,6 +21,7 @@ namespace UI.Scroll.Pagination
 			Index = index;
 		}
 	}
+
 	public interface IScrollPagination<TItemArgs> : IWidget<UIScrollLayout>, IDisposable
 		where TItemArgs : struct, IScrollListItemArgs
 	{
@@ -43,9 +44,9 @@ namespace UI.Scroll.Pagination
 			base.Initialize();
 		}
 
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 
 			_selection.Dispose();
 			TryClearScroll();

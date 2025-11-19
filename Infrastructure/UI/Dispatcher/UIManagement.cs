@@ -35,7 +35,7 @@ namespace UI
 
 		private UILayerLayout Create(string id)
 		{
-			var entry = ContentManager.Get<UILayerEntry>(id);
+			var entry = ContentManager.Get<UILayerConfig>(id);
 			var layout = UIFactory.CreateLayout(entry.template);
 
 			layout.MoveTo(UIFactory.scene);

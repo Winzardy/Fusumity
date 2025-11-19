@@ -23,7 +23,7 @@ namespace UI.Popovers
 		private T Initialize<T>(T popup)
 			where T : IPopover
 		{
-			var entry = ContentManager.Get<UIPopoverEntry>(popup.Id);
+			var entry = ContentManager.Get<UIPopoverConfig>(popup.Id);
 			popup.Initialize(in entry);
 			return popup;
 		}

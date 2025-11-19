@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 namespace ZenoTween.Participant.Tweens.UI
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.Grid)]
+	[TypeRegistryItem(Icon = SdfIconType.Grid, CategoryPath = UIAnimationTweenConstants.TWEEN_CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens.UI",
@@ -17,6 +18,7 @@ namespace ZenoTween.Participant.Tweens.UI
 	public class GraphicsAlphaAnimationTween : AnimationTween
 	{
 		[FormerlySerializedAs("graphic")]
+		[NotNull]
 		public Graphic[] graphics;
 
 		[PropertyRange(0, 1)]

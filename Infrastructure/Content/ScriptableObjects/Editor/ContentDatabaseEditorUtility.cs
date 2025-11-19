@@ -11,6 +11,7 @@ using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
 using Sapientia.Pooling;
 using Sirenix.Utilities;
+using UI;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace Content.ScriptableObjects.Editor
 
 		public static List<ContentDatabaseScriptableObject> Databases
 			=> _cache ??= AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>()
-			   .ToList();
+				.ToList();
 
 		public static void Create<T>(string name = null, string addressableName = null) where T : ContentDatabaseScriptableObject
 		{
@@ -81,7 +82,7 @@ namespace Content.ScriptableObjects.Editor
 		public static void SyncContent()
 		{
 			var scriptableObjects = AssetDatabaseUtility.GetAssets<ContentScriptableObject>()
-			   .ToList();
+				.ToList();
 			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
 			ContentDatabaseScriptableObject misc = null;
 			try
@@ -253,6 +254,8 @@ namespace Content.ScriptableObjects.Editor
 
 						foreach (var (type, content) in dictionary)
 							ContentConstantGenerator.Generate(type, content);
+
+						database.Sort();
 					}
 				}
 			}
@@ -295,10 +298,12 @@ namespace Content.ScriptableObjects.Editor
 
 					if (!collided)
 					{
-						database.scriptableObjects = new(all);
+						database.scriptableObjects = new List<ContentScriptableObject>(all);
 
 						foreach (var (type, content) in dictionary)
 							ContentConstantGenerator.Generate(type, content);
+
+						database.Sort();
 					}
 				}
 			}
@@ -329,7 +334,8 @@ namespace Content.ScriptableObjects.Editor
 							continue;
 
 						var type = scriptableObject.GetType();
-						if (type.Namespace == moduleName)
+						var typeNamespace = type.Namespace;
+						if (typeNamespace == moduleName)
 						{
 							if (!ValidateByCollisions(scriptableObject, scriptableObjects, ref collisionsMap))
 								collided = true;
@@ -341,6 +347,15 @@ namespace Content.ScriptableObjects.Editor
 
 								TryAddToGenerator(scriptableObject, dictionary);
 							}
+						}
+						else
+						{
+							GUIDebug.LogWarning(
+								$"Constant generation skipped for asset '{scriptableObject.name}' " +
+								$"[{scriptableObject.GetType().FullName}] — namespace mismatch: " +
+								$"actual = '{typeNamespace ?? "<null>"}', " +
+								$"expected = '{moduleName}'",
+								scriptableObject);
 						}
 					}
 
@@ -362,7 +377,7 @@ namespace Content.ScriptableObjects.Editor
 
 			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
 			var scriptableObjects = AssetDatabaseUtility.GetAssets(type)
-			   .Cast<IUniqueContentEntryScriptableObject>();
+				.Cast<IUniqueContentEntryScriptableObject>();
 
 			foreach (var db in dbs)
 			{
@@ -467,8 +482,8 @@ namespace Content.ScriptableObjects.Editor
 			try
 			{
 				var instances = all
-				   .ToList()
-				   .FindAll(x => x.Id == source.Id);
+					.ToList()
+					.FindAll(x => x.Id == source.Id);
 
 				ContentDebug.LogError(
 					$"Detected duplicate id: [ {source.Id} ] " +

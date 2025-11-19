@@ -9,7 +9,6 @@ namespace UI
 	public partial class UIGroup<TWidget, TWidgetLayout, TWidgetArgs> : UIWidget<UIGroupLayout>
 		where TWidget : UIWidget<TWidgetLayout, TWidgetArgs>
 		where TWidgetLayout : UIBaseLayout
-		where TWidgetArgs : struct
 	{
 		protected SimpleList<TWidgetArgs> _args;
 
@@ -110,7 +109,7 @@ namespace UI
 		/// <summary>
 		/// Аналог SetActive(false), но дополнительно сбрасывает аргументы
 		/// </summary>
-		public void Hide(bool reset = true, bool immediate = false)
+		public void Hide(bool reset = false, bool immediate = false)
 		{
 			if (!Active)
 				return;

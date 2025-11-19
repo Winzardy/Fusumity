@@ -1,7 +1,7 @@
 using Content.ContextLabel;
 using UnityEngine;
 
-namespace Content.ScriptableObjects.Labeling
+namespace Content.ScriptableObjects
 {
 	// [Constants]
 	// TODO: сделать генерацию констант через SO

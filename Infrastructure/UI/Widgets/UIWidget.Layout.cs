@@ -18,7 +18,7 @@ namespace UI
 	}
 
 	/// <typeparam name="TLayout">Тип верстки</typeparam>
-	public abstract class UIWidget<TLayout> : UIWidget, IWidget<TLayout>
+	public abstract partial class UIWidget<TLayout> : UIWidget, IWidget<TLayout>
 		where TLayout : UIBaseLayout
 	{
 		private int _siblingIndex = -1;
@@ -102,14 +102,13 @@ namespace UI
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
 		/// обязательно нужно вызывать если переопределяем!
 		/// </remarks>
-		private protected override void OnDisposeInternal()
+		private protected override void OnDisposedInternal()
 		{
 			LayoutClearingInternal();
 
 			DisposeAndSetNullSafe(ref _animator);
 
-			OnDispose();
-			base.OnDisposeInternal();
+			base.OnDisposedInternal();
 		}
 
 		public void SetSiblingIndex(int siblingIndex)
@@ -323,7 +322,7 @@ namespace UI
 		/// Лучше использовать <see cref="SetAnimator"/>.
 		/// </summary>
 		/// <typeparam name="T">Тип аниматора</typeparam>
-		protected T SetAnimator<T>()
+		public T SetAnimator<T>()
 			where T : IWidgetAnimator<TLayout>, new()
 		{
 			var animator = new T();
@@ -428,7 +427,11 @@ namespace UI
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
 		/// обязательно нужно вызывать если переопределяем!
 		/// </remarks>
-		protected internal virtual void OnLayoutInstalledInternal() => OnLayoutInstalled();
+		protected internal virtual void OnLayoutInstalledInternal()
+		{
+			_layout.SignalReceived += OnLayoutSignalReceivedInternal;
+			OnLayoutInstalled();
+		}
 
 		/// <remarks>
 		/// Базовые методы формата On{Name}Internal (префикс On и постфикс Internal)
@@ -436,6 +439,7 @@ namespace UI
 		/// </remarks>
 		protected internal virtual void OnLayoutClearedInternal()
 		{
+			_layout.SignalReceived -= OnLayoutSignalReceivedInternal;
 			LayoutCleared?.Invoke(_layout);
 			OnLayoutCleared();
 		}

@@ -137,6 +137,12 @@ namespace Fusumity.Utility
 				component.Destroy();
 		}
 
+		public static void DestroySafe(this UnityObject obj)
+		{
+			if (obj)
+				obj.Destroy();
+		}
+
 		public static void DestroyComponentSafe<T>(this T component)
 			where T : Component
 		{

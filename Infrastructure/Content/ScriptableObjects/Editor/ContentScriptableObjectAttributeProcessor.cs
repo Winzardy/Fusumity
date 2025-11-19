@@ -64,16 +64,16 @@ namespace Content.ScriptableObjects.Editor
 					//attributes.Add(new SuffixLabelAttribute($"@{rootClass}.{nameof(Suffix)}($property)"));
 
 					attributes.Add(new CustomContextMenuAttribute(
-						$"Copy Guid 2",
+						$"Copy Guid",
 						$"@{rootClass}.{nameof(CopyGuid)}($property)"));
 					attributes.Add(new DelayedPropertyAttribute());
 					attributes.Add(new OnValueChangedAttribute(
 						$"@{rootClass}.{nameof(OnIdChanged)}($property)"));
 					break;
 
-				case nameof(ContentScriptableObject.creationTimeStr):
+				case nameof(ContentScriptableObject.CreationTimeStr):
 					attributes.Add(new TooltipAttribute(ContentScriptableObject.CREATION_TIME_TOOLTIP));
-					attributes.Add(new LabelTextAttribute(nameof(ContentScriptableObject.creationTime), true));
+					attributes.Add(new LabelTextAttribute(nameof(ContentScriptableObject.CreationTime), true));
 					attributes.Add(new PropertyOrderAttribute(-1));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new ShowIfAttribute($"@{nameof(ContentScriptableObjectAttributeProcessor)}.{nameof(IsDebugMode)}()"));
@@ -124,6 +124,12 @@ namespace Content.ScriptableObjects.Editor
 					var className = nameof(ContentScriptableObjectAttributeProcessor);
 					attributes.Add(new GUIColorAttribute($"@{className}.{nameof(GetSyncButtonColor)}()"));
 					break;
+
+				case nameof(ContentScriptableObject.techDescription):
+					attributes.Add(new TextAreaAttribute());
+					attributes.Add(new EnableIfAttribute("_useTechDescription"));
+					attributes.Add(new ShowIfAttribute("ShowTechDescriptionEditor"));
+					break;
 			}
 		}
 
@@ -138,9 +144,9 @@ namespace Content.ScriptableObjects.Editor
 		public static void OnIdChanged(InspectorProperty property)
 		{
 			if (property.SerializationRoot.ValueEntry.WeakSmartValue is not IUniqueContentEntryScriptableObject
-			    {
-				    UseCustomId: true
-			    } entryScriptableObject)
+				{
+					UseCustomId: true
+				} entryScriptableObject)
 				return;
 
 			ContentAutoConstantsGenerator.ForceInvokeWithDelay(entryScriptableObject.GetType());
@@ -205,9 +211,9 @@ namespace Content.ScriptableObjects.Editor
 			if (split.Length > depth)
 			{
 				var strings = split
-				   .ToList()
-				   .GetRange(split.Length - depth, depth)
-				   .ToArray();
+					.ToList()
+					.GetRange(split.Length - depth, depth)
+					.ToArray();
 
 				return string.Join(editor ? "  \u0338 " : SMART_NAME_SEPARATOR, strings);
 			}

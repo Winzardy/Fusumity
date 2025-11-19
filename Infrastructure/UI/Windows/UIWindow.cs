@@ -13,27 +13,27 @@ namespace UI.Windows
 
 		internal event Action<IWindow> RequestedClose;
 
-		internal void Initialize(UIWindowEntry entry);
+		internal void Initialize(UIWindowConfig config);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования окна!
 		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		///получить через GetArgs() в своих целях (скрыть окно на время).
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(IWindowArgs args);
+		internal void Show(object args);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
-		internal bool CanShow(IWindowArgs args, out string error);
+		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset);
-		internal IWindowArgs GetArgs();
+		internal object GetArgs();
 	}
 
-	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyWindowArgs>
+	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
 		where TLayout : UIBaseWindowLayout
 	{
-		private protected sealed override IWindowArgs GetArgs() => null;
+		private protected sealed override object GetArgs() => null;
 
-		protected sealed override bool CanShow(ref EmptyWindowArgs _, out string error) => CanShow(out error);
+		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
 		{
@@ -44,28 +44,56 @@ namespace UI.Windows
 
 	public abstract class UIWindow<TLayout, TArgs> : UIBaseWindow<TLayout, TArgs>
 		where TLayout : UIBaseWindowLayout
-		where TArgs : struct, IWindowArgs
 	{
-		protected sealed override void OnShow() => OnShow(ref _args);
+		private bool _suppressHide;
+
+		protected sealed override void OnShow()
+		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose += RequestClose;
+
+			OnShow(ref _args);
+		}
 
 		protected abstract void OnShow(ref TArgs args);
 
-		protected sealed override void OnHide() => OnHide(ref _args);
+		protected sealed override void OnHide()
+		{
+			if (_args is IRequestClose closable)
+				closable.RequestedClose -= RequestClose;
+
+			if (_suppressHide)
+				return;
+
+			OnHide(ref _args);
+		}
 
 		protected virtual void OnHide(ref TArgs args)
 		{
 		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	public abstract class UIBaseWindow<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IWindow
 		where TLayout : UIBaseWindowLayout
-		where TArgs : struct, IWindowArgs
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Window] ";
 
 		private bool? _resetting;
 
-		protected UIWindowEntry _entry;
+		protected UIWindowConfig _config;
 
 		protected TArgs _args;
 
@@ -75,10 +103,10 @@ namespace UI.Windows
 
 		event Action<IWindow> IWindow.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
-		protected override ComponentReferenceEntry LayoutReference => _entry.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
-		protected override int LayoutAutoDestroyDelayMs => _entry.layout.autoDestroyDelayMs;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
+		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		protected override string Layer => LayerType.WINDOWS;
 
@@ -93,14 +121,14 @@ namespace UI.Windows
 		public sealed override void Initialize()
 			=> throw new Exception(INITIALIZE_OVERRIDE_EXCEPTION_MESSAGE_FORMAT.Format(GetType().Name));
 
-		void IWindow.Initialize(UIWindowEntry entry)
+		void IWindow.Initialize(UIWindowConfig config)
 		{
-			_entry = entry;
+			_config = config;
 
 			base.Initialize();
 		}
 
-		void IWindow.Show(IWindowArgs boxedArgs)
+		void IWindow.Show(object boxedArgs)
 		{
 			if (boxedArgs != null)
 			{
@@ -127,10 +155,10 @@ namespace UI.Windows
 			DisableSuppress();
 		}
 
-		IWindowArgs IWindow.GetArgs() => GetArgs();
-		private protected virtual IWindowArgs GetArgs() => _args;
+		object IWindow.GetArgs() => GetArgs();
+		private protected virtual object GetArgs() => _args;
 
-		bool IWindow.CanShow(IWindowArgs boxedArgs, out string error)
+		bool IWindow.CanShow(object boxedArgs, out string error)
 		{
 			var args = UnboxedArgs(boxedArgs);
 			return CanShow(ref args, out error);
@@ -209,7 +237,7 @@ namespace UI.Windows
 			return true;
 		}
 
-		private TArgs UnboxedArgs(IWindowArgs boxedArgs)
+		private TArgs UnboxedArgs(object boxedArgs)
 		{
 			if (boxedArgs == null)
 				throw new ArgumentException($"Passed null args ({typeof(TArgs)}) to window of type [{GetType()}]");
@@ -220,13 +248,5 @@ namespace UI.Windows
 
 			return args;
 		}
-	}
-
-	public struct EmptyWindowArgs : IWindowArgs
-	{
-	}
-
-	public interface IWindowArgs
-	{
 	}
 }

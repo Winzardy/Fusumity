@@ -23,7 +23,7 @@ namespace UI.Windows
 		private T Initialize<T>(T window)
 			where T : IWindow
 		{
-			var entry = ContentManager.Get<UIWindowEntry>(window.Id);
+			var entry = ContentManager.Get<UIWindowConfig>(window.Id);
 			window.Initialize(entry);
 			return window;
 		}

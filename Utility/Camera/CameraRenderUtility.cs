@@ -6,27 +6,27 @@ namespace Fusumity.Utility.Camera
 
 	public static class CameraRenderUtility
 	{
-		public static void Setup(this UnityCamera camera, CameraRenderEntry entry)
+		public static void Setup(this UnityCamera camera, CameraRenderSettings settings)
 		{
-			camera.cullingMask = entry.cullingMask;
+			camera.cullingMask = settings.cullingMask;
 
-			camera.nearClipPlane = entry.nearClipPlane;
-			camera.farClipPlane = entry.farClipPlane;
+			camera.nearClipPlane = settings.nearClipPlane;
+			camera.farClipPlane = settings.farClipPlane;
 
-			camera.clearFlags = entry.clearFlags;
-			camera.backgroundColor = entry.backgroundColor;
+			camera.clearFlags = settings.clearFlags;
+			camera.backgroundColor = settings.backgroundColor;
 
-			camera.fieldOfView = entry.fov;
+			camera.fieldOfView = settings.fov;
 
 			var urpData = camera.GetUniversalAdditionalCameraData();
 
-			if (entry.useRenderIndex)
-				urpData.SetRenderer(entry.renderIndex);
+			if (settings.useRenderIndex)
+				urpData.SetRenderer(settings.renderIndex);
 
-			camera.orthographic = entry.orthographic;
-			camera.orthographicSize = entry.orthographicSize;
+			camera.orthographic = settings.orthographic;
+			camera.orthographicSize = settings.orthographicSize;
 
-			urpData.volumeLayerMask = entry.volumeLayerMask;
+			urpData.volumeLayerMask = settings.volumeLayerMask;
 		}
 	}
 }

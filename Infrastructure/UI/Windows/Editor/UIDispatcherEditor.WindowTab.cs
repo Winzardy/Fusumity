@@ -5,17 +5,18 @@ using UI.Editor;
 
 namespace UI.Windows.Editor
 {
-	public class UIDispatcherEditorWindowTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorWindowTab : IUIDispatcherEditorTab
 	{
 		private UIWindowDispatcher _dispatcher => UIDispatcher.Get<UIWindowDispatcher>();
 		int IUIDispatcherEditorTab.Order => 0;
 
 		public string Title => "Windows";
+		public SdfIconType? Icon => SdfIconType.Window;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
-		public IWindowArgs args;
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -26,17 +27,17 @@ namespace UI.Windows.Editor
 			}
 
 			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.GetMethod(nameof(_dispatcher.Show))?
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new object[]
 				{
-					args
+					argsInspector.GetArgs()
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -48,20 +49,12 @@ namespace UI.Windows.Editor
 			if (arguments.Length < 2)
 				return;
 
-			var type = arguments[1];
+			var argsType = arguments[1];
 
-			if (type == typeof(EmptyWindowArgs))
+			if (argsType == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IWindowArgs>();
-		}
-
-		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Current")]
-		private void HideWindowEditor()
-		{
-			_dispatcher.TryHideCurrent();
+			argsInspector.SetType(argsType);
 		}
 	}
 }

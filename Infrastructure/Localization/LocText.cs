@@ -131,7 +131,7 @@ namespace Localization
 
 		public static implicit operator LocText(string key) => new(key);
 		public static implicit operator LocText(LocKey key) => new(key);
-		public static implicit operator bool(in LocText args) => args.IsEmpty();
+		public static implicit operator bool(in LocText args) => !args.IsEmpty();
 	}
 
 	public class CompositeLocText

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Fusumity.Editor.Drawers
 {
-	public class ColorCardBoxAttributeDrawer<T> : OdinAttributeDrawer<T>
+	public class ColorCardBoxAttributeDrawer<T> : OdinGroupDrawer<T>
 		where T : ColorCardBoxAttribute
 	{
 		private ValueResolver<string> _valueResolver;
@@ -20,6 +20,8 @@ namespace Fusumity.Editor.Drawers
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
+			var childrenCount = Property.Children.Count;
+
 			FusumityEditorGUILayout.BeginCardBox(new Color(Attribute.R, Attribute.G, Attribute.B, Attribute.A));
 
 			if (!Attribute.Label.IsNullOrEmpty())
@@ -29,7 +31,11 @@ namespace Fusumity.Editor.Drawers
 					SirenixEditorGUI.HorizontalLineSeparator(Color.black.WithAlpha(0.2f));
 			}
 
-			CallNextDrawer(label);
+			for (int index = 0; index < childrenCount; ++index)
+			{
+				var child = Property.Children[index];
+				child.Draw(child.Label);
+			}
 
 			FusumityEditorGUILayout.EndCardBox();
 		}

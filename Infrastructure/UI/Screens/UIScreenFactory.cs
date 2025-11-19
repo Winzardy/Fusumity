@@ -23,7 +23,7 @@ namespace UI.Screens
 		private T Initialize<T>(T screen)
 			where T : IScreen
 		{
-			var entry = ContentManager.Get<UIScreenEntry>(screen.Id);
+			var entry = ContentManager.Get<UIScreenConfig>(screen.Id);
 			screen.Initialize(entry);
 			return screen;
 		}

@@ -7,7 +7,7 @@ namespace UI
 		public TMP_Text label;
 		public TMP_Text text;
 
-		public override TMP_Text Placeholder => label;
+		public override TMP_Text Label => label;
 
 		public void SetLabel(string value)
 		{

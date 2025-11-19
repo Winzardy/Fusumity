@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UI.Popups;
 
@@ -12,7 +13,7 @@ namespace UI
 		/// Активация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
 		/// А активация вызывается лишь когда окно полностью закрыли
 		/// </summary>
-		public event Action<IPopup, IPopupArgs> Activated;
+		public event Action<IPopup, object> Activated;
 
 		/// <summary>
 		/// Деактивация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
@@ -31,6 +32,10 @@ namespace UI
 		/// Если не нужна реакция на показ попапа из очереди используйте <see cref="Deactivated"/>
 		/// </summary>
 		public event Action<IPopup> Hidden;
+
+		public IEnumerable<KeyValuePair<IPopup, object>> Queue => _manager.Queue;
+
+		public (IPopup popup, object args) Current => _manager.Current;
 
 		public UIPopupDispatcher(UIPopupManager manager)
 		{
@@ -67,9 +72,12 @@ namespace UI
 		/// возможны ошибки
 		/// </summary>
 		/// <param name="force">Убрать текущий попап в очередь (возможно понадобится priority вместо force, но пока так)</param>
-		public T Show<T>(IPopupArgs args = null, bool force = false)
+		public T Show<T>(object args = null, bool force = false)
 			where T : UIWidget, IPopup
 			=> _manager.Show<T>(args, force);
+
+		public void TryHide(IPopup popup)
+			=> _manager.TryHide(popup);
 
 		/// <summary>
 		/// Попробовать закрыть текущий попап
@@ -77,7 +85,7 @@ namespace UI
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
-		private void OnEnqueued(IPopup popup, IPopupArgs args, bool addToLast)
+		private void OnEnqueued(IPopup popup, object args, bool addToLast)
 		{
 			if (!addToLast)
 				Activated?.Invoke(popup, args);

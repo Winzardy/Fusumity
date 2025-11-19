@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UI.Windows
 {
 	/// <summary>
 	/// Для управления используйте <see cref="UIWindowDispatcher"/>
 	/// </summary>
-	public partial class UIWindowManager : IDisposable
+	public partial class UIWindowManager : IInitializable, IDisposable
 	{
 		private Dictionary<Type, IWindow> _windows = new(8);
 		private IWindow _current;
 
 		private readonly UIWindowFactory _factory;
 
-		private readonly UIRootWidgetQueue<IWindow, IWindowArgs> _queue;
+		private readonly UIRootWidgetQueue<IWindow, object> _queue;
 
-		internal IWindow Current => _current;
+		internal (IWindow, object) Current => (_current, _current?.GetArgs());
+
+		internal IEnumerable<KeyValuePair<IWindow, object>> Queue => _queue;
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
@@ -24,9 +27,12 @@ namespace UI.Windows
 		{
 			_factory = new();
 
-			InitializeAssetsPreloader();
-
 			_queue = new();
+		}
+
+		void IInitializable.Initialize()
+		{
+			InitializeAssetsPreloader();
 		}
 
 		void IDisposable.Dispose()
@@ -40,7 +46,7 @@ namespace UI.Windows
 			_windows = null;
 		}
 
-		internal T Show<T>(IWindowArgs args)
+		internal T Show<T>(object args)
 			where T : UIWidget, IWindow
 		{
 			if (!TryGet<T>(out var window))
@@ -79,6 +85,11 @@ namespace UI.Windows
 			return false;
 		}
 
+		internal void TryHide(IWindow window)
+		{
+			TryHide(window, false);
+		}
+
 		internal void ClearAll()
 		{
 			foreach (var window in _windows.Values)
@@ -110,10 +121,10 @@ namespace UI.Windows
 
 		internal bool IsActive(string id)
 		{
-			if (_current?.Id == id)
+			if (_current?.Id == id && _current!.IsActive())
 				return true;
 
-			foreach (var window in _queue)
+			foreach (var (window, _) in _queue)
 				if (window.Id == id)
 					return true;
 
@@ -167,19 +178,19 @@ namespace UI.Windows
 
 		private void OnRequestedClose(IWindow window) => TryHide(window);
 
-		private void Show(IWindow window, IWindowArgs args, bool fromQueue = false)
+		private void Show(IWindow window, object args, bool fromQueue = false)
 		{
 			window.Show(args);
 
 			if (_current != window)
 				TryHideAndAddToQueue(_current);
 
-			_current = window;
+			SetCurrent(window);
 
 			Shown?.Invoke(window, fromQueue);
 		}
 
-		private void TryHide(IWindow window, bool fromQueue = false)
+		private void TryHide(IWindow window, bool fromQueue)
 		{
 			_queue.TryRemove(window);
 
@@ -193,6 +204,8 @@ namespace UI.Windows
 			TryReleasePreloadedLayout(window);
 
 			Hide(window, fromQueue);
+			SetCurrent(null);
+
 			TryShowNext();
 		}
 
@@ -203,6 +216,14 @@ namespace UI.Windows
 
 			var (window, args) = _queue.Dequeue();
 			Show(window, args, true);
+		}
+
+		public void TryHideAll()
+		{
+			_queue.Clear();
+
+			_current?.Hide(false);
+			SetCurrent(null);
 		}
 
 		private void TryHideAndAddToQueue(IWindow window)
@@ -225,6 +246,11 @@ namespace UI.Windows
 			window.Hide(!fromQueue);
 
 			Hidden?.Invoke(window, fromQueue);
+		}
+
+		private void SetCurrent(IWindow window)
+		{
+			_current = window;
 		}
 
 		#region Delegates

@@ -31,14 +31,14 @@ namespace Content.ScriptableObjects.Editor
 			if (attribute == null)
 				return;
 
-			var name = type.Name;
-			var className = name;
+			var name = BuildGenericSafeName(type, out var postfix);
+			var className = postfix.IsNullOrEmpty() ? name : name[..^postfix.Length];
 			for (int i = 0; i < projectSettings.removeEndings.Length; i++)
 			{
 				var ending = projectSettings.removeEndings[i];
-				if (name.EndsWith(ending))
+				if (className.EndsWith(ending))
 				{
-					className = name[..^ending.Length];
+					className = className[..^ending.Length];
 					break;
 				}
 			}
@@ -50,6 +50,8 @@ namespace Content.ScriptableObjects.Editor
 				className = className.Replace(from, to);
 			}
 
+			className += postfix;
+
 			var rootName = nameof(Content);
 			var @namespace = type.Namespace;
 
@@ -58,7 +60,7 @@ namespace Content.ScriptableObjects.Editor
 			ConstantsOutput output = null;
 			var namespaceByOutput = @namespace;
 			if (!@namespace.IsNullOrEmpty()
-			    && !projectSettings.namespaceToOutput.TryGetValue(@namespace, out output))
+				&& !projectSettings.namespaceToOutput.TryGetValue(@namespace, out output))
 			{
 				string bestMatch = null;
 				foreach (var (t, tOutput) in projectSettings.namespaceToOutput)
@@ -119,7 +121,7 @@ namespace Content.ScriptableObjects.Editor
 			if (!namespaceByOutput.IsNullOrEmpty() && output.trimGeneratePath)
 			{
 				generateFolderPath = generateFolderPath.Remove(namespaceByOutput)
-				   .Remove(NAMESPACE_SEPARATOR);
+					.Remove(NAMESPACE_SEPARATOR);
 			}
 
 			var folder = generateFolderPath?.Replace(NAMESPACE_SEPARATOR, "/") ?? string.Empty;
@@ -167,11 +169,11 @@ namespace Content.ScriptableObjects.Editor
 				: $"{rootName}.{CONSTANTS_NAME}";
 
 			var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(@namespace))
-			   .NormalizeWhitespace()
-			   .WithLeadingTrivia(SyntaxFactory.Comment(projectSettings.scriptComment));
+				.NormalizeWhitespace()
+				.WithLeadingTrivia(SyntaxFactory.Comment(projectSettings.scriptComment));
 
 			var classDeclaration = SyntaxFactory.ClassDeclaration(className)
-			   .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+				.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
 			var needSpace = false;
 			TryAddCustomConstants(ref needSpace);
@@ -181,8 +183,8 @@ namespace Content.ScriptableObjects.Editor
 			compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
 
 			var code = compilationUnit
-			   .NormalizeWhitespace(indentation: "	", eol: "\n")
-			   .ToFullString();
+				.NormalizeWhitespace(indentation: "	", eol: "\n")
+				.ToFullString();
 			code = code.Replace(NEW_LINE_TAG, string.Empty);
 
 			if (existingData == code)
@@ -220,14 +222,14 @@ namespace Content.ScriptableObjects.Editor
 						var fieldDeclaration = SyntaxFactory.FieldDeclaration(
 								SyntaxFactory.VariableDeclaration(
 										SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
-								   .AddVariables(
+									.AddVariables(
 										SyntaxFactory.VariableDeclarator(name)
-										   .WithInitializer(
+											.WithInitializer(
 												SyntaxFactory.EqualsValueClause(
 													SyntaxFactory.LiteralExpression(
 														SyntaxKind.StringLiteralExpression,
 														SyntaxFactory.Literal(id))))))
-						   .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
+							.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
 
 						using (ListPool<SyntaxTrivia>.Get(out var trivia))
 						{
@@ -273,14 +275,14 @@ namespace Content.ScriptableObjects.Editor
 					var fieldDeclaration = SyntaxFactory.FieldDeclaration(
 							SyntaxFactory.VariableDeclaration(
 									SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
-							   .AddVariables(
+								.AddVariables(
 									SyntaxFactory.VariableDeclarator(constName)
-									   .WithInitializer(
+										.WithInitializer(
 											SyntaxFactory.EqualsValueClause(
 												SyntaxFactory.LiteralExpression(
 													SyntaxKind.StringLiteralExpression,
 													SyntaxFactory.Literal(child.fullPath))))))
-					   .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
+						.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
 
 					using (ListPool<SyntaxTrivia>.Get(out var trivia))
 					{
@@ -356,6 +358,70 @@ namespace Content.ScriptableObjects.Editor
 
 				return sb.ToString().Replace("/", string.Empty);
 			}
+		}
+
+		private static string BuildGenericSafeName(Type t, out string postfix)
+		{
+			const string SEPARATOR = "";
+			const string SEPARATOR_AND = "";
+
+			string PrefixNested(Type x)
+			{
+				var parts = new Stack<string>();
+				for (var cur = x; cur != null && cur.IsNested; cur = cur.DeclaringType)
+				{
+					parts.Push(CutTick(cur.Name));
+				}
+
+				return parts.Count > 0 ? string.Join("_", parts) + "_" : string.Empty;
+			}
+
+			string CutTick(string n)
+			{
+				var i = n.IndexOf('`');
+				return i >= 0 ? n[..i] : n;
+			}
+
+			string Core(Type x, out string postfix)
+			{
+				postfix = null;
+
+				if (x.IsGenericType)
+				{
+					var defName = CutTick(x.Name);
+					var args = x.GetGenericArguments().Select(Select);
+					postfix = SEPARATOR + string.Join(SEPARATOR_AND, args);
+					return defName + postfix;
+				}
+
+				if (x.IsGenericTypeDefinition)
+				{
+					var defName = CutTick(x.Name);
+					var pars = x.GetGenericArguments().Select(a => a.Name);
+					postfix = SEPARATOR + string.Join(SEPARATOR_AND, pars);
+					return defName + postfix;
+				}
+
+				return CutTick(x.Name);
+			}
+
+			string Select(Type x) => Core(x, out _);
+
+			string MakeIdentifier(string s)
+			{
+				var sb = new System.Text.StringBuilder(s.Length);
+				foreach (var ch in s)
+					sb.Append(char.IsLetterOrDigit(ch) ? ch : '_');
+
+				// Идентификатор не должен начинаться с цифры
+				if (sb.Length > 0 && char.IsDigit(sb[0]))
+					sb.Insert(0, '_');
+
+				return sb.ToString();
+			}
+
+			var prefix = t.IsNested ? PrefixNested(t) : string.Empty;
+			return MakeIdentifier(prefix + Core(t, out postfix));
 		}
 	}
 

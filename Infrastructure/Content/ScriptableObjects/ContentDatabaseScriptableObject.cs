@@ -69,5 +69,10 @@ namespace Content.ScriptableObjects
 		public virtual void OnUpdateContent()
 		{
 		}
+
+		public void Sort() => scriptableObjects.Sort(SortByCreationTime);
+
+		private static int SortByCreationTime(ContentScriptableObject x, ContentScriptableObject y)
+			=> x.CreationTime.CompareTo(y.CreationTime);
 	}
 }

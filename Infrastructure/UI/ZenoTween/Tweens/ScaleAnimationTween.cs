@@ -8,7 +8,7 @@ using UnityEngine;
 namespace ZenoTween.Participant.Tweens
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.ArrowsFullscreen)]
+	[TypeRegistryItem(Icon = SdfIconType.ArrowsFullscreen, CategoryPath = CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens",
@@ -33,7 +33,7 @@ namespace ZenoTween.Participant.Tweens
 		protected override Tween Create()
 		{
 			var tween = ScaleTween()
-			   .SetEase(ease);
+				.SetEase(ease);
 
 			if (useStartValue)
 				tween.From(startValue);

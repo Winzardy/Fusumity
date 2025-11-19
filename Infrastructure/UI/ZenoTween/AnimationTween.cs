@@ -13,6 +13,7 @@ namespace ZenoTween
 	[Serializable]
 	public abstract class AnimationTween : SequenceParticipant
 	{
+		public const string CATEGORY_PATH = "Tween";
 		public enum Type
 		{
 			Join = 0,
@@ -49,14 +50,19 @@ namespace ZenoTween
 		public bool IsLoop => repeat == -1;
 		public bool UseType => !(IsLoop && lifetimeByParent);
 
-		public override void Participate(ref Sequence sequence)
+		public override void Participate(ref Sequence sequence, object target = null)
 		{
 			var tween = Create();
 
 			if (tween == null)
 				return;
 
-			sequence ??= DOTween.Sequence();
+			if (sequence == null)
+			{
+				sequence = DOTween.Sequence();
+				if (target != null)
+					sequence.SetTarget(target);
+			}
 
 			if (delay > 0)
 				tween.SetDelay(delay);

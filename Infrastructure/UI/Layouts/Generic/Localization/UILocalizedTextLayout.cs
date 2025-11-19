@@ -1,17 +1,19 @@
 ﻿using TMPro;
+using UnityEngine.Serialization;
 
 namespace UI
 {
 	public class UILocalizedTextLayout : UILocalizedBaseLayout
 	{
-		public TMP_Text placeholder;
+		[FormerlySerializedAs("placeholder")]
+		public TMP_Text label;
 
-		public override TMP_Text Placeholder => placeholder;
+		public override TMP_Text Label => label;
 
 		protected override void Reset()
 		{
 			base.Reset();
-			placeholder = GetComponent<TMP_Text>();
+			label = GetComponent<TMP_Text>();
 		}
 	}
 }

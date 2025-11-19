@@ -32,7 +32,7 @@ namespace UI.Popovers
 			if(_capacityEnsured)
 				return;
 
-			var entry = ContentManager.Get<UIPopoverEntry>(entryId);
+			var entry = ContentManager.Get<UIPopoverConfig>(entryId);
 			if (entry.poolCapacity)
 				SetCapacity(entry.poolCapacity);
 

@@ -5,7 +5,6 @@ using DG.Tweening;
 namespace UI
 {
 	public class DefaultMarkerAnimator<TArgs> : BaseWidgetAnimator<UIMarkerLayout, UIMarker<TArgs>>
-		where TArgs : struct
 	{
 		protected override void OnFill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)
 		{

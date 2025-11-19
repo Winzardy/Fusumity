@@ -5,6 +5,7 @@ using DG.Tweening;
 using Fusumity.Utility;
 using InputManagement;
 using Sapientia.ServiceManagement;
+using Sapientia.Utility;
 using UnityEngine;
 using ZenoTween.Utility;
 
@@ -59,7 +60,7 @@ namespace UI
 		public UIObjectInspectorSettings Settings { get; }
 	}
 
-	public abstract class UIBaseObjectInspector<T, TArgs> : UIWidgetC<UIObjectInspectorLayout, TArgs>
+	public abstract class UIBaseObjectInspector<T, TArgs> : UIWidget<UIObjectInspectorLayout, TArgs>
 		where T : Object
 		where TArgs : class, IObjectInspectorViewModel<T>
 	{
@@ -69,7 +70,7 @@ namespace UI
 
 		private UISpinner _defaultSpinner;
 
-		private ISpinner spinner => Value.spinner ?? _defaultSpinner;
+		private ISpinner spinner => _args.spinner ?? _defaultSpinner;
 
 		private IAssetReferenceEntry _targetReference;
 		private T _targetPrefab;
@@ -80,7 +81,7 @@ namespace UI
 
 		protected UITextureRenderer _textureRenderer;
 
-		public UIObjectInspectorSettings Settings => Value.Settings;
+		public UIObjectInspectorSettings Settings => _args.Settings;
 
 		public T target;
 
@@ -115,7 +116,9 @@ namespace UI
 			_restoreRotationTween.KillSafe();
 		}
 
-		protected override void OnShow(TArgs args)
+		private CancellationTokenSource _cts;
+
+		protected sealed override void OnShow(ref TArgs args)
 		{
 			if (args.render.HasValue)
 			{
@@ -123,32 +126,45 @@ namespace UI
 				_textureRenderer = new UITextureRenderer(args.render);
 			}
 
-			ShowAsync().Forget();
+			ShowAsync(args)
+				.Forget();
 		}
 
-		protected override void OnHide(TArgs args)
+		protected sealed override void OnHide(ref TArgs args)
 		{
+			AsyncUtility.Trigger(ref _cts);
+
 			TryClearAll();
 			_textureRenderer?.Hide();
 
 			_restoreRotationTween.KillSafe();
 		}
 
-		private async UniTaskVoid ShowAsync()
+		private async UniTaskVoid ShowAsync(TArgs args)
 		{
+			_cts?.Trigger();
+			_cts = new CancellationTokenSource();
+			var token = _cts.Token;
+
 			_restoreRotationTween?.KillSafe();
 
 			_layout.image.SetActive(false);
 
-			var prefab = Value.prefab;
+			var prefab = args.prefab;
 
-			if (prefab == null && !Value.reference.IsEmptyOrInvalid())
+			if (prefab == null && !args.reference.IsEmptyOrInvalid())
 			{
 				spinner?.SetActive(true);
-				prefab = await LoadAsync(Value.reference, DisposeCancellationToken);
+				prefab = await LoadAsync(args.reference, token);
+
+				if (token.IsCancellationRequested)
+				{
+					args.reference?.Release();
+					return;
+				}
 
 				_targetReference?.Release(RELEASE_DELAY_MS);
-				_targetReference = Value.reference;
+				_targetReference = args.reference;
 
 				spinner?.SetActive(false);
 			}
@@ -162,7 +178,12 @@ namespace UI
 				}
 
 				TryClearPrefab();
-				target = await CreateAsync(prefab, DisposeCancellationToken);
+				target = await CreateAsync(prefab, token);
+				if (token.IsCancellationRequested)
+				{
+					OnClearPrefab();
+					return;
+				}
 
 				_targetPrefab = prefab;
 			}
@@ -236,9 +257,9 @@ namespace UI
 			_canRotate = false;
 
 			_restoreRotationTween ??= _textureRenderer.FocusPoint.transform
-			   .DOLocalRotate(Vector3.zero, Settings.rotationDuration)
-			   .SetEase(Settings.rotationEase)
-			   .SetDelay(Settings.rotationDelay);
+				.DOLocalRotate(Vector3.zero, Settings.rotationDuration)
+				.SetEase(Settings.rotationEase)
+				.SetDelay(Settings.rotationDelay);
 		}
 
 		private void OnSwiped(SwipeInfo info)

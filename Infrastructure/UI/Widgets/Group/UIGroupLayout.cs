@@ -17,6 +17,8 @@ namespace UI
 	*/
 	public class UIGroupLayout : UIBaseLayout
 	{
+		public bool useLayoutAnimations;
+
 		public RectTransform parent;
 
 		[SerializeField, FormerlySerializedAs("template")]
@@ -27,6 +29,8 @@ namespace UI
 		public bool forceRebuild;
 
 		public virtual UIBaseLayout template => _template;
+
+		public override bool UseLayoutAnimations => useLayoutAnimations;
 
 		protected virtual Type GetTemplateType() => null;
 

@@ -8,7 +8,7 @@ namespace UI
 	/// snapping point (tracks world position of an object),
 	/// to which you can attach any UI object.
 	/// </summary>
-	public class UIEmptyMarkersGroup : UIGroup<UIMarker, UIMarkerLayout, UIMarkerArgs<Empty>>
+	public class UIEmptyMarkersGroup : UIGroup<UIMarker, UIMarkerLayout, UIMarkerArgs<EmptyArgs>>
     {
         private Camera _customCamera;
         private Dictionary<Transform, WidgetGroupToken> _usedMarkers = new Dictionary<Transform, WidgetGroupToken>();
@@ -28,7 +28,7 @@ namespace UI
 
         public UIMarker SnapMarkerTo(Transform worldObject, Vector2 offset = default)
         {
-            var token = Add(new UIMarkerArgs<Empty>
+            var token = Add(new UIMarkerArgs<EmptyArgs>
             {
                 target = worldObject,
 				camera = _customCamera,

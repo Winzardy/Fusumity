@@ -12,6 +12,7 @@ namespace Content.ContextLabel
 
 	// TODO: добавить подсветку одинаковых label's
 	[Serializable]
+	[Constants]
 	public struct ContextLabelCatalog<TKey> : IContextLabelCatalog
 	{
 		[SerializeField]

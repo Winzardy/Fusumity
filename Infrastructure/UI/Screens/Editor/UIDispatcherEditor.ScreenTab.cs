@@ -4,14 +4,18 @@ using UI.Editor;
 
 namespace UI.Screens.Editor
 {
-	public class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorScreenTab : IUIDispatcherEditorTab
 	{
 		private UIScreenDispatcher _dispatcher => UIDispatcher.Get<UIScreenDispatcher>();
+		int IUIDispatcherEditorTab.Order => 3;
+
 		public string Title => "Screens";
+		public SdfIconType? Icon => SdfIconType.Display;
 
-		public int Order => 3;
-
+		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
+
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -22,37 +26,34 @@ namespace UI.Screens.Editor
 			}
 
 			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, null);
+				.GetMethod(nameof(_dispatcher.Show))?
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new object[]
+				{
+					argsInspector.GetArgs()
+				});
 		}
 
-		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[Button("Try Show Default")]
-		[PropertySpace(10)]
-		private void TryShowDefaultScreenEditor()
+		private void OnTypeChanged()
 		{
-			_dispatcher.TryShowDefault(false);
-		}
+			argsInspector.Clear();
 
-		[HorizontalGroup("Blockers")]
-		[Button("Add Show Blocker")]
-		private void AddShowBlockerEditor()
-		{
-			_dispatcher.AddShowBlocker(this);
-		}
+			var baseType = this.type?.BaseType;
 
-		[HorizontalGroup("Blockers")]
-		[Button("Remove Show Blocker")]
-		private void RemoveShowBlockerEditor()
-		{
-			_dispatcher.RemoveShowBlocker(this);
-		}
+			if (baseType is not {IsGenericType: true})
+				return;
 
-		[Button("Hide Current")]
-		private void HideScreenEditor()
-		{
-			_dispatcher.Hide();
+			var arguments = baseType.GetGenericArguments();
+
+			if (arguments.Length < 2)
+				return;
+
+			var argsType = arguments[1];
+
+			if (argsType == typeof(EmptyArgs))
+				return;
+
+			argsInspector.SetType(argsType);
 		}
 	}
 }

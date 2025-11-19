@@ -12,7 +12,7 @@ namespace UI.Screens
 		{
 			using (ListPool<IAssetReferenceEntry>.Get(out var list))
 			{
-				foreach (var entry in ContentManager.GetAllEntries<UIScreenEntry>())
+				foreach (var entry in ContentManager.GetAllEntries<UIScreenConfig>())
 				{
 					ref readonly var screen = ref entry.Value;
 
@@ -34,7 +34,7 @@ namespace UI.Screens
 
 		private void TryReleasePreloadedLayout(IScreen screen)
 		{
-			var entry = ContentManager.Get<UIScreenEntry>(screen.Id);
+			var entry = ContentManager.Get<UIScreenConfig>(screen.Id);
 
 			if (entry.layout.HasFlag(LayoutAutomationMode.AutoDestroy))
 				_preloader.TryRelease(entry.layout.LayoutReference);

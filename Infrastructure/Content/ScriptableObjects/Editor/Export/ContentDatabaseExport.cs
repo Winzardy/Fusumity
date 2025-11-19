@@ -19,7 +19,6 @@ namespace Content.ScriptableObjects.Editor
 		public Type type = typeof(ContentDatabaseJsonFileExporter);
 
 		[FormerlySerializedAs("_args")]
-		[DarkCardBox]
 		[SerializeField, SerializeReference]
 		protected IContentDatabaseExporterArgs _exportArgs = new ContentDatabaseJsonFileExporter.Args();
 

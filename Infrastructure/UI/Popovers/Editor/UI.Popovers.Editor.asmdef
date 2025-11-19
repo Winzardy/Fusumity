@@ -8,7 +8,8 @@
         "Sapientia",
         "Fusumity",
         "UnityEditor.UI",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"

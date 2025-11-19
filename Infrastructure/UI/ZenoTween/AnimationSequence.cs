@@ -10,7 +10,7 @@ namespace ZenoTween
 {
 	[Serializable]
 	[MovedFrom(true, sourceNamespace: "AnimationSequence", sourceAssembly: "Generic")]
-	[TypeRegistryItem(Icon = SdfIconType.CollectionPlayFill)]
+	[TypeRegistryItem(Icon = SdfIconType.CollectionPlayFill, CategoryPath = "/")]
 	public class AnimationSequence : AnimationTween
 	{
 		public enum TimeScaleMode
@@ -32,16 +32,16 @@ namespace ZenoTween
 
 		protected override Tween Create() => ToTween();
 
-		public override void Participate(ref Sequence sequence)
+		public override void Participate(ref Sequence sequence, object target = null)
 		{
-			base.Participate(ref sequence);
+			base.Participate(ref sequence, target);
 
 			//Важно понимать что данный метод переопределяет режим для всех! Защиту от дурака позже сделаю...
 			if (timeScale)
 				sequence.SetUpdate(timeScale == TimeScaleMode.Unscaled);
 		}
 
-		public Tween ToTween() => participants.ToTween();
+		public Tween ToTween(object target = null) => participants.ToTween(target);
 
 		protected internal override bool IsEmpty() => participants.IsNullOrEmpty();
 

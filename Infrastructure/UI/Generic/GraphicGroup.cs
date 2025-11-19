@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
@@ -19,6 +20,7 @@ namespace UI
 		/// </summary>
 		public bool autoCollectGraphicsOnRuntime;
 
+		[NotNull]
 		public Graphic[] graphics;
 
 		public override Color color
@@ -51,13 +53,14 @@ namespace UI
 
 			foreach (var graphic in graphics)
 			{
-#if UNITY_EDITOR
-				if (graphic == null)
+				if (!graphic)
 				{
-					GUIDebug.LogWarning("Empty graphic!", this);
+#if UNITY_EDITOR
+					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+#endif
 					continue;
 				}
-#endif
+
 				graphic.CrossFadeAlpha(alpha, duration, ignoreTimeScale);
 			}
 		}
@@ -72,13 +75,14 @@ namespace UI
 
 			foreach (var graphic in graphics)
 			{
-#if UNITY_EDITOR
-				if (graphic == null)
+				if (!graphic)
 				{
-					GUIDebug.LogWarning($"Empty graphic! ({name})", this);
+#if UNITY_EDITOR
+					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+#endif
 					continue;
 				}
-#endif
+
 				graphic.CrossFadeColor(targetColor, duration, ignoreTimeScale, useAlpha, useRGB);
 			}
 		}
@@ -92,13 +96,14 @@ namespace UI
 
 			foreach (var graphic in graphics)
 			{
-#if UNITY_EDITOR
-				if (graphic == null)
+				if (!graphic)
 				{
-					GUIDebug.LogWarning($"Empty graphic! ({name})", this);
+#if UNITY_EDITOR
+					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+#endif
 					continue;
 				}
-#endif
+
 				graphic.CrossFadeColor(targetColor, duration, ignoreTimeScale, useAlpha);
 			}
 		}

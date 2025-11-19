@@ -8,7 +8,9 @@
         "Sapientia",
         "Fusumity",
         "ZenoTween",
-        "Fusumity.Editor"
+        "Fusumity.Editor",
+        "Game.Constants",
+        "Messaging"
     ],
     "includePlatforms": [
         "Editor"

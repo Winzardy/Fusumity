@@ -19,8 +19,18 @@ namespace SceneManagement
 			Loading,
 		}
 
-		public const string SUB_SCENE_POSTFIX = "SubScene";
-		public const string EMPTY_SCENE_POSTFIX = "Empty" + SUB_SCENE_POSTFIX;
+		/// <summary>
+		/// Аддитивная сцена
+		/// </summary>
+		private const string SUB_SCENE_MARKER = "sub";
+
+		/// <summary>
+		/// Пустая значит, была создана в рантайме
+		/// </summary>
+		private const string EMPTY_SCENE_MARKER = "empty";
+
+		public const string SUB_SCENE_POSTFIX = " (" + SUB_SCENE_MARKER + ")";
+		public const string EMPTY_SCENE_POSTFIX = " (" + SUB_SCENE_MARKER + ", " + EMPTY_SCENE_MARKER + ")";
 
 		public readonly string sceneName;
 		public readonly LoadSceneMode loadSceneMode;
@@ -38,22 +48,27 @@ namespace SceneManagement
 		public SceneLoader(string sceneName)
 		{
 			this.sceneName = sceneName;
-			loadSceneMode = sceneName.Contains(SUB_SCENE_POSTFIX) ? LoadSceneMode.Additive : LoadSceneMode.Single;
-			isEmptyScene = sceneName.Contains(EMPTY_SCENE_POSTFIX);
+			loadSceneMode = sceneName.Contains(SUB_SCENE_MARKER) ? LoadSceneMode.Additive : LoadSceneMode.Single;
+			isEmptyScene = sceneName.Contains(EMPTY_SCENE_MARKER);
 
 			if (!isEmptyScene)
 				_scene = UnitySceneManager.GetSceneByName(sceneName);
 		}
 
-		public void ReloadSceneAsync(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		public void ReloadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null,
+			Action completeUnloadCallback = null)
 		{
-			UnloadSceneAsync(() =>
+			UnloadScene(OnUnloaded);
+
+			void OnUnloaded()
 			{
-				LoadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback);
-			});
+				completeUnloadCallback?.Invoke();
+				LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback);
+			}
 		}
 
-		public void LoadSceneAsync(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null, Action completeUnloadCallback = null)
+		public void LoadScene(bool activateScene, Action<Scene> completeLoadCallback = null, Action interruptLoadingCallback = null,
+			Action completeUnloadCallback = null)
 		{
 			_activateScene = activateScene;
 			CompleteLoadCallback += completeLoadCallback;
@@ -70,7 +85,8 @@ namespace SceneManagement
 					CompleteUnloadCallback += completeUnloadCallback;
 					return;
 				case GameSceneState.Unloading:
-					CompleteUnloadCallback = () => LoadSceneAsync(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
+					CompleteUnloadCallback = () =>
+						LoadScene(activateScene, completeLoadCallback, interruptLoadingCallback, completeUnloadCallback);
 					return;
 			}
 
@@ -103,7 +119,7 @@ namespace SceneManagement
 			}
 		}
 
-		public void UnloadSceneAsync(Action completeUnloadCallback = null)
+		public void UnloadScene(Action completeUnloadCallback = null)
 		{
 			CompleteUnloadCallback += completeUnloadCallback;
 
@@ -138,9 +154,10 @@ namespace SceneManagement
 			if (_shouldInterruptLoading)
 			{
 				_currentState = GameSceneState.Loaded;
-				UnloadSceneAsync();
+				UnloadScene();
 				return;
 			}
+
 			InterruptLoadingCallback = null;
 
 			if (_activateScene)
@@ -164,6 +181,7 @@ namespace SceneManagement
 				toInvoke?.Invoke();
 				_shouldInterruptLoading = false;
 			}
+
 			{
 				InterruptLoadingCallback = null;
 				CompleteLoadCallback = null;

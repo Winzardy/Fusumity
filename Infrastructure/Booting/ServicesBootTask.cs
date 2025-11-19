@@ -26,9 +26,17 @@ namespace Booting
 		}
 
 		protected void AddServiceAs<T, TAlias>()
-			where T : class, TAlias, new()			
+			where T : class, TAlias, new()
 		{
 			var instance = new T();
+			instance.RegisterAsService<TAlias>();
+		}
+
+		protected void AddServiceAndRegisterAs<T, TAlias>()
+			where T : class, TAlias, new()
+		{
+			var instance = new T();
+			instance.RegisterAsService();
 			instance.RegisterAsService<TAlias>();
 		}
 

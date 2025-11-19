@@ -6,6 +6,7 @@ using UnityEngine;
 namespace ZenoTween.Participant.Tweens
 {
 	[Serializable]
+	[TypeRegistryItem(Icon = SdfIconType.ArrowUpRightSquare, CategoryPath = AnimationTween.CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Tweens",

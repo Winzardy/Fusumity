@@ -27,72 +27,72 @@ namespace UI
 				return assigner;
 
 			var active = false;
-			assigner.TryClear(layout.Placeholder);
+			assigner.TryClear(layout.Label);
 			if (!locText.IsEmpty())
 			{
 				active = true;
-				assigner.Assign(layout.Placeholder, locText);
+				assigner.Assign(layout.Label, locText);
 			}
 			else if (!label.IsNullOrEmpty())
 			{
 				active = true;
-				layout.Placeholder.text = label;
+				layout.Label.text = label;
 			}
 
-			layout.Placeholder.SetActive(active);
+			layout.Label.SetActive(active);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this TMP_Text placeholder, UITextLocalizationAssigner assigner,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this TMP_Text tmpText, UITextLocalizationAssigner assigner,
 			in LocText locText,
 			string label)
 		{
-			assigner.SetTextOrDeactivateSafe(placeholder, in locText, label);
+			assigner.SetTextOrDeactivateSafe(tmpText, in locText, label);
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder,
+		public static UITextLocalizationAssigner SetTextOrDeactivateSafe(this UITextLocalizationAssigner assigner, TMP_Text tmpText,
 			in LocText locText,
 			string label = "")
 		{
-			if (!placeholder)
+			if (!tmpText)
 				return assigner;
 
-			assigner.TryClear(placeholder);
+			assigner.TryClear(tmpText);
 			var active = false;
 			if (!locText.IsEmpty())
 			{
 				active = true;
-				assigner.Assign(placeholder, locText);
+				assigner.Assign(tmpText, locText);
 			}
 			else if (!label.IsNullOrEmpty())
 			{
 				active = true;
-				placeholder.text = label;
+				tmpText.text = label;
 			}
 
-			placeholder.SetActive(active);
+			tmpText.SetActive(active);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, TMP_Text placeholder,
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, TMP_Text tmpText,
 			in LocText locText,
 			string label = "",
 			string defaultText = "", Action callback = null)
 		{
-			if (!placeholder)
+			if (!tmpText)
 				return assigner;
 
 			if (!locText.IsEmpty())
 			{
-				assigner.Assign(placeholder, in locText);
+				assigner.Assign(tmpText, in locText);
 			}
 			else
 			{
-				assigner.TryClear(placeholder);
-				placeholder.text = !label.IsNullOrEmpty() ? label : defaultText;
+				assigner.TryClear(tmpText);
+				tmpText.text = !label.IsNullOrEmpty() ? label : defaultText;
 			}
 
 			callback?.Invoke();
@@ -100,10 +100,25 @@ namespace UI
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout)
+		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
+			in LocText locText,
+			string label = "",
+			string defaultText = "", Action callback = null)
+		{
+			if (locText.IsEmpty() && label.IsNullOrEmpty() && defaultText.IsNullOrEmpty() && layout.locInfo)
+			{
+				assigner.Assign(layout);
+				callback?.Invoke();
+				return assigner;
+			}
+
+			return SetTextSafe(assigner, layout.Label, locText, label, defaultText, callback);
+		}
+
+		public static UITextLocalizationAssigner Assign(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout)
 		{
 			if (layout.locInfo)
-				assigner.SetText(layout.Placeholder, layout.locInfo);
+				assigner.SetText(layout.Label, layout.locInfo);
 
 			return assigner;
 		}
@@ -112,43 +127,43 @@ namespace UI
 			params object[] args)
 		{
 			if (layout.locInfo)
-				assigner.SetFormatText(layout.Placeholder, layout.locInfo, args);
+				assigner.SetFormatText(layout.Label, layout.locInfo, args);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
+		public static UITextLocalizationAssigner Assign(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
 			Func<object> func)
 		{
 			if (layout.locInfo)
-				assigner.SetText(layout.Placeholder, layout.locInfo, tag, func);
+				assigner.SetText(layout.Label, layout.locInfo, tag, func);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
+		public static UITextLocalizationAssigner Assign(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout, string tag,
 			object value)
 		{
 			if (layout.locInfo)
-				assigner.SetText(layout.Placeholder, layout.locInfo, tag, value);
+				assigner.SetText(layout.Label, layout.locInfo, tag, value);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
+		public static UITextLocalizationAssigner Assign(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout,
 			params (string name, Func<object> value)[] tags)
 		{
 			if (layout.locInfo)
-				assigner.SetText(layout.Placeholder, layout.locInfo, tags);
+				assigner.SetText(layout.Label, layout.locInfo, tags);
 
 			return assigner;
 		}
 
-		public static UITextLocalizationAssigner SetText(this UITextLocalizationAssigner assigner, UILocalizedTextLayout layout,
+		public static UITextLocalizationAssigner Assign(this UITextLocalizationAssigner assigner, UILocalizedTextLayout layout,
 			params (string name, object value)[] tags)
 		{
 			if (layout.locInfo)
-				assigner.SetText(layout.Placeholder, layout.locInfo, tags);
+				assigner.SetText(layout.Label, layout.locInfo, tags);
 
 			return assigner;
 		}
@@ -156,7 +171,7 @@ namespace UI
 		public static UITextLocalizationAssigner SetTextSafe(this UITextLocalizationAssigner assigner, UILocalizedBaseLayout layout)
 		{
 			if (layout)
-				SetText(assigner, layout);
+				Assign(assigner, layout);
 
 			return assigner;
 		}
@@ -175,7 +190,7 @@ namespace UI
 			Func<object> func)
 		{
 			if (layout)
-				SetText(assigner, layout, tag, func);
+				Assign(assigner, layout, tag, func);
 
 			return assigner;
 		}
@@ -185,7 +200,7 @@ namespace UI
 			object value)
 		{
 			if (layout)
-				SetText(assigner, layout, tag, value);
+				Assign(assigner, layout, tag, value);
 			return assigner;
 		}
 
@@ -193,7 +208,7 @@ namespace UI
 			params (string name, Func<object> value)[] tags)
 		{
 			if (layout)
-				SetText(assigner, layout, tags);
+				Assign(assigner, layout, tags);
 
 			return assigner;
 		}
@@ -202,7 +217,7 @@ namespace UI
 			params (string name, object value)[] tags)
 		{
 			if (layout)
-				SetText(assigner, layout, tags);
+				Assign(assigner, layout, tags);
 
 			return assigner;
 		}

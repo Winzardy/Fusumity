@@ -8,7 +8,7 @@ namespace UI.Tabs
 	public interface ITab : IWidget
 	{
 		public ITabGroup Group { get; }
-		public void Initialize(UITabEntry entry, ITabGroup group);
+		public void Initialize(UITabConfig config, ITabGroup group);
 		public void Show(bool immediate = false);
 		public void Hide(bool immediate = false);
 		public string Id { get; }
@@ -28,7 +28,7 @@ namespace UI.Tabs
 	{
 		private const string INITIALIZE_EXCEPTION = "Initialize without entry only with installed layout";
 
-		private UITabEntry _entry;
+		private UITabConfig _config;
 
 		protected ITabGroup _group;
 
@@ -45,10 +45,10 @@ namespace UI.Tabs
 
 		#region Layout
 
-		protected override ComponentReferenceEntry LayoutReference => _entry?.layout.LayoutReference;
-		protected override bool LayoutAutoDestroy => _entry?.layout.HasFlag(LayoutAutomationMode.AutoDestroy) ?? false;
-		protected override int LayoutAutoDestroyDelayMs => _entry?.layout.autoDestroyDelayMs ?? 0;
-		protected override List<AssetReferenceEntry> PreloadAssets => _entry?.layout.preloadAssets;
+		protected override ComponentReferenceEntry LayoutReference => _config?.layout.LayoutReference;
+		protected override bool LayoutAutoDestroy => _config?.layout.HasFlag(LayoutAutomationMode.AutoDestroy) ?? false;
+		protected override int LayoutAutoDestroyDelayMs => _config?.layout.autoDestroyDelayMs ?? 0;
+		protected override List<AssetReferenceEntry> PreloadAssets => _config?.layout.preloadAssets;
 
 		#endregion
 
@@ -60,9 +60,9 @@ namespace UI.Tabs
 			base.SetupLayout(layout);
 		}
 
-		public void Initialize(UITabEntry entry, ITabGroup group)
+		public void Initialize(UITabConfig config, ITabGroup group)
 		{
-			_entry = entry;
+			_config = config;
 			_group = group;
 
 			base.Initialize();

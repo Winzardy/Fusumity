@@ -3,7 +3,6 @@ namespace UI
 	public class UIMarker<TWidget, TLayout, TArgs> : UIMarker<TArgs>
 		where TWidget : UIWidget<TLayout, TArgs>
 		where TLayout : UIBaseLayout
-		where TArgs : struct
 	{
 		private TWidget _widget;
 
@@ -22,7 +21,7 @@ namespace UI
 			=> _widget?.Show(in args.nestedArgs, _immediate);
 	}
 
-	public class UIMarker<TWidget, TLayout> : UIMarker<Empty>
+	public class UIMarker<TWidget, TLayout> : UIMarker<EmptyArgs>
 		where TWidget : UIWidget<TLayout>
 		where TLayout : UIBaseLayout
 	{
@@ -39,7 +38,7 @@ namespace UI
 			CreateWidget(out _widget, layout);
 		}
 
-		protected override void OnShow(ref UIMarkerArgs<Empty> args)
+		protected override void OnShow(ref UIMarkerArgs<EmptyArgs> args)
 			=> _widget?.SetActive(true, _immediate);
 	}
 }

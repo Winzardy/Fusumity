@@ -30,5 +30,27 @@ namespace AssetManagement.AddressableAssets
 #endif
 			return null;
 		}
+
+		public static bool IsRuntimeValid(this AssetReference assetReference)
+		{
+			if (!assetReference.RuntimeKeyIsValid())
+				return false;
+
+#if DEBUG
+			var key = assetReference.RuntimeKey;
+			if (key == null)
+				return false;
+
+			foreach (var locator in Addressables.ResourceLocators)
+			{
+				if (locator.Locate(key, typeof(object), out var locations) && locations is {Count: > 0})
+					return true;
+			}
+
+			return false;
+#else
+			return true;
+#endif
+		}
 	}
 }

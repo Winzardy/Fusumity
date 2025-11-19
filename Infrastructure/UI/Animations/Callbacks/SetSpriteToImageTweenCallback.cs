@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace ZenoTween.Participant.Callbacks.UI
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.CardImage)]
+	[TypeRegistryItem(Icon = SdfIconType.CardImage, CategoryPath = UIAnimationTweenConstants.CALLBACK_CATEGORY_PATH)]
 	[UnityEngine.Scripting.APIUpdating.MovedFrom(
 		true,
 		sourceNamespace: "AnimationSequence.Participant.Callbacks.UI",

@@ -34,7 +34,7 @@ namespace UI.Popups
 			if (_capacityEnsured)
 				return;
 
-			var entry = ContentManager.Get<UIPopupEntry>(entryId);
+			var entry = ContentManager.Get<UIPopupConfig>(entryId);
 			if (entry.poolCapacity)
 				SetCapacity(entry.poolCapacity);
 

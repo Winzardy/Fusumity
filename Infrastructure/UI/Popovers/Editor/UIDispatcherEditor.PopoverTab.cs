@@ -4,29 +4,28 @@ using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
 using Sapientia;
-using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using UI.Editor;
-using UI.Popovers;
 using UnityEngine;
 
-namespace UI.Popups.Editor
+namespace UI.Popovers.Editor
 {
-	public class UIDispatcherEditorPopoverTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorPopoverTab : IUIDispatcherEditorTab
 	{
 		private UIPopoverDispatcher _dispatcher => UIDispatcher.Get<UIPopoverDispatcher>();
 
 		public string Title => "Popovers";
+		public SdfIconType? Icon => SdfIconType.ChatSquareText;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
 
 		[OnValueChanged(nameof(OnHostChanged))]
-		public HostEntry hostEntry;
+		public UIWidgetInspector host;
 
 		public Toggle<RectTransform> customAnchor;
 
-		public IPopoverArgs args;
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
@@ -36,7 +35,7 @@ namespace UI.Popups.Editor
 				return;
 			}
 
-			if (hostEntry.IsEmpty)
+			if (host.IsEmpty)
 			{
 				GUIDebug.LogError("Выберите хоста!");
 				return;
@@ -44,24 +43,24 @@ namespace UI.Popups.Editor
 
 			RectTransform anchor = customAnchor ? customAnchor : null;
 			_dispatcher?.GetType()
-			   .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-			   .First(m =>
+				.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+				.First(m =>
 					m.Name == nameof(UIPopoverDispatcher.Show) &&
 					m.IsGenericMethodDefinition &&
 					m.GetGenericArguments().Length == 1 &&
 					m.GetParameters().Length == 3)
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new[]
 				{
-					hostEntry.widget,
-					args,
+					host.widget,
+					argsInspector.GetArgs(),
 					anchor
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -73,108 +72,17 @@ namespace UI.Popups.Editor
 			if (arguments.Length < 2)
 				return;
 
-			var type = arguments[1];
+			var argsType = arguments[1];
 
-			if (type == typeof(EmptyPopoverArgs))
+			if (argsType == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IPopoverArgs>();
+			argsInspector.SetType(argsType, true);
 		}
 
 		private void OnHostChanged()
 		{
-			customAnchor = hostEntry.widget.RectTransform;
-		}
-
-		[Title("Other", "разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Last")]
-		private void HideLastEditor()
-		{
-			_dispatcher.TryHideLast();
-		}
-
-		[Serializable]
-		[InlineProperty]
-		public struct HostEntry
-		{
-			private const char ZWSP = '\u200B'; // zero width space
-
-			private static MethodInfo _getBaseMethodInfo;
-
-			private static Dictionary<string, int> _pathToMatchCount = new();
-
-			[ShowInInspector, HideLabel, HorizontalGroup]
-			[ValueDropdown("@" + nameof(HostEntry) + "." + nameof(CollectAllWidgets) + "()")]
-			public UIWidget widget;
-
-			[ShowInInspector, HideLabel, HorizontalGroup(0.35f)]
-			public RectTransform Layout => widget?.RectTransform;
-
-			public bool IsEmpty => widget == null;
-			public static implicit operator UIWidget(HostEntry entry) => entry.widget;
-
-			private static IEnumerable<ValueDropdownItem<UIWidget>> CollectAllWidgets()
-			{
-				var allDispatcherTypes = ReflectionUtility.GetAllTypes<IWidgetDispatcher>();
-
-				foreach (var type in allDispatcherTypes)
-				{
-					_getBaseMethodInfo ??= typeof(UIDispatcher)
-					   .GetMethods(BindingFlags.Public | BindingFlags.Static)
-					   .First(m =>
-							m.Name == nameof(UIDispatcher.GetLayer) &&
-							m.IsGenericMethodDefinition &&
-							m.GetGenericArguments().Length == 1 &&
-							m.GetParameters().Length == 0);
-
-					if (_getBaseMethodInfo == null)
-						continue;
-
-					var totalMethodInfo = _getBaseMethodInfo
-					   .MakeGenericMethod(type);
-
-					if (totalMethodInfo.Invoke(null, null) is not IWidgetDispatcher dispatcher)
-						continue;
-
-					_pathToMatchCount.Clear();
-
-					foreach (var root in dispatcher.GetAllActive())
-					{
-						foreach (var item in EnumerateWithPaths(root, null))
-							yield return item;
-					}
-				}
-			}
-
-			private static IEnumerable<ValueDropdownItem<UIWidget>> EnumerateWithPaths(UIWidget node, string prefix)
-			{
-				if (node == null || !node.RectTransform)
-					yield break;
-
-				var postfix = node.Active
-					? ""
-					: " (inactive)";
-				var name = $"{node.RectTransform.name.Trim()}{postfix}";
-				var path = string.IsNullOrEmpty(prefix) ? name : $"{prefix}/{name}";
-
-				if (!_pathToMatchCount.TryAdd(path, 0))
-				{
-					_pathToMatchCount[path]++;
-					path += new string(ZWSP, _pathToMatchCount[path]);
-				}
-
-				yield return new ValueDropdownItem<UIWidget>(path, node);
-
-				if (node.Children != null)
-				{
-					foreach (var child in node.Children)
-					{
-						foreach (var item in EnumerateWithPaths(child, path))
-							yield return item;
-					}
-				}
-			}
+			customAnchor = host.Layout;
 		}
 	}
 }

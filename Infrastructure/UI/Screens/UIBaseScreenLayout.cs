@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI.Screens
@@ -15,6 +16,9 @@ namespace UI.Screens
 
 		[HideInInspector]
 		public GraphicRaycaster raycaster;
+
+		[PropertySpace(5,5)]
+		public Button close;
 
 		//Защита от дурака)
 		//Вообще лучше максимально избегать кода завязаного на жизненый цикл юнити (unity lifecycle)

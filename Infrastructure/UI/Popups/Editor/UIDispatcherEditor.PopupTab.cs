@@ -1,19 +1,20 @@
 using System;
-using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
 namespace UI.Popups.Editor
 {
-	public class UIDispatcherEditorPopupTab : IUIDispatcherEditorTab
+	public partial class UIDispatcherEditorPopupTab : IUIDispatcherEditorTab
 	{
 		private UIPopupDispatcher _dispatcher => UIDispatcher.Get<UIPopupDispatcher>();
 		int IUIDispatcherEditorTab.Order => 2;
 		public string Title => "Popups";
+		public SdfIconType? Icon => SdfIconType.ChatRightDots;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
 		public Type type;
-		public IPopupArgs args;
+
+		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show(bool force = false)
 		{
@@ -24,18 +25,18 @@ namespace UI.Popups.Editor
 			}
 
 			_dispatcher?.GetType()
-			   .GetMethod(nameof(_dispatcher.Show))?
-			   .MakeGenericMethod(type)
-			   .Invoke(_dispatcher, new object[]
+				.GetMethod(nameof(_dispatcher.Show))?
+				.MakeGenericMethod(type)
+				.Invoke(_dispatcher, new[]
 				{
-					args,
+					argsInspector.GetArgs(),
 					force
 				});
 		}
 
 		private void OnTypeChanged()
 		{
-			args = null;
+			argsInspector.Clear();
 
 			var baseType = this.type?.BaseType;
 
@@ -47,20 +48,12 @@ namespace UI.Popups.Editor
 			if (arguments.Length < 2)
 				return;
 
-			var type = arguments[1];
+			var argsType = arguments[1];
 
-			if (type == typeof(EmptyPopupArgs))
+			if (argsType == typeof(EmptyArgs))
 				return;
 
-			args = type.CreateInstance<IPopupArgs>();
-		}
-
-		[Title("Other","разные системные методы", titleAlignment: TitleAlignments.Split)]
-		[PropertySpace(10, 0)]
-		[Button("Hide Current")]
-		private void HidePopupEditor()
-		{
-			_dispatcher.TryHideCurrent();
+			argsInspector.SetType(argsType);
 		}
 	}
 }

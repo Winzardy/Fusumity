@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Globalization;
+using Sapientia.Extensions;
+using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
@@ -7,6 +10,16 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		protected long timeCreated;
 
+		public DateTime CreationTime => new DateTime(timeCreated, DateTimeKind.Utc)
+			.ToLocalTime();
+
+		public long TimeCreated => timeCreated;
+
+		/// <summary>
+		/// Не всегда является временем когда был создан ассет, но стремится к этому
+		/// </summary>
+		public string CreationTimeStr => CreationTime.ToString(CultureInfo.InvariantCulture);
+
 		public virtual IContentEntry Import(bool clone) => null;
 
 		/// <summary>
@@ -14,12 +27,32 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		public virtual bool Enabled => true;
 
-		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
+		public string techDescription;
 
 		public void SyncedUpdate() => OnUpdated();
 
 		protected virtual void OnUpdated()
 		{
 		}
+
+		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
+
+#if UNITY_EDITOR
+		private bool _useTechDescription;
+
+		[ContextMenu("Tech Description/Enable")]
+		public void EnableTechDescription() => _useTechDescription = true;
+
+		[ContextMenu("Tech Description/Disable")]
+		public void DisableTechDescription() => _useTechDescription = false;
+
+		[ContextMenu("Tech Description/Enable", true)]
+		public bool EnableTechDescriptionValidate() => !_useTechDescription;
+
+		[ContextMenu("Tech Description/Disable", true)]
+		public bool DisableTechDescriptionValidate() => _useTechDescription;
+
+		private bool ShowTechDescriptionEditor => !techDescription.IsNullOrEmpty() || _useTechDescription;
+#endif
 	}
 }

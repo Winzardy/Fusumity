@@ -8,17 +8,14 @@ using UnityEngine;
 
 namespace UI
 {
-	public struct Empty
+	public class UIMarker : UIMarker<EmptyArgs>
 	{
-	}
-
-	public class UIMarker : UIMarker<Empty>
-	{
-		protected override void OnShow(ref UIMarkerArgs<Empty> args)
+		protected override void OnShow(ref UIMarkerArgs<EmptyArgs> args)
 		{
 		}
 
 		public void Attach(GameObject gameObject) => Attach(gameObject.transform);
+
 		public void Attach(Transform transform)
 		{
 			transform.SetParent(RectTransform, false);
@@ -82,7 +79,6 @@ namespace UI
 
 	//TODO: добавить разные состояние при маркер над объектом или в режиме offscreen
 	public abstract class UIMarker<TArgs> : UIWidget<UIMarkerLayout, UIMarkerArgs<TArgs>>
-		where TArgs : struct
 	{
 		private const float MOVE_DURATION = 0.35f;
 
@@ -163,8 +159,8 @@ namespace UI
 
 			//TODO: добавить обработку дистанции
 			if (!visible ||
-			    (!_args.offscreen && !camera.IsTargetOnFrustum(in _cacheInput)) ||
-			    (_args is {offscreen: true, hideOffscreenInFrustum: true} && camera.IsTargetOnFrustum(in _cacheInput)))
+				(!_args.offscreen && !camera.IsTargetOnFrustum(in _cacheInput)) ||
+				(_args is {offscreen: true, hideOffscreenInFrustum: true} && camera.IsTargetOnFrustum(in _cacheInput)))
 			{
 				TryDisable(animation, force);
 
@@ -289,12 +285,22 @@ namespace UI
 				}
 			}
 
-			_cacheOffscreen = offscreen;
+			SetOffscreenMode(offscreen);
 
 			if (_moveRoutine != null)
 				return;
 
 			SetPositionAndDirection(position, direction);
+		}
+
+		private void SetOffscreenMode(bool offscreen)
+		{
+			if (_cacheOffscreen == offscreen)
+				return;
+
+			_cacheOffscreen = offscreen;
+			_layout.offscreenStateSwitcher?
+				.Switch(offscreen);
 		}
 
 		private void Subscribe()

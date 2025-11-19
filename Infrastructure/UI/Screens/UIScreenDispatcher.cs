@@ -7,10 +7,31 @@ namespace UI.Screens
 	{
 		private UIScreenManager _manager;
 
-		public IScreen Current => _manager.Current;
-		public IScreen Default => _manager.Default;
+		/// <summary>
+		/// Активация окна, даже если окно в очереди
+		/// </summary>
+		public event Action<IScreen> Activated;
+
+		/// <summary>
+		/// Деактивация окна, даже если окно в очереди
+		/// </summary>
+		public event Action<IScreen> Deactivated;
+
+		/// <summary>
+		/// Событие при показе окна, важно отметить что окно может показаться из очереди!
+		/// Если не нужна реакция на показ окна из очереди используйте <see cref="Activated"/>
+		/// </summary>
 		public event Action<IScreen> Shown;
+
+		/// <summary>
+		/// Событие по скрытию окна, важно отметить что окно может скрыться в очередь!
+		/// Если не нужна реакция на показ окна из очереди используйте <see cref="Deactivated"/>
+		/// </summary>
 		public event Action<IScreen> Hidden;
+
+		public (IScreen screen, object args) Current => _manager.Current;
+		public (IScreen screen, object args) Default => _manager.Default;
+		public IEnumerable<KeyValuePair<IScreen, object>> Queue => _manager.Queue;
 
 		public UIScreenDispatcher(UIScreenManager manager)
 		{
@@ -28,48 +49,34 @@ namespace UI.Screens
 			_manager = null;
 		}
 
-		/// <summary>
-		/// Показать экран (скрывает текущий)
-		/// </summary>
-		public T Show<T>() where T : UIWidget, IScreen
-			=> _manager.Show<T>();
+		private void OnShown(IScreen window, bool fromQueue)
+		{
+			Shown?.Invoke(window);
+
+			if (!fromQueue)
+				Activated?.Invoke(window);
+		}
+
+		private void OnHidden(IScreen window, bool fromQueue)
+		{
+			Hidden?.Invoke(window);
+
+			if (!fromQueue)
+				Deactivated?.Invoke(window);
+		}
+
+		public IDisposable Prepare<T>(Action callback = null)
+			where T : UIWidget, IScreen
+			=> _manager.Prepare<T>(callback);
 
 		/// <summary>
-		/// Закрывает текущий экран
-		/// </summary>
-		public void Hide()
-			=> _manager.Hide();
-
-		/// <returns>Возвращает экран по типу (создает если его нет)</returns>
-		public T Get<T>() where T : UIWidget, IScreen
-			=> _manager.Get<T>();
-
-		/// <returns>Возвращает экран по типу (без создания)</returns>
-		public bool TryGet<T>(out T screen) where T : UIWidget, IScreen
-			=> _manager.TryGet(out screen);
-
-		/// <summary>
-		/// Установить новый дефолтный экран (если текущий дефолтный, он его скроет и откроет новый)
-		/// </summary>
-		public void SetDefault<T>() where T : UIWidget, IScreen
-			=> _manager.SetDefault<T>();
-
-		/// <summary>
-		/// Добавить блокировку экранов
-		/// </summary>
-		public bool AddShowBlocker(object blocker) => _manager.AddShowBlocker(blocker);
-
-		/// <summary>
-		/// Снять блокировку экранов
-		/// </summary>
-		public void RemoveShowBlocker(object blocker) => _manager.RemoveShowBlocker(blocker);
-
-		/// <summary>
-		/// Активен ли экран (дефолтный или текущий (current)
+		/// Проверяет находится окно в очереди или текущее окно такого типа
 		/// </summary>
 		public bool IsActive<T>()
 			where T : UIWidget, IScreen
 			=> _manager.IsActive<T>();
+
+		public bool IsActive(string id) => _manager.IsActive(id);
 
 		/// <summary>
 		/// Это текущий экран?
@@ -91,21 +98,38 @@ namespace UI.Screens
 			where T : UIWidget, IScreen
 			=> _manager.IsDefault<T>();
 
-		public IDisposable Prepare<T>(Action callback = null)
+		/// <summary>
+		/// Показать экран по типу (убирает в очередь текущее)
+		/// </summary>
+		public T Show<T>(object args = null)
 			where T : UIWidget, IScreen
-			=> _manager.Prepare<T>(callback);
+			=> _manager.Show<T>(args);
 
 		/// <summary>
-		/// Попытка показать дефолтный экран
+		/// Закрыть окно по типу, если оно открыто или убрать из очереди
 		/// </summary>
-		public void TryShowDefault(bool checkCurrent = true)
-			=> _manager.TryShowDefault(checkCurrent);
+		public bool TryHide<T>()
+			where T : UIWidget, IScreen
+			=> _manager.TryHide<T>();
 
-		private void OnShown(IScreen screen)
-			=> Shown?.Invoke(screen);
+		public void TryHide(IScreen screen)
+			=> _manager.TryHide(screen);
 
-		private void OnHidden(IScreen screen)
-			=> Hidden?.Invoke(screen);
+		public void TryHideAll() => _manager.TryHideAll();
+
+		public T Get<T>()
+			where T : UIWidget, IScreen =>
+			_manager.Get<T>();
+
+		public bool TryGet<T>(out T screen)
+			where T : UIWidget, IScreen =>
+			_manager.TryGet(out screen);
+
+		/// <summary>
+		/// Попробовать закрыть текущее окно
+		/// </summary>
+		/// <returns>Получилось ли закрыть?</returns>
+		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 	}

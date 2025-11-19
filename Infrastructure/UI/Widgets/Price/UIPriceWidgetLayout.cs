@@ -4,17 +4,17 @@ namespace UI
 {
 	public class UIPriceWidgetLayout : UIBaseLayout
 	{
-		public UILabeledIconWidgetLayout banner;
+		public UIObsoleteLabeledIconWidgetLayout banner;
 
-		public UILabeledIconWidgetLayout item;
+		public UIObsoleteLabeledIconWidgetLayout item;
 
 		/// <summary>
-		/// <see cref="UILabeledIconWidgetLayout"/>
+		/// <see cref="UIObsoleteLabeledIconWidgetLayout"/>
 		/// </summary>
 		public UIGroupLayout group;
 
 		/// <summary>
-		/// <see cref="UILabeledIconWidgetLayout"/>
+		/// <see cref="UIObsoleteLabeledIconWidgetLayout"/>
 		/// </summary>
 		public UIGroupLayout miniGroup;
 

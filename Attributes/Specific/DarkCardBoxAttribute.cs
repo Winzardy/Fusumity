@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
 using Fusumity.Utility;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Fusumity.Attributes
 {
 	[Conditional("UNITY_EDITOR")]
-	public class ColorCardBoxAttribute : Attribute
+	public class ColorCardBoxAttribute : PropertyGroupAttribute
 	{
 		public float R { get; set; }
 		public float G { get; set; }
@@ -16,7 +17,8 @@ namespace Fusumity.Attributes
 		public string Label { get; }
 		public bool UseLabelSeparator { get; set; }
 
-		public ColorCardBoxAttribute(float r, float g, float b, float a = 1f, string label = null, bool useLabelSeparator = false)
+		public ColorCardBoxAttribute(float r, float g, float b, float a = 1f, string groupId = "", float order = 0, string label = null,
+			bool useLabelSeparator = false) : base(groupId, order)
 		{
 			R = r;
 			G = g;
@@ -32,10 +34,10 @@ namespace Fusumity.Attributes
 	public class DarkCardBoxAttribute : ColorCardBoxAttribute
 	{
 		private static readonly Color _color = Color.black
-		   .WithAlpha(0.666f);
+			.WithAlpha(0.666f);
 
-		public DarkCardBoxAttribute(string label = null, bool useLabelSeparator = false)
-			: base(_color.r, _color.g, _color.b, _color.a, label, useLabelSeparator)
+		public DarkCardBoxAttribute(string groupId = "", float order = 0, string label = null, bool useLabelSeparator = false)
+			: base(_color.r, _color.g, _color.b, _color.a, groupId, order, label, useLabelSeparator)
 		{
 		}
 	}
