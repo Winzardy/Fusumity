@@ -13,10 +13,10 @@ namespace AssetManagement
 		{
 		}
 
-		public async UniTask<TComponent> LoadComponentAsync<TComponent>(CancellationToken ct = default) where TComponent : Component
+		public async UniTask<TComponent> LoadComponentAsync<TComponent>(CancellationToken token = default) where TComponent : Component
 		{
-			var go = await LoadAsync(ct);
-			ct.ThrowIfCancellationRequested();
+			var go = await LoadAsync(token);
+			token.ThrowIfCancellationRequested();
 
 			if (go == null || !go.TryGetComponent(out TComponent component))
 			{
@@ -56,7 +56,7 @@ namespace AssetManagement
 			_entry = entry;
 		}
 
-		public async UniTask<TAsset> LoadAsync(CancellationToken ct = default)
+		public async UniTask<TAsset> LoadAsync(CancellationToken token = default)
 		{
 			if (_disposed)
 				throw new ObjectDisposedException(nameof(AssetLoadingProxy<TEntry, TAsset>));
@@ -68,7 +68,7 @@ namespace AssetManagement
 
 			if (_loadingTcs != null)
 			{
-				using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, _cts.Token))
+				using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token, _cts.Token))
 				{
 					return await _loadingTcs.Task.AttachExternalCancellation(linkedCts.Token);
 				}
@@ -93,7 +93,7 @@ namespace AssetManagement
 				_loadingTcs.TrySetResult(_loadedAsset);
 
 				// throw if external token was cancelled
-				ct.ThrowIfCancellationRequested();
+				token.ThrowIfCancellationRequested();
 			}
 			catch (OperationCanceledException)
 			{
@@ -138,10 +138,10 @@ namespace AssetManagement
 
 	public class GameObjectLoadingMediator : AssetLoadingProxiesMediator<GameObject>
 	{
-		public async UniTask<T> LoadComponentAsync<T>(IAssetReferenceEntry<GameObject> entry, CancellationToken ct) where T : Component
+		public async UniTask<T> LoadComponentAsync<T>(IAssetReferenceEntry<GameObject> entry, CancellationToken token) where T : Component
 		{
-			var go = await LoadAsync(entry, ct);
-			ct.ThrowIfCancellationRequested();
+			var go = await LoadAsync(entry, token);
+			token.ThrowIfCancellationRequested();
 
 			return go.GetComponent<T>();
 		}
@@ -158,7 +158,7 @@ namespace AssetManagement
 			Clear();
 		}
 
-		public UniTask<T> LoadAsync(IAssetReferenceEntry<T> entry, CancellationToken ct)
+		public UniTask<T> LoadAsync(IAssetReferenceEntry<T> entry, CancellationToken token)
 		{
 			if (!_loadingProxies.TryGetValue(entry, out var proxy))
 			{
@@ -166,7 +166,7 @@ namespace AssetManagement
 				_loadingProxies.Add(entry, proxy);
 			}
 
-			return proxy.LoadAsync(ct);
+			return proxy.LoadAsync(token);
 		}
 
 		public void Clear(IAssetReferenceEntry<T> entry)
