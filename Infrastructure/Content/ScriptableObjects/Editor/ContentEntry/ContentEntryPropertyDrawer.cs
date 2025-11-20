@@ -54,14 +54,15 @@ namespace Content.Editor
 				if (reference == null)
 					return false;
 
-				if (!scriptableObject.Remember(in entry.Guid))
-				{
-					ForceRegenerate(reference);
-					return false;
-				}
+				// if (!scriptableObject.Remember(in entry.Guid))
+				// {
+				// 	ForceRegenerate(reference);
+				// 	return false;
+				// }
 
 				var key = (asset, reference);
-				//Попытка восстановить или задать новый гуид...
+
+				// Попытка восстановить или задать новый гуид...
 				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(in entry.Guid, reference))
 				{
 					if (ContentEntryEditorUtility.TryGet(key, out var guid))
@@ -71,7 +72,7 @@ namespace Content.Editor
 							var lenght = property.Parent.Children.Count;
 							if (_cacheArrayLenght > lenght)
 							{
-								//можно сделать чтобы только массив обновлялся
+								// Можно сделать чтобы только массив обновлялся
 								asset.Refresh();
 							}
 							else if (_cacheArrayLenght == lenght)
