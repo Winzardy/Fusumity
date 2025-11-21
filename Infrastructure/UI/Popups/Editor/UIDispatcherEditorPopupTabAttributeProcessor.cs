@@ -40,7 +40,7 @@ namespace UI.Popups.Editor
 					break;
 
 				case nameof(UIDispatcherEditorPopupTab.Show):
-					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 100));
+					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal", 160));
 					var buttonAttribute = new ButtonAttribute(ButtonSizes.Large)
 					{
 						Style = Sirenix.OdinInspector.ButtonStyle.FoldoutButton

@@ -72,9 +72,9 @@ namespace UI
 		/// возможны ошибки
 		/// </summary>
 		/// <param name="force">Убрать текущий попап в очередь (возможно понадобится priority вместо force, но пока так)</param>
-		public T Show<T>(object args = null, bool force = false)
+		public T Show<T>(object args = null, PopupShowPolicy policy = PopupShowPolicy.None)
 			where T : UIWidget, IPopup
-			=> _manager.Show<T>(args, force);
+			=> _manager.Show<T>(args, policy);
 
 		public void TryHide(IPopup popup)
 			=> _manager.TryHide(popup);

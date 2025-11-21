@@ -16,7 +16,7 @@ namespace UI.Popups.Editor
 
 		public UIWidgetArgsInspector argsInspector;
 
-		internal void Show(bool force = false)
+		internal void Show(PopupShowPolicy policy = PopupShowPolicy.None)
 		{
 			if (type == null)
 			{
@@ -30,7 +30,7 @@ namespace UI.Popups.Editor
 				.Invoke(_dispatcher, new[]
 				{
 					argsInspector.GetArgs(),
-					force
+					policy
 				});
 		}
 

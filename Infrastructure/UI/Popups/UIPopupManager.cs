@@ -3,9 +3,21 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Utility;
+using UnityEngine;
 
 namespace UI.Popups
 {
+	public enum PopupShowPolicy
+	{
+		None,
+
+		[Tooltip("Открывается поверх текущего")]
+		Force,
+
+		[Tooltip("Открывается вне очереди")]
+		Standalone
+	}
+
 	/// <summary>
 	/// Для управления используйте <see cref="UIPopupDispatcher"/>
 	/// </summary>
@@ -16,6 +28,9 @@ namespace UI.Popups
 		private readonly PopupPool _pool;
 
 		private readonly UIRootWidgetQueue<IPopup, object> _queue;
+
+		private Dictionary<IPopup, object> _standalonePopups;
+
 		private readonly CancellationTokenSource _cts = new();
 
 		internal event ShownDelegate Shown;
@@ -34,6 +49,7 @@ namespace UI.Popups
 			InitializeAssetsPreloader();
 
 			_queue = new(false);
+			_standalonePopups = new();
 		}
 
 		void IDisposable.Dispose()
@@ -47,13 +63,17 @@ namespace UI.Popups
 			_queue.Dispose();
 
 			_cts?.Trigger();
+
+			foreach (var popup in _standalonePopups.Keys)
+				popup.Dispose();
+			_standalonePopups = null;
 		}
 
-		internal T Show<T>(object args, bool force = false)
+		internal T Show<T>(object args, PopupShowPolicy policy = PopupShowPolicy.None)
 			where T : UIWidget, IPopup
 		{
 			var popup = Get<T>();
-			Show(popup, args, false, force);
+			Show(popup, args, false, policy);
 			return popup;
 		}
 
@@ -94,6 +114,12 @@ namespace UI.Popups
 
 		internal void TryHide(IPopup popup)
 		{
+			if (_standalonePopups.Remove(popup))
+			{
+				PerformHide();
+				return;
+			}
+
 			_queue.TryRemove(popup);
 
 			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущий активный попап
@@ -103,24 +129,34 @@ namespace UI.Popups
 				return;
 			}
 
-			TryReleasePreloadedLayout(popup);
-
-			HideInternal(popup, false);
-
-			//Нужно подождать пока отыграется анимация и только потом возвращать в пул
-			WaitHideAndReleaseAsync(popup, _cts.Token).Forget();
-
+			PerformHide();
 			_current = null;
 
 			TryShowNext();
+
+			void PerformHide()
+			{
+				TryReleasePreloadedLayout(popup);
+				HideInternal(popup, false);
+
+				//Нужно подождать пока отыграется анимация и только потом возвращать в пул
+				WaitHideAndReleaseAsync(popup, _cts.Token)
+					.Forget();
+			}
 		}
 
-		//TODO: добавить приоритет вместо force
-		private void Show(IPopup popup, object args, bool fromQueue, bool force = false)
+		private void Show(IPopup popup, object args, bool fromQueue, PopupShowPolicy policy = PopupShowPolicy.None)
 		{
+			if (policy == PopupShowPolicy.Standalone)
+			{
+				ShowInternal(popup, args, false);
+				_standalonePopups.Add(popup, args);
+				return;
+			}
+
 			if (_current != null)
 			{
-				if (force)
+				if (policy == PopupShowPolicy.Force)
 				{
 					//Tак как вызывали форсом добавляем текущий попап первым в очереди на след. показ
 					Enqueue(_current, addToLast: true);
