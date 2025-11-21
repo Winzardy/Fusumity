@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Fusumity.Utility;
+using System;
 using System.Collections.Generic;
-using Fusumity.Utility;
 
 namespace UI.Screens
 {
@@ -302,6 +302,10 @@ namespace UI.Screens
 		{
 			_queue.Clear();
 
+			if (_current != null &&
+				_current == _default.screen)
+				return;
+
 			_current?.Hide(false);
 			SetCurrent(null);
 
@@ -348,6 +352,6 @@ namespace UI.Screens
 
 		public delegate void HiddenDelegate(IScreen screen, bool fromQueue);
 
-		#endregion
+		#endregion Delegates
 	}
 }
