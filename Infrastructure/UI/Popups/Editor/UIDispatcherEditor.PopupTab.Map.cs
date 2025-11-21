@@ -16,7 +16,9 @@ namespace UI.Popups.Editor
 		[OnInspectorGUI]
 		private void OnInspectorGUI()
 		{
-			if (!_dispatcher.Queue.Any() && _dispatcher.Current.popup == null)
+			if (!_dispatcher.Queue.Any() &&
+				_dispatcher.Current.popup == null &&
+				!_dispatcher.Standalones.Any())
 				return;
 
 			GUILayout.Space(12);
@@ -41,6 +43,22 @@ namespace UI.Popups.Editor
 				FusumityEditorGUILayout.BeginCardBox(Color.Lerp(Color.blue, Color.white, 0.8f).WithAlpha(0.3f));
 				Draw(i, _dispatcher.Current.popup, _dispatcher.Current.args, true);
 				FusumityEditorGUILayout.EndCardBox();
+			}
+
+			if (_dispatcher.Standalones.Any())
+			{
+				GUILayout.Space(6);
+				GUILayout.Label("Standalones", SirenixGUIStyles.CenteredGreyMiniLabel);
+				SirenixEditorGUI.HorizontalLineSeparator(Color.gray.WithAlpha(0.1f));
+				i = 0;
+				foreach (var (popup, args) in _dispatcher.Standalones)
+				{
+					FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
+					if (!Draw(i, popup, args))
+						break;
+					FusumityEditorGUILayout.EndCardBox();
+					i++;
+				}
 			}
 
 			FusumityEditorGUILayout.EndCardBox();

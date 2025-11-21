@@ -7,14 +7,15 @@ using UnityEngine;
 
 namespace UI.Popups
 {
-	public enum PopupShowPolicy
+	public enum PopupMode
 	{
-		None,
+		[Tooltip("Обычный режим, в котором попап встает в очередь")]
+		Default,
 
 		[Tooltip("Открывается поверх текущего")]
 		Force,
 
-		[Tooltip("Открывается вне очереди")]
+		[Tooltip("Открывается вне очереди, поверх текущих попапов")]
 		Standalone
 	}
 
@@ -29,7 +30,7 @@ namespace UI.Popups
 
 		private readonly UIRootWidgetQueue<IPopup, object> _queue;
 
-		private Dictionary<IPopup, object> _standalonePopups;
+		private Dictionary<IPopup, object> _standalones;
 
 		private readonly CancellationTokenSource _cts = new();
 
@@ -40,6 +41,7 @@ namespace UI.Popups
 		internal (IPopup, object) Current => (_current, _current?.GetArgs());
 
 		internal IEnumerable<KeyValuePair<IPopup, object>> Queue => _queue;
+		internal IEnumerable<KeyValuePair<IPopup, object>> Standalones => _standalones;
 
 		public UIPopupManager()
 		{
@@ -49,7 +51,7 @@ namespace UI.Popups
 			InitializeAssetsPreloader();
 
 			_queue = new(false);
-			_standalonePopups = new();
+			_standalones = new();
 		}
 
 		void IDisposable.Dispose()
@@ -64,16 +66,17 @@ namespace UI.Popups
 
 			_cts?.Trigger();
 
-			foreach (var popup in _standalonePopups.Keys)
+			foreach (var popup in _standalones.Keys)
 				popup.Dispose();
-			_standalonePopups = null;
+			_standalones = null;
 		}
 
-		internal T Show<T>(object args, PopupShowPolicy policy = PopupShowPolicy.None)
+		internal T Show<T>(object args, PopupMode? overrideMode = null)
 			where T : UIWidget, IPopup
 		{
 			var popup = Get<T>();
-			Show(popup, args, false, policy);
+			var mode = overrideMode ?? popup.Mode;
+			Show(popup, args, false, mode);
 			return popup;
 		}
 
@@ -114,7 +117,7 @@ namespace UI.Popups
 
 		internal void TryHide(IPopup popup)
 		{
-			if (_standalonePopups.Remove(popup))
+			if (_standalones.Remove(popup))
 			{
 				PerformHide();
 				return;
@@ -145,18 +148,18 @@ namespace UI.Popups
 			}
 		}
 
-		private void Show(IPopup popup, object args, bool fromQueue, PopupShowPolicy policy = PopupShowPolicy.None)
+		private void Show(IPopup popup, object args, bool fromQueue, PopupMode mode = PopupMode.Default)
 		{
-			if (policy == PopupShowPolicy.Standalone)
+			if (mode == PopupMode.Standalone)
 			{
 				ShowInternal(popup, args, false);
-				_standalonePopups.Add(popup, args);
+				_standalones.Add(popup, args);
 				return;
 			}
 
 			if (_current != null)
 			{
-				if (policy == PopupShowPolicy.Force)
+				if (mode == PopupMode.Force)
 				{
 					//Tак как вызывали форсом добавляем текущий попап первым в очереди на след. показ
 					Enqueue(_current, addToLast: true);

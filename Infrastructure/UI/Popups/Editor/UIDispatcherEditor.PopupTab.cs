@@ -1,4 +1,5 @@
 using System;
+using Sapientia;
 using Sirenix.OdinInspector;
 using UI.Editor;
 
@@ -16,7 +17,7 @@ namespace UI.Popups.Editor
 
 		public UIWidgetArgsInspector argsInspector;
 
-		internal void Show(PopupShowPolicy policy = PopupShowPolicy.None)
+		internal void Show(Toggle<PopupMode> mode)
 		{
 			if (type == null)
 			{
@@ -30,7 +31,7 @@ namespace UI.Popups.Editor
 				.Invoke(_dispatcher, new[]
 				{
 					argsInspector.GetArgs(),
-					policy
+					mode ? new PopupMode?(mode.value) : null
 				});
 		}
 
