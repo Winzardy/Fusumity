@@ -1,4 +1,6 @@
-﻿using Sapientia.Extensions;
+﻿using System;
+using System.Globalization;
+using Sapientia.Extensions;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
@@ -7,6 +9,16 @@ namespace Content.ScriptableObjects
 	{
 		[SerializeField]
 		protected long timeCreated;
+
+		public DateTime CreationTime => new DateTime(timeCreated, DateTimeKind.Utc)
+			.ToLocalTime();
+
+		public long TimeCreated => timeCreated;
+
+		/// <summary>
+		/// Не всегда является временем когда был создан ассет, но стремится к этому
+		/// </summary>
+		public string CreationTimeStr => CreationTime.ToString(CultureInfo.InvariantCulture);
 
 		public virtual IContentEntry Import(bool clone) => null;
 

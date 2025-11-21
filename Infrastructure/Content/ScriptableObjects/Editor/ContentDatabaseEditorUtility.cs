@@ -254,6 +254,8 @@ namespace Content.ScriptableObjects.Editor
 
 						foreach (var (type, content) in dictionary)
 							ContentConstantGenerator.Generate(type, content);
+
+						database.Sort();
 					}
 				}
 			}
@@ -296,10 +298,12 @@ namespace Content.ScriptableObjects.Editor
 
 					if (!collided)
 					{
-						database.scriptableObjects = new(all);
+						database.scriptableObjects = new List<ContentScriptableObject>(all);
 
 						foreach (var (type, content) in dictionary)
 							ContentConstantGenerator.Generate(type, content);
+
+						database.Sort();
 					}
 				}
 			}

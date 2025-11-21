@@ -121,7 +121,7 @@ namespace Content.Editor
 
 			var sourceByGuid = _guidToSource[guid];
 
-			if (sourceByGuid.TimeCreated > source.TimeCreated)
+			if (sourceByGuid.TimeCreated < source.TimeCreated)
 				return false;
 
 			_guidToSource[guid] = source;
