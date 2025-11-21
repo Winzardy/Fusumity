@@ -143,7 +143,7 @@ namespace UI.Popups
 				HideInternal(popup, false);
 
 				//Нужно подождать пока отыграется анимация и только потом возвращать в пул
-				WaitUntilHiddenAndReleaseAsync(popup, _cts.Token)
+				ReleaseWhenHiddenAsync(popup, _cts.Token)
 					.Forget();
 			}
 		}
@@ -202,7 +202,7 @@ namespace UI.Popups
 			return popup;
 		}
 
-		private async UniTaskVoid WaitUntilHiddenAndReleaseAsync(IPopup popup, CancellationToken cancellationToken)
+		private async UniTaskVoid ReleaseWhenHiddenAsync(IPopup popup, CancellationToken cancellationToken)
 		{
 			await UniTask.WaitWhile(popup.IsVisible, cancellationToken: cancellationToken);
 
