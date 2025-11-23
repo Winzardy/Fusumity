@@ -96,7 +96,7 @@ namespace Content.Editor
 		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
 		{
 			genericMenu.AddSeparator("");
-			genericMenu.AddItem(new GUIContent("Set None"), false, () => property.ValueEntry.WeakSmartValue = null);
+			genericMenu.AddItem(new GUIContent("Set None"), false, HandleSetNoneClicked);
 		}
 
 		protected override void Initialize()
@@ -571,17 +571,27 @@ namespace Content.Editor
 				}
 				else
 				{
-					Property.ValueEntry.WeakSmartValue = _mode switch
-					{
-						ContentDrawerMode.String => null,
-						ContentDrawerMode.Guid or ContentDrawerMode.Reference => SerializableGuid.Empty,
-						_ => null
-					};
+					SetNoneInternal();
 				}
 			}
 
 			EditorGUI.indentLevel = originalIndent;
 			GUI.enabled = originEnabled;
+		}
+
+		private void HandleSetNoneClicked()
+		{
+			SetNoneInternal();
+		}
+
+		private void SetNoneInternal()
+		{
+			Property.ValueEntry.WeakSmartValue = _mode switch
+			{
+				ContentDrawerMode.String => null,
+				ContentDrawerMode.Guid or ContentDrawerMode.Reference => SerializableGuid.Empty,
+				_ => null
+			};
 		}
 
 		private void TryCreateEditor()

@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Validation;
@@ -19,6 +20,20 @@ namespace Fusumity.Editor
 	{
 	}
 
+	public static class NotNullUtility
+	{
+		public static bool IsNull(IPropertyValueEntry valueEntry)
+		{
+			if (valueEntry.TypeOfValue.IsSubclassOf(typeof(UnityObject)))
+			{
+				var unityObject = valueEntry.WeakSmartValue as UnityObject;
+				return unityObject == null;
+			}
+
+			return valueEntry.WeakSmartValue == null;
+		}
+	}
+
 	public class NotNullValidator<T> : AttributeValidator<T>
 		where T : System.Attribute
 	{
@@ -28,22 +43,9 @@ namespace Fusumity.Editor
 			if (valueEntry == null)
 				return;
 
-			if (valueEntry.TypeOfValue.IsSubclassOf(typeof(UnityObject)))
+			if (NotNullUtility.IsNull(valueEntry))
 			{
-				var unityObject = valueEntry.WeakSmartValue as UnityObject;
-				if (unityObject == null)
-				{
-					result.ResultType = ValidationResultType.Error;
-					result.Message = $"Field '{Property.NiceName}' must not be null.";
-				}
-			}
-			else
-			{
-				if (valueEntry.WeakSmartValue == null)
-				{
-					result.ResultType = ValidationResultType.Error;
-					result.Message = $"Field '{Property.NiceName}' must not be null.";
-				}
+				result.AddError($"Field '{Property.NiceName}' must not be null");
 			}
 		}
 	}
@@ -59,7 +61,7 @@ namespace Fusumity.Editor
 
 			bool hasError;
 			var value = valueEntry.WeakSmartValue;
-			var isNull = value is Object obj ? obj == null : value == null;
+			var isNull = value is UnityObject obj ? obj == null : value == null;
 			if (value is string str)
 				hasError = str.IsNullOrWhiteSpace();
 			else
@@ -84,7 +86,7 @@ namespace Fusumity.Editor
 
 			bool hasError;
 			var value = valueEntry.WeakSmartValue;
-			var isNull = value is Object obj ? obj == null : value == null;
+			var isNull = value is UnityObject obj ? obj == null : value == null;
 			if (value is string str)
 				hasError = str.IsNullOrWhiteSpace();
 			else

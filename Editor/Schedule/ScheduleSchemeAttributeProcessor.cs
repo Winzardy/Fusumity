@@ -12,6 +12,9 @@ namespace Fusumity.Editor
 {
 	public class ScheduleSchemeAttributeProcessor : OdinAttributeProcessor<ScheduleScheme>
 	{
+		private const string IGNORE_LABEL = "value";
+		private const string DEFAULT_LABEL = "Schedule";
+
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
 		{
@@ -26,18 +29,31 @@ namespace Fusumity.Editor
 
 					var parentLabelContent = parentProperty.Label;
 
-					if (!parentLabelContent.text.IsNullOrEmpty())
+					if (!parentLabelContent.text.IsNullOrEmpty() && parentLabelContent.text.ToLowerInvariant() != IGNORE_LABEL)
 						attributes.Add(new LabelTextAttribute(parentLabelContent.text));
 					else
-						attributes.Add(new HideLabelAttribute());
+						attributes.Add(new LabelTextAttribute(DEFAULT_LABEL));
 
 					if (!parentLabelContent.tooltip.IsNullOrEmpty())
 						attributes.Add(new TooltipAttribute(parentLabelContent.tooltip));
 					else if (parentProperty.Info.GetMemberInfo().TryGetSummary(out summary))
 						attributes.Add(new TooltipAttribute(summary));
 
+					// var expr = "@ScheduleSchemeAttributeProcessor.ValidatePoints($property)";
+					// attributes.Add(new ValidateInputAttribute(expr, "Can't be empty or null"));
+
 					break;
 			}
+		}
+
+		public static bool ValidatePoints(InspectorProperty property)
+		{
+			if (property.ValueEntry.WeakSmartValue is SchedulePoint[] points)
+			{
+				return points.Length > 0;
+			}
+
+			return false;
 		}
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)

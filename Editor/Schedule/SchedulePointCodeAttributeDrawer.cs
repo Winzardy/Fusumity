@@ -224,6 +224,7 @@ namespace Fusumity.Editor
 			};
 
 			style.fontSize -= 2;
+
 			var now = DateTime.UtcNow;
 			var date = point.ToDateTime(now);
 
