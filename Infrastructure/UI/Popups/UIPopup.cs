@@ -9,6 +9,7 @@ namespace UI.Popups
 {
 	public interface IPopup : IWidget, IIdentifiable
 	{
+		public PopupMode Mode { get; }
 		public void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
@@ -137,6 +138,10 @@ namespace UI.Popups
 		event Action<IPopup> IPopup.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
 		protected override string Layer => LayerType.POPUPS;
+
+		protected virtual PopupMode Mode => PopupMode.Default;
+
+		PopupMode IPopup.Mode => Mode;
 
 		protected ref TArgs vm => ref _args;
 

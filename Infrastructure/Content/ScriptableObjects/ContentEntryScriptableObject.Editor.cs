@@ -62,18 +62,11 @@ namespace Content.ScriptableObjects
 				return;
 
 			ForceUpdateTimeCreated();
-			this.RecursiveRegenerateAndRefresh(false);
+			this.RecursiveRegenerateAndRefresh(!forceSave);
 			_entry.scriptableObject = this;
 			_entry.SetGuid(in guid);
 
 			ContentEditorCache.Refresh(this);
-
-			if (!forceSave)
-				return;
-
-			EditorUtility.SetDirty(this);
-			AssetDatabase.SaveAssetIfDirty(this);
-			AssetDatabase.Refresh();
 		}
 
 		public override bool NeedSync()

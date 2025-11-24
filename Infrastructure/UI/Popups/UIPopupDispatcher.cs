@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UI.Popups;
 
@@ -34,6 +33,7 @@ namespace UI
 		public event Action<IPopup> Hidden;
 
 		public IEnumerable<KeyValuePair<IPopup, object>> Queue => _manager.Queue;
+		public IEnumerable<KeyValuePair<IPopup, object>> Standalones => _manager.Standalones;
 
 		public (IPopup popup, object args) Current => _manager.Current;
 
@@ -72,9 +72,9 @@ namespace UI
 		/// возможны ошибки
 		/// </summary>
 		/// <param name="force">Убрать текущий попап в очередь (возможно понадобится priority вместо force, но пока так)</param>
-		public T Show<T>(object args = null, bool force = false)
+		public T Show<T>(object args = null, PopupMode? overrideMode = null)
 			where T : UIWidget, IPopup
-			=> _manager.Show<T>(args, force);
+			=> _manager.Show<T>(args, overrideMode);
 
 		public void TryHide(IPopup popup)
 			=> _manager.TryHide(popup);
