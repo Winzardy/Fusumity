@@ -188,6 +188,24 @@ namespace Content.Editor
 			else
 				EditorSingleContentEntryShortcut.Register(valueType, target);
 		}
+
+		public static event Action<IUniqueContentEntry, string, string> RegeneratedGuid;
+
+		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject context = null)
+		{
+			var prevGuid = entry.Guid;
+			entry.RegenerateGuid();
+			RegeneratedGuid?.Invoke(entry, prevGuid, entry.Guid);
+
+			if (ContentDebug.Logging.Nested.regenerate)
+			{
+				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
+				if (prevGuid != SerializableGuid.Empty)
+					msg += $" from [ {prevGuid} ]";
+				msg += " for content entry by path: <u>" + path + "</u>";
+				ContentDebug.LogWarning(msg, context);
+			}
+		}
 	}
 
 	internal delegate IContentEntrySource EditorTypeSingleResolver();

@@ -9,7 +9,6 @@ using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEditor;
-using UnityEngine;
 
 namespace Content.Editor
 {
@@ -298,12 +297,13 @@ namespace Content.Editor
 			} while (iterator.NextVisible(true));
 		}
 
-		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject asset, bool refreshAndSave = true)
+		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
 		{
 			var prevEntryGuid = entry.Guid;
 
 			entry.RegenerateGuid();
-			EditorUtility.SetDirty(asset);
+			EditorUtility.SetDirty(source);
+
 			if (refreshAndSave)
 				ScheduleRefreshAndSave();
 
@@ -312,8 +312,8 @@ namespace Content.Editor
 				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
 				if (prevEntryGuid != SerializableGuid.Empty)
 					msg += $" from [ {prevEntryGuid} ]";
-				msg += " for content entry by path: " + path;
-				ContentDebug.LogWarning(msg, asset);
+				msg += " for content entry by path: <u>" + path + "</u>";
+				ContentDebug.LogWarning(msg, source);
 			}
 		}
 
@@ -324,7 +324,8 @@ namespace Content.Editor
 			EditorUtility.SetDirty(source);
 
 			if (ContentDebug.Logging.Nested.restore)
-				ContentDebug.LogWarning($"<b>Restored</b> guid [ {entry.Guid} ] from [ {prev} ] for content entry by path: " + path,
+				ContentDebug.LogWarning($"<b>Restored</b> guid [ {entry.Guid} ] from [ {prev} ]" +
+					$" for content entry by path: <u>" + path + "</u>",
 					source);
 		}
 

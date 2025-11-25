@@ -23,14 +23,14 @@ namespace Content.Editor
 
 		public static void RegenerateGuid(this InspectorProperty property, IUniqueContentEntry entry, ContentScriptableObject asset)
 		{
-			RegenerateGuid(entry, property.Path, asset);
+			RegenerateGuid(entry, property.UnityPropertyPath, asset);
 			RecursiveRegenerateGuidForChildren(property, asset);
 
 			property.MarkSerializationRootDirty();
 		}
 
 		public static void RestoreGuid(this InspectorProperty property, IUniqueContentEntry entry, in SerializableGuid guid) =>
-			RestoreGuid(entry, in guid, property.Path, property.Tree.UnitySerializedObject.targetObject);
+			RestoreGuid(entry, in guid, property.UnityPropertyPath, property.Tree.UnitySerializedObject.targetObject);
 
 		private static void RecursiveRegenerateGuidForChildren(this InspectorProperty property, ContentScriptableObject asset)
 		{
@@ -38,7 +38,7 @@ namespace Content.Editor
 			foreach (var child in property.Children.Recurse())
 			{
 				if (child.ValueEntry?.WeakSmartValue is IUniqueContentEntry entry)
-					RegenerateGuid(entry, child.Path, asset);
+					RegenerateGuid(entry, child.UnityPropertyPath, asset);
 			}
 		}
 	}
