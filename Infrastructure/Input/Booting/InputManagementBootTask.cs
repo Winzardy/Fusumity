@@ -26,7 +26,6 @@ namespace Booting.Input
 			_inputReader = new MobileInputReader();
 #endif
 
-
 			_inputReader.RegisterAsService();
 
 			return UniTask.CompletedTask;
