@@ -116,7 +116,9 @@ namespace Content.Editor
 			if (property.Parent.ValueEntry.WeakSmartValue is not IUniqueContentEntry contentEntry)
 				return;
 
-			contentEntry.RegenerateGuid();
+			ContentEditorCache.RegenerateGuid(contentEntry,
+				property.Parent.UnityPropertyPath,
+				property.Tree.UnitySerializedObject.targetObject);
 		}
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
@@ -131,7 +133,7 @@ namespace Content.Editor
 			var isCollection = typeof(IList).IsAssignableFrom(valueType);
 			var collectionLabel = valueType.IsArray ? ARRAY_DEFAULT_LABEL : LIST_DEFAULT_LABEL;
 			if (attributes.GetAttribute<HideLabelAttribute>() != null ||
-			    typeof(IList).IsAssignableFrom(property.ValueEntry.ParentType))
+				typeof(IList).IsAssignableFrom(property.ValueEntry.ParentType))
 				guiContent.text = isCollection ? collectionLabel : string.Empty;
 			else if (attributes.GetAttribute<LabelTextAttribute>() != null)
 				guiContent.text = attributes.GetAttribute<LabelTextAttribute>().Text;

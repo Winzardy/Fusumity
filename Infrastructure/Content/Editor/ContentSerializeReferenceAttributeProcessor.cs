@@ -75,9 +75,9 @@ namespace Content.Editor
 			if (property.Parent.Parent.ValueEntry.WeakSmartValue is not IUniqueContentEntry contentEntry)
 				return;
 
-			var oldGuid = contentEntry.Guid;
-			var newGuid = contentEntry.RegenerateGuid();
-
+			ContentEditorCache.RegenerateGuid(contentEntry,
+				property.Parent.Parent.UnityPropertyPath,
+				property.Tree.UnitySerializedObject.targetObject);
 		}
 
 		public static string GetTooltip(InspectorProperty property, string tooltip)
