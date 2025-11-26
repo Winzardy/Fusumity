@@ -6,6 +6,7 @@ using Sapientia;
 using Sapientia.ServiceManagement;
 using SharedLogic;
 using Sirenix.OdinInspector;
+using Survivor.Interop.SharedLogic;
 
 namespace Booting.SharedLogic
 {
@@ -17,8 +18,6 @@ namespace Booting.SharedLogic
 	public class SharedLogicBootTask : BaseBootTask
 	{
 		private ISharedRoot _sharedRoot;
-		private ICommandCenter _center;
-		private ISharedDataStreamer _dataStreamer;
 
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
@@ -28,25 +27,15 @@ namespace Booting.SharedLogic
 
 		private async UniTask Initialize()
 		{
-			IDateTimeProvider dateTimeProvider = new SharedDateTimeProvider();
+			// Часть сервисов инициализируется здесь, т.к. есть зависимости на другие бут таски
+			// Перенести в SharedLogicInitializer
+			IDateTimeProvider dateTimeProvider = new SharedDateTimeProvider().RegisterAsService();
 			dateTimeProvider.RegisterAsService();
 
-			var configuration = ContentManager.Get<SharedLogicConfiguration>();
-
-			var registrar = configuration.registrarFactory.Create();
+			var registrar = new SurvivorSharedNodesRegistrar();
 			_sharedRoot = new SharedRoot(registrar, dateTimeProvider, SLDebug.logger);
 			_sharedRoot.Initialize();
 			_sharedRoot.RegisterAsService();
-
-			_dataStreamer = configuration.dataStreamerFactory.Create(_sharedRoot);
-			_dataStreamer.RegisterAsService();
-
-			_center = configuration.center.Create(_dataStreamer);
-			await _center.InitializeAsync();
-
-			var commandRunner = new ClientCommandRunner(_sharedRoot, _center, SLDebug.logger);
-			var router = new SharedLogicRouter(_sharedRoot, dateTimeProvider, commandRunner);
-			SharedLogicManager.Initialize(router);
 		}
 
 		protected override void OnDispose()
@@ -54,12 +43,6 @@ namespace Booting.SharedLogic
 			ServiceLocator<ISharedRoot>.UnRegister();
 
 			_sharedRoot?.Dispose();
-
-			if (_center is IDisposable center)
-				center.Dispose();
-
-			if (_dataStreamer is IDisposable dataHandler)
-				dataHandler.Dispose();
 		}
 	}
 }

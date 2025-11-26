@@ -9,7 +9,8 @@
         "Content",
         "WLog",
         "Fusumity",
-        "SharedLogic.Client"
+        "SharedLogic.Client",
+        "Survivor.Interop"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

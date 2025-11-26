@@ -1,6 +1,8 @@
+using System;
+using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using Sapientia;
+using UnityEngine;
 
 namespace SharedLogic
 {
@@ -19,7 +21,15 @@ namespace SharedLogic
 		public static bool ExecuteCommand<T>(in T command)
 			where T : struct, ICommand
 		{
-			return router.ExecuteCommand(in command);
+			try
+			{
+				return router.ExecuteCommand(in command);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[SharedLogicManager.ExecuteCommand] ок на старте приложение, пока не убрали инициализацию из бут тасок: {ex.Message}"); //PTODO
+				return false;
+			}
 		}
 	}
 
