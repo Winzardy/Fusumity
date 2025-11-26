@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Attributes;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -43,6 +44,13 @@ namespace Fusumity.Editor
 				}
 				else
 					attributes.Add(new HideLabelAttribute());
+			}
+
+			if (member.Name == ValueFieldName)
+			{
+				foreach (var parentAttribute in parentProperty.Attributes)
+					if (parentAttribute is ParentAttribute attribute)
+						attributes.Add(attribute.Convert());
 			}
 		}
 

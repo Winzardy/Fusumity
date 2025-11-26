@@ -6,7 +6,8 @@
         "Content",
         "Sapientia",
         "Localization",
-        "AssetManagement"
+        "AssetManagement",
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
