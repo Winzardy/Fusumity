@@ -36,6 +36,9 @@ namespace UI
 		public Func<Vector3> offsetFunc;
 		public Vector3 offset;
 
+		public Func<Vector3> screenOffsetFunc;
+		public Vector3 screenOffset;
+
 		public Func<Vector3> sizeFunc;
 		public Vector3? size;
 
@@ -157,6 +160,11 @@ namespace UI
 			//Виден ли маркер по "custom" логике?
 			var visible = _args.visibleFunc?.Invoke() ?? true;
 
+#if UNITY_EDITOR
+			_layout.gizmoWorldPosition = worldPosition;
+			_layout.gizmoWorldOffsetPosition = offset;
+#endif
+
 			//TODO: добавить обработку дистанции
 			if (!visible ||
 				(!_args.offscreen && !camera.IsTargetOnFrustum(in _cacheInput)) ||
@@ -177,7 +185,8 @@ namespace UI
 			{
 				camera.CalculateScreenTransform(in _cacheInput, out var output);
 				{
-					UpdatePosition(output.position, output.direction, output.offscreen, forceUpdatePosition);
+					var screenOffset = _args.screenOffsetFunc?.Invoke() ?? _args.screenOffset;
+					UpdatePosition(output.position + screenOffset, output.direction, output.offscreen, forceUpdatePosition);
 				}
 			}
 		}
