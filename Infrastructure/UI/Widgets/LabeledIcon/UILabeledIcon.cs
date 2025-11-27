@@ -20,8 +20,8 @@ namespace Game.UI
 			Create(out _spriteAssigner);
 			Create(out _locTextAssigner);
 
-			_layout.labelButton.Subscribe(OnLabelClicked);
-			_layout.iconButton.Subscribe(OnIconClicked);
+			_layout.labelButton?.Subscribe(OnLabelClicked);
+			_layout.iconButton?.Subscribe(OnIconClicked);
 
 			if (_layout.icon)
 				_defaultIconSprite = _layout.icon.sprite;
@@ -31,8 +31,8 @@ namespace Game.UI
 
 		protected override void OnLayoutCleared()
 		{
-			_layout.labelButton.Unsubscribe(OnLabelClicked);
-			_layout.iconButton.Unsubscribe(OnIconClicked);
+			_layout.labelButton?.Unsubscribe(OnLabelClicked);
+			_layout.iconButton?.Unsubscribe(OnIconClicked);
 		}
 
 		protected override void OnShow(ref ILabeledIconViewModel vm)
