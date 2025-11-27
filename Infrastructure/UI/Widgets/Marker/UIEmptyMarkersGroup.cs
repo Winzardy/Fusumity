@@ -11,6 +11,7 @@ namespace UI
 	public class UIEmptyMarkersGroup : UIGroup<UIMarker, UIMarkerLayout, UIMarkerArgs<EmptyArgs>>
     {
         private Camera _customCamera;
+
         private Dictionary<Transform, WidgetGroupToken> _usedMarkers = new Dictionary<Transform, WidgetGroupToken>();
 
         public UIEmptyMarkersGroup(UIGroupLayout layout, Camera customCamera = null)
@@ -26,13 +27,14 @@ namespace UI
 			_customCamera = customCamera;
 		}
 
-        public UIMarker SnapMarkerTo(Transform worldObject, Vector2 offset = default)
+        public UIMarker SnapMarkerTo(Transform worldObject, Vector2 screenOffset = default)
         {
             var token = Add(new UIMarkerArgs<EmptyArgs>
             {
                 target = worldObject,
 				camera = _customCamera,
-				offset = offset
+
+				screenOffset = screenOffset
             });
 
             _usedMarkers.Add(worldObject, token);
