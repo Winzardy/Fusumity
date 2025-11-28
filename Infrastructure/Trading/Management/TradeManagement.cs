@@ -25,18 +25,72 @@ namespace Trading
 			_service = service;
 		}
 
+		public bool CanFetchOrExecute(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
+		{
+			// if (!tradeboard.IsFetchMode)
+			// 	throw new ArgumentException("Tradeboard will be fetched!");
+			//
+			// error = null;
+			//
+			// TradePayError? payError = null;
+			// foreach (var actualTradeCost in trade.cost.EnumerateActual(tradeboard))
+			// {
+			// 	if (actualTradeCost is ITradeCostWithReceipt tradeCostWithReceipt)
+			// 	{
+			// 		if (!tradeCostWithReceipt.CanFetch(tradeboard, out payError))
+			// 		{
+			// 			payError ??= TradePayError.NotImplemented;
+			// 			break;
+			// 		}
+			// 	}
+			// 	else
+			// 	{
+			// 		if (!actualTradeCost.CanExecute(tradeboard, out payError))
+			// 		{
+			// 			payError ??= TradePayError.NotImplemented;
+			// 			break;
+			// 		}
+			// 	}
+			// }
+
+			if (!CanFetchOrExecute(trade.cost, tradeboard, out var payError))
+			{
+				error = new TradeExecuteError(payError, null);
+				return false;
+			}
+
+			if (!trade.reward.CanExecute(tradeboard, out var receiveError))
+			{
+				error = new TradeExecuteError(payError, receiveError);
+				return false;
+			}
+
+			error = null;
+			return true;
+		}
+
 		public bool CanFetchOrExecute([CanBeNull] TradeCost cost, Tradeboard tradeboard, out TradePayError? error)
 		{
 			if (!tradeboard.IsFetchMode)
 				throw new ArgumentException("Tradeboard will be fetched!");
 
-			error = null;
-
 			if (cost == null)
+			{
+				error = null;
 				return false;
+			}
 
 			foreach (var t in cost.EnumerateActual(tradeboard))
 			{
+				if (t is IInterceptableTradeCost interceptable)
+				{
+					if (interceptable.ShouldIntercept(tradeboard))
+					{
+						error = null;
+						return true;
+					}
+				}
+
 				if (t is ITradeCostWithReceipt tradeCostWithReceipt)
 				{
 					if (!tradeCostWithReceipt.CanFetch(tradeboard, out error))
@@ -49,49 +103,7 @@ namespace Trading
 				}
 			}
 
-			return true;
-		}
-
-		public bool CanFetchOrExecute(in TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
-		{
-			if (!tradeboard.IsFetchMode)
-				throw new ArgumentException("Tradeboard will be fetched!");
-
 			error = null;
-
-			TradePayError? payError = null;
-			foreach (var actualTradeCost in trade.cost.EnumerateActual(tradeboard))
-			{
-				if (actualTradeCost is ITradeCostWithReceipt tradeCostWithReceipt)
-				{
-					if (!tradeCostWithReceipt.CanFetch(tradeboard, out payError))
-					{
-						payError ??= TradePayError.NotImplemented;
-						break;
-					}
-				}
-				else
-				{
-					if (!actualTradeCost.CanExecute(tradeboard, out payError))
-					{
-						payError ??= TradePayError.NotImplemented;
-						break;
-					}
-				}
-			}
-
-			if (payError.HasValue)
-			{
-				error = new TradeExecuteError(payError, null);
-				return false;
-			}
-
-			if (!trade.reward.CanExecute(tradeboard, out var receiveError))
-			{
-				error = new TradeExecuteError(payError, receiveError);
-				return false;
-			}
-
 			return true;
 		}
 
@@ -122,6 +134,17 @@ namespace Trading
 			{
 				if (!CanFetchOrExecute(cost, tradeboard, out error))
 					return error;
+			}
+
+			foreach (var actualCost in cost.EnumerateActual(tradeboard))
+			{
+				if (actualCost is IInterceptableTradeCost interceptable)
+				{
+					var result = await interceptable.InterceptAsync(tradeboard, cancellationToken);
+
+					if (result == InterceptResult.Cancel)
+						return TradePayError.Cancelled;
+				}
 			}
 
 			using (tradeboard.FetchModeScope())
