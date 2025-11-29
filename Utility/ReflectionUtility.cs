@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -384,6 +385,19 @@ namespace Fusumity.Utility
 				EventInfo evt => "E:" + evt.DeclaringType.FullName + "." + evt.Name,
 				_ => string.Empty
 			};
+
+		public static FieldInfo[] GetConstants<T>()
+		{
+			return GetConstants(typeof(T));
+		}
+
+		public static FieldInfo[] GetConstants(Type type)
+		{
+			FieldInfo[] fieldInfos = type.GetFields(BindingFlags.Public |
+				 BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+			return fieldInfos.Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToArray();
+		}
 	}
 
 	public enum XmlCommentType

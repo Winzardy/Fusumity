@@ -232,13 +232,13 @@ namespace Fusumity.Editor.Utility
 
 		public static T CreateScriptableObject<T>(string path, string assetName, bool saveAssets = true) where T : ScriptableObject
 		{
-			return (T) CreateScriptableObject(typeof(T), path, assetName, saveAssets);
+			return (T)CreateScriptableObject(typeof(T), path, assetName, saveAssets);
 		}
 
 		public static T CreateScriptableObject<T>(Type type, string path, string assetName, bool saveAssets = true)
 			where T : ScriptableObject
 		{
-			return (T) CreateScriptableObject(type, path, assetName, saveAssets);
+			return (T)CreateScriptableObject(type, path, assetName, saveAssets);
 		}
 
 		public static ScriptableObject CreateScriptableObject(Type type, string path, string assetName, bool saveAssets = true)
@@ -272,7 +272,7 @@ namespace Fusumity.Editor.Utility
 		{
 			return string.IsNullOrEmpty(path)
 				? AssetDatabase.FindAssets($"t:{type.Name}")
-				: AssetDatabase.FindAssets($"t:{type.Name}", new string[] {path});
+				: AssetDatabase.FindAssets($"t:{type.Name}", new string[] { path });
 		}
 
 		public static void Rename(UnityObject asset, string newName, bool setDirty = false)
@@ -336,6 +336,22 @@ namespace Fusumity.Editor.Utility
 					AssetDatabase.CreateFolder(current, split[i]);
 				current = next;
 			}
+		}
+
+		public static string GetFolderPath(UnityEngine.Object obj)
+		{
+			string path = AssetDatabase.GetAssetPath(obj);
+			if (path.IsNullOrEmpty())
+			{
+				path = "Assets";
+			}
+			else
+			if (System.IO.Path.GetExtension(path) != "")
+			{
+				path = path.Replace(System.IO.Path.GetFileName(path), "");
+			}
+
+			return path;
 		}
 	}
 }

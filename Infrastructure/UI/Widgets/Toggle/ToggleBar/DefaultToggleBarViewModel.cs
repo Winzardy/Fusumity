@@ -32,7 +32,7 @@ namespace UI
 		public void Repopulate(IList<TSourceData> sourceData, int selectedIndex)
 		{
 			Assert.IsNotNull(sourceData, $"Provided null source data [ {typeof(TSourceData).Name} ]");
-			Assert.IsTrue(sourceData.WithinRange(selectedIndex), $"Selected index [ {selectedIndex} ] is out of bounds");
+			Assert.IsTrue(sourceData.WithinBounds(selectedIndex), $"Selected index [ {selectedIndex} ] is out of bounds");
 
 			Clear();
 

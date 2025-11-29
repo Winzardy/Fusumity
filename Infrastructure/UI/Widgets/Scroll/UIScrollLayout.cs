@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sapientia.Collections;
 using UnityEngine.Serialization;
+using Sapientia.Utility;
 
 namespace UI.Scroll
 {

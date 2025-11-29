@@ -136,8 +136,8 @@ namespace Fusumity.Editor.Extensions
 			{
 				var field = fields[i];
 				if ((restrictSet == null || !restrictSet.Contains(field)) &&
-				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
-				    !field.HasAttribute<HideInInspector>())
+					(field.IsPublic || field.HasAttribute<SerializeField>()) &&
+					!field.HasAttribute<HideInInspector>())
 				{
 					result.Add(field);
 				}
@@ -327,6 +327,11 @@ namespace Fusumity.Editor.Extensions
 			new AssetSelectorDrawData(target, label, propertyType, targetType, onSelected).Draw(position);
 		}
 
+		public static void AddOption(this GenericMenu menu, GenericMenuOption option)
+		{
+			menu.AddItem(option.content, option.on, option.func);
+		}
+
 		public static void PropertyField(this SerializedProperty property, Rect position, GUIContent label = null, bool includeChildren = true)
 		{
 			_positionCache = position;
@@ -350,7 +355,8 @@ namespace Fusumity.Editor.Extensions
 
 		public static float GetPropertyHeight_Cached(this SerializedProperty property)
 		{
-			return EditorGUI.GetPropertyHeight(property, _includeChildrenCache);;
+			return EditorGUI.GetPropertyHeight(property, _includeChildrenCache);
+			;
 		}
 
 		public static bool HasChildren(this SerializedProperty property)
@@ -361,6 +367,33 @@ namespace Fusumity.Editor.Extensions
 				return false;
 
 			return copy.GetParentPropertyPath() == property.propertyPath;
+		}
+	}
+
+	public struct GenericMenuOption
+	{
+		public GUIContent content;
+		public GenericMenu.MenuFunction func;
+		public bool on;
+
+		public Func<bool> predicate;
+
+		public GenericMenuOption(string label, GenericMenu.MenuFunction func, bool on = false, Func<bool> predicate = null)
+		{
+			this.content = new GUIContent(label);
+			this.func = func;
+			this.on = on;
+
+			this.predicate = predicate;
+		}
+
+		public GenericMenuOption(GUIContent content, GenericMenu.MenuFunction func, bool on = false, Func<bool> predicate = null)
+		{
+			this.content = content;
+			this.func = func;
+			this.on = on;
+
+			this.predicate = predicate;
 		}
 	}
 }
