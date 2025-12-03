@@ -52,7 +52,7 @@ namespace UI
 
 		public void Select(int index)
 		{
-			if (!_buttons.WithinRange(index))
+			if (!_buttons.WithinBounds(index))
 				return;
 
 			var button = _buttons[index];
