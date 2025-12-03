@@ -17,7 +17,7 @@ namespace Submodules.Fusumity.Infrastructure.Migration
 		// В наследниках необходимо написать следующий код:
 		/*
 		public bool IsMigrated { get => isMigrated; set => isMigrated = value; }
-		[SerializeField, ReadOnly]
+		[UnityEngine.SerializeField, Sirenix.OdinInspector.ReadOnly]
 		private bool isMigrated;
 		*/
 
