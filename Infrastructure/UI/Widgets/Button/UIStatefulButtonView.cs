@@ -19,19 +19,23 @@ namespace UI
 		{
 			_widget.Show(viewModel);
 
-			viewModel.LabelChanged += HandleLabelChanged;
-			viewModel.StyleChanged += HandleStyleChanged;
-			viewModel.InteractableChanged += HandleInteractableChanged;
+			UpdateLabel();
+			UpdateStyle();
+			UpdateInteractable();
+
+			viewModel.LabelChanged += UpdateLabel;
+			viewModel.StyleChanged += UpdateStyle;
+			viewModel.InteractableChanged += UpdateInteractable;
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			viewModel.LabelChanged -= HandleLabelChanged;
-			viewModel.StyleChanged -= HandleStyleChanged;
-			viewModel.InteractableChanged -= HandleInteractableChanged;
+			viewModel.LabelChanged -= UpdateLabel;
+			viewModel.StyleChanged -= UpdateStyle;
+			viewModel.InteractableChanged -= UpdateInteractable;
 		}
 
-		private void HandleLabelChanged()
+		private void UpdateLabel()
 		{
 			if (ViewModel.Label.IsNullOrEmpty())
 			{
@@ -43,12 +47,12 @@ namespace UI
 			}
 		}
 
-		private void HandleStyleChanged()
+		private void UpdateStyle()
 		{
 			_widget.SetStyle(ViewModel.Style);
 		}
 
-		private void HandleInteractableChanged()
+		private void UpdateInteractable()
 		{
 			_widget.SetInteractable(!ViewModel.Interactable.HasValue || ViewModel.Interactable.Value);
 		}
