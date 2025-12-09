@@ -20,7 +20,6 @@ namespace Localization
 			get => resolver != null;
 		}
 
-
 		public static string CurrentLocaleCode => resolver.CurrentLocaleCode;
 
 		/// <inheritdoc cref="LocalizationResolver.CurrentLanguage"/>
@@ -37,6 +36,17 @@ namespace Localization
 
 		/// <returns>Перевод слова по ключу (текущего выбранного языка)</returns>
 		public static string Get(string key, string defaultValue = null) => resolver.Get(key, defaultValue);
+		public static string GetFormatted(string key, params (string tag, string value)[] toReplace)
+		{
+			var localized = Get(key);
+			for (int i = 0; i < toReplace.Length; i++)
+			{
+				var tuple = toReplace[i];
+				localized = localized.Replace(tuple.tag, tuple.value);
+			}
+
+			return localized;
+		}
 
 		public static void SetLanguage(string localeCode)
 			=> resolver.SetLanguage(localeCode);

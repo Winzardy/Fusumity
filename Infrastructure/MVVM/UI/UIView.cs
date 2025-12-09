@@ -1,5 +1,5 @@
-using Fusumity.Utility;
 using System;
+using TMPro;
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,6 +26,11 @@ namespace Fusumity.MVVM.UI
 		protected void Subscribe(UILabeledButtonLayout layout, Action action)
 		{
 			Subscribe(layout.button, action);
+		}
+
+		protected void Bind(TMP_Text label, ILabelViewModel viewModel)
+		{
+			Bind(viewModel, (x) => label.text = x);
 		}
 	}
 }

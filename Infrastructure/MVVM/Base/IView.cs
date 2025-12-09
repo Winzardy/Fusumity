@@ -30,6 +30,7 @@ namespace Fusumity.MVVM
 			OnDispose();
 
 			_disposables?.Dispose();
+			_bindings?.Dispose();
 		}
 
 		void IView.Update(object baseModel)
@@ -63,6 +64,7 @@ namespace Fusumity.MVVM
 		{
 			if (ViewModel != null)
 			{
+				_bindings?.Dispose();
 				OnClear(ViewModel);
 
 				if (dispose && ViewModel is IDisposable disposable)
@@ -138,6 +140,18 @@ namespace Fusumity.MVVM
 		}
 
 		#endregion Disposables
+
+		#region Bindings
+		private CompositeDisposable _bindings;
+		/// <summary>
+		/// Bindings are disposed of upon each view model clearing.
+		/// </summary>
+		protected void Bind<T>(IBinding<T> binding,  Action<T> handler)
+		{
+			var lazyCd = _bindings ??= new CompositeDisposable();
+			lazyCd.AddDisposable(new BindingSubscription<T>(binding, handler));
+		}
+		#endregion
 	}
 
 	public abstract class View<TViewModel, TLayout> : View<TViewModel>
