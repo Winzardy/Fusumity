@@ -242,8 +242,8 @@ namespace Game.Logic.Gizmo
 			Gizmos.color = color;
 			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), rotation.ToQuaternion(), size.XZ(1f));
 
-			var leftUp = new Vector3(-1f, 0f, 1f);
-			var rightUp = new Vector3(1f, 0f, 1f);
+			var leftUp = new Vector3(-0.5f, 0f, 0.5f);
+			var rightUp = new Vector3(0.5f, 0f, 0.5f);
 			var rightDown = -leftUp;
 			var leftDown = -rightUp;
 
