@@ -11,11 +11,10 @@ using Sapientia;
 using Sirenix.OdinInspector;
 #if FAKE
 using Advertising.Fake;
-
 #else
 using Content;
 using Advertising.UnityLevelPlay;
-using Targeting;
+using ProjectInformation;
 #endif
 
 namespace Booting.Advertising
@@ -40,7 +39,7 @@ namespace Booting.Advertising
 			_integration = new FakeAdIntegration();
 #else
 			var settings = ContentManager.Get<UnityLevelPlaySettings>();
-			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectDesk.Platform);
+			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectInfo.Platform);
 #endif
 			var management = new AdManagement(_integration);
 			AdManager.Initialize(management);

@@ -54,11 +54,8 @@ namespace Booting.InAppPurchasing
 				.ContinueWith(OnInitialized)
 				.Forget();
 
-			var management = new IAPManagement(_integration
-#if IAP_DEBUG
-				, _grantCenter
-#endif
-			);
+			var management = new IAPManagement(_integration);
+			management.SetGrantCenter(_grantCenter);
 			IAPManager.Initialize(management);
 
 			if (useOfflineService)
