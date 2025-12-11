@@ -5,6 +5,7 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -15,7 +16,10 @@ namespace Game.Logic.Gizmo
 	public static class GizmoExt
 	{
 		private const float DEFAULT_HEIGHT = 0.5f;
-		private const int CIRCLE_PRECISE = 60;
+
+		private const int CIRCLE_PRECISE = 30;
+		private const int ANNULUS_PRECISE = 30;
+
 		public const int FRAMES_FOR_ONCE_DRAWING = 10;
 
 		private const float ARROW_HANDLE_ANGLE_RAD = FloatMathExt.DEG_TO_RAD * 20f;
@@ -23,10 +27,17 @@ namespace Game.Logic.Gizmo
 		private static readonly float3 ARROW_LEFT_DIR = (new Rotation(-ARROW_HANDLE_ANGLE_RAD).ToDirection() * 0.5f).XZ();
 
 		private static readonly Vector3[] CIRCLE_POINTS = new Vector3[CIRCLE_PRECISE];
+		private static readonly Mesh CIRCLE_MESH = new Mesh();
 
-		public static readonly Color ORANGE = new (1f, 0.5f, 0f, 1f);
-		public static readonly Color PURPLE = new (0.5f, 0f, 1f, 1f);
-		public static readonly Color JADE_WHISPER = new (0.3f, 0.8f, 0.6f, 1f);
+		private static readonly Vector3[] ANNULUS_POINTS = new Vector3[ANNULUS_PRECISE];
+		private static readonly SimpleList<Mesh> ANNULUS_MESH_BUFFER = new SimpleList<Mesh>();
+		private static readonly Dictionary<float, Mesh> ANNULUS_RATIO_TO_MESH = new Dictionary<float, Mesh>();
+
+		private static int LAST_DRAW_FRAME = -1;
+
+		public static readonly Color ORANGE = new(1f, 0.5f, 0f, 1f);
+		public static readonly Color PURPLE = new(0.5f, 0f, 1f, 1f);
+		public static readonly Color JADE_WHISPER = new(0.3f, 0.8f, 0.6f, 1f);
 
 		public static float Height => GizmoDrawer.Current == null ? DEFAULT_HEIGHT : GizmoDrawer.Current.Height;
 
@@ -55,6 +66,20 @@ namespace Game.Logic.Gizmo
 
 		static GizmoExt()
 		{
+			BuildCirclePoints();
+			BuildCircleMesh();
+			BuildAnnulusPoints();
+
+			if (!Application.isPlaying)
+				return;
+
+			var gameObject = new GameObject($"{nameof(GizmoDrawer)}");
+			Object.DontDestroyOnLoad(gameObject);
+			gameObject.AddComponent<GizmoDrawer>();
+		}
+
+		private static void BuildCirclePoints()
+		{
 			var radStep = FloatMathExt.TWO_PI / (CIRCLE_PRECISE - 1);
 			var currentRad = 0f;
 
@@ -64,13 +89,138 @@ namespace Game.Logic.Gizmo
 				currentRad += radStep;
 				CIRCLE_POINTS[i] = currentRad.CosSin().XZ();
 			}
+		}
 
-			if (!Application.isPlaying)
-				return;
+		private static void BuildCircleMesh()
+		{
+			CIRCLE_MESH.name = "GizmoSolidCircleMesh";
 
-			var gameObject = new GameObject($"{nameof(GizmoDrawer)}");
-			Object.DontDestroyOnLoad(gameObject);
-			gameObject.AddComponent<GizmoDrawer>();
+			var vertexCount = CIRCLE_PRECISE + 1;
+			var vertices = new Vector3[vertexCount];
+			var triangles = new int[CIRCLE_PRECISE * 3];
+
+			// Центр
+			vertices[0] = Vector3.zero;
+
+			var angleStep = FloatMathExt.TWO_PI / CIRCLE_PRECISE;
+
+			for (var i = 0; i < CIRCLE_PRECISE; i++)
+			{
+				var angle = angleStep * i;
+				vertices[i + 1] = new Vector3(angle.Cos(), 0f, angle.Sin());
+			}
+
+			for (var i = 0; i < CIRCLE_PRECISE; i++)
+			{
+				var triangleIndex = i * 3;
+				triangles[triangleIndex + 0] = 0;
+				triangles[triangleIndex + 1] = i + 1;
+				var nextIndex = (i + 1) % CIRCLE_PRECISE;
+				triangles[triangleIndex + 2] = nextIndex + 1;
+			}
+
+			CIRCLE_MESH.vertices = vertices;
+			CIRCLE_MESH.triangles = triangles;
+			CIRCLE_MESH.RecalculateNormals();
+			CIRCLE_MESH.RecalculateBounds();
+		}
+
+		private static void BuildAnnulusPoints()
+		{
+			var angleStep = FloatMathExt.TWO_PI / ANNULUS_PRECISE;
+
+			// Вершины: [0..segmentCount-1] — внешний контур, [segmentCount..2*segmentCount-1] — внутренний
+			for (var i = 0; i < ANNULUS_PRECISE; i++)
+			{
+				var angle = angleStep * i;
+				ANNULUS_POINTS[i] = new Vector3(angle.Cos(), 0f, angle.Sin());
+			}
+		}
+
+		private static void AppendAnnulusMesh()
+		{
+			var mesh = new Mesh();
+
+			mesh.name = "GizmoAnnulusMesh_Normalized";
+			mesh.hideFlags = HideFlags.HideAndDontSave;
+
+			var vertexCount = ANNULUS_PRECISE * 2;
+			var triangleCount = ANNULUS_PRECISE * 2; // 2 треугольника на сегмент
+			var indexCount = triangleCount * 3;
+
+			var vertices = new Vector3[vertexCount];
+			var indices = new int[indexCount];
+
+			var index = 0;
+			for (var i = 0; i < ANNULUS_PRECISE; i++)
+			{
+				var next = (i + 1) % ANNULUS_PRECISE;
+
+				var outer0 = i;
+				var outer1 = next;
+				var inner0 = i + ANNULUS_PRECISE;
+				var inner1 = next + ANNULUS_PRECISE;
+
+				// Квад outer0-outer1-inner1-inner0 → два треугольника:
+				// (outer0, outer1, inner1) и (outer0, inner1, inner0)
+
+				indices[index++] = outer0;
+				indices[index++] = outer1;
+				indices[index++] = inner1;
+
+				indices[index++] = outer0;
+				indices[index++] = inner1;
+				indices[index++] = inner0;
+			}
+
+			mesh.vertices = vertices;
+			mesh.triangles = indices;
+			mesh.RecalculateNormals();
+			mesh.RecalculateBounds();
+
+			ANNULUS_MESH_BUFFER.Add(mesh);
+		}
+
+		private static Mesh GetAnnulusMesh(float innerRatio)
+		{
+			if (LAST_DRAW_FRAME != Time.renderedFrameCount)
+			{
+				foreach (var (_, mesh) in ANNULUS_RATIO_TO_MESH)
+				{
+					ANNULUS_MESH_BUFFER.Add(mesh);
+				}
+				ANNULUS_MESH_BUFFER.Clear();
+				LAST_DRAW_FRAME = Time.renderedFrameCount;
+			}
+
+			{
+				innerRatio = innerRatio.Round(4);
+
+				if (!ANNULUS_RATIO_TO_MESH.TryGetValue(innerRatio, out var mesh))
+				{
+					if (ANNULUS_MESH_BUFFER.Count == 0)
+						AppendAnnulusMesh();
+					mesh = ANNULUS_MESH_BUFFER.RemoveLast();
+
+					using var vertices = new NativeArray<Vector3>(ANNULUS_PRECISE * 2, Allocator.Temp);
+					var verticesSpan = vertices.AsSpan();
+					var pointsSpan = ANNULUS_POINTS.AsSpan();
+
+					pointsSpan.CopyTo(verticesSpan.Slice(0, ANNULUS_PRECISE));
+					pointsSpan.CopyTo(verticesSpan.Slice(ANNULUS_PRECISE, ANNULUS_PRECISE));
+
+					for (var i = ANNULUS_PRECISE; i < verticesSpan.Length; i++)
+					{
+						verticesSpan[i] *= innerRatio;
+					}
+
+					mesh.SetVertices(vertices);
+
+					ANNULUS_RATIO_TO_MESH.Add(innerRatio, mesh);
+				}
+
+				return mesh;
+			}
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
@@ -127,6 +277,45 @@ namespace Game.Logic.Gizmo
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
+		public static void DrawSolidCircle_TopDown(float2 position, float radius, Color color, bool wire)
+		{
+			var oldMatrix = Gizmos.matrix;
+			Gizmos.color = color;
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, new Vector3(radius, 1f, radius));
+
+			if (wire)
+				Gizmos.DrawWireMesh(CIRCLE_MESH);
+			else
+				Gizmos.DrawMesh(CIRCLE_MESH);
+
+			Gizmos.matrix = oldMatrix;
+		}
+
+		[Conditional(E.UNITY_EDITOR)]
+		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color, bool wire)
+		{
+			if (innerRadius == outerRadius)
+			{
+				DrawSolidCircle_TopDown(position, outerRadius, color, wire);
+				return;
+			}
+
+			var oldMatrix = Gizmos.matrix;
+			Gizmos.color = color;
+			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, new Vector3(outerRadius, 1f, outerRadius));
+
+			var innerRatio = innerRadius / outerRadius;
+			var mesh = GetAnnulusMesh(innerRatio);
+
+			if (wire)
+				Gizmos.DrawWireMesh(mesh);
+			else
+				Gizmos.DrawMesh(mesh);
+
+			Gizmos.matrix = oldMatrix;
+		}
+
+		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawSphere_TopDown(float2 position, float3 size, Color color, bool wire)
 		{
 			var oldMatrix = Gizmos.matrix;
@@ -177,6 +366,7 @@ namespace Game.Logic.Gizmo
 				{
 					lines[i] = currentRad.CosSin().XZ();
 				}
+
 				lines[^1] = Vector3.zero;
 
 				Gizmos.DrawLineStrip(lines, true);
@@ -186,7 +376,8 @@ namespace Game.Logic.Gizmo
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
-		public static void DrawCutSector_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color)
+		public static void DrawCutSector_TopDown(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad,
+			Color color)
 		{
 			var oldMatrix = Gizmos.matrix;
 			Gizmos.color = color;
