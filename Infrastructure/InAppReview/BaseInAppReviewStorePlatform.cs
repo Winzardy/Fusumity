@@ -1,6 +1,6 @@
 using System;
+using ProjectInformation;
 using Sapientia.Extensions;
-using Targeting;
 using UnityEngine;
 
 namespace InAppReview
@@ -35,7 +35,7 @@ namespace InAppReview
 			if (!_useStorePage)
 				return;
 
-			var link = ProjectDesk.GetReviewLink();
+			var link = ProjectInfo.GetReviewLink();
 
 			if (!link.IsNullOrEmpty())
 				Application.OpenURL(link);

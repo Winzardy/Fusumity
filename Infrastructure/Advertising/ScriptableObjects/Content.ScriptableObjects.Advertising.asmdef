@@ -9,7 +9,8 @@
         "Fusumity",
         "Content",
         "Sapientia",
-        "Targeting"
+        "Targeting",
+        "ProjectInfo"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -7,13 +7,6 @@ using Sirenix.OdinInspector;
 
 namespace InAppPurchasing.Offline
 {
-	[Serializable]
-	[TypeRegistryItem("\u2009Offline", "", SdfIconType.Octagon)]
-	public class OfflineInAppPurchasingServiceFactory : IInAppPurchasingServiceFactory
-	{
-		public IInAppPurchasingService Create() => new OfflineInAppPurchasingService();
-	}
-
 	public class OfflineInAppPurchasingService : IInAppPurchasingService, IDisposable
 	{
 		private const string ALL_SAVE_KEY = "iap_all_transactions";

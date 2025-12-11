@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
-using Sapientia.Reflection;
 
 namespace InAppPurchasing
 {
@@ -17,9 +15,6 @@ namespace InAppPurchasing
 		{
 			_initialized = true;
 
-			foreach (var granter in _registeredGranters)
-				granter.Initialize();
-
 			if (_queue.IsNullOrEmpty())
 				return;
 
@@ -27,12 +22,16 @@ namespace InAppPurchasing
 				Grant(in pair.receipt, pair.callback);
 		}
 
-		public IIAPPurchaseGranter CreateOrRegister(Type type)
+		bool IInAppPurchasingGrantCenter.Register<T>(T granter)
 		{
-			var granter = type.CreateInstance<IIAPPurchaseGranter>();
 			_registeredGranters ??= new();
 			_registeredGranters.Add(granter);
-			return granter;
+			return true;
+		}
+
+		bool IInAppPurchasingGrantCenter.Unregister<T>(T granter)
+		{
+			return _registeredGranters.Remove(granter);
 		}
 
 		public void Grant(in PurchaseReceipt receipt, IntegrationCallback callback = null)

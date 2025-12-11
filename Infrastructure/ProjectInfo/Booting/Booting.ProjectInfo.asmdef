@@ -1,0 +1,23 @@
+{
+  "name": "Booting.ProjectInfo",
+  "rootNamespace": "",
+  "references": [
+    "Booting",
+    "UniTask",
+    "ProjectInfo",
+    "Content",
+    "Sapientia",
+    "Fusumity",
+    "UnityEditor.UI",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

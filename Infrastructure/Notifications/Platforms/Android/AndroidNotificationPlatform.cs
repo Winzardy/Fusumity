@@ -11,7 +11,7 @@ using UnityEngine.Scripting;
 
 namespace Notifications.Android
 {
-	public class AndroidPlatformNotificationArgs : IPlatformNotificationArgs
+	public class AndroidPlatformNotificationRequest : IPlatformNotificationRequest
 	{
 		public string largeIcon;
 		public string smallIcon;
@@ -51,22 +51,22 @@ namespace Notifications.Android
 			//TODO: как вариант записывать string айди в IntentData. Так же могут быть нотификации не "игровые"
 		}
 
-		public bool Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationRequest request)
 		{
 			TryRequestUserPermission();
 
-			var notification = new AndroidNotification(args.title, args.message, args.deliveryTime!.Value);
+			var notification = new AndroidNotification(request.title, request.message, request.deliveryTime!.Value);
 
 			//TODO: Важно отметить что IntentData используется как контейнер для хранения айди, возможно надо будет это убрать
-			notification.IntentData = args.id;
+			notification.IntentData = request.id;
 
-			var notificationEntry = args.config;
+			var notificationEntry = request.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
 
 			var channel = AndroidNotificationChannelType.DEFAULT;
 
-			if (args.repeatInterval.HasValue)
-				notification.RepeatInterval = args.repeatInterval.Value;
+			if (request.repeatInterval.HasValue)
+				notification.RepeatInterval = request.repeatInterval.Value;
 
 			if (notificationEntry.TryGet<AndroidPlatformNotificationConfig>(out var platformEntry))
 			{
@@ -83,7 +83,7 @@ namespace Notifications.Android
 					notification.Color = platformEntry.smallIconColor;
 			}
 
-			if (args.TryGet<AndroidPlatformNotificationArgs>(out var platformArgs))
+			if (request.TryGet<AndroidPlatformNotificationRequest>(out var platformArgs))
 			{
 				if (platformArgs.smallIcon != null)
 					notification.SmallIcon = platformArgs.smallIcon;
@@ -95,10 +95,10 @@ namespace Notifications.Android
 					notification.Color = platformArgs.smallIconColor;
 			}
 
-			if (_ids.TryGetValue(args.id, out var androidId))
+			if (_ids.TryGetValue(request.id, out var androidId))
 				AndroidNotificationCenter.SendNotificationWithExplicitID(notification, channel, androidId);
 			else
-				_ids[args.id] = AndroidNotificationCenter.SendNotification(notification, channel);
+				_ids[request.id] = AndroidNotificationCenter.SendNotification(notification, channel);
 
 			return true;
 		}

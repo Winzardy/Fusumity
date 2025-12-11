@@ -7,10 +7,8 @@ using System.Threading;
 using Advertising;
 using Advertising.Offline;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Sapientia;
 using Sirenix.OdinInspector;
-using UnityEngine;
 #if FAKE
 using Advertising.Fake;
 
@@ -31,11 +29,9 @@ namespace Booting.Advertising
 	{
 		public override int Priority => HIGH_PRIORITY - 60;
 
-		[LabelText("Backend")]
-		[SerializeReference]
-		private IAdvertisingServiceFactory _factory = new OfflineAdvertisingServiceFactory();
+		public bool useOfflineService;
 
-		private IAdvertisingService _service;
+		private IAdvertisingService _offlineService;
 		private IAdvertisingIntegration _integration;
 
 		public override UniTask RunAsync(CancellationToken token = default)
@@ -46,9 +42,14 @@ namespace Booting.Advertising
 			var settings = ContentManager.Get<UnityLevelPlaySettings>();
 			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectDesk.Platform);
 #endif
-			_service = _factory.Create();
-			var management = new AdManagement(_integration, _service);
+			var management = new AdManagement(_integration);
 			AdManager.Initialize(management);
+
+			if (useOfflineService)
+			{
+				_offlineService = new OfflineAdvertisingService();
+				AdManager.Bind(_offlineService);
+			}
 
 			return UniTask.CompletedTask;
 		}
@@ -59,17 +60,17 @@ namespace Booting.Advertising
 			if (_integration is IDisposable integration)
 				integration.Dispose();
 
-			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable service)
-				service.Dispose();
+			if (_offlineService is IDisposable offlineService)
+				offlineService.Dispose();
 
 			AdManager.Terminate();
 		}
 
 		public override void OnBootCompleted()
 		{
-			if (_service is IInitializable service)
-				service.Initialize();
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (_offlineService is IInitializable initializable)
+				initializable.Initialize();
 		}
 	}
 }

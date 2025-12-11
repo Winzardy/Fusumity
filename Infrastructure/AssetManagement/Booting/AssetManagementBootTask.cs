@@ -1,8 +1,6 @@
 ﻿using System.Threading;
 using AssetManagement;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
-using Sapientia.Reflection;
 using UnityEngine.Scripting;
 using Sirenix.OdinInspector;
 
@@ -19,9 +17,8 @@ namespace Booting.AssetManagement
 
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
-			var management = new AssetProvider();
-			AssetLoader.Initialize(management);
-
+			var provider = new AssetProvider();
+			AssetLoader.Initialize(provider);
 			return UniTask.CompletedTask;
 		}
 

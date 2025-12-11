@@ -1,8 +1,8 @@
 using Fusumity.Collections;
 using InAppPurchasing;
 using InAppPurchasing.Unity;
+using ProjectInformation;
 using Sirenix.OdinInspector;
-using Targeting;
 using UnityEngine;
 
 namespace Content.ScriptableObjects.InAppPurchasing

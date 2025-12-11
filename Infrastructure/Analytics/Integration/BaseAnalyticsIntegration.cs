@@ -22,8 +22,8 @@ namespace Analytics.Integration
 
 		protected virtual UniTask OnInitializeAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
 
-		public abstract void SendEvent(in AnalyticsEventArgs args);
+		public abstract void SendEvent(in AnalyticsEventPayload args);
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error) => _eventArgsValidator.IsValid(args, out error);
+		public bool IsValid(in AnalyticsEventPayload args, out string error) => _eventArgsValidator.IsValid(args, out error);
 	}
 }

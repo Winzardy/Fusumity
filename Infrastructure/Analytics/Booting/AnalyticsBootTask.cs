@@ -3,8 +3,6 @@ using System.Threading;
 using Analytics;
 using Content;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
-using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -24,32 +22,21 @@ namespace Booting.Analytics
 		public override async UniTask RunAsync(CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AnalyticsSettings>();
-			bool isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
-			var router = new AnalyticsManagement(settings, isValidationEnabled);
+			var isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
+			var management = new AnalyticsManagement(settings, isValidationEnabled);
 
 			if (@await)
-				await router.InitializeAsync(token);
+				await management.InitializeAsync(token);
 			else
-				router.InitializeAsync(token).Forget();
+				management.InitializeAsync(token)
+					.Forget(Bootstrap.LogException);
 
-			AnalyticsCenter.Initialize(router);
+			AnalyticsCenter.Initialize(management);
 		}
 
 		protected override void OnDispose()
 		{
 			AnalyticsCenter.Terminate();
-		}
-
-		public override void OnBootCompleted()
-		{
-			foreach (var type in ReflectionUtility.GetAllTypes<AnalyticsAggregator>(false))
-			{
-				if (!AnalyticsCenter.TryCreateOrRegister(type, out var aggregator))
-					continue;
-
-				AddDisposable(aggregator);
-				aggregator.Initialize();
-			}
 		}
 	}
 }

@@ -1,7 +1,7 @@
 using System;
 using Content;
-using Targeting;
 using Fusumity.Reactive;
+using ProjectInformation;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
@@ -155,7 +155,7 @@ namespace Advertising.UnityLevelPlay
 				AdsDebug.LogError("Failed to initialize: Interstitial AdUnitId is empty!");
 			}
 
-			ProjectDesk.UserId.Subscribe(OnUserIdChanged);
+			ProjectInfo.UserId.Subscribe(OnUserIdChanged);
 
 			SetPause(UnityLifecycle.ApplicationPause);
 			UnityLifecycle.ApplicationPauseEvent += OnApplicationPause;
@@ -196,7 +196,7 @@ namespace Advertising.UnityLevelPlay
 				_interstitial.ad.Dispose();
 			}
 
-			ProjectDesk.UserId.Unsubscribe(OnUserIdChanged);
+			ProjectInfo.UserId.Unsubscribe(OnUserIdChanged);
 
 			UnityLifecycle.ApplicationPauseEvent -= OnApplicationPause;
 			UnityLifecycle.ApplicationResumeEvent -= OnApplicationResume;
