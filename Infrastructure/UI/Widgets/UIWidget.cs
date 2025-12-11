@@ -84,7 +84,9 @@ namespace UI
 		[EditorBrowsable(EditorBrowsableState.Advanced)]
 		public abstract void Initialize();
 
-		public virtual void Reset(bool deactivate = true)
+		public void Reset() => Reset(true);
+
+		public virtual void Reset(bool deactivate)
 		{
 			if (!UseCustomReset)
 				if (_children.Any())

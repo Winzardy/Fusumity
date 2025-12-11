@@ -172,9 +172,9 @@ namespace UI.Windows
 
 		protected sealed override void OnEndedClosingInternal()
 		{
-			if (_resetting.HasValue)
+			if (_resetting.TryGetValue(out var reset))
 			{
-				if (_resetting.Value)
+				if (reset)
 					Reset(false);
 
 				_resetting = null;
