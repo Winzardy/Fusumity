@@ -22,6 +22,7 @@ namespace InAppPurchasing
 	public partial class IAPManagement
 	{
 		private IInAppPurchasingGrantCenter _grantCenter;
+		internal IInAppPurchasingGrantCenter GrantCenter => _grantCenter;
 
 		public void SetGrantCenter(IInAppPurchasingGrantCenter grantCenter)
 		{
