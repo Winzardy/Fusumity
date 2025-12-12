@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +34,10 @@ namespace UI
 
 		[Tooltip("Скрывать бар вне анимации, решает проблему например с trace баром (след)")]
 		public bool hideOutsideAnimation;
+
+		[Space]
+		[Header("Optional:")]
+		public TMP_Text label;
 
 		protected override void Reset()
 		{

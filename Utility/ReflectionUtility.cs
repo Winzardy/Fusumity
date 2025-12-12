@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Sapientia.Collections;
+using Sapientia.Extensions;
+using Sapientia.Pooling;
+using Sapientia.Reflection;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Sapientia.Collections;
-using Sapientia.Extensions;
-using Sapientia.Pooling;
-using Sapientia.Reflection;
 using UnityEngine;
 
 namespace Fusumity.Utility
@@ -143,7 +143,8 @@ namespace Fusumity.Utility
 			foreach (var assembly in assemblies)
 			{
 				type = assembly.GetTypeByName(typeName);
-				if (type != null) return true;
+				if (type != null)
+					return true;
 			}
 
 			type = null;
@@ -156,7 +157,8 @@ namespace Fusumity.Utility
 			{
 				type = assembly.GetTypeByName(typeName, checkFullName);
 
-				if (type != null) return true;
+				if (type != null)
+					return true;
 			}
 
 			type = null;
@@ -172,7 +174,7 @@ namespace Fusumity.Utility
 				var nextType = types[i];
 
 				if (nextType.Name == typeName ||
-				    (checkFullName && nextType.FullName == typeName))
+					(checkFullName && nextType.FullName == typeName))
 				{
 					return nextType;
 				}
@@ -209,8 +211,8 @@ namespace Fusumity.Utility
 							continue;
 
 						if (baseType.IsAssignableFrom(type) &&
-						    !type.IsInterface &&
-						    !type.IsAbstract)
+							!type.IsInterface &&
+							!type.IsAbstract)
 						{
 							list.Add(type);
 						}
@@ -270,7 +272,8 @@ namespace Fusumity.Utility
 			var enumerator = enumerable.GetEnumerator();
 			for (int i = 0; i <= index; i++)
 			{
-				if (!enumerator.MoveNext()) return null;
+				if (!enumerator.MoveNext())
+					return null;
 			}
 
 			return enumerator.Current;
@@ -398,6 +401,31 @@ namespace Fusumity.Utility
 
 			return fieldInfos.Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToArray();
 		}
+
+		public static bool TryFindFieldRecursively(this object obj, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default) => TryFindFieldRecursively(obj.GetType(), name, out info, flags);
+		public static bool TryFindFieldRecursively(this Type targetType, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default)
+		{
+			var type = targetType;
+
+			do
+			{
+				var fi = type.GetField(name, flags);
+
+				if (fi != null)
+				{
+					info = fi;
+					return true;
+				}
+				else
+				{
+					type = type.BaseType;
+				}
+			}
+			while (type != null);
+
+			info = default;
+			return false;
+		}
 	}
 
 	public enum XmlCommentType
@@ -430,6 +458,6 @@ namespace Fusumity.Utility
 		}
 
 		public void SetValue<TValue>(T obj, TValue value) => _field.SetValue(obj, value);
-		public TValue GetValue<TValue>(T obj) => (TValue) _field.GetValue(obj);
+		public TValue GetValue<TValue>(T obj) => (TValue)_field.GetValue(obj);
 	}
 }
