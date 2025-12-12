@@ -91,8 +91,11 @@ namespace Content.Editor
 			return false;
 		}
 
-		public bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry) =>
-			throw new NotImplementedException("Index can only be used at runtime");
+		public bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+			return false;
+		}
 
 		public bool TryGetEntry<T>(out SingleContentEntry<T> entry)
 		{
