@@ -294,10 +294,14 @@ namespace Game.Logic.Gizmo
 		[Conditional(E.UNITY_EDITOR)]
 		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color, bool wire)
 		{
-			if (innerRadius == outerRadius)
+			if (innerRadius <= 0f)
 			{
 				DrawSolidCircle_TopDown(position, outerRadius, color, wire);
 				return;
+			}
+			else if (innerRadius == outerRadius)
+			{
+				DrawCircle_TopDown(position, outerRadius, color);
 			}
 
 			var oldMatrix = Gizmos.matrix;
