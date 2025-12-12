@@ -9,17 +9,26 @@ namespace InAppPurchasing
 	/// </summary>
 	public interface IIAPPurchaseGranter
 	{
-		public void Initialize();
-
 		bool Grant(in PurchaseReceipt receipt);
 	}
 
 	/// <inheritdoc cref="IIAPPurchaseGranter"/>
 	public abstract class IAPPurchaseGranter : CompositeDisposable, IIAPPurchaseGranter
 	{
-		public void Initialize()
+		public IAPPurchaseGranter()
 		{
+			if (!IAPManager.RegisterGranter(this))
+				return;
+
 			OnInitializeInternal();
+		}
+
+		protected override void OnDisposeInternal()
+		{
+			if (!IAPManager.UnregisterGranter(this))
+				return;
+
+			base.OnDisposeInternal();
 		}
 
 		protected virtual void OnInitializeInternal() => OnInitialize();

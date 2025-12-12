@@ -1,6 +1,7 @@
 ﻿using AssetManagement;
 using Fusumity.MVVM.UI;
 using System;
+using UnityEngine;
 
 namespace UI
 {
@@ -45,7 +46,7 @@ namespace UI
 			viewModel.LabelChanged -= HandleLabelChanged;
 		}
 
-		private void UpdateIcon(IAssetReferenceEntry icon)
+		private void UpdateIcon(IAssetReferenceEntry<Sprite> icon)
 		{
 			_iconAssigner.TrySetSprite(_layout.icon, icon);
 		}
@@ -101,7 +102,7 @@ namespace UI
 
 	public interface IToggleButtonViewModel
 	{
-		IAssetReferenceEntry Icon { get; }
+		IAssetReferenceEntry<Sprite> Icon { get; }
 		string Label { get; }
 
 		bool IsToggled { get; }

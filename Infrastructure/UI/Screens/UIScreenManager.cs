@@ -267,7 +267,7 @@ namespace UI.Screens
 			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущее активно окно
 			if (_current != screen)
 			{
-				Hidden?.Invoke(screen, false);
+				HideInternal(screen, true);
 				return;
 			}
 
@@ -279,7 +279,7 @@ namespace UI.Screens
 
 			TryReleasePreloadedLayout(screen);
 
-			Hide(screen, fromQueue);
+			HideInternal(screen, fromQueue);
 			SetCurrent(null);
 
 			TryShowNext();
@@ -325,10 +325,10 @@ namespace UI.Screens
 			_queue.Enqueue(screen, args);
 
 			//Аргументы очищаются при Hide, поэтому сначала GetArgs, потом Hide
-			Hide(screen, true);
+			HideInternal(screen, true);
 		}
 
-		private void Hide(IScreen screen, bool fromQueue = false)
+		private void HideInternal(IScreen screen, bool fromQueue = false)
 		{
 			screen.Hide(!fromQueue);
 			Hidden?.Invoke(screen, fromQueue);

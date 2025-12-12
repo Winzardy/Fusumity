@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Threading;
 using Audio;
-using Audio.Player;
 using Content;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
-using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using AudioSettings = Audio.AudioSettings;
 
@@ -48,18 +45,6 @@ namespace Booting.Audio
 			_listener?.Dispose();
 
 			AudioManager.Terminate();
-		}
-
-		public override void OnBootCompleted()
-		{
-			foreach (var type in ReflectionUtility.GetAllTypes<IAudioPlayer>(false))
-			{
-				if (!AudioManager.TryRegisterAudioPlayer(type, out var audioPlayer))
-					continue;
-
-				AddDisposable(audioPlayer);
-				audioPlayer.Initialize();
-			}
 		}
 	}
 }

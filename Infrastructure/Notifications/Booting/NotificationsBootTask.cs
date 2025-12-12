@@ -52,20 +52,5 @@ namespace Booting.Notifications
 			_platform.Dispose();
 			NotificationsCenter.Terminate();
 		}
-
-		public override void OnBootCompleted()
-		{
-			if (_platform == null)
-				return;
-
-			foreach (var type in ReflectionUtility.GetAllTypes<NotificationScheduler>(false))
-			{
-				if (!NotificationsCenter.TryCreateOrRegister(type, out var scheduler))
-					continue;
-
-				AddDisposable(scheduler);
-				scheduler.Initialize();
-			}
-		}
 	}
 }

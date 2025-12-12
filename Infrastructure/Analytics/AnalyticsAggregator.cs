@@ -4,20 +4,29 @@ using UnityEngine.Scripting;
 
 namespace Analytics
 {
-	/// <summary>
-	/// Базовая реализация, дублирует предназначение <see cref="Game.Presenters.IPresenter"/> (со своими особенностями)
-	/// </summary>
 	[Preserve]
 	public abstract class AnalyticsAggregator : MessageSubscriber
 	{
-		public virtual void Initialize()
+		private bool _active;
+
+		public AnalyticsAggregator()
 		{
+			if (!AnalyticsCenter.Register(this))
+				return;
+
+			_active = true;
+
 			AnalyticsCenter.BeforeSend += OnBeforeSend;
 			OnInitialize();
 		}
 
 		protected override void OnDisposeInternal()
 		{
+			if (!AnalyticsCenter.Unregister(this))
+				return;
+
+			_active = false;
+
 			AnalyticsCenter.BeforeSend -= OnBeforeSend;
 			base.OnDisposeInternal();
 		}
@@ -25,30 +34,37 @@ namespace Analytics
 		protected virtual void OnInitialize()
 		{
 		}
-		//TODO: можно добавить маску интеграций (например отправлять только в фейсбук)
+
+		// TODO: можно добавить маску интеграций (например отправлять только в фейсбук)
 		protected void Send(string id)
 		{
-			var args = new AnalyticsEventArgs(id);
-			Send(ref args);
+			var payload = new AnalyticsEventPayload(id);
+			Send(ref payload);
 		}
 
 		protected void Send(string id, Dictionary<string, object> parameters)
 		{
-			var args = new AnalyticsEventArgs(id)
+			if (!_active)
+			{
+				AnalyticsDebug.LogWarning($"Send skipped for inactive aggregator [ {GetType().Name} ]");
+				return;
+			}
+
+			var args = new AnalyticsEventPayload(id)
 			{
 				parameters = parameters
 			};
 			Send(ref args);
 		}
 
-		private void Send(ref AnalyticsEventArgs args) => AnalyticsCenter.Send(ref args);
+		private void Send(ref AnalyticsEventPayload payload) => AnalyticsCenter.Send(ref payload);
 
-		private void OnBeforeSend(AnalyticsEventArgs args) => OnBeforeSend(args.id, ref args.parameters);
+		private void OnBeforeSend(in AnalyticsEventPayload payload) => OnBeforeSend(payload.id, payload.parameters);
 
 		/// <summary>
 		/// Перехватить событие и добавить к нему параметры...
 		/// </summary>
-		protected virtual void OnBeforeSend(string id, ref Dictionary<string, object> parameters)
+		protected virtual void OnBeforeSend(string id, Dictionary<string, object> parameters)
 		{
 		}
 	}

@@ -3,22 +3,23 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia.Pooling;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
+	using UnityObject = Object;
+
 	public static partial class AssetReferenceEntryUtility
 	{
 		public static void Preload(this IEnumerable<IAssetReferenceEntry> entries,
 			CancellationToken cancellationToken = default)
 		{
-			entries.LoadAssetsAsync<Object>(cancellationToken).Forget();
+			entries.LoadAssetsAsync<UnityObject>(cancellationToken).Forget();
 		}
 
 		public static async UniTask PreloadAsync(this IEnumerable<IAssetReferenceEntry> entries,
 			CancellationToken cancellationToken = default)
 		{
-			await entries.LoadAssetsAsync<Object>(cancellationToken);
+			await entries.LoadAssetsAsync<UnityObject>(cancellationToken);
 		}
 
 		public static void Release<T>(this IEnumerable<T> entries)
@@ -33,13 +34,20 @@ namespace AssetManagement
 		public static void Preload<T>(this T entry, CancellationToken cancellationToken = default)
 			where T : IAssetReferenceEntry
 		{
-			AssetLoader.LoadAssetAsync<Object>(entry, cancellationToken).Forget();
+			AssetLoader.LoadAssetAsync<UnityObject>(entry, cancellationToken).Forget();
 		}
 
 		public static async UniTask PreloadAsync<T>(this T entry, CancellationToken cancellationToken = default)
 			where T : IAssetReferenceEntry
 		{
-			await AssetLoader.LoadAssetAsync<Object>(entry, cancellationToken);
+			await AssetLoader.LoadAssetAsync<UnityObject>(entry, cancellationToken);
+		}
+
+		public static async UniTask<T> LoadAsync<T>(this IAssetReferenceEntry<T> entry,
+			CancellationToken cancellationToken = default)
+			where T : UnityObject
+		{
+			return await AssetLoader.LoadAssetAsync<T>(entry, cancellationToken);
 		}
 
 		public static async UniTask<T> LoadAsync<T>(this IAssetReferenceEntry entry,
@@ -57,7 +65,7 @@ namespace AssetManagement
 
 		public static async UniTask<T> LoadAsync<T>(this AssetReferenceEntry<T> entry,
 			CancellationToken cancellationToken = default)
-			where T : Object
+			where T : UnityObject
 		{
 			return await AssetLoader.LoadAssetAsync<T>(entry, cancellationToken);
 		}
@@ -111,14 +119,14 @@ namespace AssetManagement
 
 		public static async UniTask<IList<T>> LoadAsync<T>(this IEnumerable<IAssetReferenceEntry> entries,
 			CancellationToken cancellationToken = default)
-			where T : Object
+			where T : UnityObject
 		{
 			return await LoadAssetsAsync<T>(entries, cancellationToken);
 		}
 
 		public static async UniTask<IList<T>> LoadAsync<T>(this IEnumerable<AssetReferenceEntry<T>> entries,
 			CancellationToken cancellationToken = default)
-			where T : Object
+			where T : UnityObject
 		{
 			return await LoadAssetsAsync<T>(entries, cancellationToken);
 		}
@@ -151,7 +159,7 @@ namespace AssetManagement
 					tasks.Add(LoadAssetAsync(entry));
 
 				var isCanceled = await UniTask.WhenAll(tasks)
-				   .SuppressCancellationThrow();
+					.SuppressCancellationThrow();
 
 				if (isCanceled)
 				{
@@ -186,7 +194,7 @@ namespace AssetManagement
 				}
 
 				var isCanceled = await UniTask.WhenAll(tasks)
-				   .SuppressCancellationThrow();
+					.SuppressCancellationThrow();
 
 				if (isCanceled)
 				{

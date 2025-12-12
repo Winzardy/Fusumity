@@ -31,9 +31,8 @@ namespace UI
 		{
 		}
 
-		public void Reset()
-		{
-		}
+		public void Reset();
+		public void Reset(bool deactivate);
 
 		public void Refresh()
 		{

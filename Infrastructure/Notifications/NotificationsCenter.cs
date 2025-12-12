@@ -21,10 +21,13 @@ namespace Notifications
 		public static bool Active => management.Active;
 		public static Type PlatformType => management.PlatformType;
 
-		public static bool TryCreateOrRegister(Type type, out NotificationScheduler scheduler)
-			=> management.TryCreateOrRegister(type, out scheduler);
+		public static bool Register<T>(T scheduler) where T : NotificationScheduler
+			=> management.Register(scheduler);
 
-		public static void Schedule(ref NotificationArgs args) => management.Schedule(ref args);
+		public static bool Unregister<T>(T scheduler) where T : NotificationScheduler
+			=> management.Unregister(scheduler);
+
+		public static void Schedule(ref NotificationRequest request) => management.Schedule(ref request);
 
 		public static string GetLastIntentNotificationId() => management.GetLastIntentNotificationId();
 

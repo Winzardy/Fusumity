@@ -1,12 +1,13 @@
 ﻿using AssetManagement;
 using System;
+using UnityEngine;
 
 namespace UI
 {
 	public class DefaultToggleButtonViewModel : IToggleButtonViewModel
 	{
 		public int Index { get; }
-		public IAssetReferenceEntry Icon { get; private set; }
+		public IAssetReferenceEntry<Sprite> Icon { get; private set; }
 		public string Label { get; private set; }
 
 		public bool IsToggled { get; private set; }
@@ -19,7 +20,7 @@ namespace UI
 
 		public event Action<DefaultToggleButtonViewModel> Clicked;
 
-		public DefaultToggleButtonViewModel(int index, bool isToggled, IAssetReferenceEntry icon, string label)
+		public DefaultToggleButtonViewModel(int index, bool isToggled, IAssetReferenceEntry<Sprite> icon, string label)
 		{
 			Index = index;
 			Icon = icon;
@@ -29,7 +30,7 @@ namespace UI
 
 		public void Click() => Clicked?.Invoke(this);
 
-		public void SetIcon(IAssetReferenceEntry icon)
+		public void SetIcon(IAssetReferenceEntry<Sprite> icon)
 		{
 			Icon = icon;
 			IconChanged?.Invoke();

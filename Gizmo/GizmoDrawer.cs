@@ -17,6 +17,7 @@ namespace Game.Logic.Gizmo
 		private readonly SimpleList<(float2 positionA, float2 positionB, Color color, int frames)> DRAW_LINES = new();
 		private readonly SimpleList<(float2 basePos, float2[] points, Rotation rotation, Color color, int frames)> DRAW_POLYGONS = new();
 		private readonly SimpleList<(float2 position, float radius, Color color, int frames)> DRAW_CIRCLES = new();
+		private readonly SimpleList<(float2 position, float radius, Color color, bool wire, int frames)> DRAW_SOLID_CIRCLES = new();
 		private readonly SimpleList<(float2 position, float3 size, Color color, bool wire, int frames)> DRAW_SPHERES = new();
 		private readonly SimpleList<(float2 position, Rotation rotation, float radius, float rad, Color color, int frames)> DRAW_SECTORS = new();
 		private readonly SimpleList<(float2 position, Rotation rotation, float minRadius, float maxRadius, float rad, Color color, int frames)> DRAW_CUT_SECTORS = new();
@@ -62,6 +63,10 @@ namespace Game.Logic.Gizmo
 			foreach (var circle in DRAW_CIRCLES)
 			{
 				GizmoExt.DrawCircle_TopDown(circle.position, circle.radius, circle.color);
+			}
+			foreach (var circle in DRAW_SOLID_CIRCLES)
+			{
+				GizmoExt.DrawSolidCircle_TopDown(circle.position, circle.radius, circle.color, circle.wire);
 			}
 			foreach (var sphere in DRAW_SPHERES)
 			{
@@ -244,6 +249,14 @@ namespace Game.Logic.Gizmo
 			if (!IsEnabled)
 				return;
 			DRAW_CIRCLES.Add((position, radius, color, frames));
+		}
+
+		[Conditional(E.UNITY_EDITOR)]
+		public void RequestDrawSolidCircle_TopDown(float2 position, float radius, Color color, bool wire = false, int frames = 1)
+		{
+			if (!IsEnabled)
+				return;
+			DRAW_SOLID_CIRCLES.Add((position, radius, color, wire, frames));
 		}
 
 		[Conditional(E.UNITY_EDITOR)]

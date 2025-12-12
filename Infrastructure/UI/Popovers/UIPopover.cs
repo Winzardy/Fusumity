@@ -171,6 +171,7 @@ namespace UI.Popovers
 
 			UpdateParentTransformBindSafe();
 			SetActive(false, true, false);
+			Reset(false);
 		}
 
 		void IPopover.Show(object boxedArgs)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using Sapientia;
 using Sapientia.Extensions;
 using UnityEngine;
@@ -8,6 +9,8 @@ namespace Content.ScriptableObjects
 	public abstract partial class ContentEntryScriptableObject<T> : ContentEntryScriptableObject,
 		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>
 	{
+		private const string DEFAULT_ID_REGEX_PATTERN = @"^\d+_";
+
 		public bool useCustomId;
 
 		// ReSharper disable once InconsistentNaming
@@ -35,7 +38,7 @@ namespace Content.ScriptableObjects
 				}
 #endif
 
-				return useCustomId ? _entry.Id : name;
+				return useCustomId ? _entry.Id : GetDefaultId();
 			}
 		}
 
@@ -112,6 +115,14 @@ namespace Content.ScriptableObjects
 
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>
 			scriptableObject ? new(in scriptableObject._entry.Guid) : new(SerializableGuid.Empty);
+
+		private string GetDefaultId()
+		{
+			var match = Regex.Match(name, DEFAULT_ID_REGEX_PATTERN);
+			return match.Success
+				? name[match.Length..]
+				: name;
+		}
 	}
 
 	public abstract partial class ContentEntryScriptableObject : ContentScriptableObject

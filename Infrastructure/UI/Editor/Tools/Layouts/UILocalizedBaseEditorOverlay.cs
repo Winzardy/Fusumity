@@ -33,8 +33,15 @@ namespace UI.Editor
 					selected = index;
 			}
 
-			_target.languageEditor = languages[EditorGUILayout.Popup(selected, languages.Select(x => x.label).ToArray())].language;
-			EditorUtility.SetDirty(_target);
+			var newLanguage = languages[EditorGUILayout.Popup(selected, languages.Select(x => x.label).ToArray())].language;
+
+			var prevLanguageEditor = _target.languageEditor;
+			if (_target.languageEditor != newLanguage)
+			{
+				_target.languageEditor = newLanguage;
+				if (!prevLanguageEditor.IsNullOrEmpty())
+					EditorUtility.SetDirty(_target);
+			}
 		}
 
 		public override void OnCreated()

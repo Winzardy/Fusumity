@@ -1,6 +1,6 @@
 using Advertising;
 using Fusumity.Collections;
-using Targeting;
+using ProjectInformation;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

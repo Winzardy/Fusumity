@@ -5,7 +5,8 @@
         "Sapientia",
         "Distribution",
         "Targeting",
-        "Messaging"
+        "Messaging",
+        "ProjectInfo"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

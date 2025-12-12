@@ -79,14 +79,13 @@ namespace Notifications
 			Remove(lastIntentNotificationId);
 		}
 
-		internal bool TryCreateOrRegister(Type type, out NotificationScheduler scheduler)
+		internal bool Register<T>(T scheduler)
+			where T : NotificationScheduler
 		{
-			scheduler = null;
+			var type = typeof(T);
 
 			if (_settings.disableSchedulers.Contains(type.FullName))
 				return false;
-
-			scheduler = type.CreateInstance<NotificationScheduler>();
 
 			ISchedulerOverrider overrider = null;
 			if (_schedulerToOverrider.TryGetValue(type, out var overriderType))
@@ -99,25 +98,28 @@ namespace Notifications
 			return true;
 		}
 
-		internal void Schedule(ref NotificationArgs args)
+		internal bool Unregister<T>(T scheduler) where T : NotificationScheduler
+			=> _registeredSchedulers.Remove(scheduler);
+
+		internal void Schedule(ref NotificationRequest request)
 		{
-			if (!args.remainingTime.HasValue && !args.deliveryTime.HasValue)
+			if (!request.remainingTime.HasValue && !request.deliveryTime.HasValue)
 				throw NotificationsDebug.Exception(INVALID_ARGS_BY_TIME_LOGS_MESSAGE);
 
-			args.deliveryTime ??= DateTime.Now + args.remainingTime.Value;
+			request.deliveryTime ??= DateTime.Now + request.remainingTime.Value;
 
-			var date = args.deliveryTime!.Value;
+			var date = request.deliveryTime!.Value;
 			var isUtc = date.Kind == DateTimeKind.Utc;
 			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
 			{
 				NotificationsDebug.LogError(
-					$"Trying to schedule notification by id [ {args.id} ] in the past, " +
+					$"Trying to schedule notification by id [ {request.id} ] in the past, " +
 					$"date: {date.ToShortTimeString()}, {date.ToShortDateString()} (kind:{date.Kind})");
 				return;
 			}
 
-			if (_platform.Schedule(in args))
-				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(args));
+			if (_platform.Schedule(in request))
+				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
 		}
 
 		internal void Cancel(string id) => _platform?.Cancel(id);

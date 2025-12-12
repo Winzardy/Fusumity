@@ -154,7 +154,7 @@ namespace UI
 
 			if (prefab == null && !args.reference.IsEmptyOrInvalid())
 			{
-				spinner?.SetActive(true);
+				spinner?.Show(this);
 				prefab = await LoadAsync(args.reference, token);
 
 				if (token.IsCancellationRequested)
@@ -166,7 +166,7 @@ namespace UI
 				_targetReference?.Release(RELEASE_DELAY_MS);
 				_targetReference = args.reference;
 
-				spinner?.SetActive(false);
+				spinner?.Hide(this);
 			}
 
 			if (prefab != _targetPrefab)

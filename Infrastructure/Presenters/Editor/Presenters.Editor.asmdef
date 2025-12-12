@@ -1,0 +1,22 @@
+{
+  "name": "Presenters.Editor",
+  "rootNamespace": "",
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "references": [
+    "Fusumity",
+    "Fusumity.Editor",
+    "Presenters",
+    "UnityEditor.UI",
+    "UnityEngine.UI"
+  ]
+}

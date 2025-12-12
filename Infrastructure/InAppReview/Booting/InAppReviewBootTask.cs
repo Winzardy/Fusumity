@@ -30,9 +30,7 @@ namespace Booting.InAppReview
 #elif UNITY_IOS
 			platform = new AppStoreInAppReview();
 #endif
-
 			InAppReviewManager.Initialize(platform);
-
 			return UniTask.CompletedTask;
 		}
 

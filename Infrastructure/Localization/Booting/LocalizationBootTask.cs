@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Localization;
 using Sirenix.OdinInspector;
 

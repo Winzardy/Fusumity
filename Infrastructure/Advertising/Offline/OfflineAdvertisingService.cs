@@ -5,13 +5,6 @@ using Sirenix.OdinInspector;
 
 namespace Advertising.Offline
 {
-	[Serializable]
-	[TypeRegistryItem("\u2009Offline", "", SdfIconType.Octagon)]
-	public class OfflineAdvertisingServiceFactory : IAdvertisingServiceFactory
-	{
-		public IAdvertisingService Create() => new OfflineAdvertisingService();
-	}
-
 	public class OfflineAdvertisingService : IAdvertisingService
 	{
 		private DateTime Now => DateTime.UtcNow;
@@ -31,7 +24,7 @@ namespace Advertising.Offline
 
 			var model = LocalSave.Load<AdPlacementOfflineModel>(key);
 
-			if (!UsageLimitUtility.CanApplyUsage(in entry.usageLimit, in model.usageLimit, Now, out var errorCode))
+			if (!entry.usageLimit.CanApplyUsage(in model.usageLimit, Now, out var errorCode))
 			{
 				error = new AdShowError(AdShowErrorCode.UsageLimit, errorCode);
 				return false;
@@ -49,7 +42,7 @@ namespace Advertising.Offline
 				return AdvertisingRegisterResult.Done;
 
 			var model = LocalSave.Load<AdPlacementOfflineModel>(key);
-			UsageLimitUtility.ApplyUsage(ref model.usageLimit, in entry.usageLimit, Now);
+			model.usageLimit.ApplyUsage(in entry.usageLimit, Now);
 			LocalSave.Save(key, model);
 			return AdvertisingRegisterResult.Done;
 		}
