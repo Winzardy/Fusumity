@@ -25,7 +25,7 @@ namespace UI.Editor.Signal
 					attributes.Add(new LabelTextAttribute("Target"));
 					attributes.Add(new InfoBoxAttribute(
 						"При пустом Target сигнал перехватывает системная логика; " +
-						"если выбран виджет — он становится получателем."));
+						"если выбран виджет — он становится получателем"));
 					break;
 
 				case nameof(UIDispatcherEditorSignalTab.signalName):

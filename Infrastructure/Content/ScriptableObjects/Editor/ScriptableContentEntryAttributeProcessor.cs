@@ -42,6 +42,9 @@ namespace Content.ScriptableObjects.Editor
 					if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
 						attributes.Add(new Fusumity.Attributes.Specific.FastAssetSelectorAttribute());
 
+					if (typeof(IList).IsAssignableFrom(contentEntry.ValueType))
+						attributes.Add(new SearchableAttribute());
+
 					if (contentEntry.ValueType.IsSerializeReference())
 					{
 						attributes.Add(new HideInInspector());
@@ -130,7 +133,7 @@ namespace Content.ScriptableObjects.Editor
 			var isCollection = typeof(IList).IsAssignableFrom(valueType);
 			var collectionLabel = valueType.IsArray ? ARRAY_DEFAULT_LABEL : LIST_DEFAULT_LABEL;
 			if (attributes.GetAttribute<HideLabelAttribute>() != null ||
-			    typeof(IList).IsAssignableFrom(property.ValueEntry.ParentType))
+				typeof(IList).IsAssignableFrom(property.ValueEntry.ParentType))
 				guiContent.text = isCollection ? collectionLabel : string.Empty;
 			else if (attributes.GetAttribute<LabelTextAttribute>() != null)
 				guiContent.text = attributes.GetAttribute<LabelTextAttribute>().Text;
@@ -147,7 +150,7 @@ namespace Content.ScriptableObjects.Editor
 				return false;
 
 			if (property.ValueEntry.WeakSmartValue is
-			    Dictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> _)
+				Dictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> _)
 				return true;
 
 			return false;
