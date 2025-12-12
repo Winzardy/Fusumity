@@ -1,27 +1,61 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Fusumity.Collections;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UI.Bridge
 {
-	public abstract class BridgeStateSwitcher<TState, TLinkedState> : StateSwitcher<TState>
+	public enum BridgeMode
 	{
+		Single,
+		Group
+	}
+
+	public abstract class BridgeStateSwitcher<TInputState, TOutputState> : StateSwitcher<TInputState>, IBridgeStateSwitcher
+	{
+		public Type InputType { get => typeof(TInputState); }
+		public Type OutputType { get => typeof(TOutputState); }
+
+		private BridgeMode _mode;
+
+		[FormerlySerializedAs("_switcher")]
 		[SerializeField]
-		private StateSwitcher<TLinkedState> _switcher;
+		[NotNull]
+		private StateSwitcher<TOutputState> _single;
 
 		[SerializeField]
-		private TLinkedState _default;
+		[NotNull]
+		public List<StateSwitcher<TOutputState>> _group;
 
 		[SerializeField]
-		[LabelText("State To Linked State"), DictionaryDrawerSettings(KeyLabel = "State", ValueLabel = "Linked State")]
-		private SerializableDictionary<TState, TLinkedState> _dictionary;
+		private TOutputState _default;
 
-		protected override void OnStateSwitched(TState state)
+		[SerializeField]
+		private SerializableDictionary<TInputState, TOutputState> _dictionary;
+
+		protected override void OnStateSwitched(TInputState state)
 		{
 			var linkedState = _dictionary.GetValueOrDefaultSafe(state, _default);
-			_switcher.Switch(linkedState);
+			switch (_mode)
+			{
+				case BridgeMode.Single:
+					_single.Switch(linkedState);
+					break;
+				case BridgeMode.Group:
+					foreach (var switcher in _group)
+						switcher.Switch(linkedState);
+					break;
+			}
 		}
+	}
+
+	public interface IBridgeStateSwitcher
+	{
+		public Type InputType { get; }
+		public Type OutputType { get; }
 	}
 }
