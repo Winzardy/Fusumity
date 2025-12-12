@@ -33,6 +33,7 @@ namespace UI
 
 		protected internal override void OnValidate()
 		{
+			return;
 			base.OnValidate();
 
 			if (UnityEngine.Application.isPlaying)

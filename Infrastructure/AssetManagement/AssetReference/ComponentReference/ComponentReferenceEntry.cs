@@ -39,7 +39,6 @@ namespace AssetManagement
 		public abstract AssetReference AssetReference { get; }
 
 		int IAssetReferenceEntry.ReleaseDelayMs => _releaseDelayMs;
-		public static implicit operator bool(ComponentReferenceEntry entry) => !entry.IsEmptyOrInvalid();
 
 		public virtual Type AssetType => null;
 		public Object EditorAsset =>
@@ -48,5 +47,12 @@ namespace AssetManagement
 #else
 			null;
 #endif
+
+		public static implicit operator bool(ComponentReferenceEntry entry) => !entry.IsEmptyOrInvalid();
+
+		public static bool operator ==(ComponentReferenceEntry a, ComponentReferenceEntry b) => a.SameAsset(b);
+		public static bool operator !=(ComponentReferenceEntry a, ComponentReferenceEntry b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as ComponentReferenceEntry;
+		public override int GetHashCode() => AssetReference.GetHashCode();
 	}
 }

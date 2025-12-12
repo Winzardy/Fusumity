@@ -1,0 +1,21 @@
+{
+    "name": "Targeting.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Targeting",
+        "Content.ScriptableObjects.Editor",
+        "Content.ScriptableObjects",
+        "ProjectInfo"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

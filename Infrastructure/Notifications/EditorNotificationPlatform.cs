@@ -9,7 +9,7 @@ namespace Notifications
 	{
 		public event Action<string, string> NotificationReceived;
 
-		public bool Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationRequest request)
 		{
 #if UNITY_EDITOR
 			return true;

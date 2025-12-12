@@ -8,7 +8,8 @@
         "Content",
         "Unity.LevelPlay",
         "Distribution",
-        "Targeting"
+        "Targeting",
+        "ProjectInfo"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

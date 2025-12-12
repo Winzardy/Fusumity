@@ -9,10 +9,9 @@ using Fusumity.Utility;
 using InAppPurchasing;
 using InAppPurchasing.Offline;
 using InAppPurchasing.Unity;
+using ProjectInformation;
 using Sapientia;
 using Sirenix.OdinInspector;
-using Targeting;
-using UnityEngine;
 
 namespace Booting.InAppPurchasing
 {
@@ -25,13 +24,11 @@ namespace Booting.InAppPurchasing
 	{
 		public override int Priority => HIGH_PRIORITY - 50;
 
-		[LabelText("Backend")]
-		[SerializeReference]
-		private IInAppPurchasingServiceFactory _factory = new OfflineInAppPurchasingServiceFactory();
+		public bool useOfflineService;
 
 		private IInAppPurchasingGrantCenter _grantCenter;
 
-		private IInAppPurchasingService _service;
+		private IInAppPurchasingService _offlineService;
 		private UnityPurchasingIntegration _integration;
 
 		private UniTaskCompletionSource _storePromotionalCompletionSource;
@@ -40,39 +37,32 @@ namespace Booting.InAppPurchasing
 		{
 			_storePromotionalCompletionSource = new UniTaskCompletionSource();
 
-			_service = _factory.Create();
-
 			var settings = ContentManager.Get<UnityPurchasingSettings>();
 
 			_grantCenter = new InAppPurchasingGrantCenter();
-			foreach (var type in ReflectionUtility.GetAllTypes<IIAPPurchaseGranter>(false))
-			{
-				var granter = _grantCenter.CreateOrRegister(type);
-				if (granter is IDisposable disposable)
-					AddDisposable(disposable);
-			}
-
 			_integration = new UnityPurchasingIntegration
 			(
-				_service,
 				_grantCenter,
 				settings,
-				in ProjectDesk.Distribution,
-				ProjectDesk.Identifier,
+				in ProjectInfo.Distribution,
+				ProjectInfo.Identifier,
 				_storePromotionalCompletionSource
 			);
 
 			_integration
-			   .InitializeAsync(cancellationToken)
-			   .ContinueWith(OnInitialized)
-			   .Forget();
+				.InitializeAsync(cancellationToken)
+				.ContinueWith(OnInitialized)
+				.Forget();
 
-			var management = new IAPManagement(_integration, _service
-#if IAP_DEBUG
-				, _grantCenter
-#endif
-			);
+			var management = new IAPManagement(_integration);
+			management.SetGrantCenter(_grantCenter);
 			IAPManager.Initialize(management);
+
+			if (useOfflineService)
+			{
+				_offlineService = new OfflineInAppPurchasingService();
+				IAPManager.Bind(_offlineService);
+			}
 
 			return UniTask.CompletedTask;
 
@@ -96,7 +86,7 @@ namespace Booting.InAppPurchasing
 				integration.Dispose();
 
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_service is IDisposable service)
+			if (_offlineService is IDisposable service)
 				service.Dispose();
 
 			_storePromotionalCompletionSource?.TrySetCanceled();
@@ -108,7 +98,7 @@ namespace Booting.InAppPurchasing
 		{
 			UniTaskUtility.TrySetResultAndSetNull(ref _storePromotionalCompletionSource);
 
-			if (_service is IInitializable service)
+			if (_offlineService is IInitializable service)
 				service.Initialize();
 
 			InitializeGrantCenterAsync().Forget();

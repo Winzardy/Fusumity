@@ -8,7 +8,7 @@ namespace Analytics
 	{
 		public UniTask InitializeAsync(CancellationToken cancellationToken);
 
-		public void SendEvent(in AnalyticsEventArgs args);
-		public bool IsValid(in AnalyticsEventArgs args, out string error);
+		public void SendEvent(in AnalyticsEventPayload args);
+		public bool IsValid(in AnalyticsEventPayload args, out string error);
 	}
 }

@@ -50,6 +50,12 @@ namespace Fusumity.Utility
 			return rad.CosSin();
 		}
 
+		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly float2 RotateVector(float2 vector)
+		{
+			return vector.Rotate_Rad(rad);
+		}
+
 		public static implicit operator float(Rotation rotation)
 		{
 			return rotation.rad;
