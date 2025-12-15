@@ -64,6 +64,9 @@ namespace Fusumity.MVVM
 		{
 		}
 
+		protected virtual void OnGet(TView view) => view?.GameObject.SetActive(true);
+		protected virtual void OnReset(TView view) => view?.GameObject.SetActive(false);
+
 		public void Update(IEnumerable<TViewModel> viewModels)
 		{
 			Reset();
@@ -90,6 +93,8 @@ namespace Fusumity.MVVM
 		{
 			var view = _pool.Get();
 			_utilizedViews.Add(view);
+
+			OnGet(view);
 
 			return view;
 		}
@@ -119,6 +124,7 @@ namespace Fusumity.MVVM
 			{
 				var view = _utilizedViews[i];
 				_pool.Release(view);
+				OnReset(view);
 			}
 
 			_utilizedViews.Clear();

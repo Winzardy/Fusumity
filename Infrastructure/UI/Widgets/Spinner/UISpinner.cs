@@ -56,6 +56,10 @@ namespace UI
 			return false;
 		}
 
+		public bool Show(object requester) => Show(requester, false);
+
+		public bool Hide(object requester) => Hide(requester, false);
+
 		/// <inheritdoc cref="RemoveRequester"/>
 		public bool Hide(object requester, bool immediate = false)
 			=> RemoveRequester(requester, immediate);
@@ -134,9 +138,7 @@ namespace UI
 
 	public interface ISpinner
 	{
-		public bool Active { get; }
-		public void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true);
-		public void Pause();
-		public void Resume();
+		public bool Show(object requester);
+		public bool Hide(object requester);
 	}
 }

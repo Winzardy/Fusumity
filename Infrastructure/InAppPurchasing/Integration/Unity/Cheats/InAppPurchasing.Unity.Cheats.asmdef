@@ -5,7 +5,8 @@
         "MCK",
         "InAppPurchasing",
         "InAppPurchasing.Unity",
-        "InAppPurchasing.Cheats"
+        "InAppPurchasing.Cheats",
+        "Game.Cheats"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

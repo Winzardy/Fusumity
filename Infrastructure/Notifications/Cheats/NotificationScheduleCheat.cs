@@ -31,7 +31,7 @@ namespace Notifications.Cheats
 			if (forceShowInForeground)
 				entry.showInForeground = true;
 
-			var args = new NotificationArgs(target, entry)
+			var args = new NotificationRequest(target, entry)
 			{
 				title = LocManager.Get(entry.titleLocKey),
 				message = LocManager.Get(entry.messageLocKey),

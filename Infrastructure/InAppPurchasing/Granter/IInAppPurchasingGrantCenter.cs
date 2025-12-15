@@ -1,5 +1,3 @@
-using System;
-
 namespace InAppPurchasing
 {
 	/// <summary>
@@ -8,7 +6,9 @@ namespace InAppPurchasing
 	public interface IInAppPurchasingGrantCenter
 	{
 		public void Initialize();
-		public IIAPPurchaseGranter CreateOrRegister(Type type);
+		public bool Register<T>(T granter) where T : IIAPPurchaseGranter;
+		public bool Unregister<T>(T granter) where T : IIAPPurchaseGranter;
+
 		public void Grant(in PurchaseReceipt receipt, IntegrationCallback callback = null);
 	}
 

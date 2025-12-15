@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UI.Windows
 {
@@ -197,13 +196,13 @@ namespace UI.Windows
 			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущее активно окно
 			if (_current != window)
 			{
-				Hidden?.Invoke(window, false);
+				HideInternal(window, true);
 				return;
 			}
 
 			TryReleasePreloadedLayout(window);
 
-			Hide(window, fromQueue);
+			HideInternal(window, fromQueue);
 			SetCurrent(null);
 
 			TryShowNext();
@@ -238,13 +237,12 @@ namespace UI.Windows
 			_queue.Enqueue(window, args);
 
 			//Аргументы очищаются при Hide, поэтому сначала GetArgs, потом Hide
-			Hide(window, true);
+			HideInternal(window, true);
 		}
 
-		private void Hide(IWindow window, bool fromQueue = false)
+		private void HideInternal(IWindow window, bool fromQueue = false)
 		{
 			window.Hide(!fromQueue);
-
 			Hidden?.Invoke(window, fromQueue);
 		}
 

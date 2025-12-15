@@ -9,12 +9,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Targeting;
 using Content;
 using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
 using Fusumity.Utility.UserLocator;
 using JetBrains.Annotations;
+using ProjectInformation;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using UnityEngine.Purchasing;
@@ -124,8 +124,7 @@ namespace InAppPurchasing.Unity
 		/// </summary>
 		private readonly UniTaskCompletionSource _storePromotionalCompletionSource;
 
-		private readonly IInAppPurchasingService _service;
-		private IInAppPurchasingGrantCenter _grantCenter;
+		private readonly IInAppPurchasingGrantCenter _grantCenter;
 
 		public bool IsInitialized => _storeController != null && _processing != null;
 
@@ -136,14 +135,13 @@ namespace InAppPurchasing.Unity
 		public event PurchaseDeferred PurchaseDeferred;
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 
-		public UnityPurchasingIntegration(IInAppPurchasingService service,
+		public UnityPurchasingIntegration(
 			IInAppPurchasingGrantCenter grantCenter,
 			in UnityPurchasingSettings settings,
 			in DistributionEntry distributionPlatform,
 			string appIdentifier,
 			UniTaskCompletionSource storePromotionalCompletionSource = null)
 		{
-			_service = service;
 			_grantCenter = grantCenter;
 			_settings = settings;
 			_distributionPlatform = distributionPlatform;
@@ -218,7 +216,7 @@ namespace InAppPurchasing.Unity
 				_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
 
 				var productsStr = builder.products
-				   .GetCompositeString(definition => definition.storeSpecificId, true);
+					.GetCompositeString(definition => definition.storeSpecificId, true);
 				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
 
 				UnityPurchasing.Initialize(this, builder);
@@ -234,8 +232,8 @@ namespace InAppPurchasing.Unity
 		void IStoreListener.OnInitialized(IStoreController controller, IExtensionProvider extensions)
 		{
 			var productsStr = controller.products
-			   .set
-			   .GetCompositeString(product => product.definition.storeSpecificId, true);
+				.set
+				.GetCompositeString(product => product.definition.storeSpecificId, true);
 			IAPDebug.Log($"UnityPurchasing successfully initialized, billing: {_billing}, products:{productsStr}");
 
 			_processing = new(2);
@@ -500,7 +498,7 @@ namespace InAppPurchasing.Unity
 				return PurchaseProcessingResult.Complete;
 			}
 
-			if (_service.Contains(transactionId))
+			if (IAPManager.ContainsReceipt(transactionId))
 			{
 				_processing.Remove(product.definition.id);
 				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: Transaction by id [ {transactionId} ] has already been completed " +
@@ -552,7 +550,7 @@ namespace InAppPurchasing.Unity
 			{
 				_storeController.ConfirmPendingPurchase(unityProduct);
 				if (live)
-					_service.Register(in receipt);
+					IAPManager.RegisterReceipt(in receipt);
 				PurchaseCompleted?.Invoke(in receipt, live, args);
 			}
 		}
@@ -606,7 +604,7 @@ namespace InAppPurchasing.Unity
 						}
 
 						var purchaseDate = receipt.purchaseDate;
-						var nowDate = _service.DateTime;
+						var nowDate = IAPManager.DateTime;
 						if (purchaseDate > nowDate.AddMinutes(TOLERANCE_MINUTES))
 						{
 							IAPDebug.LogWarning($"{PREFIX} Future-dated purchase (possibly deferred): {purchaseDate} > {nowDate}");

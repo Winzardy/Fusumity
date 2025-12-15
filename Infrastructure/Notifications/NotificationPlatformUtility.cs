@@ -24,15 +24,15 @@ namespace Notifications
 			return false;
 		}
 
-		public static bool TryGet<T>(this in NotificationArgs args, out T platformArgs)
-			where T : IPlatformNotificationArgs
+		public static bool TryGet<T>(this in NotificationRequest request, out T platformArgs)
+			where T : IPlatformNotificationRequest
 		{
 			platformArgs = default;
 
-			if (args.platform == null)
+			if (request.platform == null)
 				return false;
 
-			platformArgs = (T) args.platform;
+			platformArgs = (T) request.platform;
 			return true;
 		}
 	}

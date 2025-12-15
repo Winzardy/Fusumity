@@ -28,7 +28,7 @@ namespace Notifications
 
 		public void Dispose() => OnDispose();
 
-		public abstract void Override(ref NotificationArgs args);
+		public abstract void Override(ref NotificationRequest request);
 
 		protected virtual void OnInitialize()
 		{

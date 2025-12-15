@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 
 namespace Notifications.iOS
 {
-	public struct IOSPlatformNotificationArgs : IPlatformNotificationArgs
+	public struct IOSPlatformNotificationRequest : IPlatformNotificationRequest
 	{
 		public string subtitle;
 	}
@@ -29,15 +29,15 @@ namespace Notifications.iOS
 			NotificationReceived?.Invoke(notification.Identifier, notification.Data);
 		}
 
-		public bool Schedule(in NotificationArgs args)
+		public bool Schedule(in NotificationRequest request)
 		{
-			var notification = new iOSNotification(args.id)
+			var notification = new iOSNotification(request.id)
 			{
-				Title = args.title,
-				Body = args.message
+				Title = request.title,
+				Body = request.message
 			};
 
-			var date = args.deliveryTime!.Value;
+			var date = request.deliveryTime!.Value;
 			var isUtc = date.Kind == DateTimeKind.Utc;
 			notification.Trigger = new iOSNotificationCalendarTrigger
 			{
@@ -54,12 +54,12 @@ namespace Notifications.iOS
 			//TODO: доработать кейс с бейджами (R&D)
 			notification.Badge = 1;
 
-			var notificationEntry = args.config;
+			var notificationEntry = request.config;
 			notification.ShowInForeground = notificationEntry.showInForeground;
 			if (notification.ShowInForeground)
 				notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
 
-			if (args.TryGet<IOSPlatformNotificationArgs>(out var platformArgs))
+			if (request.TryGet<IOSPlatformNotificationRequest>(out var platformArgs))
 				notification.Subtitle = platformArgs.subtitle;
 
 			//	TODO: добавить поддержку иконок через атачимент

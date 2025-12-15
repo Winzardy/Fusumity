@@ -2,11 +2,12 @@
 using DG.Tweening;
 using Fusumity.Utility;
 using UI;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Fusumity.MVVM.UI
 {
-	public class StaticImageView : View<IAssetReferenceEntry, Image>
+	public class StaticImageView : View<IAssetReferenceEntry<Sprite>, Image>
 	{
 		private UISpriteAssigner _assigner;
 		private Tween _tween;
@@ -22,10 +23,10 @@ namespace Fusumity.MVVM.UI
 			_tween?.Kill();
 		}
 
-		protected override void OnUpdate(IAssetReferenceEntry viewModel)
+		protected override void OnUpdate(IAssetReferenceEntry<Sprite> entry)
 		{
 			_layout.SetActive(true);
-			_assigner.TrySetSprite(_layout, viewModel, PlayAppearTween, true);
+			_assigner.TrySetSprite(_layout, entry, PlayAppearTween, true);
 		}
 
 		private void PlayAppearTween()

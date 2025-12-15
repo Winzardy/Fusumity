@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia.Extensions;
+using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
@@ -73,7 +74,10 @@ namespace Localization
 			var entry = _table.GetEntry(key);
 
 			if (entry == null)
-				return defaultValue; // ?? key;
+			{
+				LocalizationDebug.LogWarning($"Could not find valid localization for [ {CurrentLanguage}/{key} ]");
+				return defaultValue ?? $"#{key.ToUpper()}#".ColorText(Color.red);
+			}
 
 			return entry.Value;
 		}

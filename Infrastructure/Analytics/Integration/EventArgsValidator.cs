@@ -11,7 +11,7 @@ namespace Analytics.Integration
 			_rules = rules;
 		}
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (var rule in _rules)
 			{
@@ -26,7 +26,7 @@ namespace Analytics.Integration
 
 	public interface IEventArgsValidationRule
 	{
-		bool IsValid(in AnalyticsEventArgs args, out string error);
+		bool IsValid(in AnalyticsEventPayload args, out string error);
 	}
 
 	public class IdValidCharactersRule : IEventArgsValidationRule
@@ -35,7 +35,7 @@ namespace Analytics.Integration
 
 		public IdValidCharactersRule(Regex validateIdRegex) => _validateIdRegex = validateIdRegex;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			if (!_validateIdRegex.IsMatch(args.id))
 			{
@@ -54,7 +54,7 @@ namespace Analytics.Integration
 
 		public ParamIdValidCharactersRule(Regex validateIdRegex) => _validateIdRegex = validateIdRegex;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (var parameter in args.parameters.Keys)
 			{
@@ -76,7 +76,7 @@ namespace Analytics.Integration
 
 		public IdNotUseReservedPrefixesRule(params string[] reservedPrefixes) => _reservedPrefixes = reservedPrefixes;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (string reservedPrefix in _reservedPrefixes)
 			{
@@ -98,7 +98,7 @@ namespace Analytics.Integration
 
 		public ParamIdNotUseReservedPrefixesRule(params string[] reservedPrefixes) => _reservedPrefixes = reservedPrefixes;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (var parameter in args.parameters.Keys)
 			{
@@ -122,7 +122,7 @@ namespace Analytics.Integration
 		private readonly int _maxParamsCount;
 
 		public ParamsCountRule(int maxParamsCount) => _maxParamsCount = maxParamsCount;
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			error = args.parameters.Count > _maxParamsCount ? "too many parameters count" : null;
 			return error == null;
@@ -135,7 +135,7 @@ namespace Analytics.Integration
 
 		public IdNotUsedReservedNamesRule(params string[] reservedNames) => _reservedNames = reservedNames;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (string reservedName in _reservedNames)
 			{
@@ -157,7 +157,7 @@ namespace Analytics.Integration
 
 		public ParamIdNotUsedReservedNamesRule(params string[] reservedNames) => _reservedNames = reservedNames;
 
-		public bool IsValid(in AnalyticsEventArgs args, out string error)
+		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
 			foreach (var parameter in args.parameters.Keys)
 			{

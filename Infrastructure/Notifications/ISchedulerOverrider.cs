@@ -15,6 +15,6 @@ namespace Notifications
 	{
 		public void Initialize(NotificationScheduler scheduler);
 
-		public void Override(ref NotificationArgs args);
+		public void Override(ref NotificationRequest request);
 	}
 }

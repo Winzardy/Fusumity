@@ -1,7 +1,6 @@
 using Advertising;
 using Fusumity.Collections;
-using Targeting;
-using Sapientia.Collections;
+using ProjectInformation;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

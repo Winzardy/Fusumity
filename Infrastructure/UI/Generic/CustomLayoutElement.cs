@@ -7,7 +7,6 @@ namespace UI
 	/// Добавляет настройку максимальных размеров и немного модифицирует минимальное
 	/// </summary>
 	[RequireComponent(typeof(RectTransform))]
-	//TODO: возможно понадобится поддержка rect для prefered
 	public class CustomLayoutElement : LayoutElement
 	{
 		#region Max Width
@@ -108,50 +107,40 @@ namespace UI
 			set => base.layoutPriority = value;
 		}
 
-		public override float preferredHeight
-		{
-			get
-			{
-				if (_useMaxHeight)
-				{
-					var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
-					_ignoreOnGettingPreferredSize = true;
-
-					var baseValue = LayoutUtility.GetPreferredHeight(transform as RectTransform);
-
-					_ignoreOnGettingPreferredSize = defaultIgnoreValue;
-
-					return baseValue > maxHeight ? maxHeight : baseValue;
-				}
-				else
-				{
-					return base.preferredHeight;
-				}
-			}
-			set => base.preferredHeight = value;
-		}
-
 		public override float preferredWidth
 		{
-			get
-			{
-				if (_useMaxWidth)
-				{
-					var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
-					_ignoreOnGettingPreferredSize = true;
+			get => _useMaxWidth ? GetMaxWidth() : base.preferredWidth;
+			set => base.preferredWidth = _useMaxWidth ? GetMaxWidth() : value;
+		}
 
-					var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
+		public override float preferredHeight
+		{
+			get => _useMaxHeight ? GetMaxHeight() : base.preferredHeight;
+			set => base.preferredWidth = _useMaxHeight ? GetMaxHeight() : value;
+		}
 
-					_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+		private float GetMaxWidth()
+		{
+			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
+			_ignoreOnGettingPreferredSize = true;
 
-					return baseValue > maxWidth ? maxWidth : baseValue;
-				}
-				else
-				{
-					return base.preferredWidth;
-				}
-			}
-			set => base.preferredWidth = value;
+			var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
+
+			_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+
+			return baseValue > maxWidth ? maxWidth : baseValue;
+		}
+
+		private float GetMaxHeight()
+		{
+			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
+			_ignoreOnGettingPreferredSize = true;
+
+			var baseValue = LayoutUtility.GetPreferredHeight(transform as RectTransform);
+
+			_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+
+			return baseValue > maxHeight ? maxHeight : baseValue;
 		}
 	}
 }

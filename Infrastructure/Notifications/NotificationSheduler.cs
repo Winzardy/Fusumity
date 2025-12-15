@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Sapientia;
 using Sapientia.Extensions;
 using UnityEngine.Scripting;
 
@@ -14,16 +15,11 @@ namespace Notifications
 		[CanBeNull]
 		private ISchedulerOverrider _overrider;
 
-		// ReSharper disable once PossibleMistakenCallToGetType.2
-		public static implicit operator Type(NotificationScheduler scheduler) => scheduler.GetType();
-
-		protected internal void Construct(ISchedulerOverrider overrider)
+		public NotificationScheduler()
 		{
-			_overrider = overrider;
-		}
+			if (!NotificationsCenter.Register(this))
+				return;
 
-		public void Initialize()
-		{
 			_overrider?.Initialize(this);
 
 			OnInitializeInternal();
@@ -31,6 +27,9 @@ namespace Notifications
 
 		protected override void OnDisposeInternal()
 		{
+			if (!NotificationsCenter.Unregister(this))
+				return;
+
 			_overrider?.Dispose();
 
 			base.OnDisposeInternal();
@@ -42,10 +41,18 @@ namespace Notifications
 		{
 		}
 
-		protected virtual void Schedule(ref NotificationArgs args)
+		protected virtual void Schedule(ref NotificationRequest request)
 		{
-			_overrider?.Override(ref args);
-			NotificationsCenter.Schedule(ref args);
+			_overrider?.Override(ref request);
+			NotificationsCenter.Schedule(ref request);
+		}
+
+		// ReSharper disable once PossibleMistakenCallToGetType.2
+		public static implicit operator Type(NotificationScheduler scheduler) => scheduler.GetType();
+
+		protected internal void Construct(ISchedulerOverrider overrider)
+		{
+			_overrider = overrider;
 		}
 	}
 }

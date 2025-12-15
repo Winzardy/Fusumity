@@ -15,7 +15,8 @@
         "Game.App.BootTask.Advertising",
         "Sapientia",
         "Messaging",
-        "Advertising.Offline"
+        "Advertising.Offline",
+        "ProjectInfo"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

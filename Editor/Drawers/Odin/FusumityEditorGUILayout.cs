@@ -336,7 +336,7 @@ namespace Fusumity.Editor
 
 		#region CardBox
 
-		private static readonly GUIStyle _style = new(SirenixGUIStyles.CardStyle)
+		public static readonly GUIStyle CardStyle = new(SirenixGUIStyles.CardStyle)
 		{
 			padding = new RectOffset(5, 3, 2, 3),
 			margin = new RectOffset
@@ -352,7 +352,7 @@ namespace Fusumity.Editor
 		{
 			if (color.HasValue)
 				GUIHelper.PushColor(color.Value);
-			SirenixEditorGUI.BeginIndentedVertical(_style);
+			SirenixEditorGUI.BeginIndentedVertical(CardStyle);
 			{
 				GUIHelper.PushHierarchyMode(false);
 				if (color.HasValue)

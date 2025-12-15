@@ -1,4 +1,5 @@
 ﻿using Fusumity.MVVM.UI;
+using Sapientia.Extensions;
 using System;
 
 namespace UI
@@ -18,24 +19,42 @@ namespace UI
 		{
 			_widget.Show(viewModel);
 
-			viewModel.LabelChanged += HandleLabelChanged;
-			viewModel.StyleChanged += HandleStyleChanged;
+			UpdateLabel();
+			UpdateStyle();
+			UpdateInteractable();
+
+			viewModel.LabelChanged += UpdateLabel;
+			viewModel.StyleChanged += UpdateStyle;
+			viewModel.InteractableChanged += UpdateInteractable;
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			viewModel.LabelChanged -= HandleLabelChanged;
-			viewModel.StyleChanged -= HandleStyleChanged;
+			viewModel.LabelChanged -= UpdateLabel;
+			viewModel.StyleChanged -= UpdateStyle;
+			viewModel.InteractableChanged -= UpdateInteractable;
 		}
 
-		private void HandleLabelChanged()
+		private void UpdateLabel()
 		{
-			_widget.SetLabel(ViewModel.LocLabel, ViewModel.Label);
+			if (ViewModel.Label.IsNullOrEmpty())
+			{
+				_widget.SetLabel(ViewModel.LocLabel, ViewModel.Label);
+			}
+			else
+			{
+				_layout.label.text = ViewModel.Label;
+			}
 		}
 
-		private void HandleStyleChanged()
+		private void UpdateStyle()
 		{
 			_widget.SetStyle(ViewModel.Style);
+		}
+
+		private void UpdateInteractable()
+		{
+			_widget.SetInteractable(!ViewModel.Interactable.HasValue || ViewModel.Interactable.Value);
 		}
 
 		private void HandleClicked(IButtonWidget widget)
@@ -50,6 +69,7 @@ namespace UI
 
 		event Action LabelChanged;
 		event Action StyleChanged;
+		event Action InteractableChanged;
 
 		void Click();
 	}

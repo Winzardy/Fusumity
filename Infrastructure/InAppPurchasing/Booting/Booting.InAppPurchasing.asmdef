@@ -11,7 +11,8 @@
     "UnityEngine.Purchasing",
     "Fusumity",
     "Sapientia",
-    "InAppPurchasing.Offline"
+    "InAppPurchasing.Offline",
+    "ProjectInfo"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

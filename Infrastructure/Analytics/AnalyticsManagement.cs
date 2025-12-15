@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
+using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Utility;
@@ -19,12 +20,11 @@ namespace Analytics
 		private readonly AnalyticsSettings _settings;
 		private readonly bool _isValidationEnabled;
 
-
 		private List<AnalyticsAggregator> _registeredAggregators;
 
 		private List<IAnalyticsIntegration> _integrations;
 
-		public event Action<AnalyticsEventArgs> BeforeSend;
+		public event Receiver<AnalyticsEventPayload> BeforeSend;
 
 		public bool Active => !_integrations.IsNullOrEmpty();
 
@@ -64,14 +64,13 @@ namespace Analytics
 			_integrations = null;
 		}
 
-		internal bool TryCreateOrRegister(Type type, out AnalyticsAggregator aggregator)
+		internal bool Register<T>(T aggregator)
+			where T : AnalyticsAggregator
 		{
-			aggregator = null;
+			var type = typeof(T);
 
 			if (_settings.disableAggregators.Contains(type.FullName))
 				return false;
-
-			aggregator = type.CreateInstance<AnalyticsAggregator>();
 
 			_registeredAggregators ??= new();
 			_registeredAggregators.Add(aggregator);
@@ -79,22 +78,25 @@ namespace Analytics
 			return true;
 		}
 
-		internal void Send(ref AnalyticsEventArgs args)
+		internal bool Unregister<T>(T aggregator) where T : AnalyticsAggregator
+			=> _registeredAggregators.Remove(aggregator);
+
+		internal void Send(ref AnalyticsEventPayload payload)
 		{
-			BeforeSend?.Invoke(args);
+			BeforeSend?.Invoke(payload);
 
 			foreach (var integration in _integrations)
 			{
-				if (_isValidationEnabled && !integration.IsValid(in args, out var error))
+				if (_isValidationEnabled && !integration.IsValid(in payload, out var error))
 				{
 					// даже если была ошибка при валидации, то все равно отправляем событие, вдруг мы просто неправильно написали правила валидации
 					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}");
 				}
 
-				integration.SendEvent(in args);
+				integration.SendEvent(in payload);
 			}
 
-			AnalyticsDebug.Log($"Sent event: {args}\n{_cachedIntegrationsDebugMessage}");
+			AnalyticsDebug.Log($"Sent event: {payload}\n{_cachedIntegrationsDebugMessage}");
 		}
 
 		private async UniTask InitializeIntegrationAsync(IAnalyticsIntegration integration, CancellationToken cancellationToken)
