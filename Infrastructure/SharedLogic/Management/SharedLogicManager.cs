@@ -21,15 +21,7 @@ namespace SharedLogic
 		public static bool ExecuteCommand<T>(in T command)
 			where T : struct, ICommand
 		{
-			try
-			{
-				return router.ExecuteCommand(in command);
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError($"[SharedLogicManager.ExecuteCommand] ок на старте приложение, пока не убрали инициализацию из бут тасок: {ex.Message}"); //PTODO
-				return false;
-			}
+			return router.ExecuteCommand(in command);
 		}
 	}
 
