@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Localization;
 using Sirenix.OdinInspector;
 
@@ -22,7 +21,7 @@ namespace Booting.Localization
 		{
 			var resolver = new LocalizationResolver(in tableReference);
 			resolver.InitializeAsync(token)
-			   .Forget();
+				.Forget();
 			LocManager.Initialize(resolver);
 			return UniTask.CompletedTask;
 		}

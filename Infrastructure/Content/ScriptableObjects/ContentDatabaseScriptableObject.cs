@@ -62,7 +62,7 @@ namespace Content.ScriptableObjects
 
 	public abstract class ContentDatabaseScriptableObject : SingleContentEntryScriptableObject
 	{
-		public const string LABEL = "database";
+		public const string ADDRESSABLE_DATABASE_LABEL = "database";
 
 		public List<ContentScriptableObject> scriptableObjects;
 

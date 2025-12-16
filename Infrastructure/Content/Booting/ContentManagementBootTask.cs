@@ -2,19 +2,14 @@
 using System.Threading;
 using Content;
 using Content.Management;
-using Content.ScriptableObjects;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Sirenix.OdinInspector;
+#if UNITY_EDITOR
+using Content.ScriptableObjects.Editor;
+#endif
 
 namespace Booting.Content
 {
-#if UNITY_EDITOR
-	using ContentImporter = EditorClientContentImporter;
-#else
-	using ContentImporter = BuildInClientContentImporter;
-#endif
-
 	[TypeRegistryItem(
 		"\u2009Content Management", //В начале делаем отступ из-за отрисовки...
 		"",
@@ -24,12 +19,19 @@ namespace Booting.Content
 	{
 		public override int Priority => HIGH_PRIORITY - 20;
 
-		public override async UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(CancellationToken token = default)
 		{
-			var importer = new ContentImporter();
-			var management = new ContentResolver(importer);
-			await management.InitializeAsync(token);
-			ContentManager.Initialize(management);
+			var resolver = new ContentResolver();
+			ContentManager.Initialize(resolver);
+
+#if UNITY_EDITOR
+			ContentDatabaseEditorUtility.ValidateDatabases();
+
+			if (ClientEditorContentImporterMenu.IsEnable)
+				ContentDatabaseEditorMenu.SyncAll();
+#endif
+
+			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
