@@ -17,11 +17,9 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
-	using CollectionsUtility = CollectionsExt;
-
 	public static class ContentDatabaseEditorUtility
 	{
-		private const string ADDRESSABLE_GROUP = "Content Database Group";
+		private const string ADDRESSABLE_GROUP = "Content Runtime Database Group";
 		private const string ADDRESSABLE_NAME_FORMAT = "Database/{0}";
 
 		public const string DEFAULT_NAME_ENDING = "Database";
@@ -61,7 +59,7 @@ namespace Content.ScriptableObjects.Editor
 			database.MakeAddressable(
 				ADDRESSABLE_GROUP,
 				ADDRESSABLE_NAME_FORMAT.Format(addressableName),
-				ContentDatabaseScriptableObject.LABEL,
+				ContentDatabaseScriptableObject.ADDRESSABLE_DATABASE_LABEL,
 				true
 			);
 
@@ -111,6 +109,13 @@ namespace Content.ScriptableObjects.Editor
 			ContentEntryEditorUtility.ClearCache();
 		}
 
+		public static void ValidateDatabases()
+		{
+			foreach (var database in Databases)
+				if (!database.Validate(out var message))
+					ContentDebug.LogError($"Invalid database: {message}", database);
+		}
+
 		public static bool Validate(this ContentDatabaseScriptableObject database, out string message)
 		{
 			message = null;
@@ -118,18 +123,6 @@ namespace Content.ScriptableObjects.Editor
 			if (!database.TryGetAddressableEntry(out var entry))
 			{
 				message = "Not found addressable entry!";
-				return false;
-			}
-
-			if (!entry.labels.Contains(ContentDatabaseScriptableObject.LABEL))
-			{
-				message = $"Not found addressable label [ {ContentDatabaseScriptableObject.LABEL} ]!";
-				return false;
-			}
-
-			if (entry.parentGroup.name != ADDRESSABLE_GROUP)
-			{
-				message = $"Invalid parent group [ {entry.parentGroup.name}] need [ {ADDRESSABLE_GROUP} ]!";
 				return false;
 			}
 

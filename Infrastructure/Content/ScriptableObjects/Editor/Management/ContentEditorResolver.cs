@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Content.Management;
 using UnityEditor;
 using UnityEngine;
@@ -186,6 +188,11 @@ namespace Content.Editor
 				? $"[{typeof(T).Name}] {guid}"
 				: guid.ToString();
 		}
+
+		public Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+			=> Task.CompletedTask;
+
+		public bool IsFullyLoaded() => true;
 
 		public ref readonly SerializableGuid ToGuid<T>(int index) =>
 			throw new NotImplementedException("Index can only be used at runtime");

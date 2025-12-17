@@ -8,7 +8,9 @@
         "Content.ScriptableObjects.Importer.Editor",
         "Booting",
         "Fusumity",
-        "Sapientia"
+        "Sapientia",
+        "Content.ScriptableObjects.Editor",
+        "AssetManagement"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

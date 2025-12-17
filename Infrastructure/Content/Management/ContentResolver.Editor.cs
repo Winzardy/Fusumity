@@ -1,12 +1,19 @@
 ﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Content.Management
 {
 	public sealed partial class ContentResolver : IContentEditorResolver
 	{
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		Task IContentEditorResolver.PopulateAsync(IContentImporter importer, CancellationToken token) =>
+			PopulateAsync(importer, token);
+
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool IContentEditorResolver.Any<T>() => Any<T>();
@@ -62,6 +69,7 @@ namespace Content.Management
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool IContentEditorResolver.TryGetEntry<T>(out SingleContentEntry<T> entry)
 			=> TryGetEntry(out entry);
+
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		ref readonly T IContentEditorResolver.Get<T>(in SerializableGuid guid) => ref Get<T>(in guid);
@@ -219,6 +227,9 @@ namespace Content.Management
 
 		/// <inheritdoc cref="ContentResolver.ToLabel{T}(in SerializableGuid, bool)"/>
 		public string ToLabel<T>(in SerializableGuid guid, bool verbose = false);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task PopulateAsync(IContentImporter importer, CancellationToken token = default);
 	}
 }
 #endif
