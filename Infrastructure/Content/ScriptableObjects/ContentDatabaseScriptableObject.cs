@@ -62,7 +62,10 @@ namespace Content.ScriptableObjects
 
 	public abstract class ContentDatabaseScriptableObject : SingleContentEntryScriptableObject
 	{
-		public const string LABEL = "database";
+		public const string ADDRESSABLE_DATABASE_LABEL = "database";
+
+		[Tooltip("Используется для сортировки при импорте")]
+		public Toggle<int> priority;
 
 		public List<ContentScriptableObject> scriptableObjects;
 
