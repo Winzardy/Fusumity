@@ -64,6 +64,9 @@ namespace Content.ScriptableObjects
 	{
 		public const string ADDRESSABLE_DATABASE_LABEL = "database";
 
+		[Tooltip("Используется для сортировки при импорте")]
+		public Toggle<int> priority;
+
 		public List<ContentScriptableObject> scriptableObjects;
 
 		public virtual void OnUpdateContent()
