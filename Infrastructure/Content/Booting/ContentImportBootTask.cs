@@ -13,7 +13,7 @@ namespace Booting.Content
 		"",
 		SdfIconType.JournalArrowUp)]
 	[Serializable]
-	public class ContentImportingBootTask : BaseBootTask
+	public class ContentImportBootTask : BaseBootTask
 	{
 		public override int Priority => HIGH_PRIORITY - 110;
 
