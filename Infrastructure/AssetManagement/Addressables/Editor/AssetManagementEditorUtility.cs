@@ -158,8 +158,8 @@ namespace AssetManagement.AddressableAssets.Editor
 				}
 			}
 
-			var assetpath = AssetDatabase.GetAssetPath(obj);
-			var guid = AssetDatabase.AssetPathToGUID(assetpath);
+			var assetPath = AssetDatabase.GetAssetPath(obj);
+			var guid = AssetDatabase.AssetPathToGUID(assetPath);
 
 			var entry = settings.CreateOrMoveEntry(guid, group, false, false);
 

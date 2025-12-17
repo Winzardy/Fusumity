@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AssetManagement.AddressableAssets;
@@ -183,6 +184,28 @@ namespace AssetManagement
 			if (isCanceled)
 			{
 				ReleaseAssetsByKey(key);
+				cancellationToken.ThrowIfCancellationRequested();
+			}
+
+			return assets;
+		}
+
+		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(IEnumerable keys, CancellationToken cancellationToken)
+		{
+			var usedAssets = await FindUsedAssetsByKeyAsync<T>(keys, cancellationToken);
+
+			if (usedAssets != null)
+				return usedAssets;
+
+			var handle = Addressables.LoadAssetsAsync<T>(keys, null);
+			_keyToAssetCollectionContainer[keys] = new AssetsContainer(keys, handle);
+
+			var (isCanceled, assets) = await handle.WithCancellation(cancellationToken)
+				.SuppressCancellationThrow();
+
+			if (isCanceled)
+			{
+				ReleaseAssetsByKey(keys);
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 

@@ -7,7 +7,8 @@
         "Content.ScriptableObjects",
         "AssetManagement",
         "UniTask",
-        "Sapientia"
+        "Sapientia",
+        "GUID:72fc6620f02967440a0be6690a91e128"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
