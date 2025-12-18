@@ -8,7 +8,9 @@
         "Unity.ResourceManager",
         "Unity.Collections",
         "Unity.Mathematics",
-        "Unity.Burst"
+        "Unity.Burst",
+        "ShapesEditor",
+        "ShapesRuntime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

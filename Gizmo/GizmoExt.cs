@@ -5,6 +5,7 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Shapes;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -38,6 +39,8 @@ namespace Game.Logic.Gizmo
 		public static readonly Color ORANGE = new(1f, 0.5f, 0f, 1f);
 		public static readonly Color PURPLE = new(0.5f, 0f, 1f, 1f);
 		public static readonly Color JADE_WHISPER = new(0.3f, 0.8f, 0.6f, 1f);
+
+		private const float GIZMO_ALPHA_MULTIPLIER = 0.3f;
 
 		public static float Height => GizmoDrawer.Current == null ? DEFAULT_HEIGHT : GizmoDrawer.Current.Height;
 
@@ -292,31 +295,18 @@ namespace Game.Logic.Gizmo
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
-		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color, bool wire)
+		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color)
 		{
-			if (innerRadius <= 0f)
-			{
-				DrawSolidCircle_TopDown(position, outerRadius, color, wire);
-				return;
-			}
-			else if (innerRadius == outerRadius)
+			if (innerRadius == outerRadius)
 			{
 				DrawCircle_TopDown(position, outerRadius, color);
 			}
-
-			var oldMatrix = Gizmos.matrix;
-			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, new Vector3(outerRadius, 1f, outerRadius));
-
-			var innerRatio = innerRadius / outerRadius;
-			var mesh = GetAnnulusMesh(innerRatio);
-
-			if (wire)
-				Gizmos.DrawWireMesh(mesh);
 			else
-				Gizmos.DrawMesh(mesh);
-
-			Gizmos.matrix = oldMatrix;
+			{
+				var radius = (innerRadius + outerRadius) / 2;
+				color.a *= GIZMO_ALPHA_MULTIPLIER;
+				Draw.Ring(position.XZ(Height), Vector3.up, radius, outerRadius - innerRadius, DiscColors.Flat(color));
+			}
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
