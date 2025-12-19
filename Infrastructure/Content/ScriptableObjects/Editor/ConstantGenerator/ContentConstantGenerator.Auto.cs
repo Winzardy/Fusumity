@@ -40,13 +40,13 @@ namespace Content.ScriptableObjects.Editor
 				ContentDatabaseEditorUtility.TryRunRegenerateConstantsByAuto();
 			}
 
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 		}
 
 		public static void Invoke(Type type)
 		{
 			EditorApplication.delayCall += OnDelayCall;
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 
 			void OnDelayCall()
 			{
@@ -57,7 +57,7 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void ForceInvokeWithDelay(Type type)
 		{
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 			_cts ??= new CancellationTokenSource();
 			InvokeDelayAsync(type, _cts.Token).Forget();
 		}

@@ -132,7 +132,7 @@ namespace UI
 
 		protected sealed override void OnHide(ref TArgs args)
 		{
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 
 			TryClearAll();
 			_textureRenderer?.Hide();

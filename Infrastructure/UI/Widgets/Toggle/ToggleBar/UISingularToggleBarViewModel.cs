@@ -7,19 +7,19 @@ namespace UI
 	/// <summary>
 	/// One toggle can be active at a time.
 	/// </summary>
-	public abstract class SingularToggleBarViewModel<TSourceData, TButtonViewModel> : DefaultToggleBarViewModel<TSourceData, TButtonViewModel>
-		where TButtonViewModel : DefaultToggleButtonViewModel
+	public abstract class UISingularToggleBarViewModel<TSourceData, TButtonViewModel> : UIDefaultToggleBarViewModel<TSourceData, TButtonViewModel>
+		where TButtonViewModel : UIDefaultToggleButtonViewModel
 	{
 		public TButtonViewModel SelectedButton { get; private set; }
 
 		public event Action<TButtonViewModel> SelectionChanged;
 
-		public SingularToggleBarViewModel() :
+		public UISingularToggleBarViewModel() :
 			base()
 		{
 		}
 
-		public SingularToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex) :
+		public UISingularToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex) :
 			base(sourceData, selectedIndex)
 		{
 		}

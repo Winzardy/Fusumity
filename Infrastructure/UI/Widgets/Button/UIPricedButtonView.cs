@@ -1,5 +1,7 @@
 ﻿using Fusumity.MVVM.UI;
+using Fusumity.Utility;
 using Game.UI;
+using Sapientia.Collections;
 using System;
 using System.Collections.Generic;
 
@@ -12,33 +14,41 @@ namespace UI
 
 		public UIPricedButtonView(UIPricedButtonLayout layout) : base(layout)
 		{
-			//AddDisposable(_button = new UIStatefulButtonView(layout));
+			AddDisposable(_button = new UIStatefulButtonView(layout));
 			AddDisposable(_price = new UILabeledIconCollection(layout.prices));
 		}
 
 		protected override void OnUpdate(IPricedButtonViewModel viewModel)
 		{
 			_button.Update(viewModel);
-			_price.Update(ViewModel.Price);
+			UpdatePrices();
 
-			viewModel.PriceChanged += HandlePriceChanged;
+			viewModel.PricesChanged += UpdatePrices;
 		}
 
 		protected override void OnClear(IPricedButtonViewModel viewModel)
 		{
-			viewModel.PriceChanged -= HandlePriceChanged;
+			viewModel.PricesChanged -= UpdatePrices;
 		}
 
-		private void HandlePriceChanged()
+		private void UpdatePrices()
 		{
-			_price.Update(ViewModel.Price);
+			if (ViewModel.Prices.IsNullOrEmpty())
+			{
+				_layout.prices.root.SetActive(false);
+			}
+			else
+			{
+				_layout.prices.root.SetActive(true);
+				_price.Update(ViewModel.Prices);
+			}
 		}
 	}
 
 	public interface IPricedButtonViewModel : IStatefulButtonViewModel
 	{
-		IEnumerable<ILabeledIconViewModel> Price { get; }
+		IEnumerable<ILabeledIconViewModel> Prices { get; }
 
-		event Action PriceChanged;
+		event Action PricesChanged;
 	}
 }

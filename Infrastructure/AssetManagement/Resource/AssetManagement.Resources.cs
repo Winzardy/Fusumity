@@ -170,7 +170,7 @@ namespace AssetManagement
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 
-				AsyncUtility.Trigger(ref _disposeCts);
+				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 
 				if (_request == null)
 					SetRequestInternal(Resources.LoadAsync<T>(_path));
@@ -198,7 +198,7 @@ namespace AssetManagement
 
 				UnloadAsset();
 
-				AsyncUtility.Trigger(ref _disposeCts);
+				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 			}
 
 			private void UnloadAsset()
@@ -209,7 +209,7 @@ namespace AssetManagement
 					Resources.UnloadAsset(_request.asset);
 
 				_request = null;
-				AsyncUtility.Trigger(ref _cts);
+				AsyncUtility.TriggerAndSetNull(ref _cts);
 			}
 
 			private void SetRequestInternal(ResourceRequest request)

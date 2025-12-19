@@ -1,5 +1,4 @@
 using Fusumity.MVVM.UI;
-using Sapientia.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -17,6 +16,8 @@ namespace UI
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)
 		{
+			SetActive(true);
+
 			_collection.Update(viewModel.Buttons);
 			viewModel.ButtonsChanged += HandleButtonsChanged;
 		}
@@ -24,6 +25,11 @@ namespace UI
 		protected override void OnClear(IToggleBarViewModel viewModel)
 		{
 			viewModel.ButtonsChanged -= HandleButtonsChanged;
+		}
+
+		protected override void OnNullViewModel()
+		{
+			SetActive(false);
 		}
 
 		private void HandleButtonsChanged()
@@ -58,6 +64,6 @@ namespace UI
 		/// </summary>
 		event Action ButtonsChanged;
 
-		void ClickBack();
+		void ClickBack() { }
 	}
 }

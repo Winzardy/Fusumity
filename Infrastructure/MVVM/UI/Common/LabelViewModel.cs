@@ -26,6 +26,15 @@ namespace Fusumity.MVVM.UI
 			}
 		}
 
+		public LabelViewModel()
+		{
+		}
+
+		public LabelViewModel(string value)
+		{
+			Value = value;
+		}
+
 		public void Bind(Action<string> action, bool invokeOnBind = true)
 		{
 			Assert.IsNotNull(action, $"Passing null action to {nameof(LabelViewModel)} binding.");

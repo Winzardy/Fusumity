@@ -129,7 +129,7 @@ namespace UI
 		}
 
 		private void TryStopAutoDestroy()
-			=> AsyncUtility.Trigger(ref _autoDestroyCts);
+			=> AsyncUtility.TriggerAndSetNull(ref _autoDestroyCts);
 
 		private async UniTaskVoid WaitBeforeDestroyAsync()
 		{
@@ -232,7 +232,7 @@ namespace UI
 		}
 
 		private void CancelSetupLayout()
-			=> AsyncUtility.Trigger(ref _setupTemplateCts);
+			=> AsyncUtility.TriggerAndSetNull(ref _setupTemplateCts);
 
 		#region Prepare
 

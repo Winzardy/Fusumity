@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using Game.UI;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,5 +16,6 @@ namespace UI
 		[Space]
 		public StateSwitcher<string> switcher;
 		public UIAdBannerLayout adBanner;
+		public UILabeledIconLayout labeledIcon;
 	}
 }

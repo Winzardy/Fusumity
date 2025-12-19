@@ -28,5 +28,18 @@ namespace UI
 				callback?.Invoke();
 			}
 		}
+
+		public static void TrySetSprite(this UISpriteAssigner assigner, Image image, UISpriteInfo info, Action callback = null, bool disableDuringLoad = false)
+		{
+			if (info.sprite != null)
+			{
+				image.sprite = info.sprite;
+			}
+			else
+			if (!info.reference.IsEmptyOrInvalid())
+			{
+				assigner.TrySetSprite(image, info.reference, callback, disableDuringLoad);
+			}
+		}
 	}
 }

@@ -172,7 +172,7 @@ namespace UI
 			spriteEntry?.Release();
 			spriteEntry = null;
 
-			AsyncUtility.Trigger(ref cts);
+			AsyncUtility.TriggerAndSetNull(ref cts);
 		}
 	}
 }

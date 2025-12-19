@@ -83,7 +83,7 @@ namespace Audio
 			}
 		}
 
-		public void StopEditor() => AsyncUtility.Trigger(ref _playCts);
+		public void StopEditor() => AsyncUtility.TriggerAndSetNull(ref _playCts);
 	}
 #endif
 }

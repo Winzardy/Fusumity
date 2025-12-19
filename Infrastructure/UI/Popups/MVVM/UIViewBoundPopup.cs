@@ -2,7 +2,7 @@
 
 namespace UI.Popups
 {
-	public abstract class ViewBoundPopup<TViewModel, TView, TLayout> : UIPopup<TLayout, TViewModel>
+	public abstract class UIViewBoundPopup<TViewModel, TView, TLayout> : UIPopup<TLayout, TViewModel>
 		where TView : UIView<TViewModel, TLayout>
 		where TLayout : UIBasePopupLayout
 	{
@@ -22,7 +22,7 @@ namespace UI.Popups
 			OnViewCreated();
 		}
 
-		protected sealed override void BeforeDispose()
+		protected override void OnLayoutCleared()
 		{
 			if (_view == null)
 				return;
@@ -32,6 +32,8 @@ namespace UI.Popups
 
 			_view.Dispose();
 			OnViewDisposed();
+
+			_view = null;
 		}
 
 		/// <summary>
@@ -52,7 +54,7 @@ namespace UI.Popups
 		protected sealed override void OnShow(ref TViewModel viewModel)
 		{
 			TryAutoDisposeViewModel();
-			_view?.Update(viewModel);
+			_view.Update(viewModel);
 			OnViewShown();
 		}
 

@@ -22,7 +22,7 @@ namespace UI.Windows
 			OnViewCreated();
 		}
 
-		protected override sealed void BeforeDispose()
+		protected override void OnLayoutCleared()
 		{
 			if (_view == null)
 				return;
@@ -32,6 +32,8 @@ namespace UI.Windows
 
 			_view.Dispose();
 			OnViewDisposed();
+
+			_view = null;
 		}
 
 		/// <summary>
@@ -52,7 +54,7 @@ namespace UI.Windows
 		protected override sealed void OnShow(ref TViewModel viewModel)
 		{
 			TryAutoDisposeViewModel();
-			_view?.Update(viewModel);
+			_view.Update(viewModel);
 
 			OnViewShown();
 		}

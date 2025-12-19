@@ -53,7 +53,7 @@ namespace Analytics
 
 		public void Dispose()
 		{
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 
 			if (_integrations.IsNullOrEmpty())
 				return;

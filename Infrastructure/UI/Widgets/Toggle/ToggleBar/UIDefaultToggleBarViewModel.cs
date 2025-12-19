@@ -5,8 +5,8 @@ using UnityEngine.Assertions;
 
 namespace UI
 {
-	public abstract class DefaultToggleBarViewModel<TSourceData, TButtonViewModel> : IToggleBarViewModel, IDisposable
-		where TButtonViewModel : DefaultToggleButtonViewModel
+	public abstract class UIDefaultToggleBarViewModel<TSourceData, TButtonViewModel> : IToggleBarViewModel, IDisposable
+		where TButtonViewModel : UIDefaultToggleButtonViewModel
 	{
 		protected List<TButtonViewModel> _buttons = new List<TButtonViewModel>();
 
@@ -14,11 +14,11 @@ namespace UI
 
 		public event Action ButtonsChanged;
 
-		public DefaultToggleBarViewModel()
+		public UIDefaultToggleBarViewModel()
 		{
 		}
 
-		public DefaultToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex)
+		public UIDefaultToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex)
 		{
 			Repopulate(sourceData, selectedIndex);
 		}
@@ -79,6 +79,6 @@ namespace UI
 		{
 		}
 
-		private void HandleButtonClicked(DefaultToggleButtonViewModel button) => OnButtonClicked(button as TButtonViewModel);
+		private void HandleButtonClicked(UIDefaultToggleButtonViewModel button) => OnButtonClicked(button as TButtonViewModel);
 	}
 }
