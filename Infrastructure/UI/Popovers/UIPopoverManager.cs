@@ -13,7 +13,8 @@ namespace UI.Popovers
 	/// </summary>
 	public partial class UIPopoverManager : IDisposable
 	{
-		private readonly LinkedList<IPopover> _active = new();
+		private readonly HashSet<IPopover> _active = new();
+		private readonly List<IPopover> _queue = new();
 
 		private readonly PopoverPool _pool;
 
@@ -52,7 +53,8 @@ namespace UI.Popovers
 			}
 
 			var popover = _pool.Get<T>(host, customAnchor);
-			_active.AddLast(popover);
+			_active.Add(popover);
+			_queue.Add(popover);
 
 			var pooledToken = GetToken(popover);
 
@@ -98,8 +100,13 @@ namespace UI.Popovers
 			where T : UIWidget, IPopover
 		{
 			var popover = token.Popover;
+
+			if (!_active.Contains(popover))
+				return;
+
 			_pool.Release(popover);
 			_active.Remove(popover);
+			_queue.Remove(popover);
 			Pool<PooledPopoverToken<T>>.Release(token);
 		}
 
@@ -112,12 +119,18 @@ namespace UI.Popovers
 
 		internal bool TryHideLast()
 		{
-			if (_active.IsNullOrEmpty())
+			if (_queue.IsNullOrEmpty())
 				return false;
 
-			var last = _active.Last;
-			last.Value.SetActive(false);
+			var last = _queue.Last();
+			last.SetActive(false); // Логика дергает OnHidden он сам уберется из списка
 			return true;
+		}
+
+		internal void HideAll()
+		{
+			foreach (var active in _active)
+				active.SetActive(false, true);
 		}
 
 		internal IEnumerable<UIWidget> GetAllActive()

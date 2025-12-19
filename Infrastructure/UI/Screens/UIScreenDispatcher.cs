@@ -41,6 +41,10 @@ namespace UI.Screens
 			_manager.Hidden += OnHidden;
 		}
 
+		public UIScreenDispatcher()
+		{
+		}
+
 		public void Dispose()
 		{
 			_manager.Shown -= OnShown;
@@ -132,5 +136,6 @@ namespace UI.Screens
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
+		void IWidgetDispatcher.HideAll() => _manager.HideAll();
 	}
 }

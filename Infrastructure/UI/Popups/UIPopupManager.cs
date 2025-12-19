@@ -71,6 +71,19 @@ namespace UI.Popups
 			_standalones = null;
 		}
 
+		internal void HideAll()
+		{
+			_current?.Hide(true);
+			_current = null;
+
+			foreach (var (popup, _) in _queue)
+				popup.Hide(true);
+			_queue.Clear();
+			foreach (var (standalone, _) in _standalones)
+				standalone.Hide(true);
+			_standalones.Clear();
+		}
+
 		internal T Show<T>(object args, PopupMode? overrideMode = null)
 			where T : UIWidget, IPopup
 		{

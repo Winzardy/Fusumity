@@ -46,6 +46,10 @@ namespace UI
 			_manager.Enqueued += OnEnqueued;
 		}
 
+		public UIPopupDispatcher()
+		{
+		}
+
 		public void Dispose()
 		{
 			_manager.Shown -= OnShown;
@@ -108,5 +112,6 @@ namespace UI
 		}
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
+		void IWidgetDispatcher.HideAll() => _manager.HideAll();
 	}
 }

@@ -100,9 +100,7 @@ namespace UI.Screens
 		internal void HideAll()
 		{
 			foreach (var screen in _screens.Values)
-			{
 				TryHide(screen);
-			}
 		}
 
 		internal bool TryHide<T>()
