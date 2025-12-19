@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -86,6 +87,15 @@ namespace AssetManagement
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(string tag,
 			CancellationToken cancellationToken = default) =>
 			await provider.LoadAssetsAsync<T>(tag, cancellationToken);
+
+		/// <summary>
+		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
+		/// Ассеты обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="ReleaseAssets"/>
+		/// </summary>
+		/// <typeparam name="T">Тип ассетов</typeparam>
+		public static async UniTask<IList<T>> LoadAssetsAsync<T>(IEnumerable tags,
+			CancellationToken cancellationToken = default) =>
+			await provider.LoadAssetsAsync<T>(tags, cancellationToken);
 
 		/// <summary>
 		/// Отпустить ассет из памяти

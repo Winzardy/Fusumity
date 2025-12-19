@@ -21,7 +21,7 @@ namespace Booting.Localization
 		{
 			var resolver = new LocalizationResolver(in tableReference);
 			resolver.InitializeAsync(token)
-			   .Forget();
+				.Forget();
 			LocManager.Initialize(resolver);
 			return UniTask.CompletedTask;
 		}
