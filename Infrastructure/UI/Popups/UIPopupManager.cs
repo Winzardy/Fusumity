@@ -71,16 +71,17 @@ namespace UI.Popups
 			_standalones = null;
 		}
 
-		internal void HideAll()
+		internal void HideAll() => TryHideAll(true);
+
+		internal void TryHideAll(bool immediate = false)
 		{
-			_current?.Hide(true);
+			_queue.Clear();
+
+			_current?.Hide(true, immediate);
 			_current = null;
 
-			foreach (var (popup, _) in _queue)
-				popup.Hide(true);
-			_queue.Clear();
 			foreach (var (standalone, _) in _standalones)
-				standalone.Hide(true);
+				standalone.Hide(true, immediate);
 			_standalones.Clear();
 		}
 
