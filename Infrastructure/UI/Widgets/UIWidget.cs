@@ -104,6 +104,12 @@ namespace UI
 
 		private protected virtual void OnDisposedInternal()
 		{
+			if (_active)
+			{
+				OnHide();
+				_active = false;
+			}
+
 			DisposeChildren();
 
 			AsyncUtility.Trigger(ref _disposeCts);

@@ -103,6 +103,9 @@ namespace UI.Scroll
 
 		protected override void OnHide(ref TArgs args)
 		{
+			if(_items == null)
+				return;
+
 			for (int i = 0; i < _items.Length; i++)
 				_items[i].Hide(true, true);
 		}

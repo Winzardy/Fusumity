@@ -135,6 +135,8 @@ namespace UI
 
 		#region Internal
 
+		private bool _activeInternal;
+
 		/// <summary>
 		/// Внутренний метод, имеет смысл переопределять только в случае нового поведения при активации
 		/// Используйте OnShow если нужна логика при активации виджета
@@ -466,13 +468,6 @@ namespace UI
 		/// Аналог конструктора
 		/// </summary>
 		protected virtual void OnInitialized()
-		{
-		}
-
-		/// <summary>
-		/// Аналог Dispose
-		/// </summary>
-		protected virtual void OnDispose()
 		{
 		}
 
