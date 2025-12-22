@@ -1,5 +1,4 @@
-﻿using AssetManagement;
-using Fusumity.MVVM.UI;
+﻿using Fusumity.MVVM.UI;
 using Sapientia.Extensions;
 using System;
 using UI;
@@ -10,15 +9,20 @@ namespace Game.UI
 	public class UILabeledIconView : UIView<ILabeledIconViewModel, UILabeledIconLayout>
 	{
 		private UISpriteAssigner _assigner;
+		private bool _disableIfEmpty;
 
 		private Sprite _defaultIconSprite;
+		private Color _defaultIconColor;
 		private string _defaultLabelText;
 
-		public UILabeledIconView(UILabeledIconLayout layout) : base(layout)
+		public UILabeledIconView(UILabeledIconLayout layout, bool disableIfEmpty = false) : base(layout)
 		{
+			_disableIfEmpty = disableIfEmpty;
+
 			if (_layout.icon != null)
 			{
 				_defaultIconSprite = _layout.icon.sprite;
+				_defaultIconColor = _layout.icon.color;
 			}
 
 			if (_layout.label != null)
@@ -34,13 +38,7 @@ namespace Game.UI
 
 		protected override void OnUpdate(ILabeledIconViewModel viewModel)
 		{
-			if (viewModel.IsEmpty)
-			{
-				SetActive(false);
-				return;
-			}
-
-			SetActive(true);
+			SetActive(!_disableIfEmpty || !viewModel.IsEmpty);
 
 			UpdateIcon();
 			UpdateLabel();
@@ -71,6 +69,11 @@ namespace Game.UI
 			if (_layout.label == null)
 				return;
 
+			if (_disableIfEmpty)
+			{
+				SetActive(!ViewModel.IsEmpty);
+			}
+
 			_layout.label.text = ViewModel.Label ?? _defaultLabelText;
 		}
 
@@ -79,9 +82,15 @@ namespace Game.UI
 			if (_layout.icon == null)
 				return;
 
+			if (_disableIfEmpty)
+			{
+				SetActive(!ViewModel.IsEmpty);
+			}
+
 			if (ViewModel.Icon.IsEmptyOrInvalid())
 			{
 				_layout.icon.sprite = _defaultIconSprite;
+				_layout.icon.color = _defaultIconColor;
 			}
 			else
 			{

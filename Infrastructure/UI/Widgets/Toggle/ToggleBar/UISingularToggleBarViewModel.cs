@@ -58,5 +58,18 @@ namespace UI
 			var button = _buttons[index];
 			OnButtonClicked(button);
 		}
+
+		public void Reset(int defaultIndex = 0)
+		{
+			SelectedButton?.SetToggled(false);
+			SelectedButton = default;
+
+			if (!_buttons.WithinBounds(defaultIndex))
+				return;
+
+			SelectedButton = _buttons[defaultIndex];
+			SelectedButton.SetToggled(true);
+			OnButtonSelected(SelectedButton);
+		}
 	}
 }

@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace Fusumity.Utility
 {
 	public static class UnityColorUtility
 	{
+		public static readonly Color ERROR = new Color(1, 0, 0.8f, 1);
+
 		public static Color WithAlpha(this Color color, float alpha)
 		{
 			color.a = alpha;

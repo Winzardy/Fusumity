@@ -1,5 +1,4 @@
 ﻿using Fusumity.Utility;
-using Sapientia.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +6,10 @@ using UnityEngine;
 
 namespace Fusumity.MVVM
 {
+	/// <summary>
+	/// Collection of views that expands dynamically using single template prefab,
+	/// and caches resulting instances in the underlying pool.
+	/// </summary>
 	public abstract class ViewCollection<TViewModel, TView, TViewLayout> : BaseViewCollection<TViewModel, TView, TViewLayout>
 		where TView : class, IView
 		where TViewLayout : MonoBehaviour

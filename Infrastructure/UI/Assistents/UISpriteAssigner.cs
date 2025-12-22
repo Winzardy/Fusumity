@@ -44,6 +44,8 @@ namespace UI
 			if (image == null || entry.IsEmptyOrInvalid())
 				return;
 
+			TryCancelOrClear(image);
+
 			if (disableDuringLoad)
 			{
 				image.enabled = false;

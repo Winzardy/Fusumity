@@ -29,8 +29,11 @@ namespace UI
 			}
 		}
 
-		public static void TrySetSprite(this UISpriteAssigner assigner, Image image, UISpriteInfo info, Action callback = null, bool disableDuringLoad = false)
+		public static void TrySetSprite(this UISpriteAssigner assigner, Image image, UISpriteInfo info, Action callback = null, bool disableDuringLoad = false, Sprite defaultIcon = null)
 		{
+			if (image == null)
+				return;
+
 			if (info.sprite != null)
 			{
 				image.sprite = info.sprite;
@@ -39,6 +42,11 @@ namespace UI
 			if (!info.reference.IsEmptyOrInvalid())
 			{
 				assigner.TrySetSprite(image, info.reference, callback, disableDuringLoad);
+			}
+			else
+			if (defaultIcon != null)
+			{
+				image.sprite = defaultIcon;
 			}
 		}
 	}

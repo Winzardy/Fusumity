@@ -19,7 +19,7 @@ namespace UI
 
 			if (layout.labeledIcon != null)
 			{
-				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon));
+				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon, true));
 			}
 
 			Subscribe(layout.button, HandleClick);

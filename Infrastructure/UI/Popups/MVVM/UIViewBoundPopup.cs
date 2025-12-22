@@ -1,4 +1,5 @@
 ﻿using Fusumity.MVVM.UI;
+using System;
 
 namespace UI.Popups
 {
@@ -9,12 +10,24 @@ namespace UI.Popups
 		/// <summary>
 		/// Dispose current view model every time the view is updated
 		/// and upon window opening/closing.
+		/// <br></br>
+		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
 		public abstract bool AutoDisposeViewModel { get; }
 
 		protected TView _view;
+		protected Action _onClose;
 
 		protected abstract TView CreateView(TLayout layout);
+
+		/// <summary>
+		/// Action will be called upon window deactivation
+		/// (it is hidden and removed from the queue).
+		/// </summary>
+		public void CallOnViewClosure(Action action)
+		{
+			_onClose = action;
+		}
 
 		protected sealed override void OnLayoutInstalled()
 		{
@@ -58,10 +71,14 @@ namespace UI.Popups
 			OnViewShown();
 		}
 
-		protected sealed override void OnEndedClosing()
+		protected override void OnReset(bool deactivate)
 		{
 			TryAutoDisposeViewModel();
+
+			_onClose?.Invoke();
 			OnViewHidden();
+
+			base.OnReset(deactivate);
 		}
 
 		protected virtual void OnViewCreated()
@@ -85,10 +102,7 @@ namespace UI.Popups
 
 		protected void TryAutoDisposeViewModel()
 		{
-			if (AutoDisposeViewModel)
-			{
-				_view?.ClearViewModel(true);
-			}
+			_view?.ClearViewModel(AutoDisposeViewModel);
 		}
 	}
 }
