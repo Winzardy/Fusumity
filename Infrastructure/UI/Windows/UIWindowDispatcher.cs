@@ -40,6 +40,10 @@ namespace UI.Windows
 			_manager.Hidden += OnHidden;
 		}
 
+		public UIWindowDispatcher()
+		{
+		}
+
 		public void Dispose()
 		{
 			_manager.Shown -= OnShown;
@@ -99,5 +103,6 @@ namespace UI.Windows
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
+		void IWidgetDispatcher.HideAll() => _manager.HideAll();
 	}
 }

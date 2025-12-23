@@ -64,13 +64,7 @@ namespace UI.Windows
 			return true;
 		}
 
-		internal void HideAll()
-		{
-			foreach (var window in _windows.Values)
-			{
-				TryHide(window);
-			}
-		}
+		internal void HideAll() => TryHideAll(true);
 
 		internal bool TryHide<T>()
 			where T : UIWidget, IWindow
@@ -217,11 +211,11 @@ namespace UI.Windows
 			Show(window, args, true);
 		}
 
-		public void TryHideAll()
+		public void TryHideAll(bool immediate = false)
 		{
 			_queue.Clear();
 
-			_current?.Hide(false);
+			_current?.Hide(true,immediate);
 			SetCurrent(null);
 		}
 

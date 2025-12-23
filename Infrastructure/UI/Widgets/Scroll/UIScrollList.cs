@@ -113,17 +113,15 @@ namespace UI.Scroll
 			Update(null);
 		}
 
-		public virtual void Reset()
+		protected override void OnReset(bool deactivate)
 		{
-			OnReset();
+			base.OnReset(deactivate);
 
 			if (_cells.IsNullOrEmpty())
 				return;
 
 			foreach (var item in _cells.Values)
-			{
-				item.Reset();
-			}
+				item.Reset(deactivate);
 		}
 
 		public void Refresh()
@@ -355,7 +353,7 @@ namespace UI.Scroll
 				SetupItemLayout(layout.template);
 
 			RequestReloadDataAsync(2)
-			   .Forget();
+				.Forget();
 		}
 
 		private void SetupItemLayout(UIScrollItemLayout itemTemplate)
@@ -485,8 +483,8 @@ namespace UI.Scroll
 			_scrollSequence = DOTween.Sequence();
 			_layout.scrollSequence.Participate(ref _scrollSequence);
 			_scrollSequence
-			   .SetAutoKill(false)
-			   .Pause();
+				.SetAutoKill(false)
+				.Pause();
 
 			UpdateScrollSequence();
 		}
