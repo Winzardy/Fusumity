@@ -104,10 +104,9 @@ namespace UI
 		/// </remarks>
 		private protected override void OnDisposedInternal()
 		{
+			ForceHideInternal();
 			LayoutClearingInternal();
-
 			DisposeAndSetNullSafe(ref _animator);
-
 			base.OnDisposedInternal();
 		}
 

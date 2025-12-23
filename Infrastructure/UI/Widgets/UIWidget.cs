@@ -104,11 +104,7 @@ namespace UI
 
 		private protected virtual void OnDisposedInternal()
 		{
-			if (_active)
-			{
-				OnHide();
-				_active = false;
-			}
+			ForceHideInternal();
 
 			DisposeChildren();
 
@@ -116,6 +112,15 @@ namespace UI
 
 			GC.SuppressFinalize(this);
 			OnDispose();
+		}
+
+		private protected void ForceHideInternal()
+		{
+			if (!_active)
+				return;
+
+			SetActiveInternal(false, true);
+			_active = false;
 		}
 
 		public void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true)
