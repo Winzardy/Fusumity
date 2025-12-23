@@ -50,7 +50,8 @@ namespace UI
 				return;
 			}
 
-			WaitSetupTemplateAndActivateAsync(immediate).Forget();
+			WaitSetupTemplateAndActivateAsync(immediate)
+				.Forget();
 		}
 
 		protected sealed override void OnDeactivatedInternal(bool immediate)
@@ -171,6 +172,7 @@ namespace UI
 			await SetupTemplateAsync(template, cancellationToken);
 			OnAfterSetupTemplate();
 			cancellationToken.ThrowIfCancellationRequested();
+
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
 #endif
@@ -271,7 +273,9 @@ namespace UI
 				LayoutAutoDestroyDelayMs;
 #else
 				UILayoutDebug.debugDelayMs
-					? UILayoutDebug.debugDelayMs
+					? UILayoutDebug.debugDelayMs.value <= LayoutAutoDestroyDelayMs
+						? UILayoutDebug.debugDelayMs
+						: LayoutAutoDestroyDelayMs
 					: LayoutAutoDestroyDelayMs;
 #endif
 

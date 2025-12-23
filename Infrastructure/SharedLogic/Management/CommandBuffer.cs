@@ -81,15 +81,13 @@ namespace SharedLogic
 		public bool Validate(ISharedRoot root, out Exception exception)
 		{
 			var entry = _queue.Peek();
-			return _typeToBuffer[entry.type]
-			   .Validate(root, entry.index, out exception);
+			return _typeToBuffer[entry.type].Validate(root, entry.index, out exception);
 		}
 
 		public void Send(ICommandCenter center)
 		{
 			var entry = _queue.Peek();
-			_typeToBuffer[entry.type]
-			   .Send(center, entry.index);
+			_typeToBuffer[entry.type].Send(center, entry.index);
 		}
 
 		public void AddCommandToList(in CommandBufferEntry entry, SimpleList<ICommand> list)
