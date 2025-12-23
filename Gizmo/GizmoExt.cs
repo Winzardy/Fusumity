@@ -5,6 +5,7 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Shapes;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -29,15 +30,11 @@ namespace Game.Logic.Gizmo
 		private static readonly Vector3[] CIRCLE_POINTS = new Vector3[CIRCLE_PRECISE];
 		private static readonly Mesh CIRCLE_MESH = new Mesh();
 
-		private static readonly Vector3[] ANNULUS_POINTS = new Vector3[ANNULUS_PRECISE];
-		private static readonly SimpleList<Mesh> ANNULUS_MESH_BUFFER = new SimpleList<Mesh>();
-		private static readonly Dictionary<float, Mesh> ANNULUS_RATIO_TO_MESH = new Dictionary<float, Mesh>();
-
-		private static int LAST_DRAW_FRAME = -1;
-
 		public static readonly Color ORANGE = new(1f, 0.5f, 0f, 1f);
 		public static readonly Color PURPLE = new(0.5f, 0f, 1f, 1f);
 		public static readonly Color JADE_WHISPER = new(0.3f, 0.8f, 0.6f, 1f);
+
+		private const float GIZMO_ALPHA_MULTIPLIER = 0.3f;
 
 		public static float Height => GizmoDrawer.Current == null ? DEFAULT_HEIGHT : GizmoDrawer.Current.Height;
 
@@ -68,7 +65,6 @@ namespace Game.Logic.Gizmo
 		{
 			BuildCirclePoints();
 			BuildCircleMesh();
-			BuildAnnulusPoints();
 
 			if (!Application.isPlaying)
 				return;
@@ -123,104 +119,6 @@ namespace Game.Logic.Gizmo
 			CIRCLE_MESH.triangles = triangles;
 			CIRCLE_MESH.RecalculateNormals();
 			CIRCLE_MESH.RecalculateBounds();
-		}
-
-		private static void BuildAnnulusPoints()
-		{
-			var angleStep = FloatMathExt.TWO_PI / ANNULUS_PRECISE;
-
-			// Вершины: [0..segmentCount-1] — внешний контур, [segmentCount..2*segmentCount-1] — внутренний
-			for (var i = 0; i < ANNULUS_PRECISE; i++)
-			{
-				var angle = angleStep * i;
-				ANNULUS_POINTS[i] = new Vector3(angle.Cos(), 0f, angle.Sin());
-			}
-		}
-
-		private static void AppendAnnulusMesh()
-		{
-			var mesh = new Mesh();
-
-			mesh.name = "GizmoAnnulusMesh_Normalized";
-			mesh.hideFlags = HideFlags.HideAndDontSave;
-
-			var vertexCount = ANNULUS_PRECISE * 2;
-			var triangleCount = ANNULUS_PRECISE * 2; // 2 треугольника на сегмент
-			var indexCount = triangleCount * 3;
-
-			var vertices = new Vector3[vertexCount];
-			var indices = new int[indexCount];
-
-			var index = 0;
-			for (var i = 0; i < ANNULUS_PRECISE; i++)
-			{
-				var next = (i + 1) % ANNULUS_PRECISE;
-
-				var outer0 = i;
-				var outer1 = next;
-				var inner0 = i + ANNULUS_PRECISE;
-				var inner1 = next + ANNULUS_PRECISE;
-
-				// Квад outer0-outer1-inner1-inner0 → два треугольника:
-				// (outer0, outer1, inner1) и (outer0, inner1, inner0)
-
-				indices[index++] = outer0;
-				indices[index++] = outer1;
-				indices[index++] = inner1;
-
-				indices[index++] = outer0;
-				indices[index++] = inner1;
-				indices[index++] = inner0;
-			}
-
-			mesh.vertices = vertices;
-			mesh.triangles = indices;
-			mesh.RecalculateNormals();
-			mesh.RecalculateBounds();
-
-			ANNULUS_MESH_BUFFER.Add(mesh);
-		}
-
-		private static Mesh GetAnnulusMesh(float innerRatio)
-		{
-			if (LAST_DRAW_FRAME != Time.renderedFrameCount)
-			{
-				foreach (var (_, mesh) in ANNULUS_RATIO_TO_MESH)
-				{
-					ANNULUS_MESH_BUFFER.Add(mesh);
-				}
-				ANNULUS_MESH_BUFFER.Clear();
-				LAST_DRAW_FRAME = Time.renderedFrameCount;
-			}
-
-			{
-				innerRatio = innerRatio.Round(4);
-
-				if (!ANNULUS_RATIO_TO_MESH.TryGetValue(innerRatio, out var mesh))
-				{
-					if (ANNULUS_MESH_BUFFER.Count == 0)
-						AppendAnnulusMesh();
-					mesh = ANNULUS_MESH_BUFFER.RemoveLast();
-
-					using var vertices = new NativeArray<Vector3>(ANNULUS_PRECISE * 2, Allocator.Temp);
-					var verticesSpan = vertices.AsSpan();
-					var pointsSpan = ANNULUS_POINTS.AsSpan();
-
-					pointsSpan.CopyTo(verticesSpan.Slice(0, ANNULUS_PRECISE));
-					pointsSpan.CopyTo(verticesSpan.Slice(ANNULUS_PRECISE, ANNULUS_PRECISE));
-
-					for (var i = ANNULUS_PRECISE; i < verticesSpan.Length; i++)
-					{
-						verticesSpan[i] *= innerRatio;
-					}
-
-					mesh.SetVertices(vertices);
-
-					ANNULUS_RATIO_TO_MESH.Add(innerRatio, mesh);
-				}
-
-				return mesh;
-			}
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
@@ -292,31 +190,18 @@ namespace Game.Logic.Gizmo
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
-		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color, bool wire)
+		public static void DrawSolidAnnulus_TopDown(float2 position, float innerRadius, float outerRadius, Color color)
 		{
-			if (innerRadius <= 0f)
-			{
-				DrawSolidCircle_TopDown(position, outerRadius, color, wire);
-				return;
-			}
-			else if (innerRadius == outerRadius)
+			if (innerRadius == outerRadius)
 			{
 				DrawCircle_TopDown(position, outerRadius, color);
 			}
-
-			var oldMatrix = Gizmos.matrix;
-			Gizmos.color = color;
-			Gizmos.matrix = Matrix4x4.TRS(position.XZ(Height), Quaternion.identity, new Vector3(outerRadius, 1f, outerRadius));
-
-			var innerRatio = innerRadius / outerRadius;
-			var mesh = GetAnnulusMesh(innerRatio);
-
-			if (wire)
-				Gizmos.DrawWireMesh(mesh);
 			else
-				Gizmos.DrawMesh(mesh);
-
-			Gizmos.matrix = oldMatrix;
+			{
+				var radius = (innerRadius + outerRadius) / 2;
+				color.a *= GIZMO_ALPHA_MULTIPLIER;
+				Draw.Ring(position.XZ(Height), Vector3.up, radius, outerRadius - innerRadius, DiscColors.Flat(color));
+			}
 		}
 
 		[Conditional(E.UNITY_EDITOR)]
