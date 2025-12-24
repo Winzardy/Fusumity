@@ -25,7 +25,7 @@ namespace UI.Popups
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
 
-		internal void Hide(bool reset);
+		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
 	}
 
@@ -201,10 +201,10 @@ namespace UI.Popups
 			return CanShow(ref args, out error);
 		}
 
-		void IPopup.Hide(bool reset)
+		void IPopup.Hide(bool reset, bool immediate = false)
 		{
 			_resetting = reset;
-			SetActive(false);
+			SetActive(false, immediate);
 		}
 
 		protected sealed override void OnEndedClosingInternal()

@@ -22,6 +22,10 @@ namespace UI
 			_manager.Hidden += OnHidden;
 		}
 
+		public UIPopoverDispatcher()
+		{
+		}
+
 		public void Dispose()
 		{
 			_manager.Shown -= OnShown;
@@ -77,5 +81,6 @@ namespace UI
 		}
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
+		void IWidgetDispatcher.HideAll() => _manager.HideAll();
 	}
 }

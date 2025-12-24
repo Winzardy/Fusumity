@@ -1,6 +1,7 @@
 ﻿using Fusumity.Utility;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UI.Screens
 {
@@ -97,13 +98,7 @@ namespace UI.Screens
 			return true;
 		}
 
-		internal void HideAll()
-		{
-			foreach (var screen in _screens.Values)
-			{
-				TryHide(screen);
-			}
-		}
+		internal void HideAll() => TryHideAll(true);
 
 		internal bool TryHide<T>()
 			where T : UIWidget, IScreen
@@ -298,15 +293,14 @@ namespace UI.Screens
 			Show(screen, args, true);
 		}
 
-		public void TryHideAll()
+		internal void TryHideAll(bool immediate = false)
 		{
 			_queue.Clear();
 
-			if (_current != null &&
-				_current == _default.screen)
+			if (_current != null && _current == _default.screen)
 				return;
 
-			_current?.Hide(false);
+			_current?.Hide(true, immediate);
 			SetCurrent(null);
 
 			if (_default.screen != null)

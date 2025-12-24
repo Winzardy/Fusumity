@@ -104,10 +104,9 @@ namespace UI
 		/// </remarks>
 		private protected override void OnDisposedInternal()
 		{
+			ForceHideInternal();
 			LayoutClearingInternal();
-
 			DisposeAndSetNullSafe(ref _animator);
-
 			base.OnDisposedInternal();
 		}
 
@@ -134,6 +133,8 @@ namespace UI
 			=> _layout.rectTransform.ForceRebuild(IsVisible, delayMs, callback);
 
 		#region Internal
+
+		private bool _activeInternal;
 
 		/// <summary>
 		/// Внутренний метод, имеет смысл переопределять только в случае нового поведения при активации
@@ -466,13 +467,6 @@ namespace UI
 		/// Аналог конструктора
 		/// </summary>
 		protected virtual void OnInitialized()
-		{
-		}
-
-		/// <summary>
-		/// Аналог Dispose
-		/// </summary>
-		protected virtual void OnDispose()
 		{
 		}
 
