@@ -1,0 +1,24 @@
+using Fusumity.Collections;
+using Sapientia.Collections;
+using Sirenix.OdinInspector;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace UI
+{
+	public abstract class ImageMaterialStateSwitcher<TState> : StateSwitcher<TState>
+	{
+		[SerializeField]
+		private Image _image;
+
+		[SerializeField]
+		private Material _default;
+
+		[LabelText("State To Sprite"), DictionaryDrawerSettings(KeyLabel = "State", ValueLabel = "Material")]
+		[SerializeField]
+		private SerializableDictionary<TState, Material> _dictionary;
+
+		protected override void OnStateSwitched(TState state)
+			=> _image.material = _dictionary.GetValueOrDefaultSafe(state, _default);
+	}
+}

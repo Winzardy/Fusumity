@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Attributes;
+using Sapientia;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -49,8 +50,14 @@ namespace Fusumity.Editor
 			if (member.Name == ValueFieldName)
 			{
 				foreach (var parentAttribute in parentProperty.Attributes)
+				{
 					if (parentAttribute is ParentAttribute attribute)
-						attributes.Add(attribute.Convert());
+					{
+						attributes.Add(typeof(IContainer).IsAssignableFrom(member.DeclaringType)
+							? attribute
+							: attribute.Convert());
+					}
+				}
 			}
 		}
 
@@ -65,6 +72,8 @@ namespace Fusumity.Editor
 				guiContent.text = string.Empty;
 			else if (attributes.GetAttribute<LabelTextAttribute>() != null)
 				guiContent.text = attributes.GetAttribute<LabelTextAttribute>().Text;
+			else if (property.Parent?.ChildResolver is IOrderedCollectionResolver)
+				guiContent.text = string.Empty;
 
 			if (attributes.GetAttribute<TooltipAttribute>() != null)
 				guiContent.tooltip = attributes.GetAttribute<TooltipAttribute>().tooltip;
