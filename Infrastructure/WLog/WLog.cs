@@ -360,6 +360,14 @@ namespace WLog
 		}
 
 		[HideInCallstack]
+		public static void LogUnexpected<T>(this T self, Exception exception, string message = null,
+			UnityObject context = null,
+			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
+		{
+			LogException(self, exception, "Unexpected exception occured", context, memberName, sourceLineNumber);
+		}
+
+		[HideInCallstack]
 		[Conditional("UNITY_ASSERTIONS")]
 		[AssertionMethod]
 		[ContractAnnotation("condition:false=>halt")]
