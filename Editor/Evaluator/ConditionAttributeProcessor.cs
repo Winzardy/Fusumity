@@ -15,8 +15,14 @@ using UnityEngine;
 
 namespace Fusumity.Editor
 {
+	public class ConditionCustomDrawerAttribute : Attribute
+	{
+	}
+
 	public class ConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<ICondition>
 	{
+		public static SdfIconType TrueConditionSdfIcon { get => SdfIconType.Check; }
+		public static string TrueConditionLabel { get => "\u2009True"; }
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
@@ -36,9 +42,13 @@ namespace Fusumity.Editor
 			}
 		}
 
+
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
+
+			// Такое хак делается для отрисовки полиморфных полей, так как у OdinValueDrawer не работает отрисовка если объект null!
+			attributes.Add(new ConditionCustomDrawerAttribute());
 
 			var color = Color.Lerp(Color.blue, Color.white, 0.83f);
 
@@ -96,7 +106,7 @@ namespace Fusumity.Editor
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.Icon = SdfIconType.Alt;
 
-				typeConfig.SetPriority(valueEntryTypeOfValue, 2, null);
+				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
 			}
 
 			if (genericTypeDefinition == typeof(TrueCondition<>))
@@ -108,13 +118,13 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = "\u2009True";
+				settings.Name = TrueConditionLabel;
 				settings.Category = "/";
 				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = SdfIconType.Check;
+				settings.Icon = TrueConditionSdfIcon;
 
-				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
+				typeConfig.SetPriority(valueEntryTypeOfValue, 10001, null);
 			}
 
 			if (genericTypeDefinition == typeof(FalseCondition<>))
@@ -132,7 +142,7 @@ namespace Fusumity.Editor
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.Icon = SdfIconType.X;
 
-				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
+				typeConfig.SetPriority(valueEntryTypeOfValue, 10000, null);
 			}
 		}
 	}

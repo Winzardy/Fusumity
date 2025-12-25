@@ -13,6 +13,13 @@ namespace Fusumity.Editor
 {
 	public static class FusumityEditorGUIHelper
 	{
+		public static Color objectFieldBackgroundColor
+		{
+			get => EditorGUIUtility.isProSkin
+					? new Color(40 / 256f, 40 / 256f, 40 / 256f, 1)
+					: new Color(237 / 256f, 237 / 256f, 237 / 256f, 1);
+		}
+
 		public static bool drawAssetReference = true;
 	}
 
@@ -98,7 +105,8 @@ namespace Fusumity.Editor
 			return true;
 		}
 
-		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey, bool useIndentBody = false, bool useIndent = true)
+		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey,
+			bool useIndentBody = false, bool useIndent = true)
 		{
 			var originalIndent = EditorGUI.indentLevel;
 

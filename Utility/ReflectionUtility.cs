@@ -11,6 +11,8 @@ using UnityEngine;
 
 namespace Fusumity.Utility
 {
+	using UnityObject = UnityEngine.Object;
+
 	public static class ReflectionUtility
 	{
 		/// <summary>
@@ -172,7 +174,7 @@ namespace Fusumity.Utility
 				var nextType = types[i];
 
 				if (nextType.Name == typeName ||
-				    (checkFullName && nextType.FullName == typeName))
+					(checkFullName && nextType.FullName == typeName))
 				{
 					return nextType;
 				}
@@ -209,8 +211,8 @@ namespace Fusumity.Utility
 							continue;
 
 						if (baseType.IsAssignableFrom(type) &&
-						    !type.IsInterface &&
-						    !type.IsAbstract)
+							!type.IsInterface &&
+							!type.IsAbstract)
 						{
 							list.Add(type);
 						}
@@ -394,9 +396,31 @@ namespace Fusumity.Utility
 		public static FieldInfo[] GetConstants(Type type)
 		{
 			FieldInfo[] fieldInfos = type.GetFields(BindingFlags.Public |
-				 BindingFlags.Static | BindingFlags.FlattenHierarchy);
+				BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
 			return fieldInfos.Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToArray();
+		}
+
+		public static bool IsUnitySerializableType(this Type type)
+		{
+			if (type.IsPrimitive || type.IsEnum || type == typeof(string))
+				return true;
+
+			if (typeof(UnityObject).IsAssignableFrom(type))
+				return true;
+
+			if (type.IsArray)
+				return IsUnitySerializableType(type.GetElementType());
+
+			if (type.IsGenericType)
+			{
+				if (type.GetGenericTypeDefinition() != typeof(List<>))
+					return false;
+
+				return IsUnitySerializableType(type.GetGenericArguments()[0]);
+			}
+
+			return type.IsDefined(typeof(SerializableAttribute), false);
 		}
 	}
 
