@@ -33,6 +33,8 @@ namespace Fusumity.Utility
 		}
 
 		[BurstCompile, MethodImpl(MethodImplOptions.AggressiveInlining)]
+		// TODO: Необходимо добавить 90 градусов. Проверить все места использования
+		// (В реквестах кастах сейчас костыли, во View по все префабы внутри повёрнуты на 90 градусов, в касте сектора понадобится изменить логику, т.к. он работает и без поворота).
 		public readonly quaternion ToQuaternion()
 		{
 			return quaternion.RotateY(-rad);
