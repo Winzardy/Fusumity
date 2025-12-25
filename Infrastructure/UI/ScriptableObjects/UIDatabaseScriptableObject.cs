@@ -1,9 +1,9 @@
 namespace Content.ScriptableObjects.UI
 {
+	using UnityEngine;
 #if UNITY_EDITOR
 	using UnityEditor;
 	using Content.ScriptableObjects.Editor;
-	using UnityEngine;
 
 	public class Editor
 	{
