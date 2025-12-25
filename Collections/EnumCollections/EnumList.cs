@@ -104,6 +104,12 @@ namespace Fusumity.Collections
 			return result;
 		}
 
+		public IEnumerable<TEnum> ToEnums()
+		{
+			for (var i = 0; i < Count; i++)
+				yield return values[i].EnumValue;
+		}
+
 		public virtual void OnBeforeSerialize()
 		{
 #if UNITY_EDITOR
@@ -130,23 +136,5 @@ namespace Fusumity.Collections
 			}
 		}
 #endif
-	}
-
-	public static class EnumListExtensions
-	{
-		public static IEnumerable<TEnum> ToEnums<TEnum, TValue>(this EnumReferenceList<TEnum, TValue> enumList)
-			where TEnum : unmanaged, Enum
-			where TValue : class
-		{
-			for (var i = 0; i < enumList.Count; i++)
-				yield return enumList[i].enumValue;
-		}
-
-		public static IEnumerable<TEnum> ToEnums<TEnum, TValue>(this EnumList<TEnum, TValue> enumList)
-			where TEnum : unmanaged, Enum
-		{
-			for (var i = 0; i < enumList.Count; i++)
-				yield return enumList[i].enumValue;
-		}
 	}
 }
