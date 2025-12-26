@@ -9,7 +9,7 @@ namespace Fusumity.MVVM.UI
 			viewModel.Bind((x) => label.text = x);
 		}
 
-		public static void Release(this TMP_Text label, ILabelViewModel viewModel)
+		public static void Unbind(this TMP_Text label, ILabelViewModel viewModel)
 		{
 			viewModel.Release();
 		}

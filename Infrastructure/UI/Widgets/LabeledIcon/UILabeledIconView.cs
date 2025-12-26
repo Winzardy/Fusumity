@@ -1,6 +1,5 @@
-﻿using AssetManagement;
-using Fusumity.MVVM.UI;
-using Localization;
+﻿using Fusumity.MVVM.UI;
+using Sapientia.Extensions;
 using System;
 using UI;
 using UnityEngine;
@@ -9,21 +8,29 @@ namespace Game.UI
 {
 	public class UILabeledIconView : UIView<ILabeledIconViewModel, UILabeledIconLayout>
 	{
-		private UISpriteAssigner _spriteAssigner;
-		private UITextLocalizationAssigner _locTextAssigner;
+		private UISpriteAssigner _assigner;
+		private bool _disableIfEmpty;
 
 		private Sprite _defaultIconSprite;
+		private Color _defaultIconColor;
 		private string _defaultLabelText;
 
-		public UILabeledIconView(UILabeledIconLayout layout) : base(layout)
+		public UILabeledIconView(UILabeledIconLayout layout, bool disableIfEmpty = false) : base(layout)
 		{
-			if (_layout.icon)
-				_defaultIconSprite = _layout.icon.sprite;
-			if (_layout.label)
-				_defaultLabelText = _layout.label.text;
+			_disableIfEmpty = disableIfEmpty;
 
-			AddDisposable(_spriteAssigner = new UISpriteAssigner());
-			AddDisposable(_locTextAssigner = new UITextLocalizationAssigner());
+			if (_layout.icon != null)
+			{
+				_defaultIconSprite = _layout.icon.sprite;
+				_defaultIconColor = _layout.icon.color;
+			}
+
+			if (_layout.label != null)
+			{
+				_defaultLabelText = _layout.label.text;
+			}
+
+			AddDisposable(_assigner = new UISpriteAssigner());
 
 			Subscribe(_layout.labelButton, HandleLabelClicked);
 			Subscribe(_layout.iconButton, HandleIconClicked);
@@ -31,39 +38,86 @@ namespace Game.UI
 
 		protected override void OnUpdate(ILabeledIconViewModel viewModel)
 		{
+			SetActive(!_disableIfEmpty || !viewModel.IsEmpty);
+
 			UpdateIcon();
 			UpdateLabel();
+			UpdateIconColor();
+			UpdateLabelColor();
 
 			viewModel.LabelChanged += UpdateLabel;
 			viewModel.IconChanged += UpdateIcon;
+			viewModel.IconColorChanged += UpdateIconColor;
+			viewModel.LabelColorChanged += UpdateLabelColor;
 		}
 
 		protected override void OnClear(ILabeledIconViewModel viewModel)
 		{
 			viewModel.LabelChanged -= UpdateLabel;
 			viewModel.IconChanged -= UpdateIcon;
+			viewModel.IconColorChanged -= UpdateIconColor;
+			viewModel.LabelColorChanged -= UpdateLabelColor;
+		}
+
+		protected override void OnNullViewModel()
+		{
+			SetActive(false);
 		}
 
 		private void UpdateLabel()
 		{
-			_layout.label.SetTextSafe
-			(
-				_locTextAssigner,
-				ViewModel.LocLabel,
-				ViewModel.Label,
-				_defaultLabelText
-			);
+			if (_layout.label == null)
+				return;
+
+			if (_disableIfEmpty)
+			{
+				SetActive(!ViewModel.IsEmpty);
+			}
+
+			_layout.label.text = ViewModel.Label ?? _defaultLabelText;
 		}
 
 		private void UpdateIcon()
 		{
-			_layout.icon.SetSpriteSafe
-			(
-				_spriteAssigner,
-				ViewModel.IconRef,
-				ViewModel.Icon,
-				_defaultIconSprite
-			);
+			if (_layout.icon == null)
+				return;
+
+			if (_disableIfEmpty)
+			{
+				SetActive(!ViewModel.IsEmpty);
+			}
+
+			if (ViewModel.Icon.IsEmptyOrInvalid())
+			{
+				_layout.icon.sprite = _defaultIconSprite;
+				_layout.icon.color = _defaultIconColor;
+			}
+			else
+			{
+				_assigner.TrySetSprite(_layout.icon, ViewModel.Icon);
+			}
+		}
+
+		private void UpdateIconColor()
+		{
+			if (_layout.icon == null)
+				return;
+
+			if (ViewModel?.IconColor == null)
+				return;
+
+			_layout.icon.color = ViewModel.IconColor.Value;
+		}
+
+		private void UpdateLabelColor()
+		{
+			if (_layout.label == null)
+				return;
+
+			if (ViewModel?.LabelColor == null)
+				return;
+
+			_layout.label.color = ViewModel.LabelColor.Value;
 		}
 
 		private void HandleLabelClicked() => ViewModel?.LabelClick();
@@ -73,12 +127,15 @@ namespace Game.UI
 	public interface ILabeledIconViewModel
 	{
 		public string Label { get; }
-		public LocText LocLabel { get => default; }
-		public Sprite Icon { get => null; }
-		public AssetReferenceEntry<Sprite> IconRef { get => null; }
+		public UISpriteInfo Icon { get; }
+		public Color? IconColor { get => null; }
+		public Color? LabelColor { get => null; }
+		public bool IsEmpty { get => Label.IsNullOrEmpty() && Icon.IsEmptyOrInvalid(); }
 
 		public event Action LabelChanged;
 		public event Action IconChanged;
+		public event Action IconColorChanged;
+		public event Action LabelColorChanged;
 
 		public void LabelClick()
 		{

@@ -7,19 +7,19 @@ namespace UI
 	/// <summary>
 	/// One toggle can be active at a time.
 	/// </summary>
-	public abstract class SingularToggleBarViewModel<TSourceData, TButtonViewModel> : DefaultToggleBarViewModel<TSourceData, TButtonViewModel>
-		where TButtonViewModel : DefaultToggleButtonViewModel
+	public abstract class UISingularToggleBarViewModel<TSourceData, TButtonViewModel> : UIDefaultToggleBarViewModel<TSourceData, TButtonViewModel>
+		where TButtonViewModel : UIDefaultToggleButtonViewModel
 	{
 		public TButtonViewModel SelectedButton { get; private set; }
 
 		public event Action<TButtonViewModel> SelectionChanged;
 
-		public SingularToggleBarViewModel() :
+		public UISingularToggleBarViewModel() :
 			base()
 		{
 		}
 
-		public SingularToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex) :
+		public UISingularToggleBarViewModel(IList<TSourceData> sourceData, int selectedIndex) :
 			base(sourceData, selectedIndex)
 		{
 		}
@@ -57,6 +57,19 @@ namespace UI
 
 			var button = _buttons[index];
 			OnButtonClicked(button);
+		}
+
+		public void Reset(int defaultIndex = 0)
+		{
+			SelectedButton?.SetToggled(false);
+			SelectedButton = default;
+
+			if (!_buttons.WithinBounds(defaultIndex))
+				return;
+
+			SelectedButton = _buttons[defaultIndex];
+			SelectedButton.SetToggled(true);
+			OnButtonSelected(SelectedButton);
 		}
 	}
 }

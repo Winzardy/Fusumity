@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sapientia.Extensions;
+using System;
 using UnityEngine.Assertions;
 
 namespace Fusumity.MVVM.UI
@@ -9,6 +10,8 @@ namespace Fusumity.MVVM.UI
 	public interface ILabelViewModel : IBinding<string>
 	{
 		string Value { get; set; }
+
+		bool IsEmpty { get => Value.IsNullOrEmpty(); }
 	}
 
 	public class LabelViewModel : ILabelViewModel
@@ -24,6 +27,15 @@ namespace Fusumity.MVVM.UI
 				_value = value;
 				_onChange?.Invoke(value);
 			}
+		}
+
+		public LabelViewModel()
+		{
+		}
+
+		public LabelViewModel(string value)
+		{
+			Value = value;
 		}
 
 		public void Bind(Action<string> action, bool invokeOnBind = true)

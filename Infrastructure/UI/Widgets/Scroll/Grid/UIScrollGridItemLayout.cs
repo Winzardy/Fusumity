@@ -11,10 +11,8 @@ using Sirenix.Utilities.Editor;
 
 namespace UI.Scroll
 {
-	[RequireComponent(typeof(LayoutGroup))]
 	public class UIScrollGridItemLayout : UIScrollItemLayout
 	{
-		[ReadOnly]
 		public LayoutGroup group;
 
 		[Space, ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor))]
@@ -24,7 +22,7 @@ namespace UI.Scroll
 		{
 			base.Reset();
 
-			group = GetComponent<LayoutGroup>();
+			group = GetComponentInChildren<LayoutGroup>(true);
 		}
 
 		[ContextMenu("Add Children")]

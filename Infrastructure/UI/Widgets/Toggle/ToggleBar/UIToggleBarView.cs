@@ -1,5 +1,4 @@
 using Fusumity.MVVM.UI;
-using Sapientia.Extensions;
 using System;
 using System.Collections.Generic;
 
@@ -9,14 +8,16 @@ namespace UI
 	{
 		private UIToggleButtonsCollection _collection;
 
-		public UIToggleBarView(UIToggleBarLayout layout) : base(layout)
+		public UIToggleBarView(UIToggleBarLayout layout, Func<IWidgetAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 		{
-			AddDisposable(_collection = new UIToggleButtonsCollection(layout));
+			AddDisposable(_collection = new UIToggleButtonsCollection(layout, animatorFactory));
 			Subscribe(layout.back, HandleBackClicked);
 		}
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)
 		{
+			SetActive(true);
+
 			_collection.Update(viewModel.Buttons);
 			viewModel.ButtonsChanged += HandleButtonsChanged;
 		}
@@ -24,6 +25,11 @@ namespace UI
 		protected override void OnClear(IToggleBarViewModel viewModel)
 		{
 			viewModel.ButtonsChanged -= HandleButtonsChanged;
+		}
+
+		protected override void OnNullViewModel()
+		{
+			SetActive(false);
 		}
 
 		private void HandleButtonsChanged()
@@ -38,11 +44,14 @@ namespace UI
 
 		private class UIToggleButtonsCollection : UIViewCollection<IToggleButtonViewModel, UIToggleButtonView, UIToggleButtonLayout>
 		{
-			public UIToggleButtonsCollection(UIToggleBarLayout layout) : base(layout)
+			private Func<IWidgetAnimator<UIToggleButtonLayout>> _animatorFactory;
+
+			public UIToggleButtonsCollection(UIToggleBarLayout layout, Func<IWidgetAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 			{
+				_animatorFactory = animatorFactory;
 			}
 
-			protected override UIToggleButtonView CreateViewInstance(UIToggleButtonLayout layout) => new UIToggleButtonView(layout);
+			protected override UIToggleButtonView CreateViewInstance(UIToggleButtonLayout layout) => new UIToggleButtonView(layout, _animatorFactory?.Invoke());
 		}
 	}
 
@@ -55,6 +64,6 @@ namespace UI
 		/// </summary>
 		event Action ButtonsChanged;
 
-		void ClickBack();
+		void ClickBack() { }
 	}
 }

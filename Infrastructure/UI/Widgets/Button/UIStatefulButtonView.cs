@@ -1,73 +1,94 @@
 ﻿using Fusumity.MVVM.UI;
-using Sapientia.Extensions;
+using Game.UI;
 using System;
 
 namespace UI
 {
-	public class UIStatefulButtonView : UIView<IStatefulButtonViewModel, UILabeledButtonLayout>
+	public class UIStatefulButtonView : UIView<IStatefulButtonViewModel, UIStatefulButtonLayout>
 	{
-		private UIButtonWidget<UILabeledButtonLayout, IStatefulButtonViewModel> _widget;
+		private UIAdBannerView _adBanner;
+		private UILabeledIconView _labeledIcon;
+		private UISpriteAssigner _assigner;
 
-		public UIStatefulButtonView(UILabeledButtonLayout layout) : base(layout)
+		public UIStatefulButtonView(UIStatefulButtonLayout layout) : base(layout)
 		{
-			AddDisposable(_widget = new UIButtonWidget<UILabeledButtonLayout, IStatefulButtonViewModel>(layout));
+			if (layout.adBanner != null)
+			{
+				AddDisposable(_adBanner = new UIAdBannerView(layout.adBanner));
+			}
 
-			Subscribe(_widget, HandleClicked);
+			if (layout.labeledIcon != null)
+			{
+				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon, true));
+			}
+
+			Subscribe(layout.button, HandleClick);
 		}
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
-			_widget.Show(viewModel);
+			_layout.label.Bind(viewModel.Label);
+			_adBanner?.Update(viewModel.AdBanner);
+			_labeledIcon?.Update(viewModel.LabeledIcon);
 
-			UpdateLabel();
+			UpdateIcon();
 			UpdateStyle();
 			UpdateInteractable();
 
-			viewModel.LabelChanged += UpdateLabel;
 			viewModel.StyleChanged += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			viewModel.LabelChanged -= UpdateLabel;
+			_layout.label.Unbind(viewModel.Label);
+
 			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
 		}
 
-		private void UpdateLabel()
-		{
-			if (ViewModel.Label.IsNullOrEmpty())
-			{
-				_widget.SetLabel(ViewModel.LocLabel, ViewModel.Label);
-			}
-			else
-			{
-				_layout.label.text = ViewModel.Label;
-			}
-		}
-
 		private void UpdateStyle()
 		{
-			_widget.SetStyle(ViewModel.Style);
+			_layout.switcher?.Switch(ViewModel.Style);
 		}
 
 		private void UpdateInteractable()
 		{
-			_widget.SetInteractable(!ViewModel.Interactable.HasValue || ViewModel.Interactable.Value);
+			_layout.button.interactable = !ViewModel.Interactable.HasValue || ViewModel.Interactable.Value;
 		}
 
-		private void HandleClicked(IButtonWidget widget)
+		private void UpdateIcon()
+		{
+			if (_layout.icon == null)
+				return;
+
+			if (ViewModel.Icon.IsEmptyOrInvalid())
+				return;
+
+			if (_assigner == null)
+			{
+				AddDisposable(_assigner = new UISpriteAssigner());
+			}
+
+			_assigner.TrySetSprite(_layout.icon, ViewModel.Icon);
+		}
+
+		private void HandleClick()
 		{
 			ViewModel?.Click();
 		}
 	}
 
-	public interface IStatefulButtonViewModel : IObseleteButtonViewModel
+	public interface IStatefulButtonViewModel
 	{
-		//TODO: add other required events
+		ILabelViewModel Label { get; }
+		string Style { get; }
 
-		event Action LabelChanged;
+		bool? Interactable { get => null; }
+		UISpriteInfo Icon { get => default; }
+		IAdBannerViewModel AdBanner { get => null; }
+		ILabeledIconViewModel LabeledIcon { get => null; }
+
 		event Action StyleChanged;
 		event Action InteractableChanged;
 

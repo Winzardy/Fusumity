@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using AssetManagement.AddressableAssets;
+﻿using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia.Extensions;
-using UnityEngine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
@@ -76,7 +75,7 @@ namespace Localization
 			if (entry == null)
 			{
 				LocalizationDebug.LogWarning($"Could not find valid localization for [ {CurrentLanguage}/{key} ]");
-				return defaultValue ?? $"#{key.ToUpper()}#".ColorText(Color.red);
+				return defaultValue ?? $"#{key.ToUpper()}#".ColorText(UnityColorUtility.ERROR);
 			}
 
 			return entry.Value;

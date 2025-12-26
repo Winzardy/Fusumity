@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
@@ -52,6 +53,66 @@ namespace UI.Scroll
 				var gridArgs = Create(ItemAmountInGridItem, _rawData);
 				Update(gridArgs, normalizePosition);
 			}
+		}
+
+		public bool TryGetRowDataIndex(TValue value, out int rowIndex)
+		{
+			if (value == null)
+			{
+				rowIndex = -1;
+				return false;
+			}
+
+			return TryGetRowDataIndex((x) => x == value, out rowIndex);
+		}
+
+		public bool TryGetRowDataIndex(Func<TValue, bool> predicate, out int rowIndex)
+		{
+			foreach (var rowData in _data)
+			{
+				foreach (var itemIndex in rowData)
+				{
+					var item = rowData.Items[itemIndex];
+					if (predicate.Invoke(item))
+					{
+						rowIndex = rowData.Index;
+						return true;
+					}
+				}
+			}
+
+			rowIndex = -1;
+			return false;
+		}
+
+		public bool TryGetItemDataIndex(TValue value, out int itemIndex)
+		{
+			if (value == null)
+			{
+				itemIndex = -1;
+				return false;
+			}
+
+			return TryGetItemDataIndex((x) => x == value, out itemIndex);
+		}
+
+		public bool TryGetItemDataIndex(Func<TValue, bool> predicate, out int itemIndex)
+		{
+			foreach (var rowData in _data)
+			{
+				foreach (var index in rowData)
+				{
+					var item = rowData.Items[index];
+					if (predicate.Invoke(item))
+					{
+						itemIndex = index;
+						return true;
+					}
+				}
+			}
+
+			itemIndex = -1;
+			return false;
 		}
 	}
 }

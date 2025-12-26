@@ -10,13 +10,18 @@ namespace UI
 		private UISpriteAssigner _iconAssigner;
 		private IWidgetAnimator<UIToggleButtonLayout> _animator;
 
-		public UIToggleButtonView(UIToggleButtonLayout layout) : base(layout)
+		public UIToggleButtonView(UIToggleButtonLayout layout, IWidgetAnimator<UIToggleButtonLayout> animator = null) : base(layout)
 		{
 			AddDisposable(_iconAssigner = new UISpriteAssigner());
-			AddDisposable(_animator = new DefaultToggleWidgetAnimator());
 			Subscribe(layout, HandleClicked);
 
-			_animator.SetupLayout(layout);
+			if (animator != null)
+			{
+				_animator = animator;
+				_animator.SetupLayout(layout);
+
+				AddDisposable(animator);
+			}
 		}
 
 		protected override void OnUpdate(IToggleButtonViewModel viewModel)
@@ -43,20 +48,22 @@ namespace UI
 
 		private void UpdateIcon(IAssetReferenceEntry<Sprite> icon)
 		{
-			if (!icon.IsEmptyOrInvalid())
-			{
-				_iconAssigner.SetSprite(_layout.icon, icon);
-			}
+			_iconAssigner.TrySetSprite(_layout.icon, icon);
 		}
 
 		private void UpdateToggleState(bool isToggled, bool immediate)
 		{
-			var key =
-				isToggled ?
-				WidgetAnimationType.TOGGLE_ENABLING :
-				WidgetAnimationType.TOGGLE_DISABLING;
+			if (_animator != null)
+			{
+				var key =
+					isToggled ?
+					WidgetAnimationType.TOGGLE_ENABLING :
+					WidgetAnimationType.TOGGLE_DISABLING;
 
-			_animator.Play(key, immediate);
+				_animator.Play(key, immediate);
+			}
+
+			_layout.activitySwitcher?.Switch(isToggled);
 		}
 
 		private void UpdateLabel(string label)
