@@ -21,8 +21,10 @@ namespace Fusumity.Editor
 
 	public class ConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<ICondition>
 	{
-		public static SdfIconType TrueConditionSdfIcon { get => SdfIconType.Check; }
-		public static string TrueConditionLabel { get => "\u2009True"; }
+		public static SdfIconType NoneConditionSdfIcon { get => SdfIconType.Check; }
+		public static string NoneConditionLabel { get => "\u2009None (true)"; }
+		public static SdfIconType RejectConditionSdfIcon { get => SdfIconType.X; }
+		public static string RejectConditionLabel { get => "\u2009Reject (false)"; }
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
@@ -109,7 +111,7 @@ namespace Fusumity.Editor
 				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
 			}
 
-			if (genericTypeDefinition == typeof(TrueCondition<>))
+			if (genericTypeDefinition == typeof(NoneCondition<>))
 			{
 				if (settings == null)
 				{
@@ -118,16 +120,16 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = TrueConditionLabel;
+				settings.Name = NoneConditionLabel;
 				settings.Category = "/";
 				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = TrueConditionSdfIcon;
+				settings.Icon = NoneConditionSdfIcon;
 
 				typeConfig.SetPriority(valueEntryTypeOfValue, 10001, null);
 			}
 
-			if (genericTypeDefinition == typeof(FalseCondition<>))
+			if (genericTypeDefinition == typeof(RejectCondition<>))
 			{
 				if (settings == null)
 				{
@@ -136,11 +138,11 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = "\u2009False";
+				settings.Name = RejectConditionLabel;
 				settings.Category = "/";
 				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = SdfIconType.X;
+				settings.Icon = RejectConditionSdfIcon;
 
 				typeConfig.SetPriority(valueEntryTypeOfValue, 10000, null);
 			}

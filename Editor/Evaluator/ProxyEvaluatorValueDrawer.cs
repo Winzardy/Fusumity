@@ -42,7 +42,8 @@ namespace Fusumity.Editor
 				if (b1)
 					EditorGUI.indentLevel++;
 
-				if (EditorGUIUtility.hierarchyMode && isZeroIndent)
+				var hierarchyMode = EditorGUIUtility.hierarchyMode && isZeroIndent;
+				if (hierarchyMode)
 				{
 					iconRect.x -= 14;
 				}
@@ -50,6 +51,9 @@ namespace Fusumity.Editor
 				{
 					iconRect.x -= 11;
 				}
+
+				if (!hierarchyMode)
+					iconRect.x += GUIHelper.CurrentIndentAmount - iconRect.width;
 
 				iconRect.x -= 1.5f;
 				iconRect.width -= useOffset ? 3 : 0;

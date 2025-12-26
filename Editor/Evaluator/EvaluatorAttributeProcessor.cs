@@ -30,8 +30,6 @@ namespace Fusumity.Editor
 					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(FilterByConditionRoot)}($type, $property)",
 					ShowNoneItem = false,
 				};
-
-				attributes.Add(typeSelectorSettingsAttribute);
 			}
 			else
 			{
@@ -64,21 +62,24 @@ namespace Fusumity.Editor
 		}
 
 		// Тут фильтр для случая когда корнем древа был Condition
-		private static bool FilterByConditionRoot(Type type, InspectorProperty property)
+		internal static bool FilterByConditionRoot(Type type, InspectorProperty property)
 		{
-			if (typeof(IRandomEvaluator).IsAssignableFrom(type))
+			var finalType = type.GetFinalCollectionElementType();
+			if (typeof(IRandomEvaluator).IsAssignableFrom(finalType))
 				return false;
 
-			return Filter(type, property);
+			return Filter(finalType, property);
 		}
 
-		private static bool Filter(Type type, InspectorProperty property)
+		internal static bool Filter(Type type, InspectorProperty property)
 		{
-			if (typeof(IConstantEvaluator).IsAssignableFrom(type))
+			var finalType = type.GetFinalCollectionElementType();
+
+			if (typeof(IConstantEvaluator).IsAssignableFrom(finalType))
 			{
-				if (type.IsGenericType)
+				if (finalType.IsGenericType)
 				{
-					var valueType = type.GetGenericArguments()
+					var valueType = finalType.GetGenericArguments()
 						.SecondOrDefault();
 
 					if (valueType != null)
@@ -92,7 +93,7 @@ namespace Fusumity.Editor
 			return true;
 		}
 
-		private static bool TopSemanticAncestorIsCondition(InspectorProperty property)
+		internal static bool TopSemanticAncestorIsCondition(InspectorProperty property)
 		{
 			InspectorProperty top = null;
 

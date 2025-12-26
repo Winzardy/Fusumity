@@ -1,47 +1,15 @@
 using System;
-using Content;
 using Sapientia;
+using Sapientia.Collections;
 using Sapientia.Conditions;
-using Sirenix.Config;
-using Sirenix.OdinInspector;
+using Sapientia.Evaluators;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.OdinInspector.Editor.Drawers;
-using Sirenix.OdinInspector.Editor.TypeSearch;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
 namespace Fusumity.Editor
 {
-	// public class ConditionAttributeDrawer : OdinValueDrawer<ICondition>
-	// {
-	// 	private Type _trueType;
-	// 	private ICondition _trueDefault;
-	//
-	// 	protected override void Initialize()
-	// 	{
-	// 		_trueDefault = null;
-	// 	}
-	//
-	// 	protected override void DrawPropertyLayout(GUIContent label)
-	// 	{
-	// 		var type = Property.ValueEntry.BaseValueType;
-	// 		var contextType = type.GenericTypeArguments[0];
-	// 		_trueType ??= typeof(TrueCondition<>).MakeGenericType(contextType);
-	// 		_trueDefault ??= (ICondition) Activator.CreateInstance(_trueType);
-	//
-	// 		if (Property.ValueEntry != null)
-	// 		{
-	// 			if (Property.ValueEntry.TypeOfValue == _trueType)
-	// 			{
-	// 				Property.ValueEntry.WeakSmartValue = null;
-	// 				Property.ValueEntry.ApplyChanges();
-	// 			}
-	// 		}
-	//
-	// 		CallNextDrawer(label);
-	// 	}
-	// }
 	[DrawerPriority(DrawerPriorityLevel.WrapperPriority)]
 	public class ConditionAttributeDrawer : OdinAttributeDrawer<ConditionCustomDrawerAttribute>
 	{
@@ -65,7 +33,7 @@ namespace Fusumity.Editor
 		{
 			var type = Property.ValueEntry.BaseValueType;
 			var contextType = type.GenericTypeArguments[0];
-			_trueType ??= typeof(TrueCondition<>).MakeGenericType(contextType);
+			_trueType ??= typeof(NoneCondition<>).MakeGenericType(contextType);
 			_trueDefault ??= (ICondition) Activator.CreateInstance(_trueType);
 
 			if (Property.ValueEntry != null)
@@ -80,25 +48,32 @@ namespace Fusumity.Editor
 
 			if (Property.ValueEntry?.WeakSmartValue == null)
 			{
-				var originLastRect = GUILayoutUtility.GetLastRect();
-				var lastRect = originLastRect;
+				var lastRect = GUILayoutUtility.GetLastRect();
 
-				lastRect.x += GUIHelper.BetterLabelWidth + 6;
+				if (typeof(IProxyEvaluator).IsAssignableFrom(Property.ParentType) &&
+					Property.Parent.ParentType.IsArray)
+					lastRect.x += GUIHelper.CurrentIndentAmount;
 
-				var backRect = originLastRect;
-				backRect.x += GUIHelper.BetterLabelWidth + 2;
+				var labelWidth = label == null || label.text.IsNullOrEmpty()
+					? 0
+					: GUIHelper.BetterLabelWidth;
+
+				var backRect = lastRect;
+				backRect.x += labelWidth + 2;
 				backRect.width = GUIHelper.BetterLabelWidth;
 				backRect.x += 2;
 				backRect.y += 2;
 				backRect.height -= 4;
 				EditorGUI.DrawRect(backRect, FusumityEditorGUIHelper.objectFieldBackgroundColor);
 
-				lastRect.width = 11;
-				SdfIcons.DrawIcon(lastRect, ConditionAttributeProcessor.TrueConditionSdfIcon, _iconColor);
+				var labelRect = lastRect;
+				labelRect.x += labelWidth + 6;
+				labelRect.width = 11;
+				SdfIcons.DrawIcon(labelRect, ConditionAttributeProcessor.NoneConditionSdfIcon, _iconColor);
 
-				lastRect.x += 11.5f;
-				lastRect.width = 100;
-				GUI.Label(lastRect, ConditionAttributeProcessor.TrueConditionLabel);
+				labelRect.x += 11.5f;
+				labelRect.width = 100;
+				GUI.Label(labelRect, ConditionAttributeProcessor.NoneConditionLabel);
 			}
 		}
 

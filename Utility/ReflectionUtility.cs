@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 using UnityEngine;
