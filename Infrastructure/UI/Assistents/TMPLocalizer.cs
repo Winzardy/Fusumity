@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace UI
 {
-	[InfoBox("Utility component for static localizations.", InfoMessageType.Info)]
 	public class TMPLocalizer : MonoBehaviour
 	{
+		[InfoBox("Utility component for static localizations.", InfoMessageType.Info)]
 		[SerializeField]
 		private TMP_Text _text;
 		[SerializeField]

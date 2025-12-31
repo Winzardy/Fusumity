@@ -5,23 +5,51 @@ using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEngine;
 using ZenoTween;
 using ZenoTween.Utility;
 
 namespace UI
 {
-	public abstract class TweenStateSwitcher<TState> : StateSwitcher<TState>
+	// cus serialized dictionary is broken af in combination with these switchers.
+	public abstract class ReliableTweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
 		[NonSerialized]
 		private readonly Dictionary<TState, Tween> _cached = new();
+		[NonSerialized]
+		private Dictionary<TState, AnimationSequence> _mappedSequences;
 
 		[SerializeField, HideLabel, FoldoutGroup("Default State")]
 		private AnimationSequence _default;
 
-		[Space, LabelText("State To Enable"), DictionaryDrawerSettings(KeyLabel = "State", ValueLabel = "Sequence")]
+		[SerializeField, Tooltip("Trigger state switching if default state value is provided.")]
+		private bool _switchIfDefaultValue;
+
+		[Space, LabelText("State To Enable")]
 		[SerializeField]
-		private SerializableDictionary<TState, AnimationSequence> _dictionary;
+		private StatePair[] _states;
+
+		private Dictionary<TState, AnimationSequence> mappedSequences
+		{
+			get
+			{
+				if (_mappedSequences == null)
+				{
+					_mappedSequences = new Dictionary<TState, AnimationSequence>();
+					if (!_states.IsNullOrEmpty())
+					{
+						for (int i = 0; i < _states.Length; i++)
+						{
+							var pair = _states[i];
+							_mappedSequences.Add(pair.state, pair.sequence);
+						}
+					}
+				}
+
+				return _mappedSequences;
+			}
+		}
 
 		protected override bool UseEquals => true;
 
@@ -31,10 +59,14 @@ namespace UI
 
 		protected override void OnStateSwitched(TState state)
 		{
+			if (EqualityComparer<TState>.Default.Equals(state, default) &&
+				!_switchIfDefaultValue)
+				return;
+
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
-				_dictionary.GetValueOrDefaultSafe(state, _default)
+				mappedSequences.GetValueOrDefaultSafe(state, _default)
 				   .ToTween(this)
 				   .Kill(true);
 
@@ -43,7 +75,7 @@ namespace UI
 
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
-				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
+				_cached[state] = tween = mappedSequences.GetValueOrDefaultSafe(state, _default)
 				   .ToTween(this)
 				   .SetAutoKill(false);
 			}
@@ -83,6 +115,14 @@ namespace UI
 				tween?.KillSafe();
 
 			_cached.Clear();
+		}
+
+		[Serializable]
+		public struct StatePair
+		{
+			public TState state;
+			[BoxGroup]
+			public AnimationSequence sequence;
 		}
 	}
 }
