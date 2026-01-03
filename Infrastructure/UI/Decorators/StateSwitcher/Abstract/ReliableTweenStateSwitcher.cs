@@ -1,11 +1,9 @@
 using DG.Tweening;
-using Fusumity.Collections;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEngine;
 using ZenoTween;
 using ZenoTween.Utility;
@@ -16,6 +14,8 @@ namespace UI
 	public abstract class ReliableTweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
 		[NonSerialized]
+		private Tween _tween;
+		[NonSerialized]
 		private readonly Dictionary<TState, Tween> _cached = new();
 		[NonSerialized]
 		private Dictionary<TState, AnimationSequence> _mappedSequences;
@@ -23,8 +23,10 @@ namespace UI
 		[SerializeField, HideLabel, FoldoutGroup("Default State")]
 		private AnimationSequence _default;
 
-		[SerializeField, Tooltip("Trigger state switching if default state value is provided.")]
+		[SerializeField, BoxGroup("Options:"), Tooltip("Trigger state switching if default state value is provided.")]
 		private bool _switchIfDefaultValue;
+		[SerializeField, BoxGroup("Options:")]
+		private bool _useCache;
 
 		[Space, LabelText("State To Enable")]
 		[SerializeField]
@@ -51,11 +53,20 @@ namespace UI
 			}
 		}
 
-		protected override bool UseEquals => true;
+		protected override bool UseEquals { get => true; }
 
 		private void Awake() => Clear();
-
 		private void OnDestroy() => Clear();
+
+		protected override void BeforeStateSwitched(TState state)
+		{
+			if (!EqualityComparer<TState>.Default.Equals(current, default) &&
+				_cached.TryGetValue(current, out var cachedTween) &&
+				cachedTween.IsPlaying())
+			{
+				cachedTween.Complete(true);
+			}
+		}
 
 		protected override void OnStateSwitched(TState state)
 		{
@@ -73,17 +84,9 @@ namespace UI
 				return;
 			}
 
-			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
-			{
-				_cached[state] = tween = mappedSequences.GetValueOrDefaultSafe(state, _default)
-				   .ToTween(this)
-				   .SetAutoKill(false);
-			}
-
-			if (tween.playedOnce)
-				tween.Restart();
-			else
-				tween.Play();
+			var tween = _useCache ?
+				PlayTweenCached(state) :
+				PlayTween(state);
 
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
@@ -104,6 +107,34 @@ namespace UI
 #endif
 		}
 
+		private Tween PlayTween(TState state)
+		{
+			_tween?.KillSafe();
+
+			_tween = mappedSequences
+				.GetValueOrDefaultSafe(state, _default)
+				.ToTween(this);
+
+			return _tween;
+		}
+
+		private Tween PlayTweenCached(TState state) //TODO: Not working properly atm.
+		{
+			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
+			{
+				_cached[state] = tween = mappedSequences.GetValueOrDefaultSafe(state, _default)
+				   .ToTween(this)
+				   .SetAutoKill(false);
+			}
+
+			if (tween.playedOnce)
+				tween.Restart();
+			else
+				tween.Play();
+
+			return tween;
+		}
+
 #if UNITY_EDITOR
 		private bool ShowIfClearButton() => _cached.Count > 0;
 
@@ -111,10 +142,17 @@ namespace UI
 #endif
 		private void Clear()
 		{
-			foreach (var tween in _cached.Values)
-				tween?.KillSafe();
+			if (_useCache)
+			{
+				foreach (var tween in _cached.Values)
+					tween?.KillSafe();
 
-			_cached.Clear();
+				_cached.Clear();
+			}
+			else
+			{
+				_tween?.KillSafe();
+			}
 		}
 
 		[Serializable]
