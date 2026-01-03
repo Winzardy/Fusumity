@@ -58,16 +58,6 @@ namespace UI
 		private void Awake() => Clear();
 		private void OnDestroy() => Clear();
 
-		protected override void BeforeStateSwitched(TState state)
-		{
-			if (!EqualityComparer<TState>.Default.Equals(current, default) &&
-				_cached.TryGetValue(current, out var cachedTween) &&
-				cachedTween.IsPlaying())
-			{
-				cachedTween.Complete(true);
-			}
-		}
-
 		protected override void OnStateSwitched(TState state)
 		{
 			if (EqualityComparer<TState>.Default.Equals(state, default) &&
