@@ -10,13 +10,17 @@ namespace Fusumity.Editor.Drawers
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var dictionary = ValueEntry.SmartValue;
-			var sync = dictionary.Length == dictionary.Count;
+			var needSync = dictionary.NeedSync();
 
-			if (!sync)
+			if (needSync)
 			{
-				var msg = $"Out of sync: serialized length ({dictionary.Length}) ≠ runtime length ({dictionary.Count})\n" +
+				var msg =
+					"Dictionary is out of sync\n" +
+					"Serialized data does not match runtime data\n\n" +
 					"Synchronization is required!";
 				var buttonLabel = "Sync";
+
+				Debug.LogError(msg);
 
 				if (FusumityEditorGUILayout.MessageBoxButton(msg, buttonLabel, MessageType.Error))
 				{

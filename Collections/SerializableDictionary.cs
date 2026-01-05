@@ -9,14 +9,15 @@ namespace Fusumity.Collections
 	public interface ISerializableDictionary : IDictionary
 	{
 		/// <summary>
-		/// Длина сериализованного списка
-		/// </summary>
-		public int Length { get; }
-
-		/// <summary>
 		/// Синхронизирует сериализованное представление со значениями из runtime-кеша словаря
 		/// </summary>
 		public void Sync();
+
+		/// <summary>
+		/// Проверяет, совпадают ли сериализованное представление
+		/// и runtime-содержимое словаря (ключи и значения)
+		/// </summary>
+		public bool NeedSync();
 	}
 
 	[Serializable]
@@ -159,6 +160,28 @@ namespace Fusumity.Collections
 		}
 
 		void ISerializableDictionary.Sync() => Sync();
+
+		bool ISerializableDictionary.NeedSync()
+		{
+			if (elements == null)
+				return true;
+
+			if (elements.Length != Count)
+				return true;
+
+			for (int i = 0; i < elements.Length; i++)
+			{
+				ref readonly var pair = ref elements[i];
+
+				if (!TryGetValue(pair.Key, out var runtimeValue))
+					return true;
+
+				if (!EqualityComparer<TValue>.Default.Equals(pair.Value, runtimeValue))
+					return true;
+			}
+
+			return false;
+		}
 
 		private void Sync()
 		{
