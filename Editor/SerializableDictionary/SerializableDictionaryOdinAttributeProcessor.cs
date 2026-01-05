@@ -22,6 +22,8 @@ namespace Fusumity.Editor
 				return;
 
 			dictionary.Sync();
+			property.MarkSerializationRootDirty();
+			property.ValueEntry.ApplyChanges();
 		}
 	}
 }
