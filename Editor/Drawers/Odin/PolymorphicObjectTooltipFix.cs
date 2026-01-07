@@ -5,6 +5,7 @@ using Fusumity.Editor.Utility;
 using Sapientia;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEditor;
 using UnityEngine;
 
@@ -73,7 +74,16 @@ namespace Fusumity.Editor
 	[DrawerPriority(DrawerPriorityLevel.WrapperPriority)]
 	public class SerializeReferenceHintDrawer : OdinAttributeDrawer<SerializeReference>
 	{
-		private bool? _isSerializeReferenceCache;
+		private const string KEY = "SerializeReferenceHintDrawer";
+
+		protected override bool CanDrawAttributeProperty(InspectorProperty property)
+		{
+			if (property.Context.GetPersistent<bool>(this, KEY, out var ctx))
+				return ctx.Value;
+
+			ctx.Value = property.ValueEntry.BaseValueType.IsSerializeReference();
+			return ctx.Value;
+		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
@@ -85,8 +95,6 @@ namespace Fusumity.Editor
 		{
 			var entry = Property.ValueEntry;
 			var type = entry.TypeOfValue;
-			if (!IsSerializeReference())
-				return false;
 			if (type == null)
 				return false;
 			if (!TypeHint.TryGet(type, out var hint))
@@ -96,16 +104,6 @@ namespace Fusumity.Editor
 			rect = rect.AlignTop(EditorGUIUtility.singleLineHeight);
 			GUI.Label(rect, new GUIContent(string.Empty, hint.message));
 			return true;
-		}
-
-		private bool IsSerializeReference()
-		{
-			if (_isSerializeReferenceCache.TryGetValue(out var cache))
-				return cache;
-			var entry = Property.ValueEntry;
-			var isSerializeReference = entry.BaseValueType.IsSerializeReference();
-			_isSerializeReferenceCache = isSerializeReference;
-			return isSerializeReference;
 		}
 	}
 }
