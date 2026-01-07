@@ -28,7 +28,7 @@ namespace Fusumity.Editor
 				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 				{
 					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(FilterByConditionRoot)}($type, $property)",
-					ShowNoneItem = false,
+					ShowNoneItem = false
 				};
 			}
 			else
@@ -36,7 +36,7 @@ namespace Fusumity.Editor
 				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 				{
 					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(Filter)}($type, $property)",
-					ShowNoneItem = false,
+					ShowNoneItem = false
 				};
 			}
 
