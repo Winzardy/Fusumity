@@ -2,19 +2,15 @@ using System;
 using System.Collections.Generic;
 using Content;
 using Fusumity.Editor.Utility;
-using Sapientia;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
-using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 using UnityEditor;
 using UnityEngine;
 
 namespace Fusumity.Editor
 {
-	/// <summary>
 	/// Набор editor-классов для корректного отображения tooltip’ов
 	/// для полиморфных типов в Odin Inspector
-	/// </summary>
 	public class TypeSelectorV2AttributeProcessor : OdinAttributeProcessor<TypeSelectorV2>
 	{
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
@@ -43,11 +39,11 @@ namespace Fusumity.Editor
 
 			foreach (var item in tree.MenuItems)
 			{
-				DrawInfo(item);
+				DrawItemInfo(item);
 			}
 		}
 
-		private static void DrawInfo(OdinMenuItem item)
+		private void DrawItemInfo(OdinMenuItem item)
 		{
 			if (item.Value is not Type type)
 				return;
