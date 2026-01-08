@@ -21,7 +21,7 @@ namespace AssetManagement
 
 		public void TryRelease()
 		{
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 
 			if (!_preloaded)
 				return;

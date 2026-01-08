@@ -63,7 +63,7 @@ namespace Audio
 
 			_idToMixerGroup = null;
 
-			AsyncUtility.Trigger(ref _cts);
+			AsyncUtility.TriggerAndSetNull(ref _cts);
 
 			foreach (var player in _audioPlayers)
 			{

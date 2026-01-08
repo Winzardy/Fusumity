@@ -44,6 +44,8 @@ namespace UI
 			if (image == null || entry.IsEmptyOrInvalid())
 				return;
 
+			TryCancelOrClear(image);
+
 			if (disableDuringLoad)
 			{
 				image.enabled = false;
@@ -172,7 +174,7 @@ namespace UI
 			spriteEntry?.Release();
 			spriteEntry = null;
 
-			AsyncUtility.Trigger(ref cts);
+			AsyncUtility.TriggerAndSetNull(ref cts);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 namespace Content.ScriptableObjects.UI
 {
+	using UnityEngine;
 #if UNITY_EDITOR
 	using UnityEditor;
 	using Content.ScriptableObjects.Editor;
@@ -16,5 +17,7 @@ namespace Content.ScriptableObjects.UI
 #endif
 	public class UIDatabaseScriptableObject : ContentDatabaseScriptableObject
 	{
+		public Sprite placeholderSprite;
+		public Color placeholderColor;
 	}
 }

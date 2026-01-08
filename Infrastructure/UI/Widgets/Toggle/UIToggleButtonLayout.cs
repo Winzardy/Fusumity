@@ -15,6 +15,9 @@ namespace UI
 		[SerializeReference]
 		public SequenceParticipant offSequence;
 
+		[Space]
+		public StateSwitcher<bool> activitySwitcher;
+
 		private void OnValidate()
 		{
 			if (Application.isPlaying)

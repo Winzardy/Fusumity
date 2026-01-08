@@ -17,7 +17,7 @@ namespace UI
 
 		protected internal override void OnBeganClosingInternal()
 		{
-			AsyncUtility.Trigger(ref _closableCts);
+			AsyncUtility.TriggerAndSetNull(ref _closableCts);
 			base.OnBeganClosingInternal();
 		}
 
@@ -36,7 +36,7 @@ namespace UI
 		}
 
 		protected void CancelRequestClose()
-			=> AsyncUtility.Trigger(ref _closableCts);
+			=> AsyncUtility.TriggerAndSetNull(ref _closableCts);
 
 	}
 

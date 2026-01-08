@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UI
 {
-	public class DefaultToggleButtonViewModel : IToggleButtonViewModel
+	public class UIDefaultToggleButtonViewModel : IToggleButtonViewModel
 	{
 		public int Index { get; }
 		public IAssetReferenceEntry<Sprite> Icon { get; private set; }
@@ -18,14 +18,18 @@ namespace UI
 		public event Action LabelChanged;
 		public event Action StyleChanged;
 
-		public event Action<DefaultToggleButtonViewModel> Clicked;
+		public event Action<UIDefaultToggleButtonViewModel> Clicked;
 
-		public DefaultToggleButtonViewModel(int index, bool isToggled, IAssetReferenceEntry<Sprite> icon, string label)
+		public UIDefaultToggleButtonViewModel(int index, bool isToggled)
 		{
 			Index = index;
+			IsToggled = isToggled;
+		}
+
+		public UIDefaultToggleButtonViewModel(int index, bool isToggled, IAssetReferenceEntry<Sprite> icon, string label) : this(index, isToggled)
+		{
 			Icon = icon;
 			Label = label;
-			IsToggled = isToggled;
 		}
 
 		public void Click() => Clicked?.Invoke(this);

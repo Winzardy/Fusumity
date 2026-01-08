@@ -135,6 +135,9 @@ namespace UI
 				_target = state;
 
 			DoStateTransition((SelectionState) _target.type, instant);
+#if UNITY_EDITOR
+			UnityEditor.EditorUtility.SetDirty(this);
+#endif
 		}
 	}
 

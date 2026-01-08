@@ -108,7 +108,7 @@ namespace UI
 
 			DisposeChildren();
 
-			AsyncUtility.Trigger(ref _disposeCts);
+			AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 
 			GC.SuppressFinalize(this);
 			OnDispose();

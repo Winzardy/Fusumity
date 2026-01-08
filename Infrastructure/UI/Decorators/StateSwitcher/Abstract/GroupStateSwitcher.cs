@@ -6,7 +6,7 @@ namespace UI
 	public abstract class GroupStateSwitcher<TState> : StateSwitcher<TState>
 	{
 		[SerializeField]
-		private List<StateSwitcher<TState>> _group;
+		protected List<StateSwitcher<TState>> _group;
 
 		protected override void OnStateSwitched(TState state)
 		{
