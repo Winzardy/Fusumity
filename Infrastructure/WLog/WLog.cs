@@ -370,7 +370,6 @@ namespace WLog
 		[HideInCallstack]
 		[Conditional("UNITY_ASSERTIONS")]
 		[AssertionMethod]
-		[ContractAnnotation("condition:false=>halt")]
 		public static void Assert<T>(this T self, bool condition)
 		{
 			UnityDebug.Assert(condition);
