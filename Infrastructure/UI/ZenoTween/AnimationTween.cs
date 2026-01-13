@@ -130,7 +130,7 @@ namespace ZenoTween
 			StopTweenEditor(false);
 		}
 
-		public void PlayTweenEditor(bool reset = true, bool loop = false)
+		public void PlayTweenEditor(bool reset = false, bool loop = false)
 		{
 			if (DOTweenEditorPreview.isPreviewing)
 				DOTweenEditorPreview.Stop(true);
