@@ -67,9 +67,12 @@ namespace UI
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
-				mappedSequences.GetValueOrDefaultSafe(state, _default)
-				   .ToTween(this)
-				   .Kill(true);
+				var instantTween = mappedSequences
+					.GetValueOrDefaultSafe(state, _default)
+					.ToTween(this);
+
+				instantTween.Complete(true);
+				instantTween.Kill();
 
 				return;
 			}
@@ -79,6 +82,9 @@ namespace UI
 				PlayTween(state);
 
 #if UNITY_EDITOR
+			if (tween == null)
+				return;
+
 			if (!Application.isPlaying)
 			{
 				if (DG.DOTweenEditor.DOTweenEditorPreview.isPreviewing)
@@ -101,9 +107,12 @@ namespace UI
 		{
 			_tween?.KillSafe();
 
-			_tween = mappedSequences
-				.GetValueOrDefaultSafe(state, _default)
-				.ToTween(this);
+			var sequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
+
+			if (sequence.IsNullOrEmpty())
+				return null;
+
+			_tween = sequence.ToTween(this);
 
 			return _tween;
 		}
@@ -112,7 +121,12 @@ namespace UI
 		{
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
-				_cached[state] = tween = mappedSequences.GetValueOrDefaultSafe(state, _default)
+				var sequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
+
+				if (sequence.IsNullOrEmpty())
+					return null;
+
+				_cached[state] = tween = sequence
 				   .ToTween(this)
 				   .SetAutoKill(false);
 			}
