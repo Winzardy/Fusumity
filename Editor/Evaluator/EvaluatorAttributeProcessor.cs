@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using Fusumity.Attributes;
 using Fusumity.Editor.Utility;
+using Fusumity.Utility;
 using Sapientia;
+using Sapientia.Collections;
 using Sapientia.Evaluators;
+using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
@@ -19,15 +22,25 @@ namespace Fusumity.Editor
 			if (typeof(IConstantEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
 				return;
 
+			TypeSelectorSettingsAttribute typeSelectorSettingsAttribute;
 			if (TopSemanticAncestorIsCondition(property))
 			{
-				var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
+				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 				{
-					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(FilterByConditionRoot)}($type, $property)"
+					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(FilterByConditionRoot)}($type, $property)",
+					ShowNoneItem = false
 				};
-
-				attributes.Add(typeSelectorSettingsAttribute);
 			}
+			else
+			{
+				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
+				{
+					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(Filter)}($type, $property)",
+					ShowNoneItem = false
+				};
+			}
+
+			attributes.Add(typeSelectorSettingsAttribute);
 
 			var c = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
 			var color = Color.Lerp(c, Color.white, 0.83f);
@@ -49,15 +62,38 @@ namespace Fusumity.Editor
 		}
 
 		// Тут фильтр для случая когда корнем древа был Condition
-		private static bool FilterByConditionRoot(Type type, InspectorProperty property)
+		internal static bool FilterByConditionRoot(Type type, InspectorProperty property)
 		{
-			if (typeof(IRandomEvaluator).IsAssignableFrom(type))
+			var finalType = type.GetFinalCollectionElementType();
+			if (typeof(IRandomEvaluator).IsAssignableFrom(finalType))
 				return false;
+
+			return Filter(finalType, property);
+		}
+
+		internal static bool Filter(Type type, InspectorProperty property)
+		{
+			var finalType = type.GetFinalCollectionElementType();
+
+			if (typeof(IConstantEvaluator).IsAssignableFrom(finalType))
+			{
+				if (finalType.IsGenericType)
+				{
+					var valueType = finalType.GetGenericArguments()
+						.SecondOrDefault();
+
+					if (valueType != null)
+					{
+						if (!valueType.IsUnitySerializableType())
+							return false;
+					}
+				}
+			}
 
 			return true;
 		}
 
-		private static bool TopSemanticAncestorIsCondition(InspectorProperty property)
+		internal static bool TopSemanticAncestorIsCondition(InspectorProperty property)
 		{
 			InspectorProperty top = null;
 

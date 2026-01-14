@@ -1,4 +1,6 @@
 using System;
+using Fusumity.Utility;
+using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -29,6 +31,7 @@ namespace UI
 #if UNITY_EDITOR
 		[NonSerialized]
 		public Vector3 gizmoWorldPosition;
+
 		[NonSerialized]
 		public Vector3 gizmoWorldOffsetPosition;
 

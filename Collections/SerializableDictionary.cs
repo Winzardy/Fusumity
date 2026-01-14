@@ -1,10 +1,25 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Fusumity.Collections
 {
+	public interface ISerializableDictionary : IDictionary
+	{
+		/// <summary>
+		/// Синхронизирует сериализованное представление со значениями из runtime-кеша словаря
+		/// </summary>
+		public void Sync();
+
+		/// <summary>
+		/// Проверяет, совпадают ли сериализованное представление
+		/// и runtime-содержимое словаря (ключи и значения)
+		/// </summary>
+		public bool NeedSync();
+	}
+
 	[Serializable]
 	public class SerializableReferenceDictionary<TKey, TValue> : SerializableDictionary<TKey, TValue, KeyReferenceValue<TKey, TValue>>
 		where TValue : class
@@ -82,7 +97,9 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>,
+		ISerializableDictionary,
+		ISerializationCallbackReceiver
 		where TKeyValue : struct, IKeyValue<TKey, TValue>
 	{
 #if NEWTONSOFT
@@ -90,6 +107,8 @@ namespace Fusumity.Collections
 #endif
 		[SerializeField, HideInInspector]
 		protected TKeyValue[] elements;
+
+		public int Length => elements?.Length ?? 0;
 
 		protected SerializableDictionary() : base()
 		{
@@ -127,6 +146,45 @@ namespace Fusumity.Collections
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
+			Sync();
+		}
+
+		void ISerializationCallbackReceiver.OnAfterDeserialize()
+		{
+			Clear();
+
+			elements ??= new TKeyValue[Count];
+
+			for (var i = 0; i < elements.Length; i++)
+				TryAdd(elements[i].Key, elements[i].Value);
+		}
+
+		void ISerializableDictionary.Sync() => Sync();
+
+		bool ISerializableDictionary.NeedSync()
+		{
+			if (elements == null)
+				return true;
+
+			if (elements.Length != Count)
+				return true;
+
+			for (int i = 0; i < elements.Length; i++)
+			{
+				ref readonly var pair = ref elements[i];
+
+				if (!TryGetValue(pair.Key, out var runtimeValue))
+					return true;
+
+				if (!EqualityComparer<TValue>.Default.Equals(pair.Value, runtimeValue))
+					return true;
+			}
+
+			return false;
+		}
+
+		private void Sync()
+		{
 			if (elements == null || elements.Length != Count)
 				elements = new TKeyValue[Count];
 
@@ -139,15 +197,6 @@ namespace Fusumity.Collections
 
 				elements[i++] = keyValue;
 			}
-		}
-
-		void ISerializationCallbackReceiver.OnAfterDeserialize()
-		{
-			if (elements == null)
-				elements = new TKeyValue[Count];
-
-			for (var i = 0; i < elements.Length; i++)
-				TryAdd(elements[i].Key, elements[i].Value);
 		}
 	}
 

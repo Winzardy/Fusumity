@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Evaluators;
 using Sirenix.Config;
@@ -27,7 +28,9 @@ namespace Fusumity.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-			attributes.Add(new HideReferenceObjectPickerAttribute());
+			if (property.ValueEntry.WeakSmartValue is IConstantEvaluator evaluator)
+				if (evaluator.ValueType.IsUnitySerializableType())
+					attributes.Add(new HideReferenceObjectPickerAttribute());
 
 			// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
 			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
@@ -38,6 +41,7 @@ namespace Fusumity.Editor
 			{
 				settings = new TypeSettings();
 				typeConfig.SetSettings(constantType, settings);
+
 				EditorUtility.SetDirty(typeConfig);
 			}
 
@@ -46,6 +50,8 @@ namespace Fusumity.Editor
 			settings.DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
 			settings.LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
 			settings.Icon = SdfIconType.DiamondFill;
+
+			typeConfig.SetPriority(constantType, 10000, null);
 		}
 	}
 

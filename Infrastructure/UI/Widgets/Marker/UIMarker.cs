@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using JetBrains.Annotations;
@@ -28,7 +29,7 @@ namespace UI
 	{
 		public T nestedArgs;
 
-		//Самый приоритетный
+		// Самый приоритетный
 		public Transform target;
 		public Func<Vector3> positionFunc;
 		public Vector3? position;
@@ -50,8 +51,11 @@ namespace UI
 		/// </summary>
 		public Func<bool> visibleFunc;
 
-		//TODO: доделать
+		// Не работает если не передать distanceOrigin или distanceOriginFunc
 		public Range<float>? distance;
+
+		public Transform distanceOrigin;
+		public Func<Vector3> distanceOriginFunc;
 
 		public RectTransform area;
 
@@ -160,6 +164,23 @@ namespace UI
 			//Виден ли маркер по "custom" логике?
 			var visible = _args.visibleFunc?.Invoke() ?? true;
 
+			var distanceOriginPosition = _args.distanceOrigin
+				? _args.distanceOrigin.transform.position
+				: _args.distanceOriginFunc?.Invoke();
+			if (args.distance.TryGetValue(out var distanceRange))
+			{
+				if (distanceOriginPosition.TryGetValue(out var position))
+				{
+					var distance = worldPosition - position;
+
+					if (!distanceRange.Contains(distance))
+					{
+						DisableInternal();
+						return;
+					}
+				}
+			}
+
 #if UNITY_EDITOR
 			_layout.gizmoWorldPosition = worldPosition;
 			_layout.gizmoWorldOffsetPosition = offset;
@@ -170,18 +191,22 @@ namespace UI
 				(!_args.offscreen && !camera.IsTargetOnFrustum(in _cacheInput)) ||
 				(_args is {offscreen: true, hideOffscreenInFrustum: true} && camera.IsTargetOnFrustum(in _cacheInput)))
 			{
-				TryDisable(animation, force);
-
-				if (_calculateOnAnimation)
-					CalculateAndUpdatePosition();
-
+				DisableInternal();
 				return;
 			}
 
 			var forceUpdatePosition = TryEnable(animation, force);
-			CalculateAndUpdatePosition(forceUpdatePosition);
+			CalculateAndUpdatePositionInternal(forceUpdatePosition);
 
-			void CalculateAndUpdatePosition(bool forceUpdatePosition = false)
+			void DisableInternal()
+			{
+				TryDisable(animation, force);
+
+				if (_calculateOnAnimation)
+					CalculateAndUpdatePositionInternal();
+			}
+
+			void CalculateAndUpdatePositionInternal(bool forceUpdatePosition = false)
 			{
 				camera.CalculateScreenTransform(in _cacheInput, out var output);
 				{
