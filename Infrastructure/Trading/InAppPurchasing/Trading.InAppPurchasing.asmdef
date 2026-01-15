@@ -1,0 +1,19 @@
+{
+    "name": "Trading.InAppPurchasing",
+    "rootNamespace": "",
+    "references": [
+        "Trading",
+        "InAppPurchasing",
+        "Sapientia",
+        "Content"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

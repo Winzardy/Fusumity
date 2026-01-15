@@ -1,0 +1,10 @@
+{
+  "name": "Trading.UsagePass",
+  "references": [
+    "GUID:5178fdc142b4c42dfa60a02d476ababc",
+    "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+    "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
+    "GUID:343deaaf83e0cee4ca978e7df0b80d21",
+    "GUID:2bafac87e7f4b9b418d9448d219b01ab"
+  ]
+}
