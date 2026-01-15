@@ -12,10 +12,14 @@ namespace Fusumity.MVVM.UI
 		private UISpriteAssigner _assigner;
 		private Tween _tween;
 
-		public StaticImageView(Image layout) : base(layout)
+		private bool _animated;
+
+		public StaticImageView(Image layout, bool animated = true) : base(layout)
 		{
 			AddDisposable(_assigner = new UISpriteAssigner());
 			layout.SetActive(false);
+
+			_animated = animated;
 		}
 
 		protected override void OnDispose()
@@ -29,8 +33,16 @@ namespace Fusumity.MVVM.UI
 			_assigner.TrySetSprite(_layout, entry, PlayAppearTween, true);
 		}
 
+		protected override void OnNullViewModel()
+		{
+			_layout.SetActive(false);
+		}
+
 		private void PlayAppearTween()
 		{
+			if (!_animated)
+				return;
+
 			_tween = _layout.DOFade(1, 0.45f).From(0);
 		}
 	}

@@ -14,11 +14,11 @@ namespace Fusumity.MVVM
 		where TView : class, IView
 		where TViewLayout : MonoBehaviour
 	{
-		public ViewCollection(TViewLayout prefab, Transform root = null) : base(prefab, root)
+		public ViewCollection(ViewCollectionLayout<TViewLayout> layout) : base(layout)
 		{
 		}
 
-		public ViewCollection(ViewCollectionLayout<TViewLayout> layout) : base(layout)
+		public ViewCollection(TViewLayout prefab, Transform root = null) : base(prefab, root)
 		{
 		}
 

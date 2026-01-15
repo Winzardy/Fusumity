@@ -16,7 +16,7 @@ namespace Content.Editor
 			{
 				if (rawDatabase is IContentEntryScriptableObject<T> database)
 				{
-					database.Edit(editing);
+					database.EditValue(editing);
 					return;
 				}
 
@@ -25,7 +25,7 @@ namespace Content.Editor
 					if (target is not IContentEntryScriptableObject<T> scriptableObject)
 						continue;
 
-					scriptableObject.Edit(editing);
+					scriptableObject.EditValue(editing);
 					return;
 				}
 			}
@@ -45,7 +45,7 @@ namespace Content.Editor
 					if (source.Id != id)
 						continue;
 
-					source.Edit(editing);
+					source.EditValue(editing);
 					return;
 				}
 			}
@@ -65,7 +65,7 @@ namespace Content.Editor
 					if (source.UniqueContentEntry.Guid != guid)
 						continue;
 
-					source.Edit(editing);
+					source.EditValue(editing);
 					return;
 				}
 			}
@@ -85,7 +85,7 @@ namespace Content.Editor
 					if (source.UniqueContentEntry.Guid != reference.guid)
 						continue;
 
-					source.Edit(editing);
+					source.EditValue(editing);
 					return;
 				}
 			}

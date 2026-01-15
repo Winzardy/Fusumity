@@ -24,7 +24,19 @@ namespace UI
 		[SerializeField]
 		private Vector2 _range = new Vector2(0, 1);
 
+		[SerializeField, BoxGroup]
+		private bool _updateInEditMode = true;
+		[SerializeField, BoxGroup]
+		[Tooltip("Use Time.realtimeSinceStartup instead of the local tick when updating, to sync with other pulsars.")]
+		private bool _useGlobalTick = true;
+		[SerializeField, BoxGroup, ShowIf("@this._useGlobalTick == false")]
+		private bool _resetTickOnEnable = true;
+		[SerializeField, BoxGroup]
+		[Tooltip("Reset value to 0 instead of the lower range on disabling.")]
+		private bool _resetValueToZero;
+
 		private bool _subscribed;
+		private float _localTick;
 
 		private void OnEnable() => TrySubscribe();
 
@@ -37,10 +49,11 @@ namespace UI
 			if (_subscribed)
 				return;
 
+			_localTick = 0;
 			_subscribed = true;
 			UnityLifecycle.UpdateEvent.Subscribe(OnUpdate);
 			OnEnabled();
-			OnUpdate(0);
+			SetInitialValue();
 		}
 
 		private void TryUnsubscribe()
@@ -48,10 +61,19 @@ namespace UI
 			if (!_subscribed)
 				return;
 
+			_localTick = 0;
 			_subscribed = false;
 			UnityLifecycle.UpdateEvent.UnSubscribe(OnUpdate);
 			OnDisabled();
-			OnUpdate(0);
+
+			if (_resetValueToZero)
+			{
+				OnUpdate(0);
+			}
+			else
+			{
+				SetInitialValue();
+			}
 		}
 
 		protected virtual void OnEnabled()
@@ -64,9 +86,23 @@ namespace UI
 
 		private void OnUpdate()
 		{
-			var remainder = Time.realtimeSinceStartup % _interval;
+			if (!_useGlobalTick)
+			{
+				_localTick += Time.deltaTime;
+			}
+
+			var time = _useGlobalTick ? Time.realtimeSinceStartup : _localTick;
+
+			var remainder = time % _interval;
 			var normalizedValue = remainder / _interval;
 			var f = _curve.Evaluate(normalizedValue);
+			var value = _range.x + (f * (_range.y - _range.x));
+			OnUpdate(value);
+		}
+
+		private void SetInitialValue()
+		{
+			var f = _curve.Evaluate(0);
 			var value = _range.x + (f * (_range.y - _range.x));
 			OnUpdate(value);
 		}
@@ -76,10 +112,10 @@ namespace UI
 #if UNITY_EDITOR
 		private void Update()
 		{
-			if (Application.isPlaying)
-				return;
-
-			OnUpdate();
+			if (_updateInEditMode && !Application.isPlaying)
+			{
+				OnUpdate();
+			}
 		}
 #endif
 	}

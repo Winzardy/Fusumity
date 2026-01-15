@@ -12,7 +12,6 @@ namespace Fusumity.MVVM.UI
 	/// </summary>
 	public abstract class UIViewCollection<TViewModel, TView, TViewLayout> : ViewCollection<TViewModel, TView, TViewLayout>
 		where TView : UIView<TViewModel, TViewLayout>
-		where TViewModel : class
 		where TViewLayout : UIBaseLayout
 	{
 		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)

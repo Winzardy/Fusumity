@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UI
@@ -19,7 +20,8 @@ namespace UI
 
 		public void Switch(TState value, bool force = false)
 		{
-			if (UseEquals && current.Equals(value) && !force)
+			if (UseEquals && !force &&
+				EqualityComparer<TState>.Default.Equals(current, value))
 				return;
 
 			current = value;

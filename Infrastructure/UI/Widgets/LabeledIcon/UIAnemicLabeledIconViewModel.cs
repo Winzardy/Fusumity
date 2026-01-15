@@ -1,4 +1,4 @@
-﻿using AssetManagement;
+﻿using Sapientia.Extensions;
 using System;
 using UI;
 using UnityEngine;
@@ -22,6 +22,25 @@ namespace Game.UI
 		public event Action IconColorChanged;
 		public event Action LabelColorChanged;
 
+		public void Clear()
+		{
+			if (!Icon.IsEmptyOrInvalid())
+				Icon = default;
+
+			if (!Label.IsNullOrEmpty())
+				Label = default;
+
+			if (_iconColor.HasValue)
+				IconColor = default;
+
+			if (LabelColor.HasValue)
+				LabelColor = default;
+		}
+
+		/// <summary>
+		/// Resets silently to a default state,
+		/// does not produce events (view will not react).
+		/// </summary>
 		public void Reset()
 		{
 			_icon = default;
