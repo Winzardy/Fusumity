@@ -347,7 +347,7 @@ namespace Fusumity.Utility
 
 			if (!System.IO.File.Exists(xmlPath))
 			{
-				Debug.LogWarning($"Missing XML-doc by path: {xmlPath}");
+				//Debug.LogWarning($"Missing XML-doc by path: {xmlPath}");
 				return false;
 			}
 
