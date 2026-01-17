@@ -43,6 +43,7 @@ namespace Fusumity.MVVM.UI
 			if (!_animated)
 				return;
 
+			_tween?.Kill();
 			_tween = _layout.DOFade(1, 0.45f).From(0);
 		}
 	}
