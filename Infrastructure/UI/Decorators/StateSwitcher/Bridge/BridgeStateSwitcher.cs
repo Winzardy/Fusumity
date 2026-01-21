@@ -1,61 +1,54 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using Fusumity.Attributes.Odin;
 using Fusumity.Collections;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace UI.Bridge
 {
-	public enum BridgeMode
+	public abstract class BridgeStateSwitcher<TState, TLinkedState> : StateSwitcher<TState>
 	{
-		Single,
-		Group
-	}
-
-	public abstract class BridgeStateSwitcher<TInputState, TOutputState> : StateSwitcher<TInputState>, IBridgeStateSwitcher
-	{
-		public Type InputType { get => typeof(TInputState); }
-		public Type OutputType { get => typeof(TOutputState); }
-
-		private BridgeMode _mode;
-
-		[FormerlySerializedAs("_switcher")]
 		[SerializeField]
-		[NotNull]
-		private StateSwitcher<TOutputState> _single;
+		private StateSwitcher<TLinkedState> _switcher;
+
+		[SerializeField, InlineToggle(nameof(_ignoreDefault), "Ignore", margins = 5)]
+		private TLinkedState _default;
+
+		/// <summary>
+		/// If enabled - default TState and states that are not assigned in the dictionary -
+		/// will be completely ignored, the fallback (_default) state will not be used.
+		/// </summary>
+		[SerializeField, HideInInspector]
+		private bool _ignoreDefault;
 
 		[SerializeField]
-		[NotNull]
-		public List<StateSwitcher<TOutputState>> _group;
+		[InfoBox("Null, default and non-assigned states will be ignored", InfoMessageType.Warning, VisibleIf = nameof(_ignoreDefault))]
+		[LabelText("State To Linked State"), DictionaryDrawerSettings(KeyLabel = "State", ValueLabel = "Linked State")]
+		private SerializableDictionary<TState, TLinkedState> _dictionary;
 
-		[SerializeField]
-		private TOutputState _default;
-
-		[SerializeField]
-		private SerializableDictionary<TInputState, TOutputState> _dictionary;
-
-		protected override void OnStateSwitched(TInputState state)
+		protected override void OnStateSwitched(TState state)
 		{
-			var linkedState = _dictionary.GetValueOrDefaultSafe(state, _default);
-			switch (_mode)
+			if (TryRetrieveLinkedState(state, out var linkedState))
 			{
-				case BridgeMode.Single:
-					_single.Switch(linkedState);
-					break;
-				case BridgeMode.Group:
-					foreach (var switcher in _group)
-						switcher.Switch(linkedState);
-					break;
+				_switcher.Switch(linkedState);
 			}
 		}
-	}
 
-	public interface IBridgeStateSwitcher
-	{
-		public Type InputType { get; }
-		public Type OutputType { get; }
+		private bool TryRetrieveLinkedState(TState providedState, out TLinkedState linkedState)
+		{
+			linkedState = default;
+
+			if (_ignoreDefault)
+			{
+				if (EqualityComparer<TState>.Default.Equals(providedState, default))
+					return false;
+
+				return _dictionary.TryGetValue(providedState, out linkedState);
+			}
+
+			linkedState = _dictionary.GetValueOrDefaultSafe(providedState, _default);
+			return true;
+		}
 	}
 }

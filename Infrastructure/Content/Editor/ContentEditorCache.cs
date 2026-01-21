@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Fusumity.Editor.Utility;
-using Sapientia;
 using Sapientia.Collections;
 using UnityEngine;
 
@@ -13,6 +12,8 @@ namespace Content.Editor
 
 	public static class ContentEditorCache
 	{
+		private static Dictionary<Type, int> _typeToVersion = new();
+
 		private static Dictionary<string, ScriptableObject> _cache;
 
 		private static Dictionary<string, ScriptableObject> cache
@@ -20,7 +21,7 @@ namespace Content.Editor
 			get
 			{
 				if (_cache == null)
-					Refresh();
+					ClearAndRefreshScrObjs();
 
 				return _cache;
 			}
@@ -28,7 +29,7 @@ namespace Content.Editor
 
 		public static int version => _cache.Count;
 
-		public static void Refresh()
+		public static void ClearAndRefreshScrObjs()
 		{
 			_cache ??= new();
 			_cache.Clear();
@@ -155,6 +156,10 @@ namespace Content.Editor
 
 		private static void Refresh(Type type)
 		{
+			if (_typeToVersion.TryGetValue(type, out var currentVersion)
+				&& currentVersion == version)
+				return;
+
 			EditorContentEntryMap.Clear(type);
 			EditorSingleContentEntryShortcut.Clear(type);
 
@@ -176,6 +181,8 @@ namespace Content.Editor
 
 				Register(valueType, target);
 			}
+
+			_typeToVersion[type] = version;
 		}
 
 		private static void Register(Type valueType, IContentEntrySource target)

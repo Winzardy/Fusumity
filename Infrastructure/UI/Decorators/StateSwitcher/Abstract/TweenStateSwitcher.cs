@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
 using DG.Tweening;
 using Fusumity.Collections;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using ZenoTween;
 using ZenoTween.Utility;
@@ -16,7 +16,7 @@ namespace UI
 		[NonSerialized]
 		private readonly Dictionary<TState, Tween> _cached = new();
 
-		[SerializeField, HideLabel, BoxGroup("Default State")]
+		[SerializeField, HideLabel, FoldoutGroup("Default State")]
 		private AnimationSequence _default;
 
 		[Space, LabelText("State To Enable"), DictionaryDrawerSettings(KeyLabel = "State", ValueLabel = "Sequence")]
@@ -40,7 +40,6 @@ namespace UI
 
 				return;
 			}
-
 
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{

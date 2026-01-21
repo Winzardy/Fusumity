@@ -1,4 +1,5 @@
 ﻿using Fusumity.Collections;
+using Sapientia.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,11 +15,7 @@ namespace UI
 
 		protected override void OnStateSwitched(TFirstState state)
 		{
-			if(!_mappings.TryGetValue(state, out var adaptedState))
-			{
-				GUIDebug.LogError($"State is not present in map: [ {state} ]");
-				return;
-			}
+			var adaptedState = _mappings.GetValueOrDefaultSafe(state);
 
 			foreach (var item in _group)
 			{

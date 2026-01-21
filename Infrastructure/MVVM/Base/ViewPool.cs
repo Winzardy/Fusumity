@@ -10,7 +10,7 @@ namespace Fusumity.MVVM
 		void Release(IView obj);
 	}
 
-	public class ViewPool<TView> : ObjectPool<TView>, IViewPool where TView : class, IView
+	public class ViewPool<TView> : OrderedPool<TView>, IViewPool where TView : class, IView
 	{
 		public ViewPool(IObjectPoolPolicy<TView> policy) : base(policy)
 		{

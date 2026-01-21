@@ -105,7 +105,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			AssetDatabase.SaveAssets();
-			ContentEditorCache.Refresh();
+			ContentEditorCache.ClearAndRefreshScrObjs();
 			ContentEntryEditorUtility.ClearCache();
 		}
 
