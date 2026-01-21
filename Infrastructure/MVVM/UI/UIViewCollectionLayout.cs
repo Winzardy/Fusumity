@@ -1,11 +1,14 @@
-﻿using UI;
+﻿using System.Diagnostics.CodeAnalysis;
+using UI;
 using UnityEngine;
 
 namespace Fusumity.MVVM.UI
 {
 	public abstract class UIViewCollectionLayout<TViewLayout> : UIBaseLayout
 	{
-		public TViewLayout template;
+		[NotNull]
 		public RectTransform root;
+		[NotNull]
+		public TViewLayout template;
 	}
 }

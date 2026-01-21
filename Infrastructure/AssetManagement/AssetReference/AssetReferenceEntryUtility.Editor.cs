@@ -21,7 +21,7 @@ namespace AssetManagement
 			string group = null,
 			string label = null, bool createGroupIfNonExistent = true) where T : Component
 		{
-			if (!value.TryGetComponent(out T _))
+			if (value != null && !value.TryGetComponent(out T _))
 			{
 				AssetManagementDebug.LogError($"Component of type <b>{typeof(T).Name}</b> was not found on GameObject [ {value.name} ]", value);
 				return;

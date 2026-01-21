@@ -56,9 +56,7 @@ namespace UI.Windows.Editor
 			var types = ReflectionUtility.GetAllTypes<IWindow>(false);
 			foreach (var type in types)
 			{
-				var name = type.Name
-					.Replace("Window", string.Empty);
-
+				var name = UIDispatcherUtility.Clear(type, "Window");
 				yield return new ValueDropdownItem(name, type);
 			}
 		}

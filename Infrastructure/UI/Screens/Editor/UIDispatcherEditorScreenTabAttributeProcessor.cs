@@ -59,9 +59,7 @@ namespace UI.Screens.Editor
 			var types = ReflectionUtility.GetAllTypes<IScreen>(false);
 			foreach (var type in types)
 			{
-				var name = type.Name
-					.Replace("Screen", string.Empty);
-
+				var name = UIDispatcherUtility.Clear(type, "Screen");
 				yield return new ValueDropdownItem(name, type);
 			}
 		}

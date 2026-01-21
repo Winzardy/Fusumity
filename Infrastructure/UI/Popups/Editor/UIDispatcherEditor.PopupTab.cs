@@ -39,19 +39,9 @@ namespace UI.Popups.Editor
 		{
 			argsInspector.Clear();
 
-			var baseType = this.type?.BaseType;
+			var argsType = UIDispatcherUtility.ResolveArgsType(type);
 
-			if (baseType is not {IsGenericType: true})
-				return;
-
-			var arguments = baseType.GetGenericArguments();
-
-			if (arguments.Length < 2)
-				return;
-
-			var argsType = arguments[1];
-
-			if (argsType == typeof(EmptyArgs))
+			if (type == null)
 				return;
 
 			argsInspector.SetType(argsType);

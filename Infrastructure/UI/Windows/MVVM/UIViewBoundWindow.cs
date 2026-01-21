@@ -29,7 +29,7 @@ namespace UI.Windows
 			_onClose = action;
 		}
 
-		protected override sealed void OnLayoutInstalled()
+		protected sealed override void OnLayoutInstalled()
 		{
 			_view = CreateView(_layout);
 			OnViewCreated();

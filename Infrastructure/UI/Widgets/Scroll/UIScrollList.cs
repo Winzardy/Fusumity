@@ -41,6 +41,15 @@ namespace UI.Scroll
 
 		public event Action<TItemArgs[], float> Updated;
 
+		public UIScrollList(UIScrollLayout layout)
+		{
+			SetupLayout(layout);
+		}
+
+		public UIScrollList()
+		{
+		}
+
 		protected sealed override void OnCellInitialized(UIScrollItemLayout cell)
 		{
 			var layout = (TItemLayout) cell;
@@ -382,7 +391,7 @@ namespace UI.Scroll
 			if (_layout.useScrollSequence)
 			{
 				CreateScrollSequence();
-				_layout.RectTransformDimensionsChanged += OnRectTransformDimensionsChanged;
+				_layout.Events.RectTransformDimensionsChanged += OnRectTransformDimensionsChanged;
 			}
 
 			base.OnLayoutInstalledInternal();
@@ -394,7 +403,7 @@ namespace UI.Scroll
 			_scrollSequence = null;
 
 			if (_layout.useScrollSequence)
-				_layout.RectTransformDimensionsChanged -= OnRectTransformDimensionsChanged;
+				_layout.Events.RectTransformDimensionsChanged -= OnRectTransformDimensionsChanged;
 
 			base.OnLayoutClearedInternal();
 		}

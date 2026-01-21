@@ -1,8 +1,6 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
-using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,18 +9,37 @@ using UnityEditorInternal;
 
 namespace UI
 {
+	using UnityObject = UnityEngine.Object;
+
 	//TODO: подчистить чтобы блок с Анимациями был отдельно, возможно будут проблемы из-за потери уже существующих серилизованных полей...
 	[RequireComponent(typeof(RectTransform))]
-	public abstract partial class UIBaseLayout : UIBehaviour
+	public abstract partial class UIBaseLayout : MonoBehaviour
 	{
+		private UIBehaviourEvents _events;
+
 		[FormerlySerializedAs("root")]
 		public RectTransform rectTransform;
 
 #if UNITY_EDITOR
 		[Tooltip("Ссылка на изначальный префаб (only editor)")]
 		[NonSerialized]
-		public Object prefab;
+		public UnityObject prefab;
 #endif
+
+		public UIBehaviourEvents Events
+		{
+			get
+			{
+				if (!_events)
+				{
+					_events = gameObject.TryGetComponent(out UIBehaviourEvents events)
+						? events
+						: gameObject.AddComponent<UIBehaviourEvents>();
+				}
+
+				return _events;
+			}
+		}
 
 		[ContextMenu("Reset Transform")]
 		protected new virtual void Reset()
@@ -76,22 +93,5 @@ namespace UI
 			openingSequence?.Validate(gameObject);
 			closingSequence?.Validate(gameObject);
 		}
-
-		#region UI Behaviour
-
-		public event Action RectTransformDimensionsChanged;
-		public event Action BeforeTransformParentChanged;
-		public event Action TransformParentChanged;
-		public event Action DidApplyAnimationProperties;
-		public event Action CanvasGroupChanged;
-
-		//Если нужно добавить Override, сделайте новый метод OnRectTransformDimensionsChange => OnRectTransformDimensionsChanged
-		protected sealed override void OnRectTransformDimensionsChange() => RectTransformDimensionsChanged?.Invoke();
-		protected sealed override void OnBeforeTransformParentChanged() => BeforeTransformParentChanged?.Invoke();
-		protected sealed override void OnTransformParentChanged() => TransformParentChanged?.Invoke();
-		protected sealed override void OnDidApplyAnimationProperties() => DidApplyAnimationProperties?.Invoke();
-		protected sealed override void OnCanvasGroupChanged() => CanvasGroupChanged?.Invoke();
-
-		#endregion
 	}
 }

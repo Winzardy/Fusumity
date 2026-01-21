@@ -56,9 +56,7 @@ namespace UI.Popups.Editor
 			var types = ReflectionUtility.GetAllTypes<IPopup>(false);
 			foreach (var type in types)
 			{
-				var name = type.Name
-					.Remove("Popup");
-
+				var name = UIDispatcherUtility.Clear(type, "Popup");
 				yield return new ValueDropdownItem(name, type);
 			}
 		}

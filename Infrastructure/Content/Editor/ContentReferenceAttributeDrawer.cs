@@ -372,68 +372,72 @@ namespace Content.Editor
 			{
 				if (useFoldout)
 				{
-					var foldoutPosition = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
-					foldoutPosition.width = SirenixEditorGUI.FoldoutWidth;
-
-					if (!EditorGUIUtility.hierarchyMode && _targetObject)
+					GUIHelper.PushColor(Color.white);
 					{
-						var offset = SirenixEditorGUI.FoldoutWidth + 3;
-						foldoutPosition.x -= offset;
-						foldoutPosition.width += offset;
-					}
+						var foldoutPosition = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
+						foldoutPosition.width = SirenixEditorGUI.FoldoutWidth;
 
-					var originEnabled2 = GUI.enabled;
-					GUI.enabled = true;
-					_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
-					GUI.enabled = originEnabled2;
-
-					if (SirenixEditorGUI.BeginFadeGroup(this, useFoldout && _showDetailed))
-					{
-						var originalColor = GUI.color;
-						GUI.color = Color.black.WithAlpha(0.666f);
-
-						//Hierarchy
-						var originHierarchyMode = EditorGUIUtility.hierarchyMode;
-						EditorGUIUtility.hierarchyMode = false;
-
-						//Indent
-						var originIndent = EditorGUI.indentLevel;
-						if (useIndent)
-							EditorGUI.indentLevel -= 1;
-
-						SirenixEditorGUI.BeginIndentedVertical(_style);
+						if (!EditorGUIUtility.hierarchyMode && _targetObject)
 						{
-							GUIHelper.PushHierarchyMode(false);
-							GUIHelper.PushLabelWidth(labelWidthInEditor);
-							{
-								GUI.color = originalColor;
-
-								//Scripts
-								var originalForceHideMonoScriptInEditor = OdinEditor.ForceHideMonoScriptInEditor;
-								OdinEditor.ForceHideMonoScriptInEditor = false;
-								var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
-								FusumityEditorGUIHelper.drawAssetReference = false;
-
-								_inlineEditor.OnInspectorGUI();
-
-								//Scripts/
-								FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-								OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
-
-								//Hierarchy/
-								EditorGUIUtility.hierarchyMode = originHierarchyMode;
-							}
-							GUIHelper.PopLabelWidth();
-							GUIHelper.PopHierarchyMode();
-
-							//Indent/
-							EditorGUI.indentLevel = originIndent;
+							var offset = SirenixEditorGUI.FoldoutWidth + 3;
+							foldoutPosition.x -= offset;
+							foldoutPosition.width += offset;
 						}
 
-						SirenixEditorGUI.EndIndentedVertical();
-					}
+						var originEnabled2 = GUI.enabled;
+						GUI.enabled = true;
+						_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
+						GUI.enabled = originEnabled2;
 
-					SirenixEditorGUI.EndFadeGroup();
+						if (SirenixEditorGUI.BeginFadeGroup(this, useFoldout && _showDetailed))
+						{
+							var originalColor = GUI.color;
+							GUI.color = Color.black.WithAlpha(0.666f);
+
+							//Hierarchy
+							var originHierarchyMode = EditorGUIUtility.hierarchyMode;
+							EditorGUIUtility.hierarchyMode = false;
+
+							//Indent
+							var originIndent = EditorGUI.indentLevel;
+							if (useIndent)
+								EditorGUI.indentLevel -= 1;
+
+							SirenixEditorGUI.BeginIndentedVertical(_style);
+							{
+								GUIHelper.PushHierarchyMode(false);
+								GUIHelper.PushLabelWidth(labelWidthInEditor);
+								{
+									GUI.color = originalColor;
+
+									//Scripts
+									var originalForceHideMonoScriptInEditor = OdinEditor.ForceHideMonoScriptInEditor;
+									OdinEditor.ForceHideMonoScriptInEditor = false;
+									var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
+									FusumityEditorGUIHelper.drawAssetReference = false;
+
+									_inlineEditor.OnInspectorGUI();
+
+									//Scripts/
+									FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
+									OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+
+									//Hierarchy/
+									EditorGUIUtility.hierarchyMode = originHierarchyMode;
+								}
+								GUIHelper.PopLabelWidth();
+								GUIHelper.PopHierarchyMode();
+
+								//Indent/
+								EditorGUI.indentLevel = originIndent;
+							}
+
+							SirenixEditorGUI.EndIndentedVertical();
+						}
+
+						SirenixEditorGUI.EndFadeGroup();
+					}
+					GUIHelper.PopColor();
 				}
 			}
 

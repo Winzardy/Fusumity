@@ -70,9 +70,7 @@ namespace UI.Popovers.Editor
 			var types = ReflectionUtility.GetAllTypes<IPopover>(false);
 			foreach (var type in types)
 			{
-				var name = type.Name
-					.Remove("Popover");
-
+				var name = UIDispatcherUtility.Clear(type, "Popover");
 				yield return new ValueDropdownItem(name, type);
 			}
 		}

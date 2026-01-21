@@ -16,8 +16,8 @@ namespace UI.Editor
 
 			var target = parentProperty.ValueEntry.WeakSmartValue as UILocalizedBaseLayout;
 
-			if (target!.Label && ReferenceEquals(target.GetReflectionValue(member.Name), target!.Label))
-				attributes.Add(new VerticalGroupAttribute(nameof(UILocalizedBaseLayout)));
+			// if (target!.Label && ReferenceEquals(target.GetReflectionValue(member.Name), target!.Label))
+			// 	attributes.Add(new VerticalGroupAttribute(nameof(UILocalizedBaseLayout)));
 
 			switch (member.Name)
 			{

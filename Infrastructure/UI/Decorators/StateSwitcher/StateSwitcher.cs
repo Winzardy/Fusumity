@@ -26,4 +26,5 @@ namespace UI
 			OnStateSwitched(current);
 		}
 	}
+
 }

@@ -1,6 +1,7 @@
 ﻿using AssetManagement;
 using Fusumity.MVVM.UI;
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace UI
@@ -56,9 +57,7 @@ namespace UI
 			if (_animator != null)
 			{
 				var key =
-					isToggled ?
-					WidgetAnimationType.TOGGLE_ENABLING :
-					WidgetAnimationType.TOGGLE_DISABLING;
+					isToggled ? WidgetAnimationType.TOGGLE_ENABLING : WidgetAnimationType.TOGGLE_DISABLING;
 
 				_animator.Play(key, immediate);
 			}
@@ -102,11 +101,11 @@ namespace UI
 
 	public interface IToggleButtonViewModel
 	{
-		IAssetReferenceEntry<Sprite> Icon { get; }
-		string Label { get; }
+		[CanBeNull] IAssetReferenceEntry<Sprite> Icon { get; }
+		[CanBeNull] string Label { get; }
 
 		bool IsToggled { get; }
-		string Style { get; }
+		[CanBeNull] string Style { get; }
 
 		event Action ToggleStateChanged;
 		event Action StyleChanged;

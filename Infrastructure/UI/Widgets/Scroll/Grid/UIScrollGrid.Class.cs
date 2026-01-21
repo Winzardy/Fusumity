@@ -13,6 +13,14 @@ namespace UI.Scroll
 		where TItemLayout : UIScrollItemLayout
 		where TValue : class
 	{
+		public UIScrollGridC(UIScrollLayout layout) : base(layout)
+		{
+		}
+
+		public UIScrollGridC() : base()
+		{
+		}
+
 		public void Show(IEnumerable<TValue> data, bool preservePosition = false, bool immediate = false)
 		{
 			using (ListPool<ScrollListItemСArgs<TValue>>.Get(out var list))

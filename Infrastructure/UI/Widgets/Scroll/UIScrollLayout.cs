@@ -809,7 +809,6 @@ namespace UI.Scroll
 			return cell;
 		}
 
-
 		/// <inheritdoc cref="ReloadData(float)"/>
 		[ContextMenu("Reload")]
 		public void ReloadData() => ReloadData(0);
@@ -2193,7 +2192,7 @@ namespace UI.Scroll
 			}
 
 			if (_cachedTween != null &&
-			    gameObject.activeInHierarchy)
+				gameObject.activeInHierarchy)
 			{
 				_cachedTween.Invoke();
 				_cachedTween = null;
@@ -2239,10 +2238,8 @@ namespace UI.Scroll
 			}
 		}
 
-		protected override void OnEnable()
+		protected void OnEnable()
 		{
-			base.OnEnable();
-
 			_forceUpdatePaddingRequest = true;
 
 			if (_valueChangedSubscribed)
@@ -2253,10 +2250,8 @@ namespace UI.Scroll
 			_valueChangedSubscribed = true;
 		}
 
-		protected override void OnDisable()
+		protected void OnDisable()
 		{
-			base.OnDisable();
-
 			if (!_valueChangedSubscribed)
 				return;
 

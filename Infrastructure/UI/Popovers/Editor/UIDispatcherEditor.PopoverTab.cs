@@ -62,22 +62,12 @@ namespace UI.Popovers.Editor
 		{
 			argsInspector.Clear();
 
-			var baseType = this.type?.BaseType;
+			var argsType = UIDispatcherUtility.ResolveArgsType(type);
 
-			if (baseType is not {IsGenericType: true})
+			if (type == null)
 				return;
 
-			var arguments = baseType.GetGenericArguments();
-
-			if (arguments.Length < 2)
-				return;
-
-			var argsType = arguments[1];
-
-			if (argsType == typeof(EmptyArgs))
-				return;
-
-			argsInspector.SetType(argsType, true);
+			argsInspector.SetType(argsType);
 		}
 
 		private void OnHostChanged()

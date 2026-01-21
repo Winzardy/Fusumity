@@ -25,6 +25,13 @@ namespace UI.Scroll
 		where TItemLayout : UIScrollItemLayout
 		where TItem : UIWidget<TItemLayout, TItemArgs>, IScrollItem<TItemLayout>
 	{
+		public UIScrollGrid(UIScrollLayout layout) : base(layout)
+		{
+		}
+
+		public UIScrollGrid() : base()
+		{
+		}
 	}
 
 	//Дикое обобщение, кто смотрит сюда не суди строга :D это для сложных кейсов когда нужно контролировать все
@@ -44,6 +51,14 @@ namespace UI.Scroll
 		public ref TItemArgs this[int index] => ref _rawData[index];
 
 		public int ItemAmountInGridItem => _template.items.Length;
+
+		public UIScrollGrid(UIScrollLayout layout) : base(layout)
+		{
+		}
+
+		public UIScrollGrid() : base()
+		{
+		}
 
 		public void Show(TItemArgs[] data, bool preservePosition = false, bool immediate = false)
 		{
