@@ -156,7 +156,8 @@ namespace Content.Editor
 
 		private static void Refresh(Type type)
 		{
-			if (_typeToVersion[type] == version)
+			if (_typeToVersion.TryGetValue(type, out var currentVersion)
+				&& currentVersion == version)
 				return;
 
 			EditorContentEntryMap.Clear(type);
