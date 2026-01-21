@@ -629,7 +629,7 @@ namespace Content.Editor
 				return source;
 			}
 
-			ContentEditorCache.Refresh();
+			ContentEditorCache.ClearAndRefreshScrObjs();
 			if (ContentEditorCache.TryGetSource(type, id, out source))
 			{
 				_found = (id, source, ContentEditorCache.version);
@@ -652,7 +652,7 @@ namespace Content.Editor
 				return source;
 			}
 
-			ContentEditorCache.Refresh();
+			ContentEditorCache.ClearAndRefreshScrObjs();
 			if (ContentEditorCache.TryGetSource(type, in guid, out source))
 			{
 				_found = (guid.ToString(), source, ContentEditorCache.version);
@@ -675,7 +675,7 @@ namespace Content.Editor
 				return source;
 			}
 
-			ContentEditorCache.Refresh();
+			ContentEditorCache.ClearAndRefreshScrObjs();
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
 				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);

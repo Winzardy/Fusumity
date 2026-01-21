@@ -41,7 +41,7 @@ namespace Content.Editor
 		public UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid)
 		{
 			if (ContentEditorCache.TryGetSource(typeof(T), in guid, out var source) &&
-			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 				return contentEntry;
 
 			throw ContentDebug.NullException($"Could not find unique value of type [ {typeof(T).Name} ] by guid [ {guid} ] ");
@@ -50,7 +50,7 @@ namespace Content.Editor
 		public UniqueContentEntry<T> GetEntry<T>(string id)
 		{
 			if (ContentEditorCache.TryGetSource(typeof(T), id, out var source) &&
-			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 				return contentEntry;
 
 			throw ContentDebug.NullException($"Could not find value of type [ {typeof(T).Name} ] by id [ {id} ]");
@@ -61,7 +61,7 @@ namespace Content.Editor
 		public SingleContentEntry<T> GetEntry<T>()
 		{
 			if (ContentEditorCache.TryGetSource(typeof(T), out var source) &&
-			    source.ContentEntry is SingleContentEntry<T> singleContentEntry)
+				source.ContentEntry is SingleContentEntry<T> singleContentEntry)
 				return singleContentEntry;
 
 			throw ContentDebug.NullException($"Could not find single value of type [ {typeof(T).Name} ]");
@@ -71,7 +71,7 @@ namespace Content.Editor
 		{
 			entry = null;
 			if (ContentEditorCache.TryGetSource(typeof(T), in guid, out var source) &&
-			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 			{
 				entry = contentEntry;
 				return true;
@@ -84,7 +84,7 @@ namespace Content.Editor
 		{
 			entry = null;
 			if (ContentEditorCache.TryGetSource(typeof(T), id, out var source) &&
-			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 			{
 				entry = contentEntry;
 				return true;
@@ -103,7 +103,7 @@ namespace Content.Editor
 		{
 			entry = null;
 			if (ContentEditorCache.TryGetSource(typeof(T), out var source) &&
-			    source.ContentEntry is SingleContentEntry<T> singleContentEntry)
+				source.ContentEntry is SingleContentEntry<T> singleContentEntry)
 			{
 				entry = singleContentEntry;
 				return true;
@@ -139,7 +139,7 @@ namespace Content.Editor
 		public string ToId<T>(in SerializableGuid guid)
 		{
 			if (ContentEditorCache.TryGetSource(typeof(T), in guid, out var source) &&
-			    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 				return contentEntry.Id;
 
 			return guid.ToString();
@@ -152,7 +152,7 @@ namespace Content.Editor
 			try
 			{
 				if (ContentEditorCache.TryGetSource(typeof(T), id, out var source) &&
-				    source.ContentEntry is UniqueContentEntry<T> contentEntry)
+					source.ContentEntry is UniqueContentEntry<T> contentEntry)
 					return ref contentEntry.Guid;
 			}
 			catch (Exception e)
@@ -160,6 +160,7 @@ namespace Content.Editor
 				ContentDebug.LogWarning(e.Message);
 			}
 
+			ContentDebug.LogError($"Could not find entry of type: [ {typeof(T).Name} ] with id: [ {id} ]");
 			return ref SerializableGuid.Empty;
 		}
 
