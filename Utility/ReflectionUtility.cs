@@ -1,17 +1,18 @@
 ﻿using Sapientia.Collections;
+using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
+using Sapientia.Pooling;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
+using Sapientia.Reflection;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Sapientia.Collections;
-using Sapientia.Extensions;
-using Sapientia.Extensions.Reflection;
-using Sapientia.Pooling;
-using Sapientia.Reflection;
 using UnityEngine;
 
 namespace Fusumity.Utility
@@ -408,6 +409,18 @@ namespace Fusumity.Utility
 
 			return fieldInfos.Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToArray();
 		}
+
+		public static List<T> GetConstantValues<T>(Type type)
+		{
+			var values = new List<T>();
+			foreach (var fi in GetConstants(type))
+			{
+				var value = (T)fi.GetValue(null);
+				values.Add(value);
+			}
+
+			return values;
+		} 
 
 		public static bool TryFindFieldRecursively(this object obj, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default) => TryFindFieldRecursively(obj.GetType(), name, out info, flags);
 		public static bool TryFindFieldRecursively(this Type targetType, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default)
