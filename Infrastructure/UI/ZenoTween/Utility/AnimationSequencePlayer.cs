@@ -27,7 +27,16 @@ namespace ZenoTween.Utility
 			_tween = null;
 		}
 
-		public void Play()
+		public void Play(TweenCallback onComplete = null)
+		{
+			var args = onComplete != null ?
+				new AnimationSequencePlayerArgs { onComplete = onComplete } :
+				default;
+
+			Play(args);
+		}
+
+		public void Play(AnimationSequencePlayerArgs args)
 		{
 			if (_cached)
 			{
@@ -47,7 +56,19 @@ namespace ZenoTween.Utility
 			else
 			{
 				_tween.KillSafe();
-				_tween = _sequenceConfig.ToTween(this);
+				var sequence = _sequenceConfig.ToSequence(this);
+
+				if(args.onStart != null)
+				{
+					sequence.PrependCallback(args.onStart);
+				}
+
+				if (args.onComplete != null)
+				{
+					sequence.AppendCallback(args.onComplete);
+				}
+
+				_tween = sequence;
 			}
 		}
 
@@ -70,5 +91,11 @@ namespace ZenoTween.Utility
 				_tween.Complete(withCallbacks);
 			}
 		}
+	}
+
+	public struct AnimationSequencePlayerArgs
+	{
+		public TweenCallback onStart;
+		public TweenCallback onComplete;
 	}
 }
