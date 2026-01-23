@@ -245,10 +245,20 @@ namespace Fusumity.Editor.Extensions
 			AssetDatabase.RenameAsset(assetPath, newName);
 		}
 
+		public static void SetAssetDirty(this Object asset)
+		{
+			EditorUtility.SetDirty(asset);
+		}
+
+		public static void SaveIfDirty(this Object asset)
+		{
+			AssetDatabase.SaveAssetIfDirty(asset);
+		}
+
 		public static void SaveChanges(this Object unityObject)
 		{
-			EditorUtility.SetDirty(unityObject);
-			AssetDatabase.SaveAssetIfDirty(unityObject);
+			unityObject.SetAssetDirty();
+			unityObject.SaveIfDirty();
 		}
 	}
 }

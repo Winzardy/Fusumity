@@ -1,14 +1,17 @@
 ﻿using Fusumity.MVVM.UI;
+using Fusumity.Utility;
 using Game.UI;
 using System;
 
 namespace UI
 {
-	public class UIStatefulButtonView : UIView<IStatefulButtonViewModel, UIStatefulButtonLayout>
+	public class UIStatefulButtonView : UIView<IStatefulButtonViewModel, UIStatefulButtonLayout>, IClickable<UIStatefulButtonView>
 	{
 		private UIAdBannerView _adBanner;
 		private UILabeledIconView _labeledIcon;
 		private UISpriteAssigner _assigner;
+
+		public event Action<UIStatefulButtonView> Clicked;
 
 		public UIStatefulButtonView(UIStatefulButtonLayout layout) : base(layout)
 		{
@@ -75,6 +78,7 @@ namespace UI
 
 		private void HandleClick()
 		{
+			Clicked?.Invoke(this);
 			ViewModel?.Click();
 		}
 	}

@@ -42,6 +42,7 @@ namespace ZenoTween
 		}
 
 		public Tween ToTween(object target = null) => participants.ToTween(target);
+		public Sequence ToSequence(object target = null) => participants.ToSequence(target);
 
 		protected internal override bool IsEmpty() => participants.IsNullOrEmpty();
 

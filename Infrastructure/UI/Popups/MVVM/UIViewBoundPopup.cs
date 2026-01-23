@@ -1,4 +1,5 @@
 ﻿using Fusumity.MVVM.UI;
+using Sapientia;
 using System;
 
 namespace UI.Popups
@@ -32,6 +33,12 @@ namespace UI.Popups
 		protected sealed override void OnLayoutInstalled()
 		{
 			_view = CreateView(_layout);
+
+			if (_view is ICloseRequestor closeRequestor)
+			{
+				closeRequestor.CloseRequested += RequestClose;
+			}
+
 			OnViewCreated();
 		}
 
@@ -39,6 +46,11 @@ namespace UI.Popups
 		{
 			if (_view == null)
 				return;
+
+			if (_view is ICloseRequestor closeRequestor)
+			{
+				closeRequestor.CloseRequested -= RequestClose;
+			}
 
 			BeforeViewDisposed();
 			TryAutoDisposeViewModel();

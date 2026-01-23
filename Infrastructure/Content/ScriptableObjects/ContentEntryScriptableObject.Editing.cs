@@ -4,6 +4,11 @@
 
 	public static class ContentEntryScriptableObjectExtensions
 	{
+		public static TValue GetValue<TValue>(this IContentEntryScriptableObject<TValue> scriptableObject)
+		{
+			return scriptableObject.EditValue;
+		}
+
 		public static void SetValue<TValue>(this IContentEntryScriptableObject<TValue> scriptableObject, in TValue value, bool save = true)
 		{
 			scriptableObject.EditValue = value;
