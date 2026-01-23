@@ -9,6 +9,7 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sirenix.Utilities;
+using UI;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,17 +22,28 @@ namespace Content.ScriptableObjects.Editor
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
 
-		internal static void Generate(Type type, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
+		internal static void Generate(Type valueType, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
 		{
 			if (collection == null || collection.Count == 0)
 				return;
 
-			attribute ??= type.GetCustomAttribute<ConstantsAttribute>();
+			attribute ??= valueType.GetCustomAttribute<ConstantsAttribute>();
 
 			if (attribute == null)
-				return;
+			{
+				var scrObjType = collection
+					.First()
+					.GetType();
+				attribute = scrObjType.GetCustomAttribute<ConstantsAttribute>();
+			}
 
-			var name = BuildGenericSafeName(type, out var postfix);
+			if (attribute == null)
+			{
+				GUIDebug.LogWarning("ConstantsAttribute not found");
+				return;
+			}
+
+			var name = BuildGenericSafeName(valueType, out var postfix);
 			var className = postfix.IsNullOrEmpty() ? name : name[..^postfix.Length];
 			for (int i = 0; i < projectSettings.removeEndings.Length; i++)
 			{
@@ -53,7 +65,7 @@ namespace Content.ScriptableObjects.Editor
 			className += postfix;
 
 			var rootName = nameof(Content);
-			var @namespace = type.Namespace;
+			var @namespace = valueType.Namespace;
 
 			className += projectSettings.classNameEnding;
 
@@ -211,13 +223,13 @@ namespace Content.ScriptableObjects.Editor
 					var commented = false;
 					var comment = "Custom";
 
-					foreach (var (constant, index) in attribute.CustomConstants.WithIndex())
+					foreach (var constant in attribute.CustomConstants)
 					{
 						var split = constant.Split(ConstantsAttribute.CUSTOM_CONSTANT_SEPARATOR);
 
 						var id = split[^1];
 						var customName = split.Length > 1;
-						var name = customName ? split[0] : id;
+						var name = customName ? split[0] : id.ToUpper();
 
 						var fieldDeclaration = SyntaxFactory.FieldDeclaration(
 								SyntaxFactory.VariableDeclaration(

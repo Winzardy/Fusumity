@@ -128,7 +128,11 @@ namespace Content.Editor
 
 		public bool Contains<T>() => ContentEditorCache.TryGetSource(typeof(T), out _);
 
-		public IEnumerable<IContentEntry<T>> GetAllEntries<T>() => ContentEditorCache.GetAllSourceByValueType<T>();
+		public IEnumerable<IContentEntry<T>> GetAllEntries<T>()
+		{
+			foreach (var source in ContentEditorCache.GetAllSourceByValueType<T>())
+				yield return source.ContentEntry;
+		}
 
 		public IEnumerable<ContentReference<T>> GetAll<T>()
 		{

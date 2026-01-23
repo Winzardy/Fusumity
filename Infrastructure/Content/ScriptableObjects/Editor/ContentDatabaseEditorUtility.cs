@@ -5,6 +5,7 @@ using System.Linq;
 using AssetManagement.AddressableAssets.Editor;
 using Content.Editor;
 using Fusumity.Editor.Utility;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -513,13 +514,20 @@ namespace Content.ScriptableObjects.Editor
 		{
 			var valueType = scriptableObject.ValueType;
 
-			if (!valueType.HasAttribute<ConstantsAttribute>())
-				return;
+			if (valueType.HasAttribute<ConstantsAttribute>())
+			{
+				if (!dictionary.ContainsKey(valueType))
+					dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
 
-			if (!dictionary.ContainsKey(valueType))
-				dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
+				dictionary[valueType].Add(scriptableObject);
+			}
+			else if (scriptableObject.GetType().HasAttribute<ConstantsAttribute>())
+			{
+				if (!dictionary.ContainsKey(valueType))
+					dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
 
-			dictionary[valueType].Add(scriptableObject);
+				dictionary[valueType].Add(scriptableObject);
+			}
 		}
 
 		public static string ToLabel(this ContentDatabaseScriptableObject database)
