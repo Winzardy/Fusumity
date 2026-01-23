@@ -37,7 +37,7 @@ namespace Audio.Editor
 			switch (member.Name)
 			{
 				case nameof(AudioEventRequest.id):
-					attributes.Add(new ContentReferenceAttribute(typeof(AudioEventConfig), foldout: false));
+					attributes.Add(new ContentReferenceAttribute(typeof(AudioEventConfig), inlineEditor: false));
 					break;
 
 				case nameof(AudioEventRequest.repeat):

@@ -270,15 +270,18 @@ namespace Content.Editor
 			}
 
 			var useIndent = false;
-			var forceHideFoldout = Property.Attributes.GetAttribute<ContentReferenceHideFoldoutAttribute>() != null ||
-				Property.Parent.Attributes.GetAttribute<ContentReferenceHideFoldoutAttribute>() != null;
+
+			var drawerSettingsAttribute = Property.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
+			drawerSettingsAttribute ??= Property.Parent.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
+
+			var forceUseInlineEditorAttribute = drawerSettingsAttribute?.InlineEditor ?? false;
 
 			//Костыль, потом подумаю как убрать, в Pack ломает отображение
 			if (Property.Parent.Attributes.GetAttribute<HorizontalGroupAttribute>() != null)
-				forceHideFoldout = true;
+				forceUseInlineEditorAttribute = true;
 
-			var useFoldout = !forceHideFoldout && Attribute.Foldout;
-			if (useFoldout && !EditorGUIUtility.hierarchyMode && _targetObject)
+			var useInlineEditor = !forceUseInlineEditorAttribute && Attribute.InlineEditor;
+			if (useInlineEditor && !EditorGUIUtility.hierarchyMode && _targetObject)
 			{
 				EditorGUI.indentLevel += 1;
 				useIndent = true;
@@ -286,9 +289,8 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			Rect? objectFieldPosition = null;
-			var forceDropdownAttribute = Property.Attributes.GetAttribute<ContentReferenceDropdownAttribute>() != null ||
-				Property.Parent.Attributes.GetAttribute<ContentReferenceDropdownAttribute>() != null;
-			var useDropdown = Attribute.Dropdown || forceDropdownAttribute;
+			var forceUseDropdownAttribute = drawerSettingsAttribute?.Dropdown ?? false;
+			var useDropdown = Attribute.Dropdown || forceUseDropdownAttribute;
 
 			if (invalid)
 			{
@@ -425,7 +427,7 @@ namespace Content.Editor
 
 			if (!forceDisableInlineEditor && _inlineEditor)
 			{
-				if (useFoldout)
+				if (useInlineEditor)
 				{
 					var foldoutPosition = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
 					foldoutPosition.width = SirenixEditorGUI.FoldoutWidth;
@@ -442,7 +444,7 @@ namespace Content.Editor
 					_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
 					GUI.enabled = originEnabled2;
 
-					if (SirenixEditorGUI.BeginFadeGroup(this, useFoldout && _showDetailed))
+					if (SirenixEditorGUI.BeginFadeGroup(this, useInlineEditor && _showDetailed))
 					{
 						var originalColor = GUI.color;
 						GUI.color = Color.black.WithAlpha(0.666f);
