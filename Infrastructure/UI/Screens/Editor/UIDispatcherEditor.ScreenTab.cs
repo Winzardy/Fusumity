@@ -1,6 +1,7 @@
 using System;
 using Sirenix.OdinInspector;
 using UI.Editor;
+using UnityEngine;
 
 namespace UI.Screens.Editor
 {
@@ -13,13 +14,14 @@ namespace UI.Screens.Editor
 		public SdfIconType? Icon => SdfIconType.Display;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
-		public Type type;
+		[SerializeReference]
+		public IScreen screen;
 
 		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
-			if (type == null)
+			if (screen == null)
 			{
 				GUIDebug.LogError("Выберите тип экрана!");
 				return;
@@ -27,7 +29,7 @@ namespace UI.Screens.Editor
 
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
-				.MakeGenericMethod(type)
+				.MakeGenericMethod(screen.GetType())
 				.Invoke(_dispatcher, new object[]
 				{
 					argsInspector.GetArgs()
@@ -38,12 +40,10 @@ namespace UI.Screens.Editor
 		{
 			argsInspector.Clear();
 
-			var argsType = UIDispatcherUtility.ResolveArgsType(type);
-
-			if (type == null)
+			if (screen == null)
 				return;
 
-			argsInspector.SetType(argsType);
+			argsInspector.SetType(screen.GetArgsType());
 		}
 	}
 }

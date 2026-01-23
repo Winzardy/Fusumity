@@ -2,6 +2,7 @@ using System;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UI.Editor;
+using UnityEngine;
 
 namespace UI.Popups.Editor
 {
@@ -13,13 +14,14 @@ namespace UI.Popups.Editor
 		public SdfIconType? Icon => SdfIconType.ChatRightDots;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
-		public Type type;
+		[SerializeReference]
+		public IPopup popup;
 
 		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show(Toggle<PopupMode> mode)
 		{
-			if (type == null)
+			if (popup == null)
 			{
 				GUIDebug.LogError("Выберите тип попапа!");
 				return;
@@ -27,7 +29,7 @@ namespace UI.Popups.Editor
 
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
-				.MakeGenericMethod(type)
+				.MakeGenericMethod(popup.GetType())
 				.Invoke(_dispatcher, new[]
 				{
 					argsInspector.GetArgs(),
@@ -39,12 +41,10 @@ namespace UI.Popups.Editor
 		{
 			argsInspector.Clear();
 
-			var argsType = UIDispatcherUtility.ResolveArgsType(type);
-
-			if (type == null)
+			if (popup == null)
 				return;
 
-			argsInspector.SetType(argsType);
+			argsInspector.SetType(popup.GetArgsType());
 		}
 	}
 }

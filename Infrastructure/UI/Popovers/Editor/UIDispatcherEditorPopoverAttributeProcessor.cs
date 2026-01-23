@@ -1,15 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Attributes;
-using Fusumity.Utility;
-using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UI.Editor;
-using UI.Popovers;
-using UnityEngine;
 
 namespace UI.Popovers.Editor
 {
@@ -24,15 +19,11 @@ namespace UI.Popovers.Editor
 			var className = nameof(UIDispatcherEditorPopoverAttributeProcessor);
 			switch (member.Name)
 			{
-				case nameof(UIDispatcherEditorPopoverTab.type):
-					attributes.Add(new ShowInInspectorAttribute());
+				case nameof(UIDispatcherEditorPopoverTab.popover):
 					attributes.Add(new BoxGroupAttribute("Box", showLabel: false));
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal"));
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
 					attributes.Add(new HideLabelAttribute());
-
-					var typeExp = $"@{className}.{nameof(GetAllTypes)}()";
-					attributes.Add(new ValueDropdownAttribute(typeExp));
 					break;
 
 				case nameof(UIDispatcherEditorPopoverTab.argsInspector):
@@ -58,21 +49,11 @@ namespace UI.Popovers.Editor
 						Style = Sirenix.OdinInspector.ButtonStyle.FoldoutButton
 					};
 					attributes.Add(buttonAttribute);
-					attributes.Add(new EnableIfAttribute(nameof(UIDispatcherEditorPopoverTab.type), null));
+					attributes.Add(new EnableIfAttribute(nameof(UIDispatcherEditorPopoverTab.popover), null));
 					break;
 			}
 
 			void AddToGroup() => attributes.Add(new DarkCardBoxAttribute("Box/Horizontal/left/color"));
-		}
-
-		private static IEnumerable GetAllTypes()
-		{
-			var types = ReflectionUtility.GetAllTypes<IPopover>(false);
-			foreach (var type in types)
-			{
-				var name = UIDispatcherUtility.Clear(type, "Popover");
-				yield return new ValueDropdownItem(name, type);
-			}
 		}
 	}
 }

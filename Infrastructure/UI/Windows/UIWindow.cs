@@ -26,6 +26,7 @@ namespace UI.Windows
 
 		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
+		public Type GetArgsType();
 	}
 
 	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
@@ -156,6 +157,8 @@ namespace UI.Windows
 		}
 
 		object IWindow.GetArgs() => GetArgs();
+		Type IWindow.GetArgsType() => typeof(TArgs);
+
 		private protected virtual object GetArgs() => _args;
 
 		bool IWindow.CanShow(object boxedArgs, out string error)

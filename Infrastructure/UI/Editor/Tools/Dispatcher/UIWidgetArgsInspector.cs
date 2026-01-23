@@ -1,5 +1,6 @@
 using System;
 using Fusumity.Utility;
+using Sapientia.Collections;
 using Sapientia.Extensions.Reflection;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
@@ -23,8 +24,18 @@ namespace UI.Editor
 		private Type _argsType;
 		private (Type type, PropertyTree tree) _typeArgsToTree;
 
+		private bool _shouldTryCreateFirstArgs;
+
 		public void SetType(Type argsType, bool useLabel = false)
 		{
+			if (_argsType == argsType)
+			{
+				_useLabel = useLabel;
+				return;
+			}
+
+			Clear();
+
 			_argsType = argsType;
 			_useLabel = useLabel;
 		}
@@ -35,6 +46,7 @@ namespace UI.Editor
 			_argsType = null;
 			_typeArgsToTree = default;
 			_useLabel = false;
+			_shouldTryCreateFirstArgs = true;
 		}
 
 		public object GetArgs() => _args;
@@ -75,6 +87,15 @@ namespace UI.Editor
 
 			if (_argsType.IsPolymorphic())
 			{
+				if (_shouldTryCreateFirstArgs)
+				{
+					_args ??= _argsType.GetAllTypes()
+						.First()
+						.CreateInstanceSafe();
+
+					_shouldTryCreateFirstArgs = false;
+				}
+
 				var picked = SirenixEditorFields.PolymorphicObjectField(_args, _argsType, false);
 				if (!ReferenceEquals(picked, _args))
 				{

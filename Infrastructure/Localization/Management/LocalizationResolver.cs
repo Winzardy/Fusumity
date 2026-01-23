@@ -34,6 +34,7 @@ namespace Localization
 		public string CurrentLanguage => GetDisplayName();
 
 		public event Action<string> CurrentLocaleCodeUpdated;
+		public event Action LocaleUpdated;
 
 		public LocalizationResolver(in LocTableReference tableReference)
 		{
@@ -43,7 +44,7 @@ namespace Localization
 		public async UniTask InitializeAsync(CancellationToken token = default)
 		{
 			await LocalizationSettings.InitializationOperation
-			   .WithCancellation(token);
+				.WithCancellation(token);
 			await SetLocale(token);
 
 			LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
@@ -100,7 +101,7 @@ namespace Localization
 			var handle = LocalizationSettings.StringDatabase.GetTableAsync(_tableReference.id, locale);
 
 			await handle
-			   .WithCancellation(token);
+				.WithCancellation(token);
 
 			if (handle.Status != AsyncOperationStatus.Succeeded)
 			{
@@ -119,6 +120,7 @@ namespace Localization
 
 			_currentLocale = LocalizationSettings.SelectedLocale;
 			CurrentLocaleCodeUpdated?.Invoke(_currentLocale.Identifier.Code);
+			LocaleUpdated?.Invoke();
 
 			SmartLocaleSelector.PlayerSave(_currentLocale.Identifier.Code);
 		}

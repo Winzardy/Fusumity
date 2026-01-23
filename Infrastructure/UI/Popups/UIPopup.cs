@@ -10,6 +10,7 @@ namespace UI.Popups
 	public interface IPopup : IWidget, IIdentifiable
 	{
 		public PopupMode Mode { get; }
+		public Type GetArgsType();
 		public void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
@@ -221,6 +222,7 @@ namespace UI.Popups
 		}
 
 		object IPopup.GetArgs() => GetArgs();
+		Type IPopup.GetArgsType() => typeof(TArgs);
 
 		private protected virtual object GetArgs() => _args;
 

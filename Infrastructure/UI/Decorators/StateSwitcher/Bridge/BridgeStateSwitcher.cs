@@ -31,7 +31,7 @@ namespace UI.Bridge
 		{
 			if (TryRetrieveLinkedState(state, out var linkedState))
 			{
-				_switcher.Switch(linkedState);
+				_switcher?.Switch(linkedState);
 			}
 		}
 

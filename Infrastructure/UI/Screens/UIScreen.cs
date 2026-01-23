@@ -10,6 +10,7 @@ namespace UI.Screens
 	public interface IScreen : IWidget, IIdentifiable
 	{
 		public void RequestClose();
+		public Type GetArgsType();
 
 		internal event Action<IScreen> RequestedClose;
 
@@ -26,7 +27,7 @@ namespace UI.Screens
 
 		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
-		public Type GetArgsType();
+
 		internal IDisposable Prepare(Action callback);
 	}
 

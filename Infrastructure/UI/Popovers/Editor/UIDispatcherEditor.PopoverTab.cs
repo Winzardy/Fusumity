@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Fusumity.Utility;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UI.Editor;
@@ -18,7 +15,8 @@ namespace UI.Popovers.Editor
 		public SdfIconType? Icon => SdfIconType.ChatSquareText;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
-		public Type type;
+		[SerializeReference]
+		public IPopover popover;
 
 		[OnValueChanged(nameof(OnHostChanged))]
 		public UIWidgetInspector host;
@@ -29,7 +27,7 @@ namespace UI.Popovers.Editor
 
 		internal void Show()
 		{
-			if (type == null)
+			if (popover == null)
 			{
 				GUIDebug.LogError("Выберите тип поповера!");
 				return;
@@ -49,7 +47,7 @@ namespace UI.Popovers.Editor
 					m.IsGenericMethodDefinition &&
 					m.GetGenericArguments().Length == 1 &&
 					m.GetParameters().Length == 3)
-				.MakeGenericMethod(type)
+				.MakeGenericMethod(popover.GetType())
 				.Invoke(_dispatcher, new[]
 				{
 					host.widget,
@@ -62,12 +60,10 @@ namespace UI.Popovers.Editor
 		{
 			argsInspector.Clear();
 
-			var argsType = UIDispatcherUtility.ResolveArgsType(type);
-
-			if (type == null)
+			if (popover == null)
 				return;
 
-			argsInspector.SetType(argsType);
+			argsInspector.SetType(popover.GetArgsType());
 		}
 
 		private void OnHostChanged()

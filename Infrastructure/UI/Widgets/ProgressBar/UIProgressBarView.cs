@@ -1,6 +1,7 @@
 ﻿using Fusumity.MVVM.UI;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace UI
 {
@@ -22,27 +23,24 @@ namespace UI
 		protected override void OnUpdate(IProgressBarViewModel viewModel)
 		{
 			UpdateFilling();
-			UpdateLabel();
+
+			if (_layout.label)
+				_layout.label.Bind(viewModel.Label);
 
 			viewModel.ProgressChanged += HandleProgressChanged;
 		}
 
 		protected override void OnClear(IProgressBarViewModel viewModel)
 		{
+			if (_layout.label)
+				_layout.label.Unbind(viewModel.Label);
+
 			viewModel.ProgressChanged -= HandleProgressChanged;
 		}
 
 		private void UpdateFilling()
 		{
 			_widget.Show(ViewModel.Progress);
-		}
-
-		private void UpdateLabel()
-		{
-			if (_layout.label != null)
-			{
-				_layout.label.text = ViewModel.Label;
-			}
 		}
 
 		public override void Reset()
@@ -69,7 +67,6 @@ namespace UI
 		private void HandleProgressChanged()
 		{
 			UpdateFilling();
-			UpdateLabel();
 		}
 	}
 
@@ -80,8 +77,7 @@ namespace UI
 		/// </summary>
 		float Progress { get; }
 
-		[MaybeNull]
-		string Label { get; }
+		[CanBeNull] ILabelViewModel Label { get; }
 
 		event Action ProgressChanged;
 	}

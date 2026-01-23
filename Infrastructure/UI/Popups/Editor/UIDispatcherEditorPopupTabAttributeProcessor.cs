@@ -21,15 +21,11 @@ namespace UI.Popups.Editor
 
 			switch (member.Name)
 			{
-				case nameof(UIDispatcherEditorPopupTab.type):
-					attributes.Add(new ShowInInspectorAttribute());
+				case nameof(UIDispatcherEditorPopupTab.popup):
 					attributes.Add(new BoxGroupAttribute("Box", showLabel: false));
 					attributes.Add(new HorizontalGroupAttribute("Box/Horizontal"));
 					attributes.Add(new VerticalGroupAttribute("Box/Horizontal/left"));
 					attributes.Add(new HideLabelAttribute());
-
-					var className = nameof(UIDispatcherEditorPopupTabAttributeProcessor);
-					attributes.Add(new ValueDropdownAttribute($"@{className}.{nameof(GetAllTypes)}()"));
 					break;
 
 				case nameof(UIDispatcherEditorPopupTab.argsInspector):
@@ -46,18 +42,8 @@ namespace UI.Popups.Editor
 						Style = Sirenix.OdinInspector.ButtonStyle.FoldoutButton
 					};
 					attributes.Add(buttonAttribute);
-					attributes.Add(new EnableIfAttribute(nameof(UIDispatcherEditorPopupTab.type), null));
+					attributes.Add(new EnableIfAttribute(nameof(UIDispatcherEditorPopupTab.popup), null));
 					break;
-			}
-		}
-
-		private static IEnumerable GetAllTypes()
-		{
-			var types = ReflectionUtility.GetAllTypes<IPopup>(false);
-			foreach (var type in types)
-			{
-				var name = UIDispatcherUtility.Clear(type, "Popup");
-				yield return new ValueDropdownItem(name, type);
 			}
 		}
 	}

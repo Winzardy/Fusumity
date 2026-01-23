@@ -2,6 +2,7 @@ using System;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using UI.Editor;
+using UnityEngine;
 
 namespace UI.Windows.Editor
 {
@@ -14,13 +15,14 @@ namespace UI.Windows.Editor
 		public SdfIconType? Icon => SdfIconType.Window;
 
 		[OnValueChanged(nameof(OnTypeChanged))]
-		public Type type;
+		[SerializeReference]
+		public IWindow window;
 
 		public UIWidgetArgsInspector argsInspector;
 
 		internal void Show()
 		{
-			if (type == null)
+			if (window == null)
 			{
 				GUIDebug.LogError("Выберите тип окна!");
 				return;
@@ -28,7 +30,7 @@ namespace UI.Windows.Editor
 
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
-				.MakeGenericMethod(type)
+				.MakeGenericMethod(window.GetType())
 				.Invoke(_dispatcher, new object[]
 				{
 					argsInspector.GetArgs()
@@ -39,12 +41,10 @@ namespace UI.Windows.Editor
 		{
 			argsInspector.Clear();
 
-			var argsType = UIDispatcherUtility.ResolveArgsType(type);
-
-			if (type == null)
+			if (window == null)
 				return;
 
-			argsInspector.SetType(argsType);
+			argsInspector.SetType(window.GetArgsType());
 		}
 	}
 }

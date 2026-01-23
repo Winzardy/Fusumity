@@ -32,6 +32,12 @@ namespace Localization
 			remove => resolver.CurrentLocaleCodeUpdated -= value;
 		}
 
+		public static event Action LocaleUpdated
+		{
+			add => resolver.LocaleUpdated += value;
+			remove => resolver.LocaleUpdated -= value;
+		}
+
 		public static bool Has(string key) => resolver.Has(key);
 
 		/// <returns>Перевод слова по ключу (текущего выбранного языка)</returns>
