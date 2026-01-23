@@ -67,7 +67,7 @@ namespace Content.ScriptableObjects
 
 		IUniqueContentEntry IUniqueContentEntrySource.UniqueContentEntry => _entry;
 
-		public Type ValueType => typeof(T);
+		public override Type ValueType => typeof(T);
 
 		public ref readonly SerializableGuid Guid => ref _entry.Guid;
 
@@ -127,6 +127,7 @@ namespace Content.ScriptableObjects
 
 	public abstract partial class ContentEntryScriptableObject : ContentScriptableObject
 	{
+		public abstract Type ValueType { get; }
 	}
 
 	public interface IUniqueContentEntryScriptableObject<T> : IContentEntryScriptableObject<T>, IUniqueContentEntrySource<T>,

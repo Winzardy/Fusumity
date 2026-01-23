@@ -410,6 +410,18 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
+		public static IEnumerable<IUniqueContentEntryScriptableObject> GetScriptableObjectsByType(Type type)
+		{
+			foreach (var source in ContentEditorCache.GetAllSourceByValueType(type))
+			{
+				if (source.ContentEntry is IScriptableContentEntry scriptableContentEntry)
+				{
+					if (scriptableContentEntry.ScriptableObject is IUniqueContentEntryScriptableObject so)
+						yield return so;
+				}
+			}
+		}
+
 		private static bool TryValidate(IContentScriptableObject scriptableObject)
 		{
 			if (scriptableObject is IValidatable validatable)

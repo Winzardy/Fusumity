@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Content.Editor;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Sapientia.Collections;
@@ -22,9 +23,10 @@ namespace Content.ScriptableObjects.Editor
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
 
-		internal static void Generate(Type valueType, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
+		internal static void Generate(Type valueType, IEnumerable<IUniqueContentEntryScriptableObject> collection,
+			ConstantsAttribute attribute = null, bool fullLog = false)
 		{
-			if (collection == null || collection.Count == 0)
+			if (collection.IsNullOrEmpty())
 				return;
 
 			attribute ??= valueType.GetCustomAttribute<ConstantsAttribute>();
@@ -199,8 +201,16 @@ namespace Content.ScriptableObjects.Editor
 				.ToFullString();
 			code = code.Replace(NEW_LINE_TAG, string.Empty);
 
+			var separator = "Assets/";
+			var unityPath = separator + path.Split(separator)[^1];
+			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
+
 			if (existingData == code)
+			{
+				if (fullLog)
+					ContentDebug.Log($"Unchanged constants: {unityPath}", textAsset);
 				return;
+			}
 
 			using (var writer = new StreamWriter(path, false, new UTF8Encoding(false)))
 			{
@@ -208,11 +218,8 @@ namespace Content.ScriptableObjects.Editor
 				writer.Write(code);
 			}
 
-			var separator = "Assets/";
-			var unityPath = separator + path.Split(separator)[^1];
 			AssetDatabase.ImportAsset(unityPath);
 
-			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
 			var prefix = existingData == null ? "Generated" : "Updated";
 			ContentDebug.Log($"{prefix} constants: {unityPath}", textAsset);
 

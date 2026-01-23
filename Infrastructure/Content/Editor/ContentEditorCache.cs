@@ -170,7 +170,7 @@ namespace Content.Editor
 
 			foreach (var source in GetAllSourceByValueType(type))
 			{
-				if(source.ContentEntry is IIdentifiable identifiable)
+				if (source.ContentEntry is IIdentifiable identifiable)
 					yield return identifiable.Id;
 			}
 		}
