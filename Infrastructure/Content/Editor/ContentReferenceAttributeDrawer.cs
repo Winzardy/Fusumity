@@ -274,13 +274,14 @@ namespace Content.Editor
 			var drawerSettingsAttribute = Property.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
 			drawerSettingsAttribute ??= Property.Parent.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
 
-			var forceUseInlineEditorAttribute = drawerSettingsAttribute?.InlineEditor ?? false;
+			var useInlineEditorBySettings = drawerSettingsAttribute?.InlineEditor ?? false;
+			var useInlineEditor = useInlineEditorBySettings || Attribute.InlineEditor;
 
 			//Костыль, потом подумаю как убрать, в Pack ломает отображение
-			if (Property.Parent.Attributes.GetAttribute<HorizontalGroupAttribute>() != null)
-				forceUseInlineEditorAttribute = true;
+			if (Property.ParentType == typeof(Pack<>)
+				&& Property.Parent.Attributes.GetAttribute<HorizontalGroupAttribute>() != null)
+				useInlineEditor = true;
 
-			var useInlineEditor = !forceUseInlineEditorAttribute && Attribute.InlineEditor;
 			if (useInlineEditor && !EditorGUIUtility.hierarchyMode && _targetObject)
 			{
 				EditorGUI.indentLevel += 1;
@@ -289,8 +290,8 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			Rect? objectFieldPosition = null;
-			var forceUseDropdownAttribute = drawerSettingsAttribute?.Dropdown ?? false;
-			var useDropdown = Attribute.Dropdown || forceUseDropdownAttribute;
+			var useDropdownBySettings = drawerSettingsAttribute?.Dropdown ?? false;
+			var useDropdown = Attribute.Dropdown || useDropdownBySettings;
 
 			if (invalid)
 			{
