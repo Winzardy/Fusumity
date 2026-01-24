@@ -10,6 +10,13 @@ namespace UI
 	/// </summary>
 	public class UISpinner : UISpinner<UISpinnerLayout>
 	{
+		public UISpinner() : base()
+		{
+		}
+
+		public UISpinner(UISpinnerLayout layout) : base(layout)
+		{
+		}
 	}
 
 	public class UISpinner<TLayout> : UIWidget<TLayout>, ISpinner
@@ -17,6 +24,14 @@ namespace UI
 	{
 		private HashSet<object> _requesters;
 		private HashSet<object> _blockers;
+
+		public UISpinner() : base()
+		{
+		}
+
+		public UISpinner(TLayout layout) : base(layout)
+		{
+		}
 
 		private protected override void OnDisposedInternal()
 		{

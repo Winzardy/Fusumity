@@ -22,13 +22,9 @@ namespace Content.ScriptableObjects.Editor
 		static ContentAutoConstantsGeneratorMenu()
 		{
 			_enable = EditorPrefs.GetBool(AUTO_MENU_PATH, false);
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
-			{
-				EditorApplication.delayCall -= OnDelayCall;
-				Toggle(_enable);
-			}
+			void HandleDelayCall() => Toggle(_enable);
 		}
 
 		public static void Reset() => EditorPrefs.SetString(SAVE_LAST_PATH, 0.ToString());

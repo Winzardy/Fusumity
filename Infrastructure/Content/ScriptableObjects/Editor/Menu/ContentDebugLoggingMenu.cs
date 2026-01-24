@@ -45,11 +45,10 @@ namespace Content.ScriptableObjects.Editor
 			Register(PATH_NESTED_REFRESH, enable => ContentDebug.Logging.Nested.refresh = enable,
 				ContentDebug.Logging.Nested.refresh);
 
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
+			void HandleDelayCall()
 			{
-				EditorApplication.delayCall -= OnDelayCall;
 				PerformAction(PATH_DATABASE);
 
 				PerformAction(PATH_NESTED_RESTORE);

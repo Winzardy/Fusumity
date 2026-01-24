@@ -14,6 +14,8 @@ namespace Fusumity.MVVM.UI
 		{
 			if (!label)
 				return;
+			if (viewModel == null)
+				return;
 			label.Bind(viewModel);
 		}
 
@@ -25,6 +27,8 @@ namespace Fusumity.MVVM.UI
 		public static void UnbindSafe(this TMP_Text label, ILabelViewModel viewModel)
 		{
 			if (!label)
+				return;
+			if (viewModel == null)
 				return;
 			label.Unbind(viewModel);
 		}

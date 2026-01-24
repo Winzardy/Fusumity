@@ -17,13 +17,9 @@ namespace UI.Editor
 		{
 			Register(PATH_RECT_TRANSFORM_REBUILT, enable => GUIDebug.Logging.RectTransform.rebuilt = enable, false);
 
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
-			{
-				EditorApplication.delayCall -= OnDelayCall;
-				PerformAction(PATH_RECT_TRANSFORM_REBUILT);
-			}
+			void HandleDelayCall() => PerformAction(PATH_RECT_TRANSFORM_REBUILT);
 		}
 
 		private static void Register(string key, Action<bool> action, bool defaultValue = true)

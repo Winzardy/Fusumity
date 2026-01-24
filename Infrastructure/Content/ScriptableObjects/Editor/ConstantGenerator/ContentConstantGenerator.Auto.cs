@@ -32,27 +32,18 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void Invoke()
 		{
-			EditorApplication.delayCall += OnDelayCall;
-
-			void OnDelayCall()
-			{
-				EditorApplication.delayCall -= OnDelayCall;
-				ContentDatabaseEditorUtility.TryRunRegenerateConstantsByAuto();
-			}
+			EditorApplication.delayCall += HandleDelayCall;
 
 			AsyncUtility.TriggerAndSetNull(ref _cts);
+			void HandleDelayCall() => ContentDatabaseEditorUtility.TryRunRegenerateConstantsByAuto();
 		}
 
 		public static void Invoke(Type type)
 		{
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 			AsyncUtility.TriggerAndSetNull(ref _cts);
 
-			void OnDelayCall()
-			{
-				EditorApplication.delayCall -= OnDelayCall;
-				ContentDatabaseEditorUtility.TryRegenerateConstants(type);
-			}
+			void HandleDelayCall() => ContentDatabaseEditorUtility.TryRegenerateConstants(type);
 		}
 
 		public static void ForceInvokeWithDelay(Type type)
@@ -68,13 +59,9 @@ namespace Content.ScriptableObjects.Editor
 
 			ContentAutoConstantsGeneratorMenu.Reset();
 			Invoke(type);
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
-			{
-				EditorApplication.delayCall -= OnDelayCall;
-				ContentAutoConstantsGeneratorMenu.UpdateBlockGenerate();
-			}
+			void HandleDelayCall() => ContentAutoConstantsGeneratorMenu.UpdateBlockGenerate();
 		}
 	}
 }

@@ -50,12 +50,10 @@ namespace Content.ScriptableObjects.Editor
 
 		private static void Sync(ContentDatabaseScriptableObject database)
 		{
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
+			void HandleDelayCall()
 			{
-				EditorApplication.delayCall -= OnDelayCall;
-
 				var origin = ContentDebug.Logging.database;
 				try
 				{

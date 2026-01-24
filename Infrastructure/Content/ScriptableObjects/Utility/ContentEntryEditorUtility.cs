@@ -344,9 +344,9 @@ namespace Content.Editor
 				return;
 
 			_scheduledRefreshAndSave = true;
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
+			void HandleDelayCall()
 			{
 				AssetDatabase.Refresh();
 				AssetDatabase.SaveAssets();

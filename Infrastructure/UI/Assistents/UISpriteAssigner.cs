@@ -24,6 +24,15 @@ namespace UI
 
 		private bool _disposed;
 
+		public UISpriteAssigner()
+		{
+		}
+
+		public UISpriteAssigner(ISpinner spinner)
+		{
+			_spinner = spinner;
+		}
+
 		public void Dispose()
 		{
 			_disposed = true;
@@ -81,7 +90,7 @@ namespace UI
 			if (_imageToHandle.TryGetValue(image, out var pair))
 			{
 				//Какой смысл если там и так такой ассет
-				if (pair.spriteEntry.Equals(entry))
+				if (pair.spriteRef.Equals(entry))
 				{
 					callback?.Invoke();
 					return;
@@ -99,7 +108,7 @@ namespace UI
 			if (_single.image == image)
 			{
 				//Какой смысл если там и так такой ассет
-				if (_single.handle.spriteEntry.Equals(entry))
+				if (_single.handle.spriteRef.Equals(entry))
 				{
 					callback?.Invoke();
 					return true;
@@ -141,38 +150,38 @@ namespace UI
 
 		private async UniTaskVoid LoadAndPlaceAsync(Image image, SpriteAssignerHandle handle, Action callback = null)
 		{
-			_spinner?.Show(handle.spriteEntry);
+			_spinner?.Show(handle.spriteRef);
 
 			handle.cts = new CancellationTokenSource();
-			var sprite = await handle.spriteEntry.LoadAsync(handle.cts.Token);
+			var sprite = await handle.spriteRef.LoadAsync(handle.cts.Token);
 
 			if (handle.cts.IsCancellationRequested || _disposed || !image)
 			{
-				_spinner?.Hide(handle.spriteEntry);
+				_spinner?.Hide(handle.spriteRef);
 				return;
 			}
 
 			image.sprite = sprite;
 			callback?.Invoke();
-			_spinner?.Hide(handle.spriteEntry);
+			_spinner?.Hide(handle.spriteRef);
 		}
 	}
 
 	public struct SpriteAssignerHandle
 	{
-		public IAssetReferenceEntry<Sprite> spriteEntry;
+		public IAssetReferenceEntry<Sprite> spriteRef;
 		public CancellationTokenSource cts;
 
-		public SpriteAssignerHandle(IAssetReferenceEntry<Sprite> spriteEntry)
+		public SpriteAssignerHandle(IAssetReferenceEntry<Sprite> spriteRef)
 		{
-			this.spriteEntry = spriteEntry;
+			this.spriteRef = spriteRef;
 			cts = null;
 		}
 
 		public void Release()
 		{
-			spriteEntry?.Release();
-			spriteEntry = null;
+			spriteRef?.Release();
+			spriteRef = null;
 
 			AsyncUtility.TriggerAndSetNull(ref cts);
 		}

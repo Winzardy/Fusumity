@@ -159,12 +159,10 @@ namespace Fusumity.Utility
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				EditorApplication.delayCall += OnDelayCall;
+				EditorApplication.delayCall += HandleDelayCall;
 
-				void OnDelayCall()
+				void HandleDelayCall()
 				{
-					EditorApplication.delayCall -= OnDelayCall;
-
 					if (component)
 						UnityObject.DestroyImmediate(component.gameObject, true);
 				}
@@ -189,12 +187,10 @@ namespace Fusumity.Utility
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				EditorApplication.delayCall += OnDelayCall;
+				EditorApplication.delayCall += HandleDelayCall;
 
-				void OnDelayCall()
+				void HandleDelayCall()
 				{
-					EditorApplication.delayCall -= OnDelayCall;
-
 					if (cancel != null && cancel())
 						return;
 
@@ -229,12 +225,10 @@ namespace Fusumity.Utility
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				EditorApplication.delayCall += OnDelayCall;
+				EditorApplication.delayCall += HandleDelayCall;
 
-				void OnDelayCall()
+				void HandleDelayCall()
 				{
-					EditorApplication.delayCall -= OnDelayCall;
-
 					if (cancel != null && cancel())
 						return;
 
@@ -274,12 +268,10 @@ namespace Fusumity.Utility
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				EditorApplication.delayCall += OnDelayCall;
+				EditorApplication.delayCall += HandleDelayCall;
 
-				void OnDelayCall()
+				void HandleDelayCall()
 				{
-					EditorApplication.delayCall -= OnDelayCall;
-
 					for (int i = 0; i < removingComponentsBefore.Length; i++)
 					{
 						if (removingComponentsBefore[i])

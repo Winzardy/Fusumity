@@ -60,6 +60,15 @@ namespace UI
 
 		public sealed override RectTransform RectTransform => _layout ? _layout.rectTransform : null;
 
+		public UIWidget()
+		{
+		}
+
+		public UIWidget(TLayout layout)
+		{
+			SetupLayout(layout);
+		}
+
 		public virtual void SetupLayout(TLayout layout)
 		{
 			if (layout == null)

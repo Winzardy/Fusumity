@@ -4,6 +4,7 @@ using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities.Editor;
+using UnityEditor;
 using UnityEngine;
 
 namespace UI
@@ -29,10 +30,19 @@ namespace UI
 			}
 		}
 
+		#region Editor
+
+		private bool _useParent;
+
 		public void DrawListButtonsEditor()
 		{
 #if UNITY_EDITOR
-			if (SirenixEditorGUI.ToolbarButton(new GUIContent("Clear", "Clear from empty (NRE, missing)")))
+			_useParent = SirenixEditorGUI.ToolbarToggle(
+				_useParent,
+				new GUIContent("Use Parent", "Использовать родителя при сборе списка")
+			);
+
+			if (SirenixEditorGUI.ToolbarButton(new GUIContent("Clear", "Очистить от пустых и null")))
 			{
 				TryClear();
 			}
@@ -53,7 +63,8 @@ namespace UI
 		[ContextMenu("Add Children")]
 		private void AddChildren()
 		{
-			var children = gameObject.GetComponentsInChildren<StateSwitcher<TState>>(true);
+			var anchor = _useParent ? gameObject.transform.parent : gameObject.transform;
+			var children = anchor.GetComponentsInChildren<StateSwitcher<TState>>(true);
 
 			foreach (var switcher in children)
 			{
@@ -88,5 +99,7 @@ namespace UI
 			UnityEditor.EditorUtility.SetDirty(this);
 #endif
 		}
+
+		#endregion
 	}
 }

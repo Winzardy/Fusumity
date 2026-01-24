@@ -21,11 +21,10 @@ namespace SharedLogic.Editor
 			Register(PATH_LOGGING_SAVED, enable => SLDebug.Logging.saved = enable, SLDebug.Logging.saved);
 			Register(PATH_LOGGING_LOADED, enable => SLDebug.Logging.loaded = enable, SLDebug.Logging.loaded);
 
-			EditorApplication.delayCall += OnDelayCall;
+			EditorApplication.delayCall += HandleDelayCall;
 
-			void OnDelayCall()
+			void HandleDelayCall()
 			{
-				EditorApplication.delayCall -= OnDelayCall;
 				PerformAction(PATH_LOGGING_COMMAND_EXECUTE);
 				PerformAction(PATH_LOGGING_SAVED);
 				PerformAction(PATH_LOGGING_LOADED);
