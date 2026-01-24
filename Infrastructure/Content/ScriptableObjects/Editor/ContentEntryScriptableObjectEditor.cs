@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using Sapientia.Extensions;
+using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -10,6 +11,9 @@ namespace Content.ScriptableObjects.Editor
 	[CanEditMultipleObjects]
 	public sealed class ContentEntryScriptableObjectEditor : ContentScriptableObjectEditor
 	{
+		private const string GENERATE_CONSTANTS_LABEL = "Generate Constants";
+		private const string GENERATE_CONSTANTS_TOOLTIP_FORMAT = "Сгенерировать константы для типа: {0}";
+
 		public override void OnInspectorGUI()
 		{
 			DrawContentEntryInspector();
@@ -39,7 +43,8 @@ namespace Content.ScriptableObjects.Editor
 			var style = new GUIStyle(SirenixGUIStyles.MiniButton);
 			var type = scrObj.ValueType;
 
-			if (SirenixEditorGUI.SDFIconButton(rect, "Generate Constants", SdfIconType.Gear, IconAlignment.RightEdge, style))
+			var buttonLabel = new GUIContent(GENERATE_CONSTANTS_LABEL, GENERATE_CONSTANTS_TOOLTIP_FORMAT.Format(type.GetNiceName()));
+			if (SirenixEditorGUI.SDFIconButton(rect, buttonLabel, SdfIconType.Magic, IconAlignment.RightEdge, style))
 			{
 				ContentConstantGenerator.Generate(type, ContentDatabaseEditorUtility.GetScriptableObjectsByType(type), fullLog: true);
 			}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Management;
+using Fusumity.Editor.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -164,7 +165,12 @@ namespace Content.Editor
 				ContentDebug.LogWarning(e.Message);
 			}
 
-			ContentDebug.LogError($"Could not find entry of type: [ {typeof(T).Name} ] with id: [ {id} ]");
+			if (Application.isPlaying)
+				ContentDebug.LogError($"Could not find entry of type: [ {typeof(T).Name} ] with id: [ {id} ]");
+			else
+				ContentDebug.LogError("String-based content IDs cannot be converted to GUIDs outside of runtime." +
+					"\nUse GUID constants instead!");
+
 			return ref SerializableGuid.Empty;
 		}
 

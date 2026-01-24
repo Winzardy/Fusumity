@@ -1,5 +1,6 @@
 ﻿using System;
 using AssetManagement;
+using Content;
 using Localization;
 using UnityEngine;
 
@@ -68,10 +69,13 @@ namespace UI
 			Toggled?.Invoke(this, isOn);
 		}
 
+
 		private void ToggleInternal(bool isOn, bool immediate = false)
 		{
-			var key = isOn ? WidgetAnimationType.TOGGLE_ENABLING : WidgetAnimationType.TOGGLE_DISABLING;
+			if (_layout.activitySwitcher)
+				_layout.activitySwitcher.Switch(isOn);
 
+			var key = isOn ? WidgetAnimationType.TOGGLE_ENABLING : WidgetAnimationType.TOGGLE_DISABLING;
 			_animator.Play(key, immediate);
 		}
 

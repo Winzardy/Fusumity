@@ -6,6 +6,7 @@ using System.Text;
 using Content.Editor;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
@@ -22,6 +23,7 @@ namespace Content.ScriptableObjects.Editor
 		private const string ROOT_NODE = "ROOT";
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
+		private const string GUID_CLASS_NAME = "Guid";
 
 		internal static void Generate(Type valueType, IEnumerable<IUniqueContentEntryScriptableObject> collection,
 			ConstantsAttribute attribute = null, bool fullLog = false)
@@ -173,7 +175,13 @@ namespace Content.ScriptableObjects.Editor
 					current = current.children[part];
 				}
 
-				current.fullPath = id;
+				current.id = id;
+
+				if (!attribute.UseGuid)
+					continue;
+
+				var guid = source.Guid;
+				current.guid = guid.ToString();
 			}
 
 			var compilationUnit = SyntaxFactory.CompilationUnit();
@@ -186,14 +194,31 @@ namespace Content.ScriptableObjects.Editor
 				.NormalizeWhitespace()
 				.WithLeadingTrivia(SyntaxFactory.Comment(projectSettings.scriptComment));
 
-			var classDeclaration = SyntaxFactory.ClassDeclaration(className)
+			var baseClassDeclaration = SyntaxFactory.ClassDeclaration(className)
 				.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
 			var needSpace = false;
-			TryAddCustomConstants(ref needSpace);
-			AddConstants(root, new List<string>(), ref needSpace);
+			TryAddCustomConstants(ref baseClassDeclaration, ref needSpace);
+			AddConstants(ref baseClassDeclaration, root, new List<string>(), ref needSpace);
 
-			namespaceDeclaration = namespaceDeclaration.AddMembers(classDeclaration);
+			if (attribute.UseGuid)
+			{
+				var guidClassDeclaration = SyntaxFactory.ClassDeclaration(GUID_CLASS_NAME)
+					.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+
+				guidClassDeclaration = guidClassDeclaration.WithLeadingTrivia(
+					SyntaxFactory.TriviaList(
+						SyntaxFactory.Comment(NEW_LINE_TAG)
+					)
+				);
+
+				needSpace = false;
+				AddConstants(ref guidClassDeclaration, root, new List<string>(), ref needSpace, false);
+
+				baseClassDeclaration = baseClassDeclaration.AddMembers(guidClassDeclaration);
+			}
+
+			namespaceDeclaration = namespaceDeclaration.AddMembers(baseClassDeclaration);
 			compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
 
 			var code = compilationUnit
@@ -223,7 +248,7 @@ namespace Content.ScriptableObjects.Editor
 			var prefix = existingData == null ? "Generated" : "Updated";
 			ContentDebug.Log($"{prefix} constants: {unityPath}", textAsset);
 
-			bool TryAddCustomConstants(ref bool space)
+			bool TryAddCustomConstants(ref ClassDeclarationSyntax classDeclaration, ref bool space)
 			{
 				if (attribute != null && !attribute.CustomConstants.IsNullOrEmpty())
 				{
@@ -276,7 +301,8 @@ namespace Content.ScriptableObjects.Editor
 				return false;
 			}
 
-			void AddConstants(GeneratorConstantsNode node, List<string> pathSegments, ref bool space)
+			void AddConstants(ref ClassDeclarationSyntax classDeclaration, GeneratorConstantsNode node, List<string> pathSegments,
+				ref bool space, bool idOrGuid = true)
 			{
 				var hasAnyLeaves = node.children.Values.Any(HasLeaf);
 
@@ -287,10 +313,11 @@ namespace Content.ScriptableObjects.Editor
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
 				{
-					if (child.fullPath.IsNullOrEmpty())
+					if (child.id.IsNullOrEmpty())
 						continue;
 
-					var constName = GetName(child.fullPath);
+					var constName = GetName(child.id);
+
 					var fieldDeclaration = SyntaxFactory.FieldDeclaration(
 							SyntaxFactory.VariableDeclaration(
 									SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)))
@@ -300,7 +327,7 @@ namespace Content.ScriptableObjects.Editor
 											SyntaxFactory.EqualsValueClause(
 												SyntaxFactory.LiteralExpression(
 													SyntaxKind.StringLiteralExpression,
-													SyntaxFactory.Literal(child.fullPath))))))
+													SyntaxFactory.Literal(idOrGuid ? child.id : child.guid))))))
 						.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.ConstKeyword));
 
 					using (ListPool<SyntaxTrivia>.Get(out var trivia))
@@ -321,20 +348,19 @@ namespace Content.ScriptableObjects.Editor
 					}
 
 					classDeclaration = classDeclaration.AddMembers(fieldDeclaration);
-
 					space = child.children.Count == 0;
 				}
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
 				{
 					if (child.children.Count > 0)
-						AddConstants(child, currentPath, ref space);
+						AddConstants(ref classDeclaration, child, currentPath, ref space, idOrGuid);
 				}
 			}
 
 			bool HasLeaf(GeneratorConstantsNode c)
 			{
-				if (c.fullPath != null)
+				if (c.id != null)
 					return true;
 
 				return c.children.Values.Any(HasLeaf);
@@ -448,6 +474,7 @@ namespace Content.ScriptableObjects.Editor
 	{
 		public string name;
 		public Dictionary<string, GeneratorConstantsNode> children = new();
-		public string fullPath; //id
+		public string id;
+		public string guid;
 	}
 }
