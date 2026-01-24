@@ -20,11 +20,17 @@ namespace Fusumity.Editor
 		protected const string DOCUMENTATION_LABEL = "Documentation";
 		protected const string OPEN_IN_IDE_LABEL = "Open in IDE";
 
+		protected const int DOCUMENTATION_BUTTON_WIDTH = 125;
+
+		protected bool _documentationButtonDrawn = false;
+
 		protected override bool ShouldHideOpenButton() => true;
 
 		protected override void OnHeaderGUI()
 		{
 			base.OnHeaderGUI();
+
+			_documentationButtonDrawn = false;
 
 			if (TryGetDocumentationUrl(out var url))
 				DrawDocumentationButton(url);
@@ -86,13 +92,15 @@ namespace Fusumity.Editor
 				return;
 
 			var rect = GUILayoutUtility.GetLastRect();
-			rect = rect.AlignRight(125).AlignBottom(18);
+			rect = rect.AlignRight(DOCUMENTATION_BUTTON_WIDTH).AlignBottom(18);
 			rect = rect.AddPosition(-5, -6);
 
 			var style = new GUIStyle(SirenixGUIStyles.MiniButton);
 
 			if (SirenixEditorGUI.SDFIconButton(rect, DOCUMENTATION_LABEL, SdfIconType.JournalBookmarkFill, IconAlignment.RightEdge, style))
 				Help.BrowseURL(url);
+
+			_documentationButtonDrawn = true;
 		}
 	}
 }

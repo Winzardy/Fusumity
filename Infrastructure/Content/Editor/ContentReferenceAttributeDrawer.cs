@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Fusumity.Editor;
 using Fusumity.Utility;
 using Sapientia;
@@ -52,6 +53,8 @@ namespace Content.Editor
 
 	public abstract class ContentReferenceAttributeDrawer<T> : OdinAttributeDrawer<ContentReferenceAttribute, T>, IDefinesGenericMenuItems
 	{
+		private const string NONE_LABEL = "None";
+
 		private bool _guidRawMode;
 		protected abstract ContentDrawerMode TargetMode { get; }
 
@@ -267,15 +270,18 @@ namespace Content.Editor
 			}
 
 			var useIndent = false;
-			var forceHideFoldout = Property.Attributes.GetAttribute<HideFoldoutAttribute>() != null ||
-				Property.Parent.Attributes.GetAttribute<HideFoldoutAttribute>() != null;
+
+			var drawerSettingsAttribute = Property.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
+			drawerSettingsAttribute ??= Property.Parent.Attributes.GetAttribute<ContentReferenceDrawerSettingsAttribute>();
+
+			var forceUseInlineEditorAttribute = drawerSettingsAttribute?.InlineEditor ?? false;
 
 			//Костыль, потом подумаю как убрать, в Pack ломает отображение
 			if (Property.Parent.Attributes.GetAttribute<HorizontalGroupAttribute>() != null)
-				forceHideFoldout = true;
+				forceUseInlineEditorAttribute = true;
 
-			var useFoldout = !forceHideFoldout && Attribute.Foldout;
-			if (useFoldout && !EditorGUIUtility.hierarchyMode && _targetObject)
+			var useInlineEditor = !forceUseInlineEditorAttribute && Attribute.InlineEditor;
+			if (useInlineEditor && !EditorGUIUtility.hierarchyMode && _targetObject)
 			{
 				EditorGUI.indentLevel += 1;
 				useIndent = true;
@@ -283,78 +289,129 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			Rect? objectFieldPosition = null;
+			var forceUseDropdownAttribute = drawerSettingsAttribute?.Dropdown ?? false;
+			var useDropdown = Attribute.Dropdown || forceUseDropdownAttribute;
+
 			if (invalid)
 			{
-				EditorGUILayout.LabelField(targetLabel);
-				var position = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
-				if (!targetLabel.text.IsNullOrEmpty())
+				if (useDropdown)
 				{
-					position.width -= EditorGUIUtility.labelWidth;
-					position.x += EditorGUIUtility.labelWidth;
-				}
-
-				targetLabel = GUIContent.none;
-
-				GUI.color = Color.red;
-
-				var cacheGuiEnabled = GUI.enabled;
-				GUI.enabled = false;
-
-				GUI.enabled = false;
-
-				SirenixEditorFields.TextField(position, targetLabel, "");
-
-				GUI.enabled = cacheGuiEnabled;
-
-				var labelPos = position;
-				labelPos.x += 3;
-				EditorGUI.LabelField(labelPos, invalidLabel);
-
-				position.x += position.width - 20;
-				position.width = 20;
-				objectFieldPosition = position;
-			}
-
-			var forceDisableInlineEditor = false;
-			if (isSingle || invalid)
-			{
-				if (objectFieldPosition.HasValue)
-				{
-					source = (IContentEntrySource) EditorGUI.ObjectField
-					(
-						objectFieldPosition.Value,
-						targetLabel,
-						_targetObject,
-						_valueTypeToSourceType[_valueType],
-						false
-					);
+					GUI.color = Color.red;
 				}
 				else
 				{
-					source = (IContentEntrySource) EditorGUILayout.ObjectField
-					(
-						targetLabel,
-						_targetObject,
-						_valueTypeToSourceType[_valueType],
-						false
-					);
+					EditorGUILayout.LabelField(targetLabel);
+					var position = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
+					if (!targetLabel.text.IsNullOrEmpty())
+					{
+						position.width -= EditorGUIUtility.labelWidth;
+						position.x += EditorGUIUtility.labelWidth;
+					}
+
+					targetLabel = GUIContent.none;
+
+					GUI.color = Color.red;
+
+					var cacheGuiEnabled = GUI.enabled;
+					GUI.enabled = false;
+
+					GUI.enabled = false;
+
+					SirenixEditorFields.TextField(position, targetLabel, "");
+
+					GUI.enabled = cacheGuiEnabled;
+
+					var labelPos = position;
+					labelPos.x += 3;
+					EditorGUI.LabelField(labelPos, invalidLabel);
+
+					position.x += position.width - 20;
+					position.width = 20;
+					objectFieldPosition = position;
+				}
+			}
+
+			var forceDisableInlineEditor = false;
+
+			if (useDropdown)
+			{
+				string id = null;
+				if (source is {ContentEntry: IIdentifiable identifiable})
+				{
+					id = identifiable.Id;
+				}
+
+				var ids = ContentEditorCache.GetAllIdsByValueType(_valueType, true);
+				var selectedIds = GenericSelector<string>.DrawSelectorDropdown(targetLabel, id.IsNullOrEmpty() ? NONE_LABEL : id, rect =>
+				{
+					var selector = new GenericSelector<string>(
+						string.Empty,
+						ids,
+						false,
+						static s => s.IsNullOrEmpty() ? NONE_LABEL : s);
+					selector.EnableSingleClickToSelect();
+					selector.SetSelection(id);
+					selector.ShowInPopup(rect);
+					return selector;
+				});
+
+				if (!selectedIds.IsNullOrEmpty())
+				{
+					var selectedId = selectedIds.FirstOrDefault();
+
+					if (selectedId.IsNullOrEmpty())
+					{
+						source = null;
+					}
+					else
+					{
+						if (ContentEditorCache.TryGetSource(_valueType, selectedId, out var selectedSource))
+							source = selectedSource;
+					}
 				}
 			}
 			else
 			{
-				if (source is INestedContentEntrySource _)
+				if (isSingle || invalid)
 				{
-					forceDisableInlineEditor = true;
+					if (objectFieldPosition.HasValue)
+					{
+						source = (IContentEntrySource) EditorGUI.ObjectField
+						(
+							objectFieldPosition.Value,
+							targetLabel,
+							_targetObject,
+							_valueTypeToSourceType[_valueType],
+							false
+						);
+					}
+					else
+					{
+						source = (IContentEntrySource) EditorGUILayout.ObjectField
+						(
+							targetLabel,
+							_targetObject,
+							_valueTypeToSourceType[_valueType],
+							false
+						);
+					}
 				}
 				else
 				{
-					source = (IContentEntrySource) SirenixEditorFields.UnityObjectField
-					(
-						targetLabel,
-						_targetObject,
-						_valueTypeToSourceType[_valueType],
-						false
-					);
+					if (source is INestedContentEntrySource _)
+					{
+						forceDisableInlineEditor = true;
+					}
+					else
+					{
+						source = (IContentEntrySource) SirenixEditorFields.UnityObjectField
+						(
+							targetLabel,
+							_targetObject,
+							_valueTypeToSourceType[_valueType],
+							false
+						);
+					}
 				}
 			}
 
@@ -370,7 +427,7 @@ namespace Content.Editor
 
 			if (!forceDisableInlineEditor && _inlineEditor)
 			{
-				if (useFoldout)
+				if (useInlineEditor)
 				{
 					GUIHelper.PushColor(Color.white);
 					{
@@ -389,7 +446,7 @@ namespace Content.Editor
 						_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
 						GUI.enabled = originEnabled2;
 
-						if (SirenixEditorGUI.BeginFadeGroup(this, useFoldout && _showDetailed))
+						if (SirenixEditorGUI.BeginFadeGroup(this, useInlineEditor && _showDetailed))
 						{
 							var originalColor = GUI.color;
 							GUI.color = Color.black.WithAlpha(0.666f);
@@ -414,7 +471,7 @@ namespace Content.Editor
 									var originalForceHideMonoScriptInEditor = OdinEditor.ForceHideMonoScriptInEditor;
 									OdinEditor.ForceHideMonoScriptInEditor = false;
 									var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
-									FusumityEditorGUIHelper.drawAssetReference = false;
+									FusumityEditorGUIHelper.drawAssetReference = useDropdown;
 
 									_inlineEditor.OnInspectorGUI();
 

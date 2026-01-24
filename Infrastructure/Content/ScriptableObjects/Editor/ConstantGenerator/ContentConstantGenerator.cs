@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Content.Editor;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sirenix.Utilities;
+using UI;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,17 +23,29 @@ namespace Content.ScriptableObjects.Editor
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
 
-		internal static void Generate(Type type, List<IUniqueContentEntryScriptableObject> collection, ConstantsAttribute attribute = null)
+		internal static void Generate(Type valueType, IEnumerable<IUniqueContentEntryScriptableObject> collection,
+			ConstantsAttribute attribute = null, bool fullLog = false)
 		{
-			if (collection == null || collection.Count == 0)
+			if (collection.IsNullOrEmpty())
 				return;
 
-			attribute ??= type.GetCustomAttribute<ConstantsAttribute>();
+			attribute ??= valueType.GetCustomAttribute<ConstantsAttribute>();
 
 			if (attribute == null)
-				return;
+			{
+				var scrObjType = collection
+					.First()
+					.GetType();
+				attribute = scrObjType.GetCustomAttribute<ConstantsAttribute>();
+			}
 
-			var name = BuildGenericSafeName(type, out var postfix);
+			if (attribute == null)
+			{
+				GUIDebug.LogWarning("ConstantsAttribute not found");
+				return;
+			}
+
+			var name = BuildGenericSafeName(valueType, out var postfix);
 			var className = postfix.IsNullOrEmpty() ? name : name[..^postfix.Length];
 			for (int i = 0; i < projectSettings.removeEndings.Length; i++)
 			{
@@ -53,7 +67,7 @@ namespace Content.ScriptableObjects.Editor
 			className += postfix;
 
 			var rootName = nameof(Content);
-			var @namespace = type.Namespace;
+			var @namespace = valueType.Namespace;
 
 			className += projectSettings.classNameEnding;
 
@@ -187,8 +201,16 @@ namespace Content.ScriptableObjects.Editor
 				.ToFullString();
 			code = code.Replace(NEW_LINE_TAG, string.Empty);
 
+			var separator = "Assets/";
+			var unityPath = separator + path.Split(separator)[^1];
+			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
+
 			if (existingData == code)
+			{
+				if (fullLog)
+					ContentDebug.Log($"Unchanged constants: {unityPath}", textAsset);
 				return;
+			}
 
 			using (var writer = new StreamWriter(path, false, new UTF8Encoding(false)))
 			{
@@ -196,11 +218,8 @@ namespace Content.ScriptableObjects.Editor
 				writer.Write(code);
 			}
 
-			var separator = "Assets/";
-			var unityPath = separator + path.Split(separator)[^1];
 			AssetDatabase.ImportAsset(unityPath);
 
-			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
 			var prefix = existingData == null ? "Generated" : "Updated";
 			ContentDebug.Log($"{prefix} constants: {unityPath}", textAsset);
 
@@ -211,13 +230,13 @@ namespace Content.ScriptableObjects.Editor
 					var commented = false;
 					var comment = "Custom";
 
-					foreach (var (constant, index) in attribute.CustomConstants.WithIndex())
+					foreach (var constant in attribute.CustomConstants)
 					{
 						var split = constant.Split(ConstantsAttribute.CUSTOM_CONSTANT_SEPARATOR);
 
 						var id = split[^1];
 						var customName = split.Length > 1;
-						var name = customName ? split[0] : id;
+						var name = customName ? split[0] : id.ToUpper();
 
 						var fieldDeclaration = SyntaxFactory.FieldDeclaration(
 								SyntaxFactory.VariableDeclaration(

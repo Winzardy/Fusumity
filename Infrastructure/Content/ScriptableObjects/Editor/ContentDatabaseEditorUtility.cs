@@ -5,6 +5,7 @@ using System.Linq;
 using AssetManagement.AddressableAssets.Editor;
 using Content.Editor;
 using Fusumity.Editor.Utility;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -409,6 +410,18 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
+		public static IEnumerable<IUniqueContentEntryScriptableObject> GetScriptableObjectsByType(Type type)
+		{
+			foreach (var source in ContentEditorCache.GetAllSourceByValueType(type))
+			{
+				if (source.ContentEntry is IScriptableContentEntry scriptableContentEntry)
+				{
+					if (scriptableContentEntry.ScriptableObject is IUniqueContentEntryScriptableObject so)
+						yield return so;
+				}
+			}
+		}
+
 		private static bool TryValidate(IContentScriptableObject scriptableObject)
 		{
 			if (scriptableObject is IValidatable validatable)
@@ -513,13 +526,20 @@ namespace Content.ScriptableObjects.Editor
 		{
 			var valueType = scriptableObject.ValueType;
 
-			if (!valueType.HasAttribute<ConstantsAttribute>())
-				return;
+			if (valueType.HasAttribute<ConstantsAttribute>())
+			{
+				if (!dictionary.ContainsKey(valueType))
+					dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
 
-			if (!dictionary.ContainsKey(valueType))
-				dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
+				dictionary[valueType].Add(scriptableObject);
+			}
+			else if (scriptableObject.GetType().HasAttribute<ConstantsAttribute>())
+			{
+				if (!dictionary.ContainsKey(valueType))
+					dictionary.Add(valueType, new List<IUniqueContentEntryScriptableObject>());
 
-			dictionary[valueType].Add(scriptableObject);
+				dictionary[valueType].Add(scriptableObject);
+			}
 		}
 
 		public static string ToLabel(this ContentDatabaseScriptableObject database)
