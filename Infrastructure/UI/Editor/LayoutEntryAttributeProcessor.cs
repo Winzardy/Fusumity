@@ -7,7 +7,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace UI.Editor
 {
-	public class LayoutEntryAttributeProcessor : OdinAttributeProcessor<LayoutEntry>
+	public class LayoutEntryAttributeProcessor : OdinAttributeProcessor<UILayoutEntry>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -19,10 +19,10 @@ namespace UI.Editor
 				case "_layoutReference":
 					attributes.Add(new PropertyOrderAttribute(-1));
 					break;
-				case nameof(LayoutEntry.automationMode):
+				case nameof(UILayoutEntry.automationMode):
 					attributes.Add(new BoxGroupAttribute("Automation", false));
 					break;
-				case nameof(LayoutEntry.autoDestroyDelayMs):
+				case nameof(UILayoutEntry.autoDestroyDelayMs):
 					attributes.Add(new ShowIfAttribute($"@{nameof(LayoutEntryAttributeProcessor)}." +
 						$"{nameof(HaveAutoDestroy)}($property)"));
 					attributes.Add(new LabelTextAttribute("Delay"));
@@ -37,7 +37,7 @@ namespace UI.Editor
 
 		public static bool HaveAutoDestroy(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is LayoutEntry entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is UILayoutEntry entry)
 				return entry.automationMode.HasFlag(LayoutAutomationMode.AutoDestroy);
 
 			return false;

@@ -22,21 +22,21 @@ namespace Content.Editor
 		{
 			get
 			{
-				if (_cache == null)
+				if (_cache.IsNullOrEmpty())
 					ClearAndRefreshScrObjs();
 
 				return _cache;
 			}
 		}
 
-		public static int version => _cache.Count;
+		public static int version => cache.Count;
 
 		public static void ClearAndRefreshScrObjs()
 		{
 			_cache ??= new();
 			_cache.Clear();
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
-				cache[scriptableObject.ToGuid()] = scriptableObject;
+				_cache[scriptableObject.ToGuid()] = scriptableObject;
 		}
 
 		public static void Refresh<T>(IUniqueContentEntrySource<T> source)
@@ -144,8 +144,7 @@ namespace Content.Editor
 		/// </summary>
 		public static IEnumerable<IContentEntrySource<T>> GetAllSourceByValueType<T>()
 		{
-			if (!EditorContentEntryMap<T>.Any())
-				Refresh<T>();
+			Refresh<T>(true);
 
 			if (EditorSingleContentEntryShortcut<T>.Contains())
 				yield return EditorSingleContentEntryShortcut<T>.Get();
@@ -156,8 +155,7 @@ namespace Content.Editor
 
 		public static IEnumerable<IContentEntrySource> GetAllSourceByValueType(Type type)
 		{
-			if (!EditorContentEntryMap.Any(type))
-				Refresh(type);
+			Refresh(type, true);
 
 			foreach (var source in EditorContentEntryMap.GetAll(type))
 				yield return source;
@@ -175,13 +173,15 @@ namespace Content.Editor
 			}
 		}
 
+		private static void Refresh<T>(bool force) => Refresh(typeof(T), force);
 		private static void Refresh<T>() => Refresh(typeof(T));
 
-		private static void Refresh(Type type)
+		private static void Refresh(Type type, bool force = false)
 		{
-			if (_typeToVersion.TryGetValue(type, out var currentVersion)
-				&& currentVersion == version)
-				return;
+			if (!force)
+				if (_typeToVersion.TryGetValue(type, out var currentVersion)
+					&& currentVersion == version)
+					return;
 
 			EditorContentEntryMap.Clear(type);
 			EditorSingleContentEntryShortcut.Clear(type);

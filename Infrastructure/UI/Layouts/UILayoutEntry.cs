@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssetManagement;
+using JetBrains.Annotations;
 using Sapientia.Extensions;
 using UnityEngine;
 
@@ -23,16 +24,17 @@ namespace UI
 	}
 
 	[Serializable]
-	public class LayoutEntry<TLayout> : LayoutEntry
+	public class UILayoutEntry<TLayout> : UILayoutEntry
 		where TLayout : UIBaseLayout
 	{
+		[NotNull]
 		[SerializeField]
 		private ComponentReferenceEntry<TLayout> _layoutReference;
 
 		public override ComponentReferenceEntry LayoutReference => _layoutReference;
 	}
 
-	public abstract class LayoutEntry
+	public abstract class UILayoutEntry
 	{
 		public abstract ComponentReferenceEntry LayoutReference { get; }
 

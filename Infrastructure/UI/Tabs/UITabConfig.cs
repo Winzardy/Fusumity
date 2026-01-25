@@ -8,6 +8,6 @@ namespace UI.Tabs
 	[Documentation("https://www.notion.so/winzardy/Tab-6dd74d2937654dc5975bdfbfac6c9e68?pvs=4")]
 	public class UITabConfig
 	{
-		public LayoutEntry<UIBaseTabLayout> layout;
+		public UILayoutEntry<UIBaseTabLayout> layout;
 	}
 }

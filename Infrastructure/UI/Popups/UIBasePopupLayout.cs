@@ -7,6 +7,7 @@ namespace UI.Popups
 		public override bool UseLayoutAnimations => useAnimations;
 		public bool useAnimations = true;
 
+		[Sirenix.OdinInspector.PropertySpace(0, 10)]
 		public Button close;
 	}
 }

@@ -1,12 +1,12 @@
-﻿using Fusumity.MVVM.UI;
+﻿using System;
+using Fusumity.MVVM;
 using Sapientia;
-using System;
 
 namespace UI.Windows
 {
 	public abstract class UIViewBoundWindow<TViewModel, TView, TLayout> : UIWindow<TLayout, TViewModel>
-			where TView : UIView<TViewModel, TLayout>
-			where TLayout : UIBaseWindowLayout
+		where TView : class, IView<TViewModel>
+		where TLayout : UIBaseWindowLayout
 	{
 		/// <summary>
 		/// Dispose current view model every time the view is updated
@@ -55,7 +55,8 @@ namespace UI.Windows
 			BeforeViewDisposed();
 			TryAutoDisposeViewModel();
 
-			_view.Dispose();
+			if (_view is IDisposable disposable)
+				disposable.Dispose();
 			OnViewDisposed();
 
 			_view = null;
@@ -97,18 +98,23 @@ namespace UI.Windows
 		protected virtual void OnViewCreated()
 		{
 		}
+
 		protected virtual void BeforeViewDisposed()
 		{
 		}
+
 		protected virtual void OnViewDisposed()
 		{
 		}
+
 		protected virtual void OnViewShown()
 		{
 		}
+
 		protected virtual void OnViewHidden()
 		{
 		}
+
 		protected virtual void OnViewUpdated()
 		{
 		}

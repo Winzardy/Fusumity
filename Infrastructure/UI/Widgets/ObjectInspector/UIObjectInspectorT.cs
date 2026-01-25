@@ -9,10 +9,10 @@ namespace UI
 	public class DefaultObjectInspectorViewModel<T> : IObjectInspectorViewModel<T>
 		where T : Component
 	{
-		public IAssetReferenceEntry reference { get; set; }
-		public T prefab { get; set; }
-		public ISpinner spinner { get; set; }
-		public UITextureRendererArgs? render { get; set; }
+		public IAssetReferenceEntry Reference { get; set; }
+		public T Prefab { get; set; }
+		public ISpinner Spinner { get; set; }
+		public UITextureRendererArgs? Render { get; set; }
 		public UIObjectInspectorSettings Settings { get; set; }
 	}
 

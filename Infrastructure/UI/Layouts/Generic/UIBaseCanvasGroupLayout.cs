@@ -13,7 +13,7 @@ namespace UI
 		{
 			base.Reset();
 
-			canvasGroup = GetComponent<CanvasGroup>();
+			TryGetComponent(out canvasGroup);
 		}
 	}
 }

@@ -1,13 +1,12 @@
-﻿using Fusumity.MVVM.UI;
-using Sapientia;
-using System;
+﻿using System;
 using Fusumity.MVVM;
+using Sapientia;
 
-namespace UI.Popups
+namespace UI.Popovers
 {
-	public abstract class UIViewBoundPopup<TViewModel, TView, TLayout> : UIPopup<TLayout, TViewModel>
+	public abstract class UIViewBoundPopover<TViewModel, TView, TLayout> : UIPopover<TLayout, TViewModel>
 		where TView : class, IView<TViewModel>
-		where TLayout : UIBasePopupLayout
+		where TLayout : UIBasePopoverLayout
 	{
 		/// <summary>
 		/// Dispose current view model every time the view is updated
@@ -58,7 +57,6 @@ namespace UI.Popups
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
-
 			OnViewDisposed();
 
 			_view = null;
@@ -79,10 +77,11 @@ namespace UI.Popups
 			OnViewUpdated();
 		}
 
-		protected sealed override void OnShow(ref TViewModel viewModel)
+		protected override sealed void OnShow(ref TViewModel viewModel)
 		{
 			TryAutoDisposeViewModel();
 			_view.Update(viewModel);
+
 			OnViewShown();
 		}
 

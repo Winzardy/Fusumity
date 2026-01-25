@@ -265,7 +265,7 @@ namespace UI
 		/// Важно, сам корневой виджет остается жить, но при очистке верстки, он вызовет Dispose у своих детей (childs)!
 		/// Есть возможность использовать изберательную логику при вызове OnLayoutCleared у детей (childs), но это усложняет
 		/// и удорожает простую очистку верстки, лучше просто дольше держать активной ту верстку которая нужна по логике.
-		/// (подробнее в <see cref="LayoutEntry"/>)
+		/// (подробнее в <see cref="UILayoutEntry"/>)
 		/// </summary>
 		protected internal void RegisterChildWidget<TLayout>(UIWidget<TLayout> widget, bool autoActivation,
 			bool immediateActivation = true)
@@ -284,7 +284,7 @@ namespace UI
 		/// Важно, сам корневой виджет остается жить, но при очистке верстки, он вызовет Dispose у своих детей (childs)!
 		/// Есть возможность использовать изберательную логику при вызове OnLayoutCleared у детей (childs), но это усложняет
 		/// и удорожает простую очистку верстки, лучше просто дольше держать активной ту верстку которая нужна по логике.
-		/// (подробнее в <see cref="LayoutEntry"/>)
+		/// (подробнее в <see cref="UILayoutEntry"/>)
 		/// </summary>
 		internal void RegisterChildWidget(UIWidget widget, bool soft = false)
 		{

@@ -49,13 +49,13 @@ namespace UI
 
 	public interface IObjectInspectorViewModel<T>
 	{
-		public IAssetReferenceEntry reference { get; }
-		public T prefab { get; }
+		public IAssetReferenceEntry Reference { get; }
+		public T Prefab { get; }
 
 		//Для кастомных спинеров
-		public ISpinner spinner { get; }
+		public ISpinner Spinner { get; }
 
-		public UITextureRendererArgs? render { get; }
+		public UITextureRendererArgs? Render { get; }
 
 		public UIObjectInspectorSettings Settings { get; }
 	}
@@ -70,7 +70,7 @@ namespace UI
 
 		private UISpinner _defaultSpinner;
 
-		private ISpinner spinner => _args.spinner ?? _defaultSpinner;
+		private ISpinner spinner => _args.Spinner ?? _defaultSpinner;
 
 		private IAssetReferenceEntry _targetReference;
 		private T _targetPrefab;
@@ -88,6 +88,7 @@ namespace UI
 		protected override void OnInitialized()
 		{
 			ServiceLocator.Get(out _inputReader);
+
 			_inputReader.Swiped += OnSwiped;
 			_inputReader.Tapped += OnTapped;
 		}
@@ -120,10 +121,10 @@ namespace UI
 
 		protected sealed override void OnShow(ref TArgs args)
 		{
-			if (args.render.HasValue)
+			if (args.Render.HasValue)
 			{
 				_textureRenderer?.Dispose();
-				_textureRenderer = new UITextureRenderer(args.render);
+				_textureRenderer = new UITextureRenderer(args.Render);
 			}
 
 			ShowAsync(args)
@@ -150,21 +151,21 @@ namespace UI
 
 			_layout.image.SetActive(false);
 
-			var prefab = args.prefab;
+			var prefab = args.Prefab;
 
-			if (prefab == null && !args.reference.IsEmptyOrInvalid())
+			if (prefab == null && !args.Reference.IsEmptyOrInvalid())
 			{
 				spinner?.Show(this);
-				prefab = await LoadAsync(args.reference, token);
+				prefab = await LoadAsync(args.Reference, token);
 
 				if (token.IsCancellationRequested)
 				{
-					args.reference?.Release();
+					args.Reference?.Release();
 					return;
 				}
 
 				_targetReference?.Release(RELEASE_DELAY_MS);
-				_targetReference = args.reference;
+				_targetReference = args.Reference;
 
 				spinner?.Hide(this);
 			}

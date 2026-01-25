@@ -4,8 +4,6 @@ using UnityEngine.UI;
 
 namespace UI.Screens
 {
-	//TODO: не помню зачем я заставляю скрины иметь Canvas...
-	[RequireComponent(typeof(Canvas))]
 	public abstract class UIBaseScreenLayout : UIBaseContainerLayout
 	{
 		public override bool UseLayoutAnimations => useAnimations;
@@ -17,7 +15,7 @@ namespace UI.Screens
 		[HideInInspector]
 		public GraphicRaycaster raycaster;
 
-		[PropertySpace(5,5)]
+		[PropertySpace(0, 10)]
 		public Button close;
 
 		//Защита от дурака)

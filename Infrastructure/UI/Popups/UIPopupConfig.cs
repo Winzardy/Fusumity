@@ -10,7 +10,7 @@ namespace UI.Popups
 	[Documentation("https://www.notion.so/winzardy/Popup-4486acfcfe8143728a8a293d87b36193?pvs=4")]
 	public struct UIPopupConfig
 	{
-		public LayoutEntry<UIBasePopupLayout> layout;
+		public UILayoutEntry<UIBasePopupLayout> layout;
 
 		[Space]
 		public Toggle<int> poolCapacity;

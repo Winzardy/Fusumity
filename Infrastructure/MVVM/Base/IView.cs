@@ -12,9 +12,16 @@ namespace Fusumity.MVVM
 		void Reset();
 
 		GameObject GameObject { get; }
+
+		void ClearViewModel(bool dispose = false);
 	}
 
-	public abstract class View<TViewModel> : IView, IDisposable
+	public interface IView<TViewModel> : IView
+	{
+		void Update(TViewModel viewModel);
+	}
+
+	public abstract class View<TViewModel> : IView<TViewModel>, IDisposable
 	{
 		public abstract GameObject GameObject { get; }
 
@@ -123,6 +130,7 @@ namespace Fusumity.MVVM
 		#region Disposables
 
 		private CompositeDisposable _disposables;
+
 		protected void AddDisposable(IDisposable disposable)
 		{
 			var lazyCd = _disposables ??= new CompositeDisposable();
@@ -142,15 +150,18 @@ namespace Fusumity.MVVM
 		#endregion Disposables
 
 		#region Bindings
+
 		private CompositeDisposable _bindings;
+
 		/// <summary>
 		/// Bindings are disposed of upon each view model clearing.
 		/// </summary>
-		protected void Bind<T>(IBinding<T> binding,  Action<T> handler)
+		protected void Bind<T>(IBinding<T> binding, Action<T> handler)
 		{
 			var lazyCd = _bindings ??= new CompositeDisposable();
 			lazyCd.AddDisposable(new BindingSubscription<T>(binding, handler));
 		}
+
 		#endregion
 	}
 

@@ -22,6 +22,7 @@ namespace UI
 		public UIWidget(TLayout layout)
 		{
 			SetupLayout(layout);
+			Initialize();
 		}
 
 		public override void SetupLayout(TLayout layout)

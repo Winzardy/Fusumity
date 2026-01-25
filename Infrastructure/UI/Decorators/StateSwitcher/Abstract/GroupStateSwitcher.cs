@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
@@ -12,6 +13,7 @@ namespace UI
 	public abstract class GroupStateSwitcher<TState> : StateSwitcher<TState>
 	{
 		[SerializeField]
+		[NotNull]
 		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor))]
 		protected List<StateSwitcher<TState>> _group;
 
@@ -23,6 +25,12 @@ namespace UI
 				if (item == this)
 				{
 					GUIDebug.LogError("Used same layout in group");
+					continue;
+				}
+
+				if (item == null)
+				{
+					GUIDebug.LogError("Used null in group", this);
 					continue;
 				}
 #endif

@@ -35,7 +35,6 @@ namespace UI.Popovers
 
 	public abstract class UIPopover<TLayout, TArgs> : UIBasePopover<TLayout, TArgs>
 		where TLayout : UIBasePopoverLayout
-
 	{
 		private bool _suppressHide;
 

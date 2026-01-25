@@ -7,17 +7,31 @@ using UnityEngine;
 
 namespace UI
 {
-	public class DefaultObjectInspectorViewModel : IObjectInspectorViewModel<GameObject>
+	public interface IGameObjectInspectorViewModel : IObjectInspectorViewModel<GameObject>
 	{
-		public IAssetReferenceEntry reference { get; set; }
-		public GameObject prefab { get; set; }
-		public ISpinner spinner { get; set; }
-		public UITextureRendererArgs? render { get; set; }
+	}
+
+	public class DefaultGameObjectInspectorViewModel : IGameObjectInspectorViewModel
+	{
+		public IAssetReferenceEntry Reference { get; set; }
+		public GameObject Prefab { get; set; }
+		public ISpinner Spinner { get; set; }
+		public UITextureRendererArgs? Render { get; set; }
 		public UIObjectInspectorSettings Settings { get; set; }
 	}
 
-	public class UIObjectInspector : UIBaseObjectInspector<GameObject, DefaultObjectInspectorViewModel>
+	public class UIObjectInspector : UIBaseObjectInspector<GameObject, IGameObjectInspectorViewModel>
 	{
+		public UIObjectInspector()
+		{
+		}
+
+		public UIObjectInspector(UIObjectInspectorLayout layout)
+		{
+			SetupLayout(layout);
+			Initialize();
+		}
+
 		protected override async UniTask<GameObject> CreateAsync(GameObject prefab, CancellationToken cancellationToken)
 		{
 			var operation = Object.InstantiateAsync(prefab);
