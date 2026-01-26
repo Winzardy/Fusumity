@@ -38,6 +38,8 @@ namespace AssetManagement
 			string label = null) where T : Object
 		{
 			var entry = new AssetReferenceEntry<T>();
+			entry.assetReference = new UnityEngine.AddressableAssets.AssetReferenceT<T>(null);
+
 			entry.SetEditorAsset(asset, address, group, label);
 			return entry;
 		}

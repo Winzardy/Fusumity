@@ -1,4 +1,5 @@
 ﻿using Fusumity.MVVM.UI;
+using Sapientia;
 using System;
 
 namespace UI.Windows
@@ -32,6 +33,12 @@ namespace UI.Windows
 		protected override sealed void OnLayoutInstalled()
 		{
 			_view = CreateView(_layout);
+
+			if (_view is ICloseRequestor closeRequestor)
+			{
+				closeRequestor.CloseRequested += RequestClose;
+			}
+
 			OnViewCreated();
 		}
 
@@ -39,6 +46,11 @@ namespace UI.Windows
 		{
 			if (_view == null)
 				return;
+
+			if (_view is ICloseRequestor closeRequestor)
+			{
+				closeRequestor.CloseRequested -= RequestClose;
+			}
 
 			BeforeViewDisposed();
 			TryAutoDisposeViewModel();

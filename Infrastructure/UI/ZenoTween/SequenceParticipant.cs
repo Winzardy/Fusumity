@@ -44,6 +44,11 @@ namespace ZenoTween
 
 		public static Tween ToTween(this ICollection<SequenceParticipant> participants, object target)
 		{
+			return participants.ToSequence(target);
+		}
+
+		public static Sequence ToSequence(this ICollection<SequenceParticipant> participants, object target)
+		{
 			Sequence sequence = null;
 
 			if (!participants.IsNullOrEmpty())

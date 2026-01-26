@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,8 @@ namespace Content.Editor
 
 	public static class ContentEditorCache
 	{
+		private static Dictionary<Type, int> _typeToVersion = new();
+
 		private static Dictionary<string, ScriptableObject> _cache;
 
 		private static Dictionary<string, ScriptableObject> cache
@@ -20,7 +23,7 @@ namespace Content.Editor
 			get
 			{
 				if (_cache == null)
-					Refresh();
+					ClearAndRefreshScrObjs();
 
 				return _cache;
 			}
@@ -28,7 +31,7 @@ namespace Content.Editor
 
 		public static int version => _cache.Count;
 
-		public static void Refresh()
+		public static void ClearAndRefreshScrObjs()
 		{
 			_cache ??= new();
 			_cache.Clear();
@@ -139,22 +142,47 @@ namespace Content.Editor
 		/// <summary>
 		/// Nested не возвращает...
 		/// </summary>
-		public static IEnumerable<IContentEntry<T>> GetAllSourceByValueType<T>()
+		public static IEnumerable<IContentEntrySource<T>> GetAllSourceByValueType<T>()
 		{
 			if (!EditorContentEntryMap<T>.Any())
 				Refresh<T>();
 
 			if (EditorSingleContentEntryShortcut<T>.Contains())
-				yield return EditorSingleContentEntryShortcut<T>.Get().ContentEntry;
+				yield return EditorSingleContentEntryShortcut<T>.Get();
 
-			foreach (var entry in EditorContentEntryMap<T>.GetAll())
-				yield return entry.ContentEntry;
+			foreach (var source in EditorContentEntryMap<T>.GetAll())
+				yield return source;
+		}
+
+		public static IEnumerable<IContentEntrySource> GetAllSourceByValueType(Type type)
+		{
+			if (!EditorContentEntryMap.Any(type))
+				Refresh(type);
+
+			foreach (var source in EditorContentEntryMap.GetAll(type))
+				yield return source;
+		}
+
+		public static IEnumerable<string> GetAllIdsByValueType(Type type, bool firstEmpty = false)
+		{
+			if (firstEmpty)
+				yield return string.Empty;
+
+			foreach (var source in GetAllSourceByValueType(type))
+			{
+				if (source.ContentEntry is IIdentifiable identifiable)
+					yield return identifiable.Id;
+			}
 		}
 
 		private static void Refresh<T>() => Refresh(typeof(T));
 
 		private static void Refresh(Type type)
 		{
+			if (_typeToVersion.TryGetValue(type, out var currentVersion)
+				&& currentVersion == version)
+				return;
+
 			EditorContentEntryMap.Clear(type);
 			EditorSingleContentEntryShortcut.Clear(type);
 
@@ -176,6 +204,8 @@ namespace Content.Editor
 
 				Register(valueType, target);
 			}
+
+			_typeToVersion[type] = version;
 		}
 
 		private static void Register(Type valueType, IContentEntrySource target)
@@ -299,8 +329,27 @@ namespace Content.Editor
 		private static Dictionary<Type, MethodInfo> _typeToMethod = new(1);
 		internal static readonly Dictionary<Type, EditorTypeResolver> typeToResolver = new(1);
 		internal static readonly Dictionary<Type, Action> typeToClearAction = new(1);
+		internal static readonly Dictionary<Type, Func<bool>> typeToAnyFunc = new(1);
+		internal static readonly Dictionary<Type, Func<IEnumerable<IContentEntrySource>>> typeToGetAllFunc = new(1);
 
 		internal static Dictionary<SerializableGuid, NestedContentEntrySource> nestedToSource;
+
+		public static IEnumerable<IContentEntrySource> GetAll(Type type)
+		{
+			if (typeToGetAllFunc.TryGetValue(type, out var func))
+			{
+				foreach (var source in func.Invoke())
+					yield return source;
+			}
+		}
+
+		public static bool Any(Type type)
+		{
+			if (typeToAnyFunc.TryGetValue(type, out var func))
+				return func.Invoke();
+
+			return false;
+		}
 
 		public static bool Contains(Type type, in SerializableGuid guid)
 		{
@@ -399,6 +448,10 @@ namespace Content.Editor
 				EditorContentEntryMap.typeToResolver[typeof(T)] = Resolve;
 			if (!EditorContentEntryMap.typeToClearAction.ContainsKey(typeof(T)))
 				EditorContentEntryMap.typeToClearAction[typeof(T)] = Clear;
+			if (!EditorContentEntryMap.typeToAnyFunc.ContainsKey(typeof(T)))
+				EditorContentEntryMap.typeToAnyFunc[typeof(T)] = Any;
+			if (!EditorContentEntryMap.typeToGetAllFunc.ContainsKey(typeof(T)))
+				EditorContentEntryMap.typeToGetAllFunc[typeof(T)] = GetAll;
 
 			if (source is IUniqueContentEntrySource<T> uniqueSource)
 			{
