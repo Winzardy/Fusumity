@@ -1,7 +1,6 @@
-﻿using Fusumity.Utility;
-using System;
+﻿using System;
 
-namespace Fusumity.MVVM
+namespace Fusumity.Utility
 {
 	public class ClickableSubscription : ActionSubscription
 	{

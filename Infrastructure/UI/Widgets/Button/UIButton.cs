@@ -193,7 +193,7 @@ namespace UI
 		}
 	}
 
-	public static class UIButtonExtensions
+	public static class UIButtonWidget2Extensions
 	{
 		/// <summary>
 		/// Отписку (<see cref="Unsubscribe"/>) можно не делать так как при очистке верстки, произойдет очистка подписчиков

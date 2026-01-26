@@ -1,5 +1,4 @@
 ﻿using TMPro;
-using UnityEngine;
 
 namespace Fusumity.MVVM.UI
 {

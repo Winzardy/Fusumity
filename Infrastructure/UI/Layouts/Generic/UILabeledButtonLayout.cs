@@ -47,6 +47,10 @@ namespace UI
 		[AnimationTweenKey(ANIMATION_KEY_PREFIX), OnValueChanged(nameof(OnDefaultStyleChanged))]
 		public string defaultStyle = ANIMATION_KEY_PREFIX + ButtonStyle.DEFAULT;
 
+		[Space]
+		public string uId;
+		public string groupId;
+
 		public void Subscribe(UnityAction action) => button.onClick.AddListener(action);
 
 		public void Unsubscribe(UnityAction action) => button.onClick.RemoveListener(action);

@@ -17,5 +17,9 @@ namespace UI
 		public StateSwitcher<string> switcher;
 		public UIAdBannerLayout adBanner;
 		public UILabeledIconLayout labeledIcon;
+
+		[Space]
+		public string uId;
+		public string groupId;
 	}
 }
