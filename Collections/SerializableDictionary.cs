@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -151,12 +152,12 @@ namespace Fusumity.Collections
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-			Clear();
+			base.Clear();
 
 			elements ??= new TKeyValue[Count];
 
 			for (var i = 0; i < elements.Length; i++)
-				TryAdd(elements[i].Key, elements[i].Value);
+				base.TryAdd(elements[i].Key, elements[i].Value);
 		}
 
 		void ISerializableDictionary.Sync() => Sync();
@@ -197,6 +198,57 @@ namespace Fusumity.Collections
 
 				elements[i++] = keyValue;
 			}
+		}
+
+		public new void Clear()
+		{
+			base.Clear();
+			Sync();
+		}
+
+		public new bool TryAdd(TKey key, TValue value)
+		{
+			if (base.TryAdd(key, value))
+			{
+				AddToArrayInternal(key, value);
+				return true;
+			}
+
+			return false;
+		}
+
+		public new void Add(TKey key, TValue value)
+		{
+			base.Add(key, value);
+			AddToArrayInternal(key, value);
+		}
+
+		public new bool Remove(TKey key)
+		{
+			if (base.Remove(key))
+			{
+				var selectedIndex = 0;
+				for (int i = 0; i < elements.Length; i++)
+				{
+					if (!Equals(elements[i].Key, key))
+						continue;
+					selectedIndex = i;
+					break;
+				}
+
+				elements = elements.RemoveAt(selectedIndex);
+				return true;
+			}
+
+			return false;
+		}
+
+		private void AddToArrayInternal(TKey key, TValue value)
+		{
+			var keyValue = default(TKeyValue);
+			keyValue.Key = key;
+			keyValue.Value = value;
+			elements = elements.Add(keyValue);
 		}
 	}
 

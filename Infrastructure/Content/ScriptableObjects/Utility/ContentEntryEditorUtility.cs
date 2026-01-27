@@ -1,14 +1,20 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
+using UnityEngine;
 
 namespace Content.Editor
 {
@@ -48,65 +54,7 @@ namespace Content.Editor
 
 			var so = new SerializedObject(asset);
 			scriptableObject.ScriptableContentEntry.ClearNested();
-			Refresh(asset, so, refreshAndSave);
-			SetDirty(so, refreshAndSave);
-
-			if (ContentDebug.Logging.Nested.refresh)
-			{
-				var collection = dictionary.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
-					true);
-				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
-					$" {collection}", scriptableObject);
-			}
-		}
-
-		private static void Refresh(ContentScriptableObject asset, SerializedObject serializedObject, bool refreshAndSave = true)
-		{
-			if (asset is not IContentEntryScriptableObject scriptableObject)
-				return;
-
-			var iterator = serializedObject.GetIterator();
-			if (!iterator.Next(true))
-				return;
-			do
-			{
-				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
-				if (!modification)
-					continue;
-
-				var reference = iterator.ToContentReference();
-
-				if (reference == null)
-					continue;
-
-				if (!IsValid(entry, reference))
-				{
-					ForceRegenerate(entry, reference);
-				}
-				else
-				{
-					EditorUtility.SetDirty(asset);
-				}
-
-				if (!Track((asset, reference), in entry.Guid))
-				{
-					ForceRegenerate(entry, reference);
-				}
-			} while (iterator.Next(true));
-
-			bool IsValid(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
-				=> entry.Guid != SerializableGuid.Empty && scriptableObject.ScriptableContentEntry
-					.RegisterNestedEntry(entry.Guid, reference);
-
-			void ForceRegenerate(IUniqueContentEntry entry, MemberReflectionReference<IUniqueContentEntry> reference)
-			{
-				iterator.RegenerateGuid(entry, asset, refreshAndSave);
-
-				if (scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
-					SetDirty(serializedObject, refreshAndSave);
-				else
-					throw new ArgumentException($"{entry.Guid} is already registered (after regenerate?)");
-			}
+			Refresh(asset, so, refreshAndSave, false, log: true);
 		}
 
 		/// <returns><c>true</c>, если запомнили без проблем; иначе <c>false</c></returns>
@@ -222,18 +170,27 @@ namespace Content.Editor
 
 		public static void RecursiveRegenerateAndRefresh(this ContentScriptableObject asset, bool refreshAndSave = true)
 		{
+			Refresh(asset, null, refreshAndSave, true);
+		}
+
+		public static void Refresh(this ContentScriptableObject asset, [CanBeNull] SerializedObject serializedObject,
+			bool refreshAndSave = true,
+			bool regenerateGuid = false,
+			bool log = false)
+		{
 			if (asset is not IContentEntryScriptableObject scriptableObject)
 				return;
 
-			var serializedObject = new SerializedObject(asset);
-			scriptableObject.ScriptableContentEntry.ClearNested();
+			var map = HashMapPool<MemberReflectionReference<IUniqueContentEntry>, SerializableGuid>.Get();
 
+			serializedObject ??= new SerializedObject(asset);
 			var iterator = serializedObject.GetIterator();
 			if (!iterator.Next(true))
 				return;
 			do
 			{
-				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
+				var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
+
 				if (!modification || entry is IScriptableContentEntry)
 					continue;
 
@@ -241,14 +198,35 @@ namespace Content.Editor
 				if (reference == null)
 					continue;
 
-				iterator.RegenerateGuid(entry, asset, refreshAndSave);
-				SetDirty(iterator.serializedObject, refreshAndSave);
+				if (regenerateGuid)
+					RegenerateGuid(entry, iterator.propertyPath, asset, false);
 
-				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(entry.Guid, reference))
-					throw new Exception($"Can't add nested entry with guid [ {entry.Guid} ] by path [ {reference.Path} ]");
+				map.SetOrAdd(reference, entry.Guid);
 
 				Track((asset, reference), in entry.Guid);
 			} while (iterator.Next(true));
+
+			SetDirty(serializedObject, refreshAndSave);
+
+			scriptableObject.ScriptableContentEntry.ClearNested();
+
+			foreach (var reference in map.Keys)
+			{
+				ref var guid = ref map[reference];
+				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference))
+					throw new Exception($"Can't add nested entry with guid [ {guid} ] by path [ {reference.Path} ]");
+			}
+
+			map.ReleaseToStaticPool();
+
+			if (log && ContentDebug.Logging.Nested.refresh)
+			{
+				var collection = scriptableObject.ScriptableContentEntry.Nested
+					.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
+						true);
+				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
+					$" {collection}", scriptableObject);
+			}
 		}
 
 		private static void ClearNested(this IScriptableContentEntry entry)
@@ -264,48 +242,15 @@ namespace Content.Editor
 			entry.ClearNestedCollection();
 		}
 
-		public static void RegenerateGuid(this SerializedProperty property,
-			IUniqueContentEntry entry,
-			ContentScriptableObject asset,
-			bool refreshAndSave = true)
-		{
-			RegenerateGuid(entry, property.propertyPath, asset, refreshAndSave);
-			RecursiveRegenerateGuidForChildren(property, asset, refreshAndSave);
-		}
-
-		private static void RecursiveRegenerateGuidForChildren(this SerializedProperty property, ContentScriptableObject asset,
-			bool refreshAndSave = true)
-		{
-			var iterator = property.Copy();
-			var depth = property.depth;
-
-			if (!iterator.Next(true))
-				return;
-
-			do
-			{
-				if (iterator.depth <= depth)
-					break;
-
-				using var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
-				// Попробуем получить объект из property
-				if (!modification)
-					continue;
-
-				RegenerateGuid(entry, iterator.propertyPath, asset, refreshAndSave);
-				SetDirty(iterator.serializedObject, refreshAndSave);
-			} while (iterator.NextVisible(true));
-		}
-
 		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
 		{
-			var prevEntryGuid = entry.Guid;
-
 			entry.RegenerateGuid();
 			EditorUtility.SetDirty(source);
 
 			if (refreshAndSave)
 				ScheduleRefreshAndSave();
+
+			var prevEntryGuid = entry.Guid;
 
 			if (ContentDebug.Logging.Nested.regenerate)
 			{
@@ -340,60 +285,44 @@ namespace Content.Editor
 
 		private static void ScheduleRefreshAndSave()
 		{
-			if (_scheduledRefreshAndSave)
+			if (ContentEditorCache.IsRebuilding)
 				return;
 
-			_scheduledRefreshAndSave = true;
+			ContentEditorCache.IsRebuilding = true;
+
 			EditorApplication.delayCall += HandleDelayCall;
 
 			void HandleDelayCall()
 			{
 				AssetDatabase.Refresh();
 				AssetDatabase.SaveAssets();
-				_scheduledRefreshAndSave = false;
+				ContentEditorCache.IsRebuilding = false;
 			}
 		}
 
-		private static SerializedPropertyModification TryStartModificationNestedContentEntry(this SerializedProperty property,
+		private static bool TryStartModificationNestedContentEntry(this SerializedProperty property,
 			out IUniqueContentEntry entry)
 		{
 			entry = null;
 
 			if (property == null)
-				return null;
+				return false;
 
 			if (property.isArray)
-				return null;
+				return false;
 
 			if (property.propertyType != SerializedPropertyType.Generic)
-				return null;
+				return false;
 
 			if (!property.type.StartsWith("ContentEntry")) // фильтруем только ContentEntry
-				return null;
+				return false;
 
 			var value = property.GetValueByReflectionSafe();
-			if (value is not IUniqueContentEntry uniqueContentEntry)
-				return null;
+			if (value is not IUniqueContentEntry contentEntry)
+				return false;
 
-			entry = uniqueContentEntry;
-			return new SerializedPropertyModification(property);
-		}
-
-		private class SerializedPropertyModification : IDisposable
-		{
-			private readonly SerializedProperty _property;
-
-			public SerializedPropertyModification(SerializedProperty property)
-			{
-				_property = property;
-			}
-
-			public void Dispose()
-			{
-				_property.serializedObject.ApplyModifiedProperties();
-			}
-
-			public static implicit operator bool(SerializedPropertyModification modification) => modification != null;
+			entry = contentEntry;
+			return true;
 		}
 	}
 }
