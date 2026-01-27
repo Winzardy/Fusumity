@@ -17,9 +17,7 @@ namespace Fusumity.MVVM
 	{
 		protected TModel _model;
 
-		[ShowInInspector]
-		[HideLabel]
-		public TModel Model { get => _model; set => Update(value); }
+		[ShowInInspector] [HideLabel] public TModel Model { get => _model; set => Update(value); }
 
 		public ViewModel()
 		{
@@ -40,7 +38,8 @@ namespace Fusumity.MVVM
 
 		public void Clear()
 		{
-			OnCleared();
+			if (_model != null)
+				OnCleared(_model);
 			_model = default;
 		}
 
@@ -52,7 +51,7 @@ namespace Fusumity.MVVM
 
 		protected abstract void OnUpdated(TModel model);
 
-		protected virtual void OnCleared()
+		protected virtual void OnCleared(TModel model)
 		{
 		}
 

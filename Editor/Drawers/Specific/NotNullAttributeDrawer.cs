@@ -1,4 +1,5 @@
 using System;
+using Content;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Validation;
@@ -18,20 +19,6 @@ namespace Fusumity.Editor
 
 	public class NotNullValidator : NotNullValidator<System.Diagnostics.CodeAnalysis.NotNullAttribute>
 	{
-	}
-
-	public static class NotNullUtility
-	{
-		public static bool IsNull(IPropertyValueEntry valueEntry)
-		{
-			if (valueEntry.TypeOfValue.IsSubclassOf(typeof(UnityObject)))
-			{
-				var unityObject = valueEntry.WeakSmartValue as UnityObject;
-				return unityObject == null;
-			}
-
-			return valueEntry.WeakSmartValue == null;
-		}
 	}
 
 	public class NotNullValidator<T> : AttributeValidator<T>
@@ -59,17 +46,13 @@ namespace Fusumity.Editor
 			if (valueEntry == null)
 				return;
 
-			bool hasError;
-			var value = valueEntry.WeakSmartValue;
-			var isNull = value is UnityObject obj ? obj == null : value == null;
-			if (value is string str)
-				hasError = str.IsNullOrWhiteSpace();
-			else
-				hasError = isNull;
+			var isNull = NotNullUtility.IsNull(valueEntry);
 
 			var originColor = GUI.color;
-			if (hasError)
-				GUI.color = Color.Lerp(originColor, SirenixGUIStyles.RedErrorColor, 0.8f);
+
+			if (isNull)
+				GUI.color = NotNullUtility.GetColor(originColor);
+
 			CallNextDrawer(label);
 			GUI.color = originColor;
 		}
@@ -84,18 +67,33 @@ namespace Fusumity.Editor
 			if (valueEntry == null)
 				return;
 
-			bool hasError;
-			var value = valueEntry.WeakSmartValue;
-			var isNull = value is UnityObject obj ? obj == null : value == null;
-			if (value is string str)
-				hasError = str.IsNullOrWhiteSpace();
-			else
-				hasError = isNull;
+			var isNull = NotNullUtility.IsNull(valueEntry);
+
 			var originColor = GUI.color;
-			if (hasError)
-				GUI.color = Color.Lerp(originColor, SirenixGUIStyles.RedErrorColor, 0.8f);
+			if (isNull)
+				GUI.color = NotNullUtility.GetColor(originColor);
+
 			CallNextDrawer(label);
 			GUI.color = originColor;
+		}
+	}
+
+	public static class NotNullUtility
+	{
+		public static Color GetColor(Color original)
+		{
+			return Color.Lerp(original, SirenixGUIStyles.RedErrorColor, 0.8f);
+		}
+
+		public static bool IsNull(IPropertyValueEntry valueEntry)
+		{
+			if (valueEntry.TypeOfValue.IsSubclassOf(typeof(UnityObject)))
+			{
+				var unityObject = valueEntry.WeakSmartValue as UnityObject;
+				return unityObject == null;
+			}
+
+			return valueEntry.WeakSmartValue == null;
 		}
 	}
 }

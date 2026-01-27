@@ -127,6 +127,8 @@ namespace Fusumity.MVVM
 			ClearViewModel();
 		}
 
+		public static implicit operator bool(View<TViewModel> view) => view != null;
+
 		#region Disposables
 
 		private CompositeDisposable _disposables;
