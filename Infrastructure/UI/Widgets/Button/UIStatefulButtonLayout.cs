@@ -1,4 +1,6 @@
-﻿using Game.UI;
+﻿using ActionBusSystem;
+using Fusumity.Attributes.Odin;
+using Game.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +21,9 @@ namespace UI
 		public UILabeledIconLayout labeledIcon;
 
 		[Space]
+		[ConstDropdown(typeof(ActionBusElementType))]
 		public string uId;
+		[ConstDropdown(typeof(ActionBusGroupType))]
 		public string groupId;
 	}
 }

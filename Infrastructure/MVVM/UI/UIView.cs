@@ -19,7 +19,7 @@ namespace Fusumity.MVVM.UI
 		{
 			if (button != null)
 			{
-				AddSubscription(button.Subscribe(action, uId, groupId));
+				AddSubscription(button.Subscribe(action, uId, groupId, false));
 			}
 		}
 

@@ -71,8 +71,16 @@ namespace Fusumity.Editor.Drawers
 				_values.Add(value);
 				_namesMap.Add(value, name);
 
-				if (EqualityComparer<T>.Default.Equals(value, default))
+				if (IsDefault(value))
 					defaultFound = true;
+
+				bool IsDefault(T value)
+				{
+					if (value is string s)
+						return s.IsNullOrEmpty();
+
+					return EqualityComparer<T>.Default.Equals(value, default);
+				}
 
 				string GetFormattedName(string name)
 				{
@@ -89,7 +97,7 @@ namespace Fusumity.Editor.Drawers
 			{
 				var defaultValue =
 					typeof(T) == typeof(string) ?
-					(T)(object)string.Empty :
+					(T)(object)"" :
 					default(T);
 
 				if (defaultValue != null)

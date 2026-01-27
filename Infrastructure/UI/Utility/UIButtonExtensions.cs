@@ -6,10 +6,11 @@ namespace UI
 {
 	public static class UIButtonExtensions
 	{
-		public static ActionBusElement Subscribe(this Button button, Action action, string uId = null, string groupId = null)
+		public static ActionBusElement Subscribe(this Button button, Action action, string uId = null, string groupId = null, bool allowLinking = true)
 		{
-			var subscription = new UnityButtonBusElement(button, action, uId, groupId);
-			return ActionBus.Register(subscription);
+			var element = new UnityButtonBusElement(button, action, uId, groupId);
+			element.AllowLinking = allowLinking;
+			return ActionBus.Register(element);
 		}
 
 		public static ActionBusElement Subscribe(UILabeledButtonLayout layout, Action action)

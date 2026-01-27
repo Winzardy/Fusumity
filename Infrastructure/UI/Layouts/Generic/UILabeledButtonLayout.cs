@@ -1,4 +1,6 @@
 ﻿using System;
+using ActionBusSystem;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -48,7 +50,9 @@ namespace UI
 		public string defaultStyle = ANIMATION_KEY_PREFIX + ButtonStyle.DEFAULT;
 
 		[Space]
+		[ConstDropdown(typeof(ActionBusElementType))]
 		public string uId;
+		[ConstDropdown(typeof(ActionBusGroupType))]
 		public string groupId;
 
 		public void Subscribe(UnityAction action) => button.onClick.AddListener(action);
