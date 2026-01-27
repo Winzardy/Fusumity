@@ -208,39 +208,24 @@ namespace Content.Editor
 
 			SetDirty(serializedObject, refreshAndSave);
 
-			var skip = 1;
+			scriptableObject.ScriptableContentEntry.ClearNested();
 
-			if (!map.IsEmpty())
-				EditorApplication.delayCall += HandleDelayCall;
-
-			void HandleDelayCall()
+			foreach (var reference in map.Keys)
 			{
-				if (skip > 0)
-				{
-					skip--;
-					EditorApplication.delayCall += HandleDelayCall;
-					return;
-				}
+				ref var guid = ref map[reference];
+				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference))
+					throw new Exception($"Can't add nested entry with guid [ {guid} ] by path [ {reference.Path} ]");
+			}
 
-				scriptableObject.ScriptableContentEntry.ClearNested();
+			map.ReleaseToStaticPool();
 
-				foreach (var reference in map.Keys)
-				{
-					ref var guid = ref map[reference];
-					if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference))
-						throw new Exception($"Can't add nested entry with guid [ {guid} ] by path [ {reference.Path} ]");
-				}
-
-				map.ReleaseToStaticPool();
-
-				if (log && ContentDebug.Logging.Nested.refresh)
-				{
-					var collection = scriptableObject.ScriptableContentEntry.Nested
-						.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
-							true);
-					ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
-						$" {collection}", scriptableObject);
-				}
+			if (log && ContentDebug.Logging.Nested.refresh)
+			{
+				var collection = scriptableObject.ScriptableContentEntry.Nested
+					.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
+						true);
+				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
+					$" {collection}", scriptableObject);
 			}
 		}
 
@@ -304,19 +289,11 @@ namespace Content.Editor
 				return;
 
 			ContentEditorCache.IsRebuilding = true;
-			var skip = 2;
+
 			EditorApplication.delayCall += HandleDelayCall;
 
 			void HandleDelayCall()
 			{
-				if (skip > 0)
-				{
-					skip--;
-					EditorApplication.delayCall += HandleDelayCall;
-
-					return;
-				}
-
 				AssetDatabase.Refresh();
 				AssetDatabase.SaveAssets();
 				ContentEditorCache.IsRebuilding = false;

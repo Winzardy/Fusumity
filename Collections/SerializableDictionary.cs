@@ -98,16 +98,16 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValuePair> : Dictionary<TKey, TValue>,
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>,
 		ISerializableDictionary,
 		ISerializationCallbackReceiver
-		where TKeyValuePair : struct, IKeyValuePair<TKey, TValue>
+		where TKeyValue : struct, IKeyValue<TKey, TValue>
 	{
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
 		[SerializeField, HideInInspector]
-		protected TKeyValuePair[] elements;
+		protected TKeyValue[] elements;
 
 		public int Length => elements?.Length ?? 0;
 
@@ -154,10 +154,10 @@ namespace Fusumity.Collections
 		{
 			base.Clear();
 
-			elements ??= new TKeyValuePair[Count];
+			elements ??= new TKeyValue[Count];
 
 			for (var i = 0; i < elements.Length; i++)
-				TryAdd(elements[i].Key, elements[i].Value);
+				base.TryAdd(elements[i].Key, elements[i].Value);
 		}
 
 		void ISerializableDictionary.Sync() => Sync();
@@ -187,12 +187,12 @@ namespace Fusumity.Collections
 		private void Sync()
 		{
 			if (elements == null || elements.Length != Count)
-				elements = new TKeyValuePair[Count];
+				elements = new TKeyValue[Count];
 
 			var i = 0;
 			foreach (var pair in this)
 			{
-				var keyValue = default(TKeyValuePair);
+				var keyValue = default(TKeyValue);
 				keyValue.Key = pair.Key;
 				keyValue.Value = pair.Value;
 
@@ -245,7 +245,7 @@ namespace Fusumity.Collections
 
 		private void AddToArrayInternal(TKey key, TValue value)
 		{
-			var keyValue = default(TKeyValuePair);
+			var keyValue = default(TKeyValue);
 			keyValue.Key = key;
 			keyValue.Value = value;
 			elements = elements.Add(keyValue);
@@ -253,7 +253,7 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public struct KeyValue<TKey, TValue> : IKeyValuePair<TKey, TValue>
+	public struct KeyValue<TKey, TValue> : IKeyValue<TKey, TValue>
 	{
 		public TKey key;
 		public TValue value;
@@ -281,7 +281,7 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public struct KeyReferenceValue<TKey, TValue> : IKeyValuePair<TKey, TValue>
+	public struct KeyReferenceValue<TKey, TValue> : IKeyValue<TKey, TValue>
 		where TValue : class
 	{
 		public TKey key;
@@ -306,7 +306,7 @@ namespace Fusumity.Collections
 		}
 	}
 
-	public interface IKeyValuePair<TKey, TValue>
+	public interface IKeyValue<TKey, TValue>
 	{
 		public TKey Key { get; set; }
 		public TValue Value { get; set; }
