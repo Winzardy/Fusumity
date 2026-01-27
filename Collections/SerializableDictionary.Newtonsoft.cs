@@ -8,7 +8,7 @@ using Sapientia.Reflection;
 namespace Fusumity.Collections
 {
 	[JsonConverter(typeof(SerializableDictionaryJsonConverter))]
-	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue>
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValuePair>
 	{
 	}
 

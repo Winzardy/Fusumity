@@ -14,6 +14,8 @@ namespace Content.Editor
 
 	public static class ContentEditorCache
 	{
+		public static bool IsRebuilding { get; set; }
+
 		private static Dictionary<Type, int> _typeToVersion = new();
 
 		private static Dictionary<string, ScriptableObject> _cache;

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using UnityEngine;
 
 namespace Fusumity.Collections
@@ -97,16 +98,16 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValue> : Dictionary<TKey, TValue>,
+	public abstract partial class SerializableDictionary<TKey, TValue, TKeyValuePair> : Dictionary<TKey, TValue>,
 		ISerializableDictionary,
 		ISerializationCallbackReceiver
-		where TKeyValue : struct, IKeyValue<TKey, TValue>
+		where TKeyValuePair : struct, IKeyValuePair<TKey, TValue>
 	{
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
 		[SerializeField, HideInInspector]
-		protected TKeyValue[] elements;
+		protected TKeyValuePair[] elements;
 
 		public int Length => elements?.Length ?? 0;
 
@@ -151,9 +152,9 @@ namespace Fusumity.Collections
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-			Clear();
+			base.Clear();
 
-			elements ??= new TKeyValue[Count];
+			elements ??= new TKeyValuePair[Count];
 
 			for (var i = 0; i < elements.Length; i++)
 				TryAdd(elements[i].Key, elements[i].Value);
@@ -186,22 +187,73 @@ namespace Fusumity.Collections
 		private void Sync()
 		{
 			if (elements == null || elements.Length != Count)
-				elements = new TKeyValue[Count];
+				elements = new TKeyValuePair[Count];
 
 			var i = 0;
 			foreach (var pair in this)
 			{
-				var keyValue = default(TKeyValue);
+				var keyValue = default(TKeyValuePair);
 				keyValue.Key = pair.Key;
 				keyValue.Value = pair.Value;
 
 				elements[i++] = keyValue;
 			}
 		}
+
+		public new void Clear()
+		{
+			base.Clear();
+			Sync();
+		}
+
+		public new bool TryAdd(TKey key, TValue value)
+		{
+			if (base.TryAdd(key, value))
+			{
+				AddToArrayInternal(key, value);
+				return true;
+			}
+
+			return false;
+		}
+
+		public new void Add(TKey key, TValue value)
+		{
+			base.Add(key, value);
+			AddToArrayInternal(key, value);
+		}
+
+		public new bool Remove(TKey key)
+		{
+			if (base.Remove(key))
+			{
+				var selectedIndex = 0;
+				for (int i = 0; i < elements.Length; i++)
+				{
+					if (!Equals(elements[i].Key, key))
+						continue;
+					selectedIndex = i;
+					break;
+				}
+
+				elements = elements.RemoveAt(selectedIndex);
+				return true;
+			}
+
+			return false;
+		}
+
+		private void AddToArrayInternal(TKey key, TValue value)
+		{
+			var keyValue = default(TKeyValuePair);
+			keyValue.Key = key;
+			keyValue.Value = value;
+			elements = elements.Add(keyValue);
+		}
 	}
 
 	[Serializable]
-	public struct KeyValue<TKey, TValue> : IKeyValue<TKey, TValue>
+	public struct KeyValue<TKey, TValue> : IKeyValuePair<TKey, TValue>
 	{
 		public TKey key;
 		public TValue value;
@@ -229,7 +281,7 @@ namespace Fusumity.Collections
 	}
 
 	[Serializable]
-	public struct KeyReferenceValue<TKey, TValue> : IKeyValue<TKey, TValue>
+	public struct KeyReferenceValue<TKey, TValue> : IKeyValuePair<TKey, TValue>
 		where TValue : class
 	{
 		public TKey key;
@@ -254,7 +306,7 @@ namespace Fusumity.Collections
 		}
 	}
 
-	public interface IKeyValue<TKey, TValue>
+	public interface IKeyValuePair<TKey, TValue>
 	{
 		public TKey Key { get; set; }
 		public TValue Value { get; set; }
