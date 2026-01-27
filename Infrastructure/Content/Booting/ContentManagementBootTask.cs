@@ -22,7 +22,7 @@ namespace Booting.Content
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
 			var resolver = new ContentResolver();
-			ContentManager.Initialize(resolver);
+			ContentManager.Set(resolver);
 
 #if UNITY_EDITOR
 			ContentDatabaseEditorUtility.ValidateDatabases();
@@ -36,7 +36,7 @@ namespace Booting.Content
 
 		protected override void OnDispose()
 		{
-			ContentManager.Terminate();
+			ContentManager.Clear();
 		}
 	}
 }

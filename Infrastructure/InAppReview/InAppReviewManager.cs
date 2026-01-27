@@ -3,7 +3,7 @@ using Sapientia;
 
 namespace InAppReview
 {
-	public class InAppReviewManager : StaticProvider<IInAppReviewStorePlatform>
+	public class InAppReviewManager : StaticAccessor<IInAppReviewStorePlatform>
 	{
 		// ReSharper disable once InconsistentNaming
 		private static IInAppReviewStorePlatform storePlatform

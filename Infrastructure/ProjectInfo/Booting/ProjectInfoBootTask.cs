@@ -23,13 +23,13 @@ namespace Booting.ProjectInformation
 			var platform = GetTargetPlatform();
 			var provider = new DefaultProjectInfoAttendant(in options, in platform);
 
-			ProjectInfo.Initialize(provider);
+			ProjectInfo.Set(provider);
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			ProjectInfo.Terminate();
+			ProjectInfo.Clear();
 		}
 
 		private static PlatformEntry GetTargetPlatform()

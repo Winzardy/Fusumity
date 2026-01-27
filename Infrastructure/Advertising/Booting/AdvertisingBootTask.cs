@@ -42,7 +42,7 @@ namespace Booting.Advertising
 			_integration = new UnityLevelPlayAdIntegration(settings, in ProjectInfo.Platform);
 #endif
 			var management = new AdManagement(_integration);
-			AdManager.Initialize(management);
+			AdManager.Set(management);
 
 			if (useOfflineService)
 			{
@@ -62,7 +62,7 @@ namespace Booting.Advertising
 			if (_offlineService is IDisposable offlineService)
 				offlineService.Dispose();
 
-			AdManager.Terminate();
+			AdManager.Clear();
 		}
 
 		public override void OnBootCompleted()

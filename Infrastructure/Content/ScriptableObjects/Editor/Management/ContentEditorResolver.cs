@@ -31,7 +31,7 @@ namespace Content.Editor
 			EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
 			if (state == PlayModeStateChange.ExitingPlayMode)
-				ContentManager.Terminate();
+				ContentManager.Clear();
 		}
 	}
 

@@ -19,14 +19,14 @@ namespace Booting.Messaging
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
 			var bus = new MessageBus();
-			Messenger.Initialize(bus);
+			Messenger.Set(bus);
 
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			Messenger.Terminate();
+			Messenger.Clear();
 		}
 	}
 }

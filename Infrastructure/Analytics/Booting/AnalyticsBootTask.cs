@@ -31,12 +31,12 @@ namespace Booting.Analytics
 				management.InitializeAsync(token)
 					.Forget(Bootstrap.LogException);
 
-			AnalyticsCenter.Initialize(management);
+			AnalyticsCenter.Set(management);
 		}
 
 		protected override void OnDispose()
 		{
-			AnalyticsCenter.Terminate();
+			AnalyticsCenter.Clear();
 		}
 	}
 }

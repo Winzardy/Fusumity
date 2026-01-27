@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
-	public partial class AssetLoader : StaticProvider<AssetProvider>
+	public partial class AssetLoader : StaticAccessor<AssetProvider>
 	{
 		// ReSharper disable once InconsistentNaming
 		private static AssetProvider provider

@@ -5,7 +5,7 @@ using Sapientia;
 
 namespace Localization
 {
-	public partial class LocManager : StaticProvider<LocalizationResolver>
+	public partial class LocManager : StaticAccessor<LocalizationResolver>
 	{
 		// ReSharper disable once InconsistentNaming
 		private static LocalizationResolver resolver

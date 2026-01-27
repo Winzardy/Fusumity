@@ -36,7 +36,7 @@ namespace Booting.Audio
 				listenerLocator,
 				new AudioEngineEvents());
 			await management.InitializeAsync(token);
-			AudioManager.Initialize(management);
+			AudioManager.Set(management);
 		}
 
 		protected override void OnDispose()
@@ -44,7 +44,7 @@ namespace Booting.Audio
 			_factory?.Dispose();
 			_listener?.Dispose();
 
-			AudioManager.Terminate();
+			AudioManager.Clear();
 		}
 	}
 }

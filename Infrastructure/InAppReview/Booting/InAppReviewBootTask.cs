@@ -30,13 +30,13 @@ namespace Booting.InAppReview
 #elif UNITY_IOS
 			platform = new AppStoreInAppReview();
 #endif
-			InAppReviewManager.Initialize(platform);
+			InAppReviewManager.Set(platform);
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			InAppReviewManager.Terminate();
+			InAppReviewManager.Clear();
 		}
 	}
 }

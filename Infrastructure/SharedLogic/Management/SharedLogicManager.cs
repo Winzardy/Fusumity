@@ -9,7 +9,7 @@ namespace SharedLogic
 	/// <remarks>
 	/// Такое решение подразумевает что мы используем всего один инстанс SharedRoot, если вдруг понадобится использовать несколько экземпляров, то придется поменять подход
 	/// </remarks>
-	public class SharedLogicManager : StaticProvider<ISharedLogicRouter>
+	public class SharedLogicManager : StaticAccessor<ISharedLogicRouter>
 	{
 		// ReSharper disable once InconsistentNaming
 		internal static ISharedLogicRouter router

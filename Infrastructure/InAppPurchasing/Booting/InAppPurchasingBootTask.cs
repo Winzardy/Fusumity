@@ -56,7 +56,7 @@ namespace Booting.InAppPurchasing
 
 			var management = new IAPManagement(_integration);
 			management.SetGrantCenter(_grantCenter);
-			IAPManager.Initialize(management);
+			IAPManager.Set(management);
 
 			if (useOfflineService)
 			{
@@ -91,7 +91,7 @@ namespace Booting.InAppPurchasing
 
 			_storePromotionalCompletionSource?.TrySetCanceled();
 
-			IAPManager.Terminate();
+			IAPManager.Clear();
 		}
 
 		public override void OnBootCompleted()

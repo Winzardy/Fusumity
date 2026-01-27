@@ -61,7 +61,7 @@ namespace Booting.UI
 
 		protected override void OnDispose()
 		{
-			UIDispatcher.Terminate();
+			UIDispatcher.Clear();
 			_eventSystem.Destroy();
 		}
 
@@ -74,7 +74,7 @@ namespace Booting.UI
 		private void InitializeManagement()
 		{
 			_management = new UIManagement();
-			UIDispatcher.Initialize(_management);
+			UIDispatcher.Set(_management);
 		}
 
 		private void InitializeScreens()

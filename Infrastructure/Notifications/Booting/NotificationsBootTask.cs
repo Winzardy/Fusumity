@@ -38,7 +38,7 @@ namespace Booting.Notifications
 			{
 				var settings = ContentManager.Get<NotificationsSettings>();
 				var management = new NotificationsManagement(settings, _platform);
-				NotificationsCenter.Initialize(management);
+				NotificationsCenter.Set(management);
 			}
 
 			return UniTask.CompletedTask;
@@ -50,7 +50,7 @@ namespace Booting.Notifications
 				return;
 
 			_platform.Dispose();
-			NotificationsCenter.Terminate();
+			NotificationsCenter.Clear();
 		}
 	}
 }

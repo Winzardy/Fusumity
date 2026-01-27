@@ -18,13 +18,13 @@ namespace Booting.AssetManagement
 		public override UniTask RunAsync(CancellationToken token = default)
 		{
 			var provider = new AssetProvider();
-			AssetLoader.Initialize(provider);
+			AssetLoader.Set(provider);
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			AssetLoader.Terminate();
+			AssetLoader.Clear();
 		}
 	}
 }

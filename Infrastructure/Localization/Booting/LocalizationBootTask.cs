@@ -22,13 +22,13 @@ namespace Booting.Localization
 			var resolver = new LocalizationResolver(in tableReference);
 			resolver.InitializeAsync(token)
 				.Forget();
-			LocManager.Initialize(resolver);
+			LocManager.Set(resolver);
 			return UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()
 		{
-			LocManager.Terminate();
+			LocManager.Clear();
 		}
 	}
 }
