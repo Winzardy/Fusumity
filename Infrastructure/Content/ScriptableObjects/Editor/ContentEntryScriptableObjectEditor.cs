@@ -10,6 +10,8 @@ namespace Content.ScriptableObjects.Editor
 	[CanEditMultipleObjects]
 	public sealed class ContentEntryScriptableObjectEditor : ContentScriptableObjectEditor
 	{
+		private const string GENERATE_CONSTANTS_LABEL = "Generate Constants";
+
 		public override void OnInspectorGUI()
 		{
 			DrawContentEntryInspector();
@@ -39,7 +41,7 @@ namespace Content.ScriptableObjects.Editor
 			var style = new GUIStyle(SirenixGUIStyles.MiniButton);
 			var type = scrObj.ValueType;
 
-			if (SirenixEditorGUI.SDFIconButton(rect, "Generate Constants", SdfIconType.Gear, IconAlignment.RightEdge, style))
+			if (SirenixEditorGUI.SDFIconButton(rect, GENERATE_CONSTANTS_LABEL, SdfIconType.Gear, IconAlignment.RightEdge, style))
 			{
 				ContentConstantGenerator.Generate(type, ContentDatabaseEditorUtility.GetScriptableObjectsByType(type), fullLog: true);
 			}

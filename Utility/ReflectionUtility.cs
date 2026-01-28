@@ -420,7 +420,7 @@ namespace Fusumity.Utility
 			}
 
 			return values;
-		} 
+		}
 
 		public static bool TryFindFieldRecursively(this object obj, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default) => TryFindFieldRecursively(obj.GetType(), name, out info, flags);
 		public static bool TryFindFieldRecursively(this Type targetType, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default)

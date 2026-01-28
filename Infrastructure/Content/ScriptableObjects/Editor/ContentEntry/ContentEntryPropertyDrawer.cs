@@ -34,8 +34,11 @@ namespace Content.Editor
 				return;
 			}
 
-			if (Register(Property))
-				Property.Tree?.UnitySerializedObject.ApplyModifiedProperties();
+			if (!ContentEditorCache.IsRebuilding)
+			{
+				if (Register(Property))
+					Property.Tree?.UnitySerializedObject.ApplyModifiedProperties();
+			}
 
 			CallNextDrawer(label);
 		}
