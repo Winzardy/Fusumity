@@ -42,16 +42,12 @@ namespace ZenoTween
 		}
 
 		public Tween ToTween(object target = null) => participants.ToTween(target);
-		public Sequence ToSequence(object target = null) => participants.ToSequence(target);
+
+		public Sequence ToSequence(object target = null)
+		{
+			return participants.ToSequence(target);
+		}
 
 		protected internal override bool IsEmpty() => participants.IsNullOrEmpty();
-
-#if UNITY_EDITOR
-		public override void PlayEditor()
-		{
-			foreach (var participant in participants)
-				participant.PlayEditor();
-		}
-#endif
 	}
 }
