@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Fusumity.Attributes;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
@@ -20,6 +21,9 @@ namespace Fusumity.Editor
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
+
+			if (member.TryGetSummary(out var summary))
+				attributes.Add(new TooltipAttribute(summary));
 
 			if (member.Name == ValueFieldName || member.Name == SecondValueFieldName)
 			{
