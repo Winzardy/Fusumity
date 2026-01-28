@@ -39,7 +39,7 @@ namespace Fusumity.MVVM
 		}
 
 		public abstract TView Create();
-		public void OnGet(TView widget)
+		public virtual void OnGet(TView view)
 		{
 		}
 

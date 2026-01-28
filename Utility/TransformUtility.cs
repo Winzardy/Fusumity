@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Fusumity.Utility
@@ -54,6 +55,34 @@ namespace Fusumity.Utility
 
 			for (int i = 0; i < childCount; i++)
 				SetLayerRecursive(transform.GetChild(i), layer);
+		}
+
+		public static void ApplyState(this Transform transform, TransformState state)
+		{
+			if (transform == null)
+				return;
+
+			transform.localScale = state.scale;
+			transform.position = state.position;
+			transform.rotation = state.rotation;
+		}
+	}
+
+	[Serializable]
+	public struct TransformState
+	{
+		public Vector3 scale;
+		public Vector3 position;
+		public Quaternion rotation;
+
+		public static TransformState Snapshot(Transform transform)
+		{
+			return new TransformState
+			{
+				scale = transform.localScale,
+				position = transform.position,
+				rotation = transform.rotation,
+			};
 		}
 	}
 }

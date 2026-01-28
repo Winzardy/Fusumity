@@ -88,7 +88,7 @@ namespace UI
 			if (!_layout.disableDefaultLabel && _layout.label)
 				_defaultLabelText = _layout.label.text;
 
-			_layout.Subscribe(OnClicked);
+			_layout.button.Subscribe(OnClicked);
 
 			base.OnLayoutInstalledInternal();
 		}
@@ -100,7 +100,7 @@ namespace UI
 
 			Clicked = null;
 
-			_layout.Unsubscribe(OnClicked);
+			_layout.button.Unsubscribe(OnClicked);
 
 			base.OnLayoutClearedInternal();
 		}
