@@ -14,6 +14,7 @@ namespace ZenoTween
 	public abstract class AnimationTween : SequenceParticipant
 	{
 		public const string CATEGORY_PATH = "Tween";
+
 		public enum Type
 		{
 			Join = 0,
@@ -69,19 +70,11 @@ namespace ZenoTween
 
 			if (repeat != 0)
 			{
-				if (repeat > 0)
-				{
-					tween.SetAutoKill(repeat > 0);
-					tween.SetLoops(repeat, repeatType);
-				}
-				else
-				{
-					tween.SetAutoKill(false);
-				}
+				tween.SetAutoKill(repeat > 0);
+				tween.SetLoops(repeat, repeatType);
 			}
 
-			//TODO: требует доработки, данный участок нужно чтобы делать зацикленные твины на определенный участок, например: пульсация в момент передвижения
-			if (IsLoop || lifetimeByParent)
+			if (IsLoop && lifetimeByParent)
 			{
 				sequence.JoinCallback(() =>
 				{
