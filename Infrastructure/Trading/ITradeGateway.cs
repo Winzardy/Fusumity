@@ -15,11 +15,9 @@ namespace Trading
 	/// </remarks>
 	public interface ITradeGateway
 	{
-#if CLIENT
 		void PushReceipts(Tradeboard tradeboard);
 
 		bool CanFetch(TradeCost cost, string tradeId, out TradePayError? error);
 		bool CanFetch(TradeConfig trade, out TradeExecuteError? error);
-#endif
 	}
 }
