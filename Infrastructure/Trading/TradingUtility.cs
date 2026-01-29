@@ -133,7 +133,7 @@ namespace Trading
 				{
 					if (actualCost is IInterceptableTradeCost interceptable)
 					{
-						if(interceptable.ShouldIntercept(tradeboard))
+						if(!interceptable.ShouldIntercept(tradeboard))
 							continue;
 
 						var result = await interceptable.InterceptAsync(tradeboard, cancellationToken);
