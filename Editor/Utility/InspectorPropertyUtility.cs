@@ -1,11 +1,12 @@
 using System;
+using Sapientia.Collections;
 using Sirenix.OdinInspector.Editor;
 
 namespace Fusumity.Editor.Utility
 {
 	public static class InspectorPropertyUtility
 	{
-		public static bool IsAnyParentHasAttribute<TAttribute>(this InspectorProperty property)
+		public static bool AnyParentHasAttribute<TAttribute>(this InspectorProperty property)
 			where TAttribute : Attribute
 		{
 			while (property != null)
@@ -21,7 +22,7 @@ namespace Fusumity.Editor.Utility
 			return false;
 		}
 
-		public static bool IsAnyParentHasAttribute<T1, T2>(this InspectorProperty property)
+		public static bool AnyParentHasAttribute<T1, T2>(this InspectorProperty property)
 			where T1 : Attribute
 			where T2 : Attribute
 		{
@@ -39,6 +40,34 @@ namespace Fusumity.Editor.Utility
 			}
 
 			return false;
+		}
+
+		public static void AddAttribute(this InspectorProperty property, Attribute attribute, bool unique = true, bool replace = false)
+		{
+			var editableAtts = property.Info.GetEditableAttributesList();
+			var type = attribute.GetType();
+
+			if (replace)
+			{
+				editableAtts.RemoveAll(x => x.GetType() == type);
+				editableAtts.Add(attribute);
+
+				property.RefreshSetup();
+			}
+			else
+			if (!unique ||
+				editableAtts.IsNullOrEmpty() ||
+			   !editableAtts.Any(x => x.GetType() == type))
+			{
+				editableAtts.Add(attribute);
+				property.RefreshSetup();
+			}
+		}
+
+		public static bool TryGetChild(this InspectorProperty property, string name, out InspectorProperty childProperty)
+		{
+			childProperty = property.Children.Get(name);
+			return childProperty != null;
 		}
 	}
 }
