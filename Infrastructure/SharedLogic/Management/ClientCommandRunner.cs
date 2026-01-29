@@ -52,10 +52,10 @@ namespace SharedLogic
 
 				//try
 				//{
-					_buffer.Execute(_root);
-					_buffer.OnExecute(_root);
+				_buffer.Execute(_root);
+				_buffer.OnExecute(_root);
 
-					_buffer.Send(_center);
+				_buffer.Send(_center);
 				//}
 				// catch (Exception e)
 				// {
@@ -63,7 +63,7 @@ namespace SharedLogic
 				// }
 				// finally
 				// {
-				 	_buffer.Dequeue();
+				_buffer.Dequeue();
 				//}
 			}
 

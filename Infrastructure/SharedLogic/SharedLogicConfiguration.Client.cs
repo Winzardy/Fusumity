@@ -2,8 +2,8 @@ namespace SharedLogic
 {
 	public interface ISharedLogicCenter : ICommandCenter
 	{
-
 	}
+
 	/// <summary>
 	/// Командный центр решает что с командой дальше делать, например: отправить на сервер, сохранить или еще что
 	/// </summary>
