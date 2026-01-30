@@ -134,5 +134,29 @@ namespace UI
 			target.localScale = source.localScale;
 			target.localPosition = source.localPosition;
 		}
+
+		public static void StretchHorizontally(this RectTransform rect)
+		{
+			rect.anchorMin = new Vector2(0, rect.anchorMin.y);
+			rect.anchorMax = new Vector2(1, rect.anchorMax.y);
+			rect.offsetMin = new Vector2(0, rect.offsetMin.y);
+			rect.offsetMax = new Vector2(0, rect.offsetMax.y);
+		}
+
+		public static void StretchVertically(this RectTransform rect)
+		{
+			rect.anchorMin = new Vector2(rect.anchorMin.x, 0);
+			rect.anchorMax = new Vector2(rect.anchorMax.x, 1);
+			rect.offsetMin = new Vector2(rect.offsetMin.x, 0);
+			rect.offsetMax = new Vector2(rect.offsetMax.x, 0);
+		}
+
+		public static void StretchAllSides(this RectTransform rect)
+		{
+			rect.anchorMin = Vector3.zero;
+			rect.anchorMax = Vector3.one;
+			rect.offsetMin = Vector2.zero;
+			rect.offsetMax = Vector2.zero;
+		}
 	}
 }

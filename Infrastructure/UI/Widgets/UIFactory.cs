@@ -58,7 +58,7 @@ namespace UI
 			var layout = (await operation)[0];
 			if (cancellationToken.IsCancellationRequested)
 			{
-				layout.Destroy();
+				layout.DestroyGameObject();
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
@@ -89,6 +89,6 @@ namespace UI
 
 		public static void Destroy<TLayout>(TLayout layout)
 			where TLayout : UIBaseLayout
-			=> layout.Destroy();
+			=> layout.DestroyGameObject();
 	}
 }

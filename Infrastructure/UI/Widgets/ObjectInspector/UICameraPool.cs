@@ -50,7 +50,7 @@ namespace UI
 
 			public void OnDispose(Camera camera)
 			{
-				camera.DestroySafe();
+				camera.DestroyGameObjectSafe();
 			}
 		}
 	}
