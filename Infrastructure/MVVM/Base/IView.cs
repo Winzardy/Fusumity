@@ -48,7 +48,8 @@ namespace Fusumity.MVVM
 			}
 			else
 			{
-				Debug.LogError($"Provided invalid ViewModel type: [ {baseModel.GetType()} ]");
+				var typeStr = baseModel?.GetType().ToString() ?? "null";
+				Debug.LogError($"Provided invalid ViewModel type: [ {typeStr} ]");
 			}
 		}
 
