@@ -10,8 +10,8 @@ namespace Localization.Editor
 	{
 		private const string DOC_URL = "https://www.notion.so/winzardy/Localization-38343db9d7f845f4b4361163736075e6?source=copy_link";
 
-		private const string TOOLS_MENU_PATH = "Tools/Localization/";
-		internal const string CONSTANTS_MENU_PATH = "Tools/Localization/Constants/";
+		public const string TOOLS_MENU_PATH = "Tools/Localization/";
+		public const string CONSTANTS_MENU_PATH = "Tools/Localization/Constants/";
 
 		[MenuItem(TOOLS_MENU_PATH + "\ud83d\uddc2\ufe0f Documentation", priority = 0)]
 		public static void OpenDocumentation() => Application.OpenURL(DOC_URL);
@@ -70,6 +70,9 @@ namespace Localization.Editor
 				);
 
 				LocalizationDebug.Log($"Pulled from Google Sheets for table [ {table.name} ]", table);
+
+				if(LocalizationAutoGenerationMenu.IsEnable)
+					GenerateConstants();
 			}
 		}
 
@@ -77,6 +80,33 @@ namespace Localization.Editor
 		private static void GenerateConstants()
 		{
 			LocalizationConstantGenerator.Generate(LocManager.GetAllKeysEditor());
+		}
+	}
+
+	[InitializeOnLoad]
+	public static class LocalizationAutoGenerationMenu
+	{
+		public const string PATH = LocalizationToolsMenu.TOOLS_MENU_PATH + "Google Sheets/Auto Generate Constants On Pull";
+
+		private static bool _enable;
+
+		public static bool IsEnable => _enable;
+
+		[MenuItem(PATH, priority = 81)]
+		private static void Toggle() => Toggle(!_enable);
+
+		static LocalizationAutoGenerationMenu()
+		{
+			_enable = EditorPrefs.GetBool(PATH, false);
+			EditorApplication.delayCall += () => { Toggle(_enable); };
+		}
+
+		private static void Toggle(bool enabled)
+		{
+			Menu.SetChecked(PATH, enabled);
+			EditorPrefs.SetBool(PATH, enabled);
+			_enable = enabled;
+			UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
 		}
 	}
 }

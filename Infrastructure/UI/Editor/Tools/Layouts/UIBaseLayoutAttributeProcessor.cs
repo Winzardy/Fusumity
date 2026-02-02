@@ -18,6 +18,13 @@ namespace UI.Editor
 			"useLayoutAnimations"
 		};
 
+		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
+		{
+			base.ProcessSelfAttributes(property, attributes);
+
+			attributes.Add(new InlineEditorAttribute(InlineEditorObjectFieldModes.Foldout));
+		}
+
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
 		{

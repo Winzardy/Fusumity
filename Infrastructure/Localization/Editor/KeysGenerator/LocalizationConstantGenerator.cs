@@ -141,7 +141,6 @@ namespace Localization.Editor
 			var textAsset = AssetDatabase.LoadAssetAtPath<MonoScript>(unityPath);
 			var prefix = existingData == null ? "Generated" : "Updated";
 			LocalizationDebug.Log($"{prefix} constants: {unityPath}", textAsset);
-
 			void AddConstants(GeneratorConstantsNode node, List<string> pathSegments, ref bool space)
 			{
 				var hasAnyLeaves = node.children.Values.Any(HasLeaf);

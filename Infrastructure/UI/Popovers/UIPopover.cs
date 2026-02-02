@@ -40,8 +40,8 @@ namespace UI.Popovers
 
 		protected sealed override void OnShow()
 		{
-			if (_args is IRequestClose closable)
-				closable.RequestedClose += RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested += RequestClose;
 
 			OnShow(ref _args);
 		}
@@ -50,8 +50,8 @@ namespace UI.Popovers
 
 		protected sealed override void OnHide()
 		{
-			if (_args is IRequestClose closable)
-				closable.RequestedClose -= RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested -= RequestClose;
 
 			if (_suppressHide)
 				return;

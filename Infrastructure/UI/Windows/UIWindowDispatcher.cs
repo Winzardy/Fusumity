@@ -29,8 +29,9 @@ namespace UI.Windows
 		/// </summary>
 		public event Action<IWindow> Hidden;
 
-		public (IWindow window, object args) Current => _manager.Current;
-		public IEnumerable<KeyValuePair<IWindow, object>> Queue => _manager.Queue;
+		public ref readonly WindowQueueContext Current { get => ref _manager.Current; }
+
+		public IEnumerable<KeyValuePair<IWindow, WindowQueueContext>> Queue { get => _manager.Queue; }
 
 		public UIWindowDispatcher(UIWindowManager manager)
 		{
@@ -80,9 +81,9 @@ namespace UI.Windows
 		/// <summary>
 		/// Показать экран по типу (убирает в очередь текущее)
 		/// </summary>
-		public T Show<T>(object args = null)
+		public T Show<T>(object args = null, WindowMode mode = WindowMode.Default)
 			where T : UIWidget, IWindow
-			=> _manager.Show<T>(args);
+			=> _manager.Show<T>(args, mode);
 
 		/// <summary>
 		/// Закрыть окно по типу, если оно открыто или убрать из очереди

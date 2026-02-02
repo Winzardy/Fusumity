@@ -45,6 +45,7 @@ namespace UI.Windows.Editor
 
 			FusumityEditorGUILayout.EndCardBox();
 
+			//TODO: добавить отрисовку "mode"
 			bool Draw(int index, IWindow window, object windowArgs, bool current = false)
 			{
 				const string BUTTON_HIDE_LABEL = "Hide";

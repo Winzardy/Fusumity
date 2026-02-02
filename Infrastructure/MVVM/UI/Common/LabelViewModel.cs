@@ -56,4 +56,31 @@ namespace Fusumity.MVVM.UI
 			_onChange = null;
 		}
 	}
+
+	public static class LabelViewModelExtensions
+	{
+		public static bool IsNullOrEmpty(this ILabelViewModel vm)
+		{
+			if (vm == null)
+				return true;
+
+			return vm.IsEmpty;
+		}
+
+		public static void ClearSafe(this ILabelViewModel vm)
+		{
+			if (vm.IsNullOrEmpty())
+				return;
+
+			vm.Value = default;
+		}
+
+		public static void ResetSafe(this ILabelViewModel vm)
+		{
+			if (vm == null)
+				return;
+
+			vm.Value = default;
+		}
+	}
 }

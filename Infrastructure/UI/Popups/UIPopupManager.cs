@@ -19,6 +19,7 @@ namespace UI.Popups
 		Standalone
 	}
 
+	//TODO: есть проблема что если открыть попап в режиме Default поверх попапа который Standalone то начнет открывать попапы из очереди
 	/// <summary>
 	/// Для управления используйте <see cref="UIPopupDispatcher"/>
 	/// </summary>
@@ -28,7 +29,7 @@ namespace UI.Popups
 
 		private readonly PopupPool _pool;
 
-		private readonly UIRootWidgetQueue<IPopup, object> _queue;
+		private readonly UIPopupQueue<object> _queue;
 
 		private Dictionary<IPopup, object> _standalones;
 
@@ -50,7 +51,7 @@ namespace UI.Popups
 
 			InitializeAssetsPreloader();
 
-			_queue = new(false);
+			_queue = new();
 			_standalones = new();
 		}
 

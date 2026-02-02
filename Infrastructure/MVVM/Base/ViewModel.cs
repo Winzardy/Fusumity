@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 
 namespace Fusumity.MVVM
@@ -21,9 +22,10 @@ namespace Fusumity.MVVM
 
 		public ViewModel()
 		{
+			Initialize();
 		}
 
-		public ViewModel(TModel model)
+		public ViewModel(TModel model) : this()
 		{
 			Update(model);
 		}
@@ -47,6 +49,12 @@ namespace Fusumity.MVVM
 		{
 			Clear();
 			OnDisposed();
+		}
+
+		private void Initialize() => OnInitialized();
+
+		protected virtual void OnInitialized()
+		{
 		}
 
 		protected abstract void OnUpdated(TModel model);

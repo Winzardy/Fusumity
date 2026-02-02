@@ -11,20 +11,20 @@ namespace UI
 			Sprite icon = null, Sprite defaultIconSprite = null, Action callback = null) =>
 			assigner.SetSprite(placeholder, reference, icon, defaultIconSprite, callback);
 
-		public static void SetSprite(this UISpriteAssigner assigner, Image placeholder, AssetReferenceEntry<Sprite> reference,
+		public static void SetSprite(this UISpriteAssigner assigner, Image image, AssetReferenceEntry<Sprite> reference,
 			Sprite icon = null, Sprite defaultIconSprite = null, Action callback = null)
 		{
-			if (!placeholder)
+			if (!image)
 				return;
 
 			if (!reference.IsEmptyOrInvalid())
 			{
-				assigner.SetSprite(placeholder, reference, callback);
+				assigner.SetSprite(image, reference, callback);
 			}
 			else
 			{
-				assigner.TryCancelOrClear(placeholder);
-				placeholder.sprite = icon ? icon : defaultIconSprite;
+				assigner.TryCancelOrClear(image);
+				image.sprite = icon ? icon : defaultIconSprite;
 				callback?.Invoke();
 			}
 		}

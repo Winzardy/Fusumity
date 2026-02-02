@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZenoTween;
+using ZenoTween.Participant.Callbacks;
 using ZenoTween.Utility;
 
 namespace UI
@@ -15,8 +16,10 @@ namespace UI
 	{
 		[NonSerialized]
 		private Tween _tween;
+
 		[NonSerialized]
 		private readonly Dictionary<TState, Tween> _cached = new();
+
 		[NonSerialized]
 		private Dictionary<TState, AnimationSequence> _mappedSequences;
 
@@ -25,6 +28,7 @@ namespace UI
 
 		[SerializeField, BoxGroup("Options:"), Tooltip("Trigger state switching if default state value is provided.")]
 		private bool _switchIfDefaultValue;
+
 		[SerializeField, BoxGroup("Options:")]
 		private bool _useCache;
 
@@ -77,10 +81,13 @@ namespace UI
 				return;
 			}
 
-			var tween = _useCache ?
-				PlayTweenCached(state) :
-				PlayTween(state);
-
+			var tween = _useCache ? PlayTweenCached(state) : PlayTween(state);
+			if (Forced)
+			{
+				AnimationTweenCallback.immediate = true;
+				tween.GotoWithCallbacks(1);
+				AnimationTweenCallback.immediate = false;
+			}
 #if UNITY_EDITOR
 			if (tween == null)
 				return;
@@ -127,8 +134,8 @@ namespace UI
 					return null;
 
 				_cached[state] = tween = sequence
-				   .ToTween(this)
-				   .SetAutoKill(false);
+					.ToTween(this)
+					.SetAutoKill(false);
 			}
 
 			if (tween.playedOnce)
@@ -163,6 +170,7 @@ namespace UI
 		public struct StatePair
 		{
 			public TState state;
+
 			[BoxGroup]
 			public AnimationSequence sequence;
 		}

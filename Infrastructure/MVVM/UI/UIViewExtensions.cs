@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UI;
 
 namespace Fusumity.MVVM.UI
@@ -7,15 +8,33 @@ namespace Fusumity.MVVM.UI
 	{
 		public static void Bind(this TMP_Text label, ILabelViewModel viewModel)
 		{
-			viewModel.Bind(x => label.text = x);
+			Bind(label, viewModel, x => label.text = x);
+		}
+
+		public static void Bind(this TMP_Text label, ILabelViewModel viewModel, Action<string> labelTextSetter)
+		{
+			viewModel.Bind(labelTextSetter);
+		}
+
+		public static void BindSafe(this TMP_Text label, ILabelViewModel viewModel, Action<string> labelTextSetter)
+		{
+			if (!label)
+				return;
+
+			if (viewModel == null)
+				return;
+
+			label.Bind(viewModel, labelTextSetter);
 		}
 
 		public static void BindSafe(this TMP_Text label, ILabelViewModel viewModel)
 		{
 			if (!label)
 				return;
+
 			if (viewModel == null)
 				return;
+
 			label.Bind(viewModel);
 		}
 

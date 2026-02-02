@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZenoTween;
+using ZenoTween.Participant.Callbacks;
 using ZenoTween.Utility;
 
 namespace UI
@@ -35,8 +36,8 @@ namespace UI
 			if (!gameObject.IsActive())
 			{
 				_dictionary.GetValueOrDefaultSafe(state, _default)
-				   .ToTween(this)
-				   .Kill(true);
+					.ToTween(this)
+					.Kill(true);
 
 				return;
 			}
@@ -44,14 +45,23 @@ namespace UI
 			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
 			{
 				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
-				   .ToTween(this)
-				   .SetAutoKill(false);
+					.ToTween(this)
+					.SetAutoKill(false);
 			}
 
-			if (tween.playedOnce)
-				tween.Restart();
+			if (Forced)
+			{
+				AnimationTweenCallback.immediate = true;
+				tween.GotoWithCallbacks(1);
+				AnimationTweenCallback.immediate = false;
+			}
 			else
-				tween.Play();
+			{
+				if (tween.playedOnce)
+					tween.Restart();
+				else
+					tween.Play();
+			}
 
 #if UNITY_EDITOR
 			if (!Application.isPlaying)

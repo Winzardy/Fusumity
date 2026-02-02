@@ -4,23 +4,11 @@ using System.Collections.Generic;
 
 namespace UI
 {
-	/// <summary>
-	/// Кастомная очередь для Window и Popup, в случае Windows новые элементы встают в начале (Stack),
-	/// а у Popup в конце (Queue)
-	/// </summary>
+	// TODO: переделать...
 	public class UIRootWidgetQueue<TWidget, TArgs> : IDisposable, IEnumerable<KeyValuePair<TWidget, TArgs>>
 	{
-		private readonly bool _addToLast;
-
 		private Dictionary<TWidget, TArgs> _args = new(8);
-
-		// LinkedList, чтобы иметь дешевую возможность удалять из середины
 		private LinkedList<TWidget> _queue = new();
-
-		public UIRootWidgetQueue(bool addToLast = true)
-		{
-			_addToLast = addToLast;
-		}
 
 		public void Dispose()
 		{
@@ -28,19 +16,11 @@ namespace UI
 			_queue = null;
 		}
 
-		public void Enqueue(TWidget widget, TArgs args)
-		{
-			Enqueue(widget, args, _addToLast);
-		}
-
-		public void Enqueue(TWidget widget, TArgs args, bool addToLast)
+		public void Enqueue(TWidget widget, in TArgs args)
 		{
 			_args[widget] = args;
 
-			if (addToLast)
-				_queue.AddLast(widget);
-			else
-				_queue.AddFirst(widget);
+			_queue.AddLast(widget);
 		}
 
 		public bool IsEmpty() => _queue.Count <= 0;

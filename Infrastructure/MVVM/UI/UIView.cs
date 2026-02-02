@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using TMPro;
 using UI;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace Fusumity.MVVM.UI
 		{
 		}
 
-		protected void Subscribe(Button button, Action action)
+		protected void Subscribe([CanBeNull] Button button, Action action)
 		{
 			if (button != null)
 			{

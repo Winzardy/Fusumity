@@ -6,6 +6,7 @@ using Sapientia.Pooling;
 
 namespace Localization
 {
+	[Obsolete("Решили, что данный способ не очень, лучше использовать ILabelViewModel и сложной логикой менять текст, а это легаси")]
 	public struct LocText
 	{
 		/// <summary>
@@ -80,6 +81,7 @@ namespace Localization
 
 		public readonly bool IsEmpty() => LocUtility.IsEmptyKey(key);
 
+		public string ToLocalize() => ToString();
 		public override string ToString()
 		{
 			if (composite)

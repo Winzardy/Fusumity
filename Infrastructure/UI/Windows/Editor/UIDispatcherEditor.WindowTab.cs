@@ -1,4 +1,5 @@
 using System;
+using Sapientia;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using UI.Editor;
@@ -20,7 +21,7 @@ namespace UI.Windows.Editor
 
 		public UIWidgetArgsInspector argsInspector;
 
-		internal void Show()
+		internal void Show(Toggle<WindowMode> mode)
 		{
 			if (window == null)
 			{
@@ -28,12 +29,14 @@ namespace UI.Windows.Editor
 				return;
 			}
 
+			WindowMode targetMode = mode ? mode : WindowMode.Default;
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
 				.MakeGenericMethod(window.GetType())
-				.Invoke(_dispatcher, new object[]
+				.Invoke(_dispatcher, new []
 				{
-					argsInspector.GetArgs()
+					argsInspector.GetArgs(),
+					targetMode
 				});
 		}
 

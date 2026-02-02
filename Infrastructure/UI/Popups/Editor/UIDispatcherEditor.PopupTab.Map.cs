@@ -26,20 +26,23 @@ namespace UI.Popups.Editor
 			var color = Color.black.WithAlpha(0.2f);
 			FusumityEditorGUILayout.BeginCardBox(color);
 
-			GUILayout.Label("Queue", SirenixGUIStyles.CenteredGreyMiniLabel);
-			SirenixEditorGUI.HorizontalLineSeparator(Color.gray.WithAlpha(0.1f));
 			var i = 0;
-			foreach (var (popup, args) in _dispatcher.Queue)
+			var queueShow = _dispatcher.Current.popup != null
+				&& _dispatcher.Standalones.All(x => x.Key != _dispatcher.Current.popup);
+			if (_dispatcher.Queue.Any() || queueShow)
 			{
-				FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
-				if (!Draw(i, popup, args))
-					break;
-				FusumityEditorGUILayout.EndCardBox();
-				i++;
-			}
+				GUILayout.Label("Queue", SirenixGUIStyles.CenteredGreyMiniLabel);
+				SirenixEditorGUI.HorizontalLineSeparator(Color.gray.WithAlpha(0.1f));
 
-			if (_dispatcher.Current.popup != null)
-			{
+				foreach (var (popup, args) in _dispatcher.Queue)
+				{
+					FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
+					if (!Draw(i, popup, args, _dispatcher.Current.popup == popup))
+						break;
+					FusumityEditorGUILayout.EndCardBox();
+					i++;
+				}
+
 				FusumityEditorGUILayout.BeginCardBox(Color.Lerp(Color.blue, Color.white, 0.8f).WithAlpha(0.3f));
 				Draw(i, _dispatcher.Current.popup, _dispatcher.Current.args, true);
 				FusumityEditorGUILayout.EndCardBox();
@@ -54,7 +57,7 @@ namespace UI.Popups.Editor
 				foreach (var (popup, args) in _dispatcher.Standalones)
 				{
 					FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
-					if (!Draw(i, popup, args))
+					if (!Draw(i, popup, args, _dispatcher.Current.popup == popup))
 						break;
 					FusumityEditorGUILayout.EndCardBox();
 					i++;

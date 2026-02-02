@@ -61,8 +61,8 @@ namespace UI.Popups
 				return;
 			}
 
-			if (_args is IRequestClose closable)
-				closable.RequestedClose += RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested += RequestClose;
 
 			OnShow(ref _args);
 		}
@@ -74,8 +74,8 @@ namespace UI.Popups
 			if (ShouldSkipActivation(in _args, out _))
 				return;
 
-			if (_args is IRequestClose closable)
-				closable.RequestedClose -= RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested -= RequestClose;
 
 			if (_suppressHide)
 				return;

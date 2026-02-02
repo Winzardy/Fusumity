@@ -62,7 +62,7 @@ namespace UI
 				_animator.Play(key, immediate);
 			}
 
-			_layout.activitySwitcher?.Switch(isToggled);
+			_layout.activitySwitcher?.Switch(isToggled, immediate);
 		}
 
 		private void UpdateLabel(string label)
@@ -78,9 +78,9 @@ namespace UI
 			_layout.styleSwitcher?.Switch(ViewModel.Style);
 		}
 
-		private void HandleToggleStateChanged()
+		private void HandleToggleStateChanged(bool immediate = false)
 		{
-			UpdateToggleState(ViewModel.IsToggled, false);
+			UpdateToggleState(ViewModel.IsToggled, immediate);
 		}
 
 		private void HandleIconChanged()
@@ -107,7 +107,7 @@ namespace UI
 		bool IsToggled { get; }
 		[CanBeNull] string Style { get; }
 
-		event Action ToggleStateChanged;
+		event Action<bool> ToggleStateChanged;
 		event Action StyleChanged;
 		event Action IconChanged;
 		event Action LabelChanged;

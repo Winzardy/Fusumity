@@ -19,7 +19,7 @@ namespace UI.Windows
 		///При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		///получить через GetArgs() в своих целях (скрыть окно на время).
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(object args);
+		internal void Show(object args, bool immediate = false);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
@@ -50,8 +50,8 @@ namespace UI.Windows
 
 		protected sealed override void OnShow()
 		{
-			if (_args is IRequestClose closable)
-				closable.RequestedClose += RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested += RequestClose;
 
 			OnShow(ref _args);
 		}
@@ -60,8 +60,8 @@ namespace UI.Windows
 
 		protected sealed override void OnHide()
 		{
-			if (_args is IRequestClose closable)
-				closable.RequestedClose -= RequestClose;
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested -= RequestClose;
 
 			if (_suppressHide)
 				return;
@@ -129,7 +129,7 @@ namespace UI.Windows
 			base.Initialize();
 		}
 
-		void IWindow.Show(object boxedArgs)
+		void IWindow.Show(object boxedArgs, bool immediate = false)
 		{
 			if (boxedArgs != null)
 			{
@@ -152,7 +152,7 @@ namespace UI.Windows
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
-			SetActive(true, suppressAnyFlag);
+			SetActive(true, suppressAnyFlag || immediate);
 			DisableSuppress();
 		}
 

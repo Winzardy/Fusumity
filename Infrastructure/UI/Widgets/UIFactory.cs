@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
@@ -17,6 +18,8 @@ namespace UI
 
 		private const string UNITY_CLONE_POSTFIX = "(Clone)";
 		private const string NAME_SEPARATOR = "_";
+
+		private const string DISPLAY_NAME_SEPARATOR = "/";
 
 		public static SceneHolder scene = new(SCENE_NAME);
 
@@ -81,9 +84,13 @@ namespace UI
 			where TLayout : UIBaseLayout
 		{
 			var split = layout.name
-			   .Remove(UNITY_CLONE_POSTFIX)
-			   .Split(NAME_SEPARATOR);
-			var name = split.Length > 1 ? split[^1] : split[0];
+				.Remove(UNITY_CLONE_POSTFIX)
+				.Split(NAME_SEPARATOR);
+			var name = split.Length > 1
+				? split
+					.Skip(1)
+					.GetCompositeString(vertical: false, numerate: false, separator: DISPLAY_NAME_SEPARATOR)
+				: split[0];
 			layout.name = $"{prefix}{name}";
 		}
 

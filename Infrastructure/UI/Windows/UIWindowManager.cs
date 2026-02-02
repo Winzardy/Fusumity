@@ -1,23 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
+using UnityEngine;
 
 namespace UI.Windows
 {
+	public enum WindowMode
+	{
+		[Tooltip("Обычный режим: текущее окно закрывается и помещается в очередь перед открытием следующего")]
+		Default,
+
+		[Tooltip("Overlay-режим: окно открывается поверх текущего, не закрывая его, и не закрывается следующими окнами")]
+		Overlay
+	}
+
+	public struct WindowQueueContext
+	{
+		public IWindow window;
+
+		/// <summary>
+		/// Было ли окно перекрыто другим окном (overlay),
+		/// и поэтому не закрыто при вытеснении
+		/// </summary>
+		public bool overlaid;
+
+		public WindowMode? mode;
+		public object args;
+
+		internal void ActualArgs()
+		{
+			args = window.GetArgs();
+		}
+	}
+
+	// TODO: нужно переделать позже
+	// - убрать переиспользуемость окна в очереди
+	// - убрать авто дестрой верстки
 	/// <summary>
 	/// Для управления используйте <see cref="UIWindowDispatcher"/>
 	/// </summary>
 	public partial class UIWindowManager : IInitializable, IDisposable
 	{
 		private Dictionary<Type, IWindow> _windows = new(8);
-		private IWindow _current;
+
+		private WindowQueueContext _current;
 
 		private readonly UIWindowFactory _factory;
 
-		private readonly UIRootWidgetQueue<IWindow, object> _queue;
+		private readonly UIRootWidgetQueue<IWindow, WindowQueueContext> _queue;
 
-		internal (IWindow, object) Current => (_current, _current?.GetArgs());
+		internal ref readonly WindowQueueContext Current { get => ref _current; }
 
-		internal IEnumerable<KeyValuePair<IWindow, object>> Queue => _queue;
+		internal IEnumerable<KeyValuePair<IWindow, WindowQueueContext>> Queue => _queue;
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
@@ -45,22 +79,26 @@ namespace UI.Windows
 			_windows = null;
 		}
 
-		internal T Show<T>(object args)
+		internal T Show<T>(object args, WindowMode mode = WindowMode.Default)
 			where T : UIWidget, IWindow
 		{
-			if (!TryGet<T>(out var window))
+			if (!TryGet(out T window))
 				window = Create<T>();
 
-			Show(window, args);
+			Show(window, new WindowQueueContext
+			{
+				args = args,
+				mode = mode
+			});
 			return window;
 		}
 
 		internal bool TryHideCurrent()
 		{
-			if (_current == null)
+			if (_current.window == null)
 				return false;
 
-			TryHide(_current);
+			TryHide(_current.window);
 			return true;
 		}
 
@@ -102,7 +140,7 @@ namespace UI.Windows
 		{
 			if (TryGet<T>(out var window))
 			{
-				if (_current == window && _current.Active)
+				if (_current.window == window && _current.window.Active)
 					return true;
 
 				if (_queue.Contains(window))
@@ -114,7 +152,7 @@ namespace UI.Windows
 
 		internal bool IsActive(string id)
 		{
-			if (_current?.Id == id && _current!.IsActive())
+			if (_current.window?.Id == id && _current.window!.IsActive())
 				return true;
 
 			foreach (var (window, _) in _queue)
@@ -126,7 +164,7 @@ namespace UI.Windows
 
 		internal IEnumerable<UIWidget> GetAllActive()
 		{
-			if (_current is UIWidget widget)
+			if (_current.window is UIWidget widget)
 				yield return widget;
 		}
 
@@ -171,15 +209,22 @@ namespace UI.Windows
 
 		private void OnRequestedClose(IWindow window) => TryHide(window);
 
-		private void Show(IWindow window, object args, bool fromQueue = false)
+		private void Show([NotNull] IWindow window, in WindowQueueContext context, bool fromQueue = false)
 		{
-			window.Show(args);
+			var immediate = false;
 
-			if (_current != window)
-				TryHideAndAddToQueue(_current);
+			if (fromQueue)
+				immediate = context.overlaid;
 
-			SetCurrent(window);
+			window.Show(context.args, immediate);
 
+			if (_current.window != window)
+			{
+				_current.overlaid = context.mode!.Value == WindowMode.Overlay;
+				TryAddToQueueAndHide(ref _current);
+			}
+
+			SetCurrent(window, context.mode);
 			Shown?.Invoke(window, fromQueue);
 		}
 
@@ -187,17 +232,17 @@ namespace UI.Windows
 		{
 			_queue.TryRemove(window);
 
-			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущее активно окно
-			if (_current != window)
+			// Запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущее активно окно
+			if (_current.window != window)
 			{
-				HideInternal(window, true);
+				HideInternal(window, fromQueue);
 				return;
 			}
 
 			TryReleasePreloadedLayout(window);
 
 			HideInternal(window, fromQueue);
-			SetCurrent(null);
+			SetCurrent(null, null);
 
 			TryShowNext();
 		}
@@ -207,31 +252,33 @@ namespace UI.Windows
 			if (_queue.IsEmpty())
 				return;
 
-			var (window, args) = _queue.Dequeue();
-			Show(window, args, true);
+			var (window, context) = _queue.Dequeue();
+			Show(window, in context, true);
 		}
 
 		public void TryHideAll(bool immediate = false)
 		{
 			_queue.Clear();
 
-			_current?.Hide(true,immediate);
-			SetCurrent(null);
+			_current.window?.Hide(true, immediate);
+			SetCurrent(null, null);
 		}
 
-		private void TryHideAndAddToQueue(IWindow window)
+		private bool TryAddToQueueAndHide(ref WindowQueueContext context)
 		{
-			if (window == null)
-				return;
+			if (context.window == null)
+				return false;
 
-			if (!window.Active)
-				return;
+			if (!context.window.Active)
+				return false;
 
-			var args = window.GetArgs();
-			_queue.Enqueue(window, args);
+			context.ActualArgs();
+			_queue.Enqueue(context.window, in context);
 
-			//Аргументы очищаются при Hide, поэтому сначала GetArgs, потом Hide
-			HideInternal(window, true);
+			if (!context.overlaid)
+				HideInternal(context.window, true);
+
+			return true;
 		}
 
 		private void HideInternal(IWindow window, bool fromQueue = false)
@@ -240,9 +287,10 @@ namespace UI.Windows
 			Hidden?.Invoke(window, fromQueue);
 		}
 
-		private void SetCurrent(IWindow window)
+		private void SetCurrent(IWindow window, WindowMode? mode)
 		{
-			_current = window;
+			_current.window = window;
+			_current.mode = mode;
 		}
 
 		#region Delegates

@@ -1,17 +1,37 @@
-using Fusumity.Utility;
-using Sapientia.Collections;
-using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using Fusumity.Utility;
+using Sapientia.Collections;
+using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace UI
 {
 	public class GroupStringSwitcher : GroupStateSwitcher<string>
 	{
 #if UNITY_EDITOR
+		public override IEnumerable<object> GetVariants()
+		{
+			if (_allCollectedStates.IsNullOrEmpty())
+				yield break;
+
+			foreach (var state in _allCollectedStates)
+				yield return state;
+
+			if (_variants.IsNullOrEmpty())
+				yield break;
+
+			foreach (var variant in _variants)
+			{
+				if (_allCollectedStates.ContainsElement(variant))
+					continue;
+
+				yield return variant;
+			}
+		}
+
 		[NonSerialized, ReadOnly]
 		[OnInspectorInit(nameof(CollectStates))]
 		[LabelText("All Collected States (editor only)")]
@@ -47,6 +67,10 @@ namespace UI
 
 			_allCollectedStates = states.ToArray();
 		}
+
+		[SerializeField]
+		[Tooltip("Варианты для dropdown (только редактор)")]
+		private string[] _variants;
 #endif
 	}
 }

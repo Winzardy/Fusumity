@@ -22,7 +22,9 @@ namespace UI
 
 		protected override void OnUpdate(IProgressBarViewModel viewModel)
 		{
-			UpdateFilling();
+			SetActive(true);
+
+			UpdateFilling(true);
 
 			if (_layout.label)
 				_layout.label.Bind(viewModel.Label);
@@ -38,9 +40,14 @@ namespace UI
 			viewModel.ProgressChanged -= HandleProgressChanged;
 		}
 
-		private void UpdateFilling()
+		protected override void OnNullViewModel()
 		{
-			_widget.Show(ViewModel.Progress);
+			SetActive(false);
+		}
+
+		private void UpdateFilling(bool immediate = false)
+		{
+			_widget.Show(ViewModel.Progress, immediate);
 		}
 
 		public override void Reset()

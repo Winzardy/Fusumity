@@ -89,9 +89,15 @@ namespace UI.Editor
 			{
 				if (_shouldTryCreateFirstArgs)
 				{
-					_args ??= _argsType.GetAllTypes()
-						.First()
-						.CreateInstanceSafe();
+					if (_args == null)
+					{
+						_args = _argsType.GetAllTypes()
+							.First()
+							.CreateInstanceSafe(out var exception);
+
+						if (exception != null)
+							GUIDebug.LogException(exception);
+					}
 
 					_shouldTryCreateFirstArgs = false;
 				}

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities.Editor;
@@ -86,7 +85,7 @@ namespace UI
 			}
 
 #if UNITY_EDITOR
-			UnityEditor.EditorUtility.SetDirty(this);
+			EditorUtility.SetDirty(this);
 #endif
 		}
 
@@ -104,7 +103,7 @@ namespace UI
 			}
 
 #if UNITY_EDITOR
-			UnityEditor.EditorUtility.SetDirty(this);
+			EditorUtility.SetDirty(this);
 #endif
 		}
 

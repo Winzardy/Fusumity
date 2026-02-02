@@ -43,6 +43,8 @@ namespace UI.Scroll
 
 		public TValue Value => _args.value;
 
+		public TValue ViewModel => _args.value;
+
 		public void Show(TValue value, bool immediate = false, bool equals = true)
 		{
 			Update(value, equals);
