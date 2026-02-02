@@ -90,7 +90,12 @@ namespace Content.ScriptableObjects.Editor
 				namespaceByOutput = bestMatch;
 			}
 
-			output ??= projectSettings.output;
+			output ??= new ConstantsOutput
+			{
+				asmdef = projectSettings.output.asmdef,
+				folderPath = projectSettings.output.folderPath,
+				trimGeneratePath = projectSettings.output.trimGeneratePath,
+			};
 
 			if (attribute.HasCustomizedOutputPath)
 			{
