@@ -45,7 +45,7 @@ namespace SharedLogic
 				// клиент никогда не узнает и выполнит эту команду без повторного запуска
 				if (!_buffer.Validate(_root, out var exception))
 				{
-					_logger?.Exception(exception);
+					_logger?.LogException(exception);
 					_buffer.Dequeue();
 					break;
 				}

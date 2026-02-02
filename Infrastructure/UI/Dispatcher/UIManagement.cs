@@ -50,7 +50,10 @@ namespace UI
 
 		public void Dispose()
 		{
-			_layers = null;
+			foreach (var layout in _layers.Values)
+				layout.Destroy();
+
+			_layers.Clear();
 		}
 
 		public IEnumerator<UILayerLayout> GetEnumerator() => _layers.Values.GetEnumerator();
