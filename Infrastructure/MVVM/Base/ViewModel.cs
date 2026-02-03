@@ -57,9 +57,9 @@ namespace Fusumity.MVVM
 		{
 		}
 
-		protected abstract void OnUpdated(TModel model);
+		protected abstract void OnUpdated([CanBeNull] TModel model);
 
-		protected virtual void OnCleared(TModel model)
+		protected virtual void OnCleared([NotNull] TModel model)
 		{
 		}
 

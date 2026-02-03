@@ -39,6 +39,8 @@ namespace UI
 		[Header("Optional:")]
 		public TMP_Text label;
 
+		public StateSwitcher<string> styleSwitcher;
+
 		protected override void Reset()
 		{
 			base.Reset();

@@ -30,6 +30,13 @@ namespace UI
 				_layout.label.Bind(viewModel.Label);
 
 			viewModel.ProgressChanged += HandleProgressChanged;
+
+			if (_layout.styleSwitcher)
+			{
+				UpdateStyle();
+				if (viewModel is IStylizedProgressBarViewModel stylizedViewModel)
+					stylizedViewModel.StyleChanged += UpdateStyle;
+			}
 		}
 
 		protected override void OnClear(IProgressBarViewModel viewModel)
@@ -38,6 +45,10 @@ namespace UI
 				_layout.label.Unbind(viewModel.Label);
 
 			viewModel.ProgressChanged -= HandleProgressChanged;
+
+			if (_layout.styleSwitcher)
+				if (viewModel is IStylizedProgressBarViewModel stylizedViewModel)
+					stylizedViewModel.StyleChanged -= UpdateStyle;
 		}
 
 		protected override void OnNullViewModel()
@@ -75,6 +86,14 @@ namespace UI
 		{
 			UpdateFilling();
 		}
+
+		private void UpdateStyle()
+		{
+			var style = string.Empty;
+			if (ViewModel is IStylizedProgressBarViewModel stylizedViewModel)
+				style = stylizedViewModel.Style;
+			_layout.styleSwitcher.Switch(style);
+		}
 	}
 
 	public interface IProgressBarViewModel
@@ -87,5 +106,12 @@ namespace UI
 		[CanBeNull] ILabelViewModel Label { get; }
 
 		event Action ProgressChanged;
+	}
+
+	public interface IStylizedProgressBarViewModel : IProgressBarViewModel
+	{
+		public string Style { get; }
+
+		event Action StyleChanged;
 	}
 }

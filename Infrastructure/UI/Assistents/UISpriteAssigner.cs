@@ -48,9 +48,9 @@ namespace UI
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
 		}
 
-		public void TrySetSprite(Image image, IAssetReferenceEntry<Sprite> entry, Action callback = null, bool disableDuringLoad = false)
+		public void TrySetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = false)
 		{
-			if (image == null || entry.IsEmptyOrInvalid())
+			if (image == null || iconRef.IsEmptyOrInvalid())
 				return;
 
 			if (disableDuringLoad)
@@ -59,7 +59,7 @@ namespace UI
 				callback += () => image.enabled = true;
 			}
 
-			SetSprite(image, entry, callback);
+			SetSprite(image, iconRef, callback);
 		}
 
 		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry<Sprite> entry)
