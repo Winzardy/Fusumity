@@ -3,8 +3,10 @@ using System.Linq;
 using JetBrains.Annotations;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
+#if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace UI
