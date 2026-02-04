@@ -25,7 +25,7 @@ namespace UI
 				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon, true));
 			}
 
-			Subscribe(layout.button, HandleClick);
+			Subscribe(layout, HandleClick);
 		}
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)

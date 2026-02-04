@@ -13,6 +13,7 @@ namespace Fusumity.Attributes.Odin
 		public int width;
 		public SdfIconType icon;
 		public IconAlignment iconAlignment;
+		public bool hideBoolean = true;
 		public string showIf;
 
 		public InlineToggleAttribute(string valueGetter, string label)

@@ -42,7 +42,7 @@ namespace Audio
 			public void OnDispose(AudioEventPlayer player)
 			{
 				player.Dispose();
-				player.DestroySafe();
+				player.DestroyGameObjectSafe();
 			}
 		}
 	}

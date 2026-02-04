@@ -1,4 +1,5 @@
 ﻿using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -12,10 +13,9 @@ namespace ZenoTween.Participant.Tweens
 		public RectTransform rectTransform;
 
 		[Space]
+		[InlineToggle(nameof(useStartValue), "From")]
 		public Vector3 endValue = Vector3.zero;
-
 		public bool useStartValue = false;
-
 		[ShowIf(nameof(useStartValue))]
 		public Vector3 startValue;
 

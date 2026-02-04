@@ -1,5 +1,7 @@
-﻿using System;
-using DG.Tweening;
+﻿using DG.Tweening;
+using Fusumity.Utility;
+using Sapientia.ServiceManagement;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -24,6 +26,8 @@ namespace UI.Joystick
 
 		protected override void OnLayoutInstalled()
 		{
+			ServiceLocator.Get<UnityObjectsRegistry>().Register(_layout);
+
 			_layout.onDrag += OnDrag;
 			_layout.onPointerUp += OnPointerUp;
 			_layout.onPointerDown += OnPointerDown;
@@ -48,6 +52,8 @@ namespace UI.Joystick
 
 		protected override void OnLayoutCleared()
 		{
+			ServiceLocator.Get<UnityObjectsRegistry>().Unregister(_layout);
+
 			_layout.onDrag -= OnDrag;
 			_layout.onPointerUp -= OnPointerUp;
 			_layout.onPointerDown -= OnPointerDown;

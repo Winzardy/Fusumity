@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
 using DG.Tweening;
 using Fusumity.Attributes;
 using JetBrains.Annotations;
 using Sapientia.Collections;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 
@@ -42,26 +42,26 @@ namespace ZenoTween
 			return participant.IsEmpty();
 		}
 
-		public static Tween ToTween(this ICollection<SequenceParticipant> participants, object target)
-		{
-			return participants.ToSequence(target);
-		}
-
 		public static Sequence ToSequence(this ICollection<SequenceParticipant> participants, object target)
 		{
-			Sequence sequence = null;
+			if (participants.IsNullOrEmpty())
+				return null;
 
-			if (!participants.IsNullOrEmpty())
-			{
-				sequence = DOTween.Sequence();
-				if (target != null)
-					sequence.SetTarget(target);
-
-				foreach (var participant in participants)
-					participant.Participate(ref sequence);
-			}
-
+			var sequence = DOTween.Sequence();
+			participants.Participate(ref sequence, target);
 			return sequence;
+		}
+
+		public static void Participate(this ICollection<SequenceParticipant> participants, ref Sequence sequence, object target = null)
+		{
+			if (participants.IsNullOrEmpty())
+				return;
+
+			if (target != null)
+				sequence.SetTarget(target);
+
+			foreach (var participant in participants)
+				participant.Participate(ref sequence);
 		}
 	}
 }

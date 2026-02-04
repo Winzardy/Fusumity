@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Content.Editor;
+using Fusumity.Editor.Utility;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -11,6 +6,11 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sirenix.Utilities;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using UI;
 using UnityEditor;
 using UnityEngine;
@@ -59,7 +59,7 @@ namespace Content.ScriptableObjects.Editor
 				}
 			}
 
-			if (attribute is {ReplaceForClassName: not null})
+			if (attribute is { ReplaceForClassName: not null })
 			{
 				var from = attribute.ReplaceForClassName.Value.from;
 				var to = attribute.ReplaceForClassName.Value.to;
@@ -92,7 +92,42 @@ namespace Content.ScriptableObjects.Editor
 				namespaceByOutput = bestMatch;
 			}
 
-			output ??= projectSettings.output;
+			output ??= new ConstantsOutput
+			{
+				asmdef = projectSettings.output.asmdef,
+				folderPath = projectSettings.output.folderPath,
+				trimGeneratePath = projectSettings.output.trimGeneratePath,
+			};
+
+			if (attribute.HasCustomizedOutputPath)
+			{
+				output.trimGeneratePath = true;
+				output.asmdef = null;
+				namespaceByOutput = @namespace;
+			}
+
+			if (!attribute.OutputPath.IsNullOrEmpty())
+			{
+				output.folderPath = attribute.OutputPath;
+			}
+			else if (attribute.RespectExistingOutputPath)
+			{
+				var existingPath = AssetDatabaseUtility.FindScriptPath(className);
+				if (!existingPath.IsNullOrEmpty())
+				{
+					output.folderPath = Path.GetDirectoryName(existingPath).SlashSafe();
+				}
+			}
+			else if (attribute.TypeOutputPath != null)
+			{
+				var typePath = AssetDatabaseUtility.FindScriptPath(attribute.TypeOutputPath);
+				output.folderPath = Path.GetDirectoryName(typePath).SlashSafe();
+			}
+			else if (attribute.UseAppliedTypeOutputPath)
+			{
+				var typePath = AssetDatabaseUtility.FindScriptPath(valueType);
+				output.folderPath = Path.GetDirectoryName(typePath).SlashSafe();
+			}
 
 			var folderPath = output.folderPath;
 
@@ -154,7 +189,7 @@ namespace Content.ScriptableObjects.Editor
 
 			var existingData = File.Exists(path) ? File.ReadAllText(path) : null;
 
-			var root = new GeneratorConstantsNode {name = ROOT_NODE};
+			var root = new GeneratorConstantsNode { name = ROOT_NODE };
 
 			foreach (var source in collection)
 			{
@@ -171,7 +206,7 @@ namespace Content.ScriptableObjects.Editor
 				foreach (var part in parts)
 				{
 					if (!current.children.ContainsKey(part))
-						current.children[part] = new GeneratorConstantsNode {name = part};
+						current.children[part] = new GeneratorConstantsNode { name = part };
 					current = current.children[part];
 				}
 
@@ -306,7 +341,7 @@ namespace Content.ScriptableObjects.Editor
 			{
 				var hasAnyLeaves = node.children.Values.Any(HasLeaf);
 
-				var currentPath = new List<string>(pathSegments) {node.name};
+				var currentPath = new List<string>(pathSegments) { node.name };
 				var comment = string.Join(" -> ", currentPath.Skip(1));
 
 				var handled = false;
@@ -387,7 +422,7 @@ namespace Content.ScriptableObjects.Editor
 				for (int i = 0; i < input.Length; i++)
 				{
 					char current = input[i];
-					char? next = i + 1 < input.Length ? input[i + 1] : (char?) null;
+					char? next = i + 1 < input.Length ? input[i + 1] : (char?)null;
 
 					if (char.IsUpper(current))
 					{

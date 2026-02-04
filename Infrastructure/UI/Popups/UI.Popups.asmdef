@@ -3,12 +3,14 @@
     "rootNamespace": "",
     "references": [
         "UI",
+        "MVVM",
         "AssetManagement",
         "UniTask",
         "Content",
         "DOTween.Modules",
         "Sapientia",
-        "Fusumity"
+        "Fusumity",
+        "ActionBus"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

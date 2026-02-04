@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -31,10 +32,6 @@ namespace UI
 		public StateSwitcher<string> styleSwitcher;
 
 		public override TMP_Text Label => label;
-
-		public void Subscribe(UnityAction action) => button.onClick.AddListener(action);
-
-		public void Unsubscribe(UnityAction action) => button.onClick.RemoveListener(action);
 
 		protected override void Reset()
 		{

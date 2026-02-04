@@ -62,7 +62,7 @@ namespace Booting.UI
 		protected override void OnDispose()
 		{
 			UIDispatcher.Clear();
-			_eventSystem.Destroy();
+			_eventSystem.DestroyGameObject();
 		}
 
 		private void Initialize()

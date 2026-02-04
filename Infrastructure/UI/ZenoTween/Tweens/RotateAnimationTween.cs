@@ -1,8 +1,9 @@
-﻿using System;
-using DG.Tweening;
+﻿using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
+using System;
 using UnityEngine;
 
 namespace ZenoTween.Participant.Tweens
@@ -18,10 +19,9 @@ namespace ZenoTween.Participant.Tweens
 		public Transform root;
 
 		[Space]
+		[InlineToggle(nameof(useStartValue), "From")]
 		public Vector3 endValue = new() {z = 360};
-
 		public bool useStartValue = false;
-
 		[ShowIf(nameof(useStartValue))]
 		public Vector3 startValue;
 

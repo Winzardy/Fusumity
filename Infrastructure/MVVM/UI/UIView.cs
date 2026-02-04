@@ -16,17 +16,17 @@ namespace Fusumity.MVVM.UI
 		{
 		}
 
-		protected void Subscribe([CanBeNull] Button button, Action action)
+		protected void Subscribe([CanBeNull] Button button, Action action, string uId = null, string groupId = null)
 		{
 			if (button != null)
 			{
-				AddDisposable(new UnityButtonSubscription(button, action));
+				AddSubscription(button.Subscribe(action, uId, groupId, false));
 			}
 		}
 
-		protected void Subscribe(UILabeledButtonLayout layout, Action action)
+		protected void Subscribe(UIStatefulButtonLayout layout, Action action)
 		{
-			Subscribe(layout.button, action);
+			Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
 		protected void Bind(TMP_Text label, ILabelViewModel viewModel)

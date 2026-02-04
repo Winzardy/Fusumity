@@ -1,6 +1,7 @@
-﻿using System;
-using DG.Tweening;
+﻿using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
+using System;
 using UnityEngine;
 
 namespace ZenoTween.Participant.Tweens
@@ -14,10 +15,10 @@ namespace ZenoTween.Participant.Tweens
 	public class PivotToTargetAnimationTween : AnimationTween
 	{
 		public RectTransform root;
+
+		[InlineToggle(nameof(useStartTarget), "From")]
 		public RectTransform target;
-
 		public bool useStartTarget;
-
 		[ShowIf(nameof(useStartTarget))]
 		public RectTransform startTarget;
 

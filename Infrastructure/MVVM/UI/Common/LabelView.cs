@@ -1,4 +1,4 @@
-﻿using Sapientia.Extensions;
+using Sapientia.Extensions;
 using TMPro;
 
 namespace Fusumity.MVVM.UI
