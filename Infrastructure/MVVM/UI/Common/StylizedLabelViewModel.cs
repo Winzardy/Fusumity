@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using UnityEngine.Assertions;
 
 namespace Fusumity.MVVM.UI
 {
-	public class LabelViewModel : ILabelViewModel
+	public class StylizedLabelViewModel : IStylizedLabelViewModel
 	{
 		private string _value;
+		private string _style;
+
 		private Action<string> _onChange;
 
 		public string Value
@@ -18,11 +20,23 @@ namespace Fusumity.MVVM.UI
 			}
 		}
 
-		public LabelViewModel()
+		public string Style
+		{
+			get { return _style; }
+			set
+			{
+				_style = value;
+				StyleChanged?.Invoke();
+			}
+		}
+
+		public event Action StyleChanged;
+
+		public StylizedLabelViewModel()
 		{
 		}
 
-		public LabelViewModel(string value)
+		public StylizedLabelViewModel(string value)
 		{
 			Value = value;
 		}
@@ -41,33 +55,6 @@ namespace Fusumity.MVVM.UI
 		public void Release()
 		{
 			_onChange = null;
-		}
-	}
-
-	public static class LabelViewModelExtensions
-	{
-		public static bool IsNullOrEmpty(this ILabelViewModel vm)
-		{
-			if (vm == null)
-				return true;
-
-			return vm.IsEmpty;
-		}
-
-		public static void ClearSafe(this ILabelViewModel vm)
-		{
-			if (vm.IsNullOrEmpty())
-				return;
-
-			vm.Value = default;
-		}
-
-		public static void ResetSafe(this ILabelViewModel vm)
-		{
-			if (vm == null)
-				return;
-
-			vm.Value = default;
 		}
 	}
 }

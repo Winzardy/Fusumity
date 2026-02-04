@@ -1,5 +1,4 @@
 ﻿using Fusumity.MVVM.UI;
-using Sapientia.Extensions;
 using System;
 using JetBrains.Annotations;
 using UI;
@@ -32,7 +31,7 @@ namespace Game.UI
 
 			if (_layout.subLabel != null)
 			{
-				_defaultLabelText = _layout.label.text;
+				_defaultSubLabelText = _layout.subLabel.text;
 				Subscribe(_layout.subLabelButton, HandleSubLabelClicked);
 			}
 
@@ -52,8 +51,8 @@ namespace Game.UI
 
 			if (!viewModel.Label.IsNullOrEmpty())
 				_layout.label.Bind(viewModel.Label, UpdateLabel);
-
-			_layout.subLabel.BindSafe(viewModel.SubLabel, UpdateLabel);
+			if (_layout.subLabel && !viewModel.SubLabel.IsNullOrEmpty())
+				_layout.subLabel.Bind(viewModel.SubLabel, UpdateSubLabel);
 
 			viewModel.IconChanged += UpdateIcon;
 			viewModel.IconColorChanged += UpdateIconColor;
@@ -67,8 +66,8 @@ namespace Game.UI
 		{
 			if (!viewModel.Label.IsNullOrEmpty())
 				_layout.label.Unbind(viewModel.Label);
-
-			_layout.subLabel.UnbindSafe(viewModel.Label);
+			if (_layout.subLabel && !viewModel.SubLabel.IsNullOrEmpty())
+				_layout.subLabel.Unbind(viewModel.SubLabel);
 
 			viewModel.IconChanged -= UpdateIcon;
 			viewModel.IconColorChanged -= UpdateIconColor;
