@@ -1,4 +1,6 @@
 ﻿using System;
+using ActionBusSystem;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -47,9 +49,15 @@ namespace UI
 		[AnimationTweenKey(ANIMATION_KEY_PREFIX), OnValueChanged(nameof(OnDefaultStyleChanged))]
 		public string defaultStyle = ANIMATION_KEY_PREFIX + ButtonStyle.DEFAULT;
 
-		public void Subscribe(UnityAction action) => button.onClick.AddListener(action);
+		[Space]
+		[ConstDropdown(typeof(ActionBusElementType))]
+		public string uId;
+		[ConstDropdown(typeof(ActionBusGroupType))]
+		public string groupId;
 
-		public void Unsubscribe(UnityAction action) => button.onClick.RemoveListener(action);
+		public void Subscribe(Action action) => button.Subscribe(action);
+
+		public void Unsubscribe(Action action) => button.Unsubscribe(action);
 
 		public override TMP_Text Label => label;
 

@@ -353,5 +353,31 @@ namespace Fusumity.Editor.Utility
 
 			return path;
 		}
+
+		public static IEnumerable<string> FindScriptsPaths(string typeName, bool partialMatch = true)
+		{
+			if (partialMatch)
+			{
+				return AssetDatabase
+					.FindAssets($"t: script {typeName}")
+					.Select(AssetDatabase.GUIDToAssetPath);
+			}
+			else
+			{
+				return AssetDatabase
+					.FindAssets($"t: script {typeName}")
+					.Select(AssetDatabase.GUIDToAssetPath)
+					.Where(x => string.Equals(Path.GetFileNameWithoutExtension(x), typeName, StringComparison.Ordinal));
+			}
+		}
+
+		public static string FindScriptPath(string typeName, bool partialMatch = true)
+		{
+			return FindScriptsPaths(typeName, partialMatch).FirstOrDefault();
+		}
+		public static string FindScriptPath(System.Type type, bool partialMatch = true)
+		{
+			return FindScriptPath(type.Name, partialMatch);
+		}
 	}
 }

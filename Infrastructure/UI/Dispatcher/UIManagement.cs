@@ -1,7 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Content;
 using Fusumity.Utility;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UI.Layers;
 
 namespace UI
@@ -12,7 +13,7 @@ namespace UI
 		internal static T instance;
 	}
 
-	public class UIManagement : IDisposable
+	public class UIManagement : IDisposable, IEnumerable<UILayerLayout>
 	{
 		private const string NAME_FORMAT = "[Canvas] {0}";
 
@@ -54,5 +55,8 @@ namespace UI
 
 			_layers.Clear();
 		}
+
+		public IEnumerator<UILayerLayout> GetEnumerator() => _layers.Values.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

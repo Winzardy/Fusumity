@@ -65,14 +65,7 @@ namespace ZenoTween
 					sequence.SetTarget(target);
 			}
 
-			if (delay > 0)
-				tween.SetDelay(delay);
-
-			if (repeat != 0)
-			{
-				tween.SetAutoKill(repeat > 0);
-				tween.SetLoops(repeat, repeatType);
-			}
+			ApplyTweenSettings(tween);
 
 			if (IsLoop && lifetimeByParent)
 			{
@@ -100,6 +93,18 @@ namespace ZenoTween
 				case Type.Prepend:
 					sequence.Prepend(tween);
 					break;
+			}
+		}
+
+		protected void ApplyTweenSettings(in Tween tween)
+		{
+			if (delay > 0)
+				tween.SetDelay(delay);
+
+			if (repeat != 0)
+			{
+				tween.SetAutoKill(repeat > 0);
+				tween.SetLoops(repeat, repeatType);
 			}
 		}
 
@@ -177,6 +182,6 @@ namespace ZenoTween
 		}
 #endif
 
-		#endregion
+		#endregion Debug Preview
 	}
 }

@@ -7,7 +7,9 @@
         "Content",
         "Fusumity",
         "Sapientia",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "MVVM",
+        "ActionBus"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

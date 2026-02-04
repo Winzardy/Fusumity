@@ -1,6 +1,7 @@
-﻿using System;
-using DG.Tweening;
+﻿using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
+using System;
 using UnityEngine;
 
 namespace ZenoTween.Participant.Tweens.UI
@@ -16,10 +17,9 @@ namespace ZenoTween.Participant.Tweens.UI
 		public CanvasGroup group;
 
 		[PropertyRange(0, 1)]
+		[InlineToggle(nameof(useStartAlpha), "From")]
 		public float alpha;
-
 		public bool useStartAlpha = false;
-
 		[ShowIf(nameof(useStartAlpha))]
 		[PropertyRange(0, 1)]
 		public float startAlpha;

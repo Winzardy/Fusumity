@@ -88,7 +88,7 @@ namespace UI
 			if (!_layout.disableDefaultLabel && _layout.label)
 				_defaultLabelText = _layout.label.text;
 
-			_layout.Subscribe(OnClicked);
+			_layout.button.Subscribe(OnClicked);
 
 			base.OnLayoutInstalledInternal();
 		}
@@ -100,7 +100,7 @@ namespace UI
 
 			Clicked = null;
 
-			_layout.Unsubscribe(OnClicked);
+			_layout.button.Unsubscribe(OnClicked);
 
 			base.OnLayoutClearedInternal();
 		}
@@ -193,7 +193,7 @@ namespace UI
 		}
 	}
 
-	public static class UIButtonExtensions
+	public static class UIButtonWidget2Extensions
 	{
 		/// <summary>
 		/// Отписку (<see cref="Unsubscribe"/>) можно не делать так как при очистке верстки, произойдет очистка подписчиков

@@ -1,4 +1,5 @@
 using Fusumity.Attributes.Odin;
+using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.ActionResolvers;
@@ -52,6 +53,16 @@ namespace Fusumity.Editor.Drawers
 			_tooltip =
 				Property.GetAttribute<PropertyTooltipAttribute>()?.Tooltip ??
 				Property.GetAttribute<TooltipAttribute>()?.tooltip;
+
+			if (Attribute.hideBoolean)
+			{
+				var parent = Property.Parent;
+				if (parent.TryGetChild(Attribute.valueGetter, out var boolean) &&
+					boolean.ValueEntry.TypeOfValue == typeof(bool))
+				{
+					boolean.AddAttribute(new HideInInspector());
+				}
+			}
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)

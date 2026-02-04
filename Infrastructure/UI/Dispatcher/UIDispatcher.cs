@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using Sapientia;
+﻿using Sapientia;
+using System.Runtime.CompilerServices;
 
 namespace UI
 {
@@ -40,5 +40,21 @@ namespace UI
 		/// Возвращает слой по айди (без создания)
 		/// </summary>
 		public static bool TryGetLayer(string id, out UILayerLayout layer) => management.TryGet(id, out layer);
+
+		public static void SetLayerEnabled(string id, bool enabled)
+		{
+			if (TryGetLayer(id, out var layer))
+			{
+				layer.Enable(enabled);
+			}
+		}
+
+		public static void SetAllLayersEnabled(bool enabled)
+		{
+			foreach (var layer in management)
+			{
+				layer.Enable(enabled);
+			}
+		}
 	}
 }

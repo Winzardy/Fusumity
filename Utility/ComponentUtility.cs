@@ -121,7 +121,7 @@ namespace Fusumity.Utility
 		/// <summary>
 		/// Уничтожает GameObject!
 		/// </summary>
-		public static void Destroy<T>(this T component)
+		public static void DestroyGameObject<T>(this T component)
 			where T : Component
 		{
 			UnityObject.Destroy(component.gameObject);
@@ -130,17 +130,22 @@ namespace Fusumity.Utility
 		/// <summary>
 		/// Уничтожает GameObject!
 		/// </summary>
-		public static void DestroySafe<T>(this T component)
+		public static void DestroyGameObjectSafe<T>(this T component)
 			where T : Component
 		{
 			if (component)
-				component.Destroy();
+				component.DestroyGameObject();
 		}
 
 		public static void DestroySafe(this UnityObject obj)
 		{
 			if (obj)
 				obj.Destroy();
+		}
+
+		public static void Destroy<T>(this T component) where T : Component
+		{
+			UnityObject.Destroy(component);
 		}
 
 		public static void DestroyComponentSafe<T>(this T component)

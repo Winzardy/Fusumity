@@ -33,5 +33,23 @@ namespace Fusumity.Utility
 				.WhenAll(tasks)
 				.AttachExternalCancellation(token);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static UniTask NextFrame(CancellationToken token = default)
+		{
+			return UniTask.NextFrame(token);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static UniTask NextFrames(int frames, CancellationToken token = default)
+		{
+			if (frames < 1)
+				throw new ArgumentException($"Invalid frame count [ {frames} ]");
+
+			if (frames == 1)
+				return UniTask.NextFrame(token);
+
+			return UniTask.DelayFrame(frames, cancellationToken: token);
+		}
 	}
 }

@@ -5,6 +5,7 @@ using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using UnityEngine;
 
 namespace ZenoTween.Editor
 {
@@ -38,6 +39,16 @@ namespace ZenoTween.Editor
 					attributes.Add(new UnitAttribute(Units.Second));
 					attributes.Add(new MinimumAttribute(0));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+
+					if (parentProperty.ValueEntry.TypeOfValue == typeof(AnimationSequence))
+					{
+						attributes.Add(new InlineToggleAttribute(nameof(AnimationSequence.delayOnce), "Once")
+						{
+							showIf = nameof(AnimationSequence.IsLoop),
+							margins = 5
+						});
+					}
+
 					break;
 
 				case nameof(AnimationTween.repeat):
@@ -103,6 +114,10 @@ namespace ZenoTween.Editor
 				case nameof(AnimationSequence.timeScale):
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
 					attributes.Add(new PropertyOrderAttribute(ORDER + 4));
+					break;
+
+				case nameof(AnimationSequence.delayOnce):
+					attributes.Add(new HideInInspector());
 					break;
 			}
 		}

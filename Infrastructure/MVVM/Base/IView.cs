@@ -129,16 +129,21 @@ namespace Fusumity.MVVM
 			lazyCd.AddDisposable(disposable);
 		}
 
+		protected void AddSubscription<T>(BaseSubscription<T> subscription) where T : Delegate
+		{
+			if (subscription != null && !subscription.IsDisposed)
+				AddDisposable(subscription);
+		}
+
 		protected void Subscribe(IClickable clickable, Action handler)
 		{
-			AddDisposable(new ClickableSubscription(clickable, handler));
+			AddSubscription(new ClickableSubscription(clickable, handler));
 		}
 
 		protected void Subscribe<T>(IClickable<T> clickable, Action<T> handler)
 		{
-			AddDisposable(new ClickableSubscription<T>(clickable, handler));
+			AddSubscription(new ClickableSubscription<T>(clickable, handler));
 		}
-
 		#endregion Disposables
 
 		#region Bindings
@@ -146,12 +151,12 @@ namespace Fusumity.MVVM
 		/// <summary>
 		/// Bindings are disposed of upon each view model clearing.
 		/// </summary>
-		protected void Bind<T>(IBinding<T> binding,  Action<T> handler)
+		protected void Bind<T>(IBinding<T> binding, Action<T> handler)
 		{
 			var lazyCd = _bindings ??= new CompositeDisposable();
 			lazyCd.AddDisposable(new BindingSubscription<T>(binding, handler));
 		}
-		#endregion
+		#endregion Bindings
 	}
 
 	public abstract class View<TViewModel, TLayout> : View<TViewModel>

@@ -1,8 +1,9 @@
-﻿using System;
-using DG.Tweening;
+﻿using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
+using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -22,10 +23,9 @@ namespace ZenoTween.Participant.Tweens.UI
 		public Graphic[] graphics;
 
 		[PropertyRange(0, 1)]
+		[InlineToggle(nameof(useStartAlpha), "From")]
 		public float alpha;
-
 		public bool useStartAlpha = false;
-
 		[ShowIf(nameof(useStartAlpha))]
 		[PropertyRange(0, 1)]
 		public float startAlpha;

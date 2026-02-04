@@ -1,21 +1,21 @@
 ﻿using System;
 using UnityEngine.Assertions;
 
-namespace Fusumity.MVVM
+namespace Fusumity.Utility
 {
 	public abstract class BaseSubscription<TDelegate> : IDisposable where TDelegate : Delegate
 	{
 		protected TDelegate _delegate;
 
 		public bool IsEnabled { get; private set; } = true;
-		public bool IsDisposed { get; private set; }
+		public bool IsDisposed { get; protected set; }
 
 		public BaseSubscription(TDelegate @delegate)
 		{
 			_delegate = @delegate;
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			if (IsDisposed)
 				return;
@@ -108,5 +108,10 @@ namespace Fusumity.MVVM
 			var result = _delegate.Invoke(param);
 			Invoked?.Invoke(result);
 		}
+	}
+
+	public interface ISubscriptionsHolder
+	{
+		void AddSubscription<T>(BaseSubscription<T> subscription) where T : Delegate;
 	}
 }

@@ -15,7 +15,9 @@
         "ZenoTween",
         "DOTween.Modules",
         "Unity.Mathematics",
-        "Messaging"
+        "Messaging",
+        "MVVM",
+        "ActionBus"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

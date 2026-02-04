@@ -18,6 +18,7 @@ namespace Content.ScriptableObjects.Editor
 			[DarkCardBox]
 			public ConstantsOutput output;
 
+			[DictionaryDrawerSettings(KeyLabel = "Namespace", ValueLabel = "Output")]
 			public SerializableDictionary<string, ConstantsOutput> namespaceToOutput = new();
 
 			[Space]

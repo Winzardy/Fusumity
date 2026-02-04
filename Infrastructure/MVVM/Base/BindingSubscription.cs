@@ -1,4 +1,4 @@
-﻿using Sapientia;
+﻿using Fusumity.Utility;
 using System;
 
 namespace Fusumity.MVVM
