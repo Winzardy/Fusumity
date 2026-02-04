@@ -24,6 +24,11 @@ namespace Fusumity.MVVM.UI
 			}
 		}
 
+		protected void Subscribe(UILabeledButtonLayout layout, Action action)
+		{
+			Subscribe(layout.button, action, layout.uId, layout.groupId);
+		}
+
 		protected void Subscribe(UIStatefulButtonLayout layout, Action action)
 		{
 			Subscribe(layout.button, action, layout.uId, layout.groupId);
