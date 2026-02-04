@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using UnityEngine.TextCore.Text;
 
 namespace Fusumity.Utility
 {
@@ -14,7 +16,7 @@ namespace Fusumity.Utility
 		}
 	}
 
-	public class ObjectsCatalog<T> : ObjectsCatalog
+	public class ObjectsCatalog<T> : ObjectsCatalog, IEnumerable<T>
 	{
 		private readonly List<T> _objects = new List<T>();
 
@@ -48,5 +50,8 @@ namespace Fusumity.Utility
 
 			return removed;
 		}
+
+		public IEnumerator<T> GetEnumerator() => Objects.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

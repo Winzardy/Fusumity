@@ -58,9 +58,11 @@ namespace Fusumity.Utility
 			}
 		}
 
-		public static T GetObject<T>(this IObjectsRegistry registry)
+		public static T GetObject<T>(this IObjectsRegistry registry, Func<T, bool> predicate = null)
 		{
-			return registry.GetCatalog<T>().Objects.FirstOrDefault();
+			return predicate != null ?
+				registry.GetCatalog<T>().Objects.FirstOrDefault(predicate) :
+				registry.GetCatalog<T>().Objects.FirstOrDefault();
 		}
 
 		public static bool TryGetObject<T>(this IObjectsRegistry registry, out T obj)
