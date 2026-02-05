@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace SceneManagement
 {
-	public class SceneManager : StaticAccessor<SceneLoaderHub>
+	public class SceneManager : StaticWrapper<SceneLoaderHub>
 	{
 		public const string SUB_SCENE_POSTFIX = SceneLoader.SUB_SCENE_POSTFIX;
 		public const string EMPTY_SCENE_POSTFIX = SceneLoader.EMPTY_SCENE_POSTFIX;

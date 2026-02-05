@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Audio
 {
-	public class AudioManager : StaticAccessor<AudioManagement>
+	public class AudioManager : StaticWrapper<AudioManagement>
 	{
 		// ReSharper disable once InconsistentNaming
 		private static AudioManagement management

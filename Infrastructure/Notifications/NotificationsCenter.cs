@@ -4,7 +4,7 @@ using Sapientia;
 
 namespace Notifications
 {
-	public class NotificationsCenter : StaticAccessor<NotificationsManagement>
+	public class NotificationsCenter : StaticWrapper<NotificationsManagement>
 	{
 		private static NotificationsManagement management
 		{

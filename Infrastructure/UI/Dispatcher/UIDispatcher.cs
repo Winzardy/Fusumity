@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace UI
 {
-	public class UIDispatcher : StaticAccessor<UIManagement>
+	public class UIDispatcher : StaticWrapper<UIManagement>
 	{
 		private static UIManagement management
 		{

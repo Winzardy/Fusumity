@@ -3,7 +3,7 @@ using Sapientia;
 
 namespace Analytics
 {
-	public class AnalyticsCenter : StaticAccessor<AnalyticsManagement>
+	public class AnalyticsCenter : StaticWrapper<AnalyticsManagement>
 	{
 		// ReSharper disable once InconsistentNaming
 		private static AnalyticsManagement management
