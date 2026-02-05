@@ -19,11 +19,5 @@ namespace Game.UI
 		public Button labelButton;
 		[Indent, LabelText("Style Switcher")]
 		public StateSwitcher<string> labelStyleSwitcher;
-
-		public TMP_Text subLabel;
-		[Indent, LabelText("Button"), ShowIf(nameof(subLabel), null)]
-		public Button subLabelButton;
-		[Indent, LabelText("Style Switcher"), ShowIf(nameof(subLabel), null)]
-		public StateSwitcher<string> subLabelStyleSwitcher;
 	}
 }

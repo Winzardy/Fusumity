@@ -12,6 +12,8 @@ namespace Game.UI
 		private Color? _iconColor;
 		private Color? _labelColor;
 
+		private string _label;
+
 		private string _labelStyle;
 		private string _subLabelStyle;
 
@@ -25,7 +27,16 @@ namespace Game.UI
 			}
 		}
 
-		[NotNull] public ILabelViewModel Label { get; set; } = new LabelViewModel();
+		[NotNull]
+		public string Label
+		{
+			get => _label;
+			set
+			{
+				_label = value;
+				LabelChanged?.Invoke();
+			}
+		}
 
 		public Color? IconColor
 		{
@@ -47,8 +58,6 @@ namespace Game.UI
 			}
 		}
 
-		[NotNull] public ILabelViewModel SubLabel { get; } = new LabelViewModel();
-
 		public string LabelStyle
 		{
 			get => _labelStyle;
@@ -59,31 +68,16 @@ namespace Game.UI
 			}
 		}
 
-		public string SubLabelStyle
-		{
-			get => _subLabelStyle;
-			set
-			{
-				_subLabelStyle = value;
-				SubLabelStyleChanged?.Invoke();
-			}
-		}
-
 		public event Action IconChanged;
 		public event Action IconColorChanged;
 		public event Action LabelColorChanged;
 
 		public event Action LabelStyleChanged;
-		public event Action SubLabelStyleChanged;
+		public event Action LabelChanged;
 
 		public UIAnemicLabeledIconViewModel(string label)
 		{
-			Label!.Value = label;
-		}
-
-		public UIAnemicLabeledIconViewModel(string label, string subLabel) : this(label)
-		{
-			SubLabel!.Value = subLabel;
+			_label = label;
 		}
 
 		public UIAnemicLabeledIconViewModel()
@@ -94,9 +88,6 @@ namespace Game.UI
 		{
 			if (!Icon.IsEmptyOrInvalid())
 				Icon = default;
-
-			Label.TryClearValue();
-			SubLabel.TryClearValue();
 
 			if (_iconColor.HasValue)
 				IconColor = default;
@@ -114,9 +105,7 @@ namespace Game.UI
 			_icon = default;
 			_iconColor = default;
 			_labelColor = default;
-
-			//Label.ResetSafe(); // bug
-			//SubLabel.ResetSafe();
+			_label = default;
 		}
 	}
 }

@@ -8,19 +8,15 @@ namespace Fusumity.MVVM.UI
 	{
 		public static void Bind(this TMP_Text label, ILabelViewModel viewModel)
 		{
-			viewModel.Bind(x => label.text = x);
-		}
-
-		public static void Bind(this TMP_Text label, ILabelViewModel viewModel, Action<string> labelTextSetter)
-		{
-			//TODO: remove
-			if (label == null)
-				return;
-
-			if (viewModel == null)
-				return;
-
-			viewModel.Bind(labelTextSetter);
+			try
+			{
+				viewModel.Bind(x => label.text = x);
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogException(e, label);
+				throw;
+			}
 		}
 
 		public static void Unbind(this TMP_Text label, ILabelViewModel viewModel)

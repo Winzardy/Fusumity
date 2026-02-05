@@ -1,6 +1,7 @@
 ﻿using Fusumity.MVVM.UI;
 using System;
 using JetBrains.Annotations;
+using Sapientia.Extensions;
 using UI;
 using UnityEngine;
 
@@ -29,12 +30,6 @@ namespace Game.UI
 			_defaultLabelText = _layout.label.text;
 			Subscribe(_layout.labelButton, HandleLabelClicked);
 
-			if (_layout.subLabel != null)
-			{
-				_defaultSubLabelText = _layout.subLabel.text;
-				Subscribe(_layout.subLabelButton, HandleSubLabelClicked);
-			}
-
 			AddDisposable(_spriteAssigner = new UISpriteAssigner());
 
 			Subscribe(_layout.iconButton, HandleIconClicked);
@@ -44,39 +39,28 @@ namespace Game.UI
 		{
 			SetActive(!_disableIfEmpty || !viewModel.IsEmpty);
 
+			UpdateLabel();
 			UpdateIcon();
 
 			UpdateIconColor();
 			UpdateLabelColor();
 
-			if (!viewModel.Label.IsNullOrEmpty())
-				_layout.label.Bind(viewModel.Label, UpdateLabel);
-
-			if (_layout.subLabel != null && !viewModel.SubLabel.IsNullOrEmpty())
-				_layout.subLabel.Bind(viewModel.SubLabel, UpdateSubLabel);
+			viewModel.LabelChanged += HandleLabelChanged;
+			viewModel.LabelColorChanged += UpdateLabelColor;
+			viewModel.LabelStyleChanged += HandleLabelStyleChanged;
 
 			viewModel.IconChanged += UpdateIcon;
 			viewModel.IconColorChanged += UpdateIconColor;
-			viewModel.LabelColorChanged += UpdateLabelColor;
-
-			viewModel.LabelStyleChanged += HandleLabelStyleChanged;
-			viewModel.SubLabelStyleChanged += HandleSubLabelStyleChanged;
 		}
 
 		protected override void OnClear(ILabeledIconViewModel viewModel)
 		{
-			if (!viewModel.Label.IsNullOrEmpty())
-				_layout.label.Unbind(viewModel.Label);
-
-			if (_layout.subLabel != null && !viewModel.SubLabel.IsNullOrEmpty())
-				_layout.subLabel.Unbind(viewModel.SubLabel);
+			viewModel.LabelChanged -= HandleLabelChanged;
+			viewModel.LabelColorChanged -= UpdateLabelColor;
+			viewModel.LabelStyleChanged -= HandleLabelStyleChanged;
 
 			viewModel.IconChanged -= UpdateIcon;
 			viewModel.IconColorChanged -= UpdateIconColor;
-			viewModel.LabelColorChanged -= UpdateLabelColor;
-
-			viewModel.LabelStyleChanged -= HandleLabelStyleChanged;
-			viewModel.SubLabelStyleChanged -= HandleSubLabelStyleChanged;
 		}
 
 		protected override void OnNullViewModel()
@@ -84,39 +68,22 @@ namespace Game.UI
 			SetActive(false);
 		}
 
-		private void UpdateLabel(string text)
+		private void HandleLabelChanged() => UpdateLabel();
+
+		private void UpdateLabel()
 		{
 			if (_disableIfEmpty)
 			{
 				SetActive(!ViewModel.IsEmpty);
 			}
 
-			_layout.label.text = text ?? _defaultLabelText;
-		}
-
-		private void UpdateSubLabel(string text)
-		{
-			if (_layout.label == null)
-				return;
-
-			if (_disableIfEmpty)
-			{
-				SetActive(!ViewModel.IsEmpty);
-			}
-
-			_layout.subLabel.text = text ?? _defaultSubLabelText;
+			_layout.label.text = ViewModel.Label ?? _defaultLabelText;
 		}
 
 		private void HandleLabelStyleChanged()
 		{
 			if (_layout.labelStyleSwitcher)
 				_layout.labelStyleSwitcher.Switch(ViewModel.LabelStyle);
-		}
-
-		private void HandleSubLabelStyleChanged()
-		{
-			if (_layout.subLabelStyleSwitcher)
-				_layout.subLabelStyleSwitcher.Switch(ViewModel.SubLabelStyle);
 		}
 
 		private void UpdateIcon()
@@ -170,21 +137,21 @@ namespace Game.UI
 
 	public interface ILabeledIconViewModel
 	{
-		[CanBeNull] ILabelViewModel Label { get; }
+		string Label { get; }
+		Color? LabelColor { get => null; }
 		string LabelStyle { get => null; }
 
-		[CanBeNull] ILabelViewModel SubLabel { get => null; }
-		string SubLabelStyle { get => null; }
 		UISpriteInfo Icon { get; }
 		Color? IconColor { get => null; }
-		Color? LabelColor { get => null; }
-		bool IsEmpty { get => SubLabel.IsNullOrEmpty() && Icon.IsEmptyOrInvalid() && SubLabel.IsNullOrEmpty(); }
+
+		bool IsEmpty { get => Label.IsNullOrEmpty() && Icon.IsEmptyOrInvalid(); }
+
+		event Action LabelChanged;
+		event Action LabelColorChanged;
+		event Action LabelStyleChanged;
 
 		event Action IconChanged;
 		event Action IconColorChanged;
-		public event Action LabelColorChanged;
-		event Action LabelStyleChanged;
-		event Action SubLabelStyleChanged;
 
 		public void LabelClick()
 		{
