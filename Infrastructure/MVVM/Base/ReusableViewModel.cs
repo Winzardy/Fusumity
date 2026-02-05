@@ -1,31 +1,42 @@
-using System;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector;
+using System;
 
 namespace Fusumity.MVVM
 {
-	public static class ViewModelUtility
+	public static class ReusableViewModelUtility
 	{
 		public static void CreateOrUpdate<TViewModel, TModel>(ref TViewModel viewModel, TModel model)
-			where TViewModel : ViewModel<TModel>, new()
+			where TViewModel : ReusableViewModel<TModel>, new()
 		{
 			viewModel ??= new TViewModel();
 			viewModel.Update(model);
 		}
 	}
 
-	public abstract class ViewModel<TModel> : IDisposable
+	/// <summary>
+	/// Only inherit from it in specific scenarios, when you are absolutely sure you need it.
+	/// </summary>
+	public abstract class ReusableViewModel<TModel> : IDisposable
 	{
 		protected TModel _model;
 
-		[ShowInInspector] [HideLabel] public TModel Model { get => _model; set => Update(value); }
+		[ShowInInspector]
+		[HideLabel]
+		public TModel Model
+		{
+			get => _model;
+#if UNITY_EDITOR
+			set => Update(value);
+#endif
+		}
 
-		public ViewModel()
+		public ReusableViewModel()
 		{
 			Initialize();
 		}
 
-		public ViewModel(TModel model) : this()
+		public ReusableViewModel(TModel model) : this()
 		{
 			Update(model);
 		}
@@ -34,6 +45,7 @@ namespace Fusumity.MVVM
 		{
 			if (_model != null)
 				Clear();
+
 			_model = model;
 			OnUpdated(model);
 		}
@@ -42,6 +54,7 @@ namespace Fusumity.MVVM
 		{
 			if (_model != null)
 				OnCleared(_model);
+
 			_model = default;
 		}
 

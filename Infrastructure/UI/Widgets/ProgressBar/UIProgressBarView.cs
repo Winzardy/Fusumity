@@ -1,7 +1,6 @@
 ﻿using Fusumity.MVVM.UI;
-using System;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
+using System;
 
 namespace UI
 {
@@ -23,15 +22,14 @@ namespace UI
 		protected override void OnUpdate(IProgressBarViewModel viewModel)
 		{
 			SetActive(true);
-
 			UpdateFilling(true);
 
-			if (_layout.label)
+			if (_layout.label != null)
 				_layout.label.Bind(viewModel.Label);
 
 			viewModel.ProgressChanged += HandleProgressChanged;
 
-			if (_layout.styleSwitcher)
+			if (_layout.styleSwitcher != null)
 			{
 				UpdateStyle();
 				if (viewModel is IStylizedProgressBarViewModel stylizedViewModel)
@@ -41,14 +39,16 @@ namespace UI
 
 		protected override void OnClear(IProgressBarViewModel viewModel)
 		{
-			if (_layout.label)
+			if (_layout.label != null)
 				_layout.label.Unbind(viewModel.Label);
 
 			viewModel.ProgressChanged -= HandleProgressChanged;
 
-			if (_layout.styleSwitcher)
+			if (_layout.styleSwitcher != null)
+			{
 				if (viewModel is IStylizedProgressBarViewModel stylizedViewModel)
 					stylizedViewModel.StyleChanged -= UpdateStyle;
+			}
 		}
 
 		protected override void OnNullViewModel()
@@ -58,7 +58,7 @@ namespace UI
 
 		private void UpdateFilling(bool immediate = false)
 		{
-			_widget.Show(ViewModel.Progress, immediate);
+			_widget.Show(ViewModel.Progress, immediate, false);
 		}
 
 		public override void Reset()
@@ -91,7 +91,10 @@ namespace UI
 		{
 			var style = string.Empty;
 			if (ViewModel is IStylizedProgressBarViewModel stylizedViewModel)
+			{
 				style = stylizedViewModel.Style;
+			}
+
 			_layout.styleSwitcher.Switch(style);
 		}
 	}

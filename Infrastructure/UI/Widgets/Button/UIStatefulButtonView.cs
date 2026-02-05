@@ -30,7 +30,8 @@ namespace UI
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
-			_layout.label.BindSafe(viewModel.Label);
+			if(_layout.label != null)
+				_layout.label.Bind(viewModel.Label);
 
 			_adBanner?.Update(viewModel.AdBanner);
 			_labeledIcon?.Update(viewModel.LabeledIcon);
@@ -45,7 +46,8 @@ namespace UI
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			_layout.label.UnbindSafe(viewModel.Label);
+			if(_layout.label != null)
+				_layout.label.Unbind(viewModel.Label);
 
 			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
@@ -53,7 +55,7 @@ namespace UI
 
 		private void UpdateStyle()
 		{
-			if (_layout.switcher)
+			if (_layout.switcher != null)
 				_layout.switcher.Switch(ViewModel.Style);
 		}
 

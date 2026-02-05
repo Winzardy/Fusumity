@@ -51,7 +51,8 @@ namespace Game.UI
 
 			if (!viewModel.Label.IsNullOrEmpty())
 				_layout.label.Bind(viewModel.Label, UpdateLabel);
-			if (_layout.subLabel && !viewModel.SubLabel.IsNullOrEmpty())
+
+			if (_layout.subLabel != null && !viewModel.SubLabel.IsNullOrEmpty())
 				_layout.subLabel.Bind(viewModel.SubLabel, UpdateSubLabel);
 
 			viewModel.IconChanged += UpdateIcon;
@@ -66,7 +67,8 @@ namespace Game.UI
 		{
 			if (!viewModel.Label.IsNullOrEmpty())
 				_layout.label.Unbind(viewModel.Label);
-			if (_layout.subLabel && !viewModel.SubLabel.IsNullOrEmpty())
+
+			if (_layout.subLabel != null && !viewModel.SubLabel.IsNullOrEmpty())
 				_layout.subLabel.Unbind(viewModel.SubLabel);
 
 			viewModel.IconChanged -= UpdateIcon;

@@ -95,8 +95,8 @@ namespace Game.UI
 			if (!Icon.IsEmptyOrInvalid())
 				Icon = default;
 
-			Label.ClearSafe();
-			SubLabel.ClearSafe();
+			Label.TryClearValue();
+			SubLabel.TryClearValue();
 
 			if (_iconColor.HasValue)
 				IconColor = default;
@@ -115,8 +115,8 @@ namespace Game.UI
 			_iconColor = default;
 			_labelColor = default;
 
-			Label.ResetSafe();
-			SubLabel.ResetSafe();
+			//Label.ResetSafe(); // bug
+			//SubLabel.ResetSafe();
 		}
 	}
 }

@@ -11,7 +11,7 @@ namespace Fusumity.MVVM
 	/// and caches resulting instances in the underlying pool.
 	/// </summary>
 	public abstract class ViewCollection<TViewModel, TView, TViewLayout> : BaseViewCollection<TViewModel, TView, TViewLayout>
-		where TView : class, IView
+		where TView : class, IView<TViewModel>
 		where TViewLayout : MonoBehaviour
 	{
 		public ViewCollection(ViewCollectionLayout<TViewLayout> layout) : base(layout)
@@ -26,7 +26,7 @@ namespace Fusumity.MVVM
 	}
 
 	public abstract class BaseViewCollection<TViewModel, TView, TViewLayout> : IDisposable, IEnumerable<TView>
-		where TView : class, IView
+		where TView : class, IView<TViewModel>
 		where TViewLayout : MonoBehaviour
 	{
 		private ViewPool<TViewModel, TView, TViewLayout> _pool;
