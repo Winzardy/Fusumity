@@ -32,7 +32,7 @@ namespace Localization
 			remove => resolver.CurrentLocaleCodeUpdated -= value;
 		}
 
-		public static event Action LocaleUpdated
+		public static event Action LanguageChanged
 		{
 			add => resolver.LocaleUpdated += value;
 			remove => resolver.LocaleUpdated -= value;

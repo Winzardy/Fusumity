@@ -29,12 +29,12 @@ namespace UI
 			}
 
 			UpdateText();
-			LocManager.CurrentLocaleCodeUpdated += HandleLanguageChanged;
+			LocManager.LanguageChanged += HandleLanguageChanged;
 		}
 
 		private void OnDestroy()
 		{
-			LocManager.CurrentLocaleCodeUpdated -= HandleLanguageChanged;
+			LocManager.LanguageChanged -= HandleLanguageChanged;
 		}
 
 		private void UpdateText()
@@ -53,7 +53,7 @@ namespace UI
 			UpdateText();
 		}
 
-		private void HandleLanguageChanged(string _)
+		private void HandleLanguageChanged()
 		{
 			UpdateText();
 		}
