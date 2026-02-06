@@ -29,13 +29,14 @@ namespace AssetManagement
 
 				using var linkedCts = _cts.Link(cancellationToken);
 				var isCanceled = await _handle.WithCancellation(linkedCts.Token)
-				   .SuppressCancellationThrow();
+					.SuppressCancellationThrow();
 
 				if (isCanceled)
 				{
 					Release();
-					cancellationToken.ThrowIfCancellationRequested();
+					linkedCts.Token.ThrowIfCancellationRequested();
 				}
+
 				return (T) _handle.Result;
 			}
 		}
@@ -53,7 +54,7 @@ namespace AssetManagement
 
 				using var linkedCts = _cts.Link(cancellationToken);
 				var isCanceled = await _handle.WithCancellation(linkedCts.Token)
-				   .SuppressCancellationThrow();
+					.SuppressCancellationThrow();
 
 				if (isCanceled)
 				{
