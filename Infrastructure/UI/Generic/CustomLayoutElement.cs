@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -124,11 +125,23 @@ namespace UI
 			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
 			_ignoreOnGettingPreferredSize = true;
 
-			var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
+			try
+			{
+				if (transform.TryGetComponent(out Image image))
+				{
+					if (!image.enabled)
+						return base.preferredWidth;
+				}
 
-			_ignoreOnGettingPreferredSize = defaultIgnoreValue;
-
-			return baseValue > maxWidth ? maxWidth : baseValue;
+				var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
+				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+				return baseValue > maxWidth ? maxWidth : baseValue;
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogWarning(e.Message, transform);
+				return base.preferredWidth;
+			}
 		}
 
 		private float GetMaxHeight()

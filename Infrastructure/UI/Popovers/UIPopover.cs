@@ -41,7 +41,7 @@ namespace UI.Popovers
 		protected sealed override void OnShow()
 		{
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested += RequestClose;
+				requestor.CloseRequested += RequestCloseInternal;
 
 			OnShow(ref _args);
 		}
@@ -51,7 +51,7 @@ namespace UI.Popovers
 		protected sealed override void OnHide()
 		{
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested -= RequestClose;
+				requestor.CloseRequested -= RequestCloseInternal;
 
 			if (_suppressHide)
 				return;
@@ -217,7 +217,21 @@ namespace UI.Popovers
 
 		object IPopover.GetArgs() => _args;
 
-		public override void RequestClose() => RequestedClose?.Invoke(this);
+		public override void RequestClose()
+		{
+			if (_args is ICloseInterceptor interceptor)
+			{
+				interceptor.RequestClose();
+				return;
+			}
+
+			RequestCloseInternal();
+		}
+
+		private protected void RequestCloseInternal()
+		{
+			RequestedClose?.Invoke(this);
+		}
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

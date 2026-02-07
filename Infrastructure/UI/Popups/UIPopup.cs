@@ -62,7 +62,7 @@ namespace UI.Popups
 			}
 
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested += RequestClose;
+				requestor.CloseRequested += RequestCloseInternal;
 
 			OnShow(ref _args);
 		}
@@ -75,7 +75,7 @@ namespace UI.Popups
 				return;
 
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested -= RequestClose;
+				requestor.CloseRequested -= RequestCloseInternal;
 
 			if (_suppressHide)
 				return;
@@ -226,7 +226,21 @@ namespace UI.Popups
 
 		private protected virtual object GetArgs() => _args;
 
-		public override void RequestClose() => RequestedClose?.Invoke(this);
+		public override void RequestClose()
+		{
+			if (_args is ICloseInterceptor interceptor)
+			{
+				interceptor.RequestClose();
+				return;
+			}
+
+			RequestCloseInternal();
+		}
+
+		private protected void RequestCloseInternal()
+		{
+			RequestedClose?.Invoke(this);
+		}
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

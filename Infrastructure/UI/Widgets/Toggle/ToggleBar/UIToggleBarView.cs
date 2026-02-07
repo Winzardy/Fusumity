@@ -11,7 +11,9 @@ namespace UI
 		public UIToggleBarView(UIToggleBarLayout layout, Func<IWidgetAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 		{
 			AddDisposable(_collection = new UIToggleButtonsCollection(layout, animatorFactory));
-			Subscribe(layout.back, HandleBackClicked);
+
+			if(layout.back != null)
+				Subscribe(layout.back, HandleBackClicked);
 		}
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)

@@ -28,11 +28,13 @@ namespace Game.UI
 			}
 
 			_defaultLabelText = _layout.label.text;
-			Subscribe(_layout.labelButton, HandleLabelClicked);
+			if (_layout.labelButton != null)
+				Subscribe(_layout.labelButton, HandleLabelClicked);
 
 			AddDisposable(_spriteAssigner = new UISpriteAssigner());
 
-			Subscribe(_layout.iconButton, HandleIconClicked);
+			if (_layout.iconButton != null)
+				Subscribe(_layout.iconButton, HandleIconClicked);
 		}
 
 		protected override void OnUpdate(ILabeledIconViewModel viewModel)

@@ -48,16 +48,10 @@ namespace UI
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
 		}
 
-		public void TrySetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = false)
+		public void TrySetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
 		{
 			if (image == null || iconRef.IsEmptyOrInvalid())
 				return;
-
-			if (disableDuringLoad)
-			{
-				image.enabled = false;
-				callback += () => image.enabled = true;
-			}
 
 			SetSprite(image, iconRef, callback);
 		}
@@ -68,8 +62,14 @@ namespace UI
 				SetSprite(placeholder, entry);
 		}
 
-		public void SetSprite(Image image, IAssetReferenceEntry<Sprite> entry, Action callback = null)
+		public void SetSprite(Image image, IAssetReferenceEntry<Sprite> entry, Action callback = null, bool disableDuringLoad = true)
 		{
+			if (disableDuringLoad)
+			{
+				image.enabled = false;
+				callback += () => image.enabled = true;
+			}
+
 			if (_single.image != null)
 			{
 				if (TryUpdateSingle(image, entry, callback))
@@ -148,20 +148,33 @@ namespace UI
 
 		private async UniTaskVoid LoadAndPlaceAsync(Image image, SpriteAssignerHandle handle, Action callback = null)
 		{
-			_spinner?.Show(handle.spriteRef);
-
 			handle.cts = new CancellationTokenSource();
+			OnStartLoading();
+
 			var sprite = await handle.spriteRef.LoadAsync(handle.cts.Token);
 
 			if (handle.cts.IsCancellationRequested || _disposed || !image)
 			{
-				_spinner?.Hide(handle.spriteRef);
+				OnEndLoading();
 				return;
 			}
 
 			image.sprite = sprite;
+
 			callback?.Invoke();
-			_spinner?.Hide(handle.spriteRef);
+			OnEndLoading();
+
+			void OnStartLoading()
+			{
+				_spinner?.Show(handle.cts);
+				//	image.enabled = false;
+			}
+
+			void OnEndLoading()
+			{
+				_spinner?.Hide(handle.cts);
+				//	image.enabled = true;
+			}
 		}
 	}
 

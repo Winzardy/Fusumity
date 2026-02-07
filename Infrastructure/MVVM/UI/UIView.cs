@@ -16,12 +16,18 @@ namespace Fusumity.MVVM.UI
 		{
 		}
 
-		protected void Subscribe([CanBeNull] Button button, Action action, string uId = null, string groupId = null)
+		protected void Subscribe(Button button, Action action, string uId = null, string groupId = null)
 		{
-			if (button != null)
+			if (button == null)
 			{
-				AddSubscription(button.Subscribe(action, uId, groupId, false));
+				GameObject parent = null;
+				if (action.Target is IView view)
+					parent = view.GameObject;
+				GUIDebug.LogWarning($"Attempt to subscribe a null button (uId: {uId ?? "null"}, groupId: {groupId ?? "null"})", parent);
+				return;
 			}
+
+			AddSubscription(button.Subscribe(action, uId, groupId, false));
 		}
 
 		protected void Subscribe(UILabeledButtonLayout layout, Action action)

@@ -51,7 +51,7 @@ namespace UI.Windows
 		protected sealed override void OnShow()
 		{
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested += RequestClose;
+				requestor.CloseRequested += RequestCloseInternal;
 
 			OnShow(ref _args);
 		}
@@ -61,7 +61,7 @@ namespace UI.Windows
 		protected sealed override void OnHide()
 		{
 			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested -= RequestClose;
+				requestor.CloseRequested -= RequestCloseInternal;
 
 			if (_suppressHide)
 				return;
@@ -206,7 +206,21 @@ namespace UI.Windows
 			base.OnUpdateVisibleInternal(value);
 		}
 
-		public override void RequestClose() => RequestedClose?.Invoke(this);
+		public override void RequestClose()
+		{
+			if (_args is ICloseInterceptor closeHandler)
+			{
+				closeHandler.RequestClose();
+				return;
+			}
+
+			RequestCloseInternal();
+		}
+
+		private protected void RequestCloseInternal()
+		{
+			RequestedClose?.Invoke(this);
+		}
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 
