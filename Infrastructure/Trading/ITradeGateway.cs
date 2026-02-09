@@ -17,7 +17,7 @@ namespace Trading
 	{
 		void PushReceipts(Tradeboard tradeboard);
 
-		bool CanFetch(TradeCost cost, string tradeId, out TradePayError? error);
-		bool CanFetch(TradeConfig trade, out TradeExecuteError? error);
+		bool CanFetch(TradeCost cost, string tradeId, Tradeboard tradeboard, out TradePayError? error);
+		bool CanFetch(TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error);
 	}
 }
