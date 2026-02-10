@@ -57,7 +57,7 @@ namespace UI
 	public interface IPricedButtonViewModel : IStatefulButtonViewModel
 	{
 		IEnumerable<ILabeledIconViewModel> Prices { get; }
-		[CanBeNull] public ILabeledIconViewModel PrimaryPrice { get => null; }
+		[CanBeNull] ILabeledIconViewModel PrimaryPrice { get => null; }
 
 		event Action PricesChanged;
 	}
