@@ -68,6 +68,11 @@ namespace Fusumity.Editor.Drawers
 				var value = (T)info.GetValue(null);
 				var name = GetFormattedName(info.Name);
 
+				if (Attribute.DisplayValue)
+				{
+					name += $" ({value})";
+				}
+
 				_values.Add(value);
 				_namesMap.Add(value, name);
 

@@ -15,6 +15,11 @@ namespace Fusumity.Attributes.Odin
 		/// </summary>
 		public bool EnsureDefaultValue { get; set; } = true;
 
+		/// <summary>
+		/// Displays underlying value in format: "VariableName (variableValue)"
+		/// </summary>
+		public bool DisplayValue { get; set; } = false;
+
 		public ConstDropdownAttribute(Type type)
 		{
 			this.Type = type;
