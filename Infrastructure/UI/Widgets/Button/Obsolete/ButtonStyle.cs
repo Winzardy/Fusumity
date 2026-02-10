@@ -7,5 +7,6 @@
 		public const string DISABLED = "disabled";
 		public const string LOCKED = "locked";
 		public const string UNAVAILABLE = "unavailable";
+		public const string ADS = "ads";
 	}
 }

@@ -2,6 +2,7 @@
 using Fusumity.Utility;
 using Game.UI;
 using System;
+using Sapientia.Extensions;
 
 namespace UI
 {
@@ -30,8 +31,8 @@ namespace UI
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
-			if(_layout.label != null)
-				_layout.label.Bind(viewModel.Label);
+			if (_layout.label != null)
+				viewModel.Label.Bind(UpdateLabel);
 
 			_adBanner?.Update(viewModel.AdBanner);
 			_labeledIcon?.Update(viewModel.LabeledIcon);
@@ -46,11 +47,17 @@ namespace UI
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			if(_layout.label != null)
-				_layout.label.Unbind(viewModel.Label);
+			if (_layout.label != null)
+				viewModel.Label.Release();
 
 			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
+		}
+
+		private void UpdateLabel(string text)
+		{
+			_layout.label.text = text;
+			_layout.label.SetActive(!text.IsNullOrEmpty());
 		}
 
 		private void UpdateStyle()
