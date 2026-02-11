@@ -41,6 +41,7 @@ namespace Booting.ProjectInformation
 			{
 				RuntimePlatform.Android => PlatformType.ANDROID,
 				RuntimePlatform.IPhonePlayer => PlatformType.IOS,
+				RuntimePlatform.WindowsPlayer => PlatformType.WINDOWS_DEBUG,
 				_ => targetPlatform,
 			};
 		}
