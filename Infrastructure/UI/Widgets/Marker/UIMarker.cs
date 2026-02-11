@@ -224,9 +224,15 @@ namespace UI
 			_layout.SetActive(true);
 			_enable = true;
 			_calculateOnAnimation = false;
-			_animator?.Play(WidgetAnimationType.MARKER_ENABLING, !animation || force);
+			_animator?.Play(new()
+			{
+				key = WidgetAnimationType.MARKER_ENABLING,
+				startCallback = OnStartEnabling
+			}, !animation || force);
 
 			return true;
+
+			void OnStartEnabling() => _layout.SetActive(true);
 		}
 
 		private void TryDisable(bool animation, bool force = false)
