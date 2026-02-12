@@ -10,7 +10,7 @@ namespace Fusumity.Utility
 		{
 			yield return new ValueDropdownItem<string>("None", "");
 
-			foreach (var fi in ReflectionUtility.GetConstants(type))
+			foreach (var fi in ReflectionUtility.GetConstantFieldInfos(type))
 			{
 				var value = (string)fi.GetValue(null);
 				yield return new ValueDropdownItem<string>(value, value);

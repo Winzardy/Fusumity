@@ -49,7 +49,7 @@ namespace Fusumity.Editor.Drawers
 		protected override void Initialize()
 		{
 			var consts = ReflectionUtility
-				.GetConstants(Attribute.Type)?
+				.GetConstantFieldInfos(Attribute.Type)?
 				.Where(x => x.FieldType == typeof(T))?
 				.ToArray();
 

@@ -397,12 +397,12 @@ namespace Fusumity.Utility
 				_ => string.Empty
 			};
 
-		public static FieldInfo[] GetConstants<T>()
+		public static FieldInfo[] GetConstantFieldInfos<T>()
 		{
-			return GetConstants(typeof(T));
+			return GetConstantFieldInfos(typeof(T));
 		}
 
-		public static FieldInfo[] GetConstants(Type type)
+		public static FieldInfo[] GetConstantFieldInfos(this Type type)
 		{
 			FieldInfo[] fieldInfos = type.GetFields(BindingFlags.Public |
 				BindingFlags.Static | BindingFlags.FlattenHierarchy);
@@ -410,10 +410,15 @@ namespace Fusumity.Utility
 			return fieldInfos.Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToArray();
 		}
 
-		public static List<T> GetConstantValues<T>(Type type)
+		public static List<string> GetConstants(this Type type)
+		{
+			return GetConstants<string>(type);
+		}
+
+		public static List<T> GetConstants<T>(this Type type)
 		{
 			var values = new List<T>();
-			foreach (var fi in GetConstants(type))
+			foreach (var fi in GetConstantFieldInfos(type))
 			{
 				var value = (T)fi.GetValue(null);
 				values.Add(value);
