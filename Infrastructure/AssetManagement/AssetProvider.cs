@@ -176,7 +176,7 @@ namespace AssetManagement
 		/// </summary>
 		private async UniTask WaitDelayAndReleaseAsync(IAssetReferenceEntry entry, int delayMs)
 		{
-			await UniTask.Delay(delayMs);
+			await UniTask.Delay(delayMs, DelayType.UnscaledDeltaTime);
 
 			Release(entry.AssetReference);
 		}
@@ -186,7 +186,7 @@ namespace AssetManagement
 		/// </summary>
 		private async UniTask WaitDelayAndReleaseAsync(string path, int delayMs)
 		{
-			await UniTask.Delay(delayMs);
+			await UniTask.Delay(delayMs, DelayType.UnscaledDeltaTime);
 
 			ReleaseAssetByKey(path);
 		}
