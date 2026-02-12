@@ -3,15 +3,16 @@ using UnityEngine;
 
 namespace Audio
 {
+	// TODO: если в один фрейм делать Play Dispose Play, то playback не уходит в пул... подумать что с этим сделать
 	public class AudioPlayback : IDisposable
 	{
 		private AudioEventPlayerPool _pool;
 
 		private AudioEventPlayer _player;
 
-		public bool IsPlaying => _player && _player.IsPlaying;
+		public bool IsPlaying { get => _player && _player.IsPlaying; }
 
-		public bool IsReleased => !_player;
+		public bool IsReleased { get => _player == null; }
 
 		/// <summary>
 		/// Можно считать это событие finish звука,
@@ -25,6 +26,8 @@ namespace Audio
 		/// а BeforeRelease нет!
 		/// </summary>
 		public event Action<AudioPlayback> BeforeRelease;
+
+		public AudioEventPlayer Player { get => _player; }
 
 		public AudioPlayback(AudioEventPlayerPool pool, Vector3 position) : this(pool) => _player.SetPosition(position);
 
