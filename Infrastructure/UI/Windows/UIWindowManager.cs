@@ -193,7 +193,7 @@ namespace UI.Windows
 				_windows.Remove(window.GetType());
 		}
 
-		private bool TryGet<T>(out T window)
+		public bool TryGet<T>(out T window)
 			where T : UIWidget, IWindow
 		{
 			window = null;

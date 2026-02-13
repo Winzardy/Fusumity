@@ -55,7 +55,7 @@ namespace UI
 		[ConstDropdown(typeof(ActionBusGroupType))]
 		public string groupId;
 
-		public void Subscribe(Action action) => button.Subscribe(action);
+		public void Subscribe(Action action) => button.Subscribe(action, uId, groupId);
 
 		public void Unsubscribe(Action action) => button.Unsubscribe(action);
 
