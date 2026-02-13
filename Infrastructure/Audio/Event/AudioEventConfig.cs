@@ -1,6 +1,7 @@
 ﻿using System;
 using AssetManagement;
 using Content;
+using JetBrains.Annotations;
 using Sapientia;
 using UnityEngine;
 
@@ -40,6 +41,7 @@ namespace Audio
 		public const int MIN_PRIORITY = 0;
 		public const int MAX_PRIORITY = 256;
 
+		[NotNull]
 		public string mixer;
 
 		[Tooltip("<b>" + nameof(AudioPlayMode.SameTime) + "</b> - проиграть все сразу<br>" +
