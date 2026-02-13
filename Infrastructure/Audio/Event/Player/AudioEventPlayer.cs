@@ -355,7 +355,8 @@ namespace Audio
 					sequence.Join(tween);
 				}
 
-				sequence.OnComplete(callback).Play();
+				sequence.OnComplete(callback)
+					.Play();
 				_fade = sequence;
 			}
 			else

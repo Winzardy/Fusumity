@@ -1,4 +1,5 @@
-﻿using Sapientia.Extensions;
+﻿using System;
+using Sapientia.Extensions;
 using UnityEngine;
 
 namespace Audio
@@ -13,10 +14,20 @@ namespace Audio
 			return ToPlayArgs(request, disableSpatialWarning).Play();
 		}
 
-		public static AudioPlayback Play(this in AudioEventRequest request, Transform transform)
+		public static AudioPlayback Play(this in AudioEventRequest request, Transform transform,
+			AudioPlaybackPositionMode mode = AudioPlaybackPositionMode.FollowTarget)
 		{
 			var args = request.ToPlayArgs(false);
-			args.transform = transform;
+			switch (mode)
+			{
+				case AudioPlaybackPositionMode.UseLastPosition:
+					args.position = transform.position;
+					break;
+				default:
+					args.transform = transform;
+					break;
+			}
+
 			return args.Play();
 		}
 
