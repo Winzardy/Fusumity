@@ -67,10 +67,10 @@ namespace UI.Windows
 			if (_suppressHide)
 				return;
 
-			OnHide(ref _args);
+			OnHide(in _args);
 		}
 
-		protected virtual void OnHide(ref TArgs args)
+		protected virtual void OnHide(in TArgs args)
 		{
 		}
 
@@ -98,6 +98,7 @@ namespace UI.Windows
 		protected UIWindowConfig _config;
 
 		protected TArgs _args;
+		protected TArgs ViewModel => _args;
 
 		string IIdentifiable.Id => Id;
 

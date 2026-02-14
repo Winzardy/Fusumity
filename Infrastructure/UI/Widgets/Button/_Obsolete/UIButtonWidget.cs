@@ -11,7 +11,6 @@ namespace UI
 	/// <summary>
 	/// Дефолтный виджет, для сложных кейсов есть Generic
 	/// </summary>
-
 	[Obsolete("Используйте UIButton")]
 	public class UIButtonWidget : UIButtonWidget<UILabeledButtonLayout, UIButtonWidget.Args>
 	{

@@ -1,7 +1,7 @@
-﻿using Fusumity.MVVM.UI;
+﻿using System;
+using Fusumity.MVVM.UI;
 using Fusumity.Utility;
 using Game.UI;
-using System;
 using Sapientia.Extensions;
 
 namespace UI
