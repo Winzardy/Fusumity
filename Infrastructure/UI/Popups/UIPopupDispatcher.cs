@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
+using NUnit.Framework;
 using UI.Popups;
 
 namespace UI
@@ -69,6 +71,7 @@ namespace UI
 		public bool IsActive(string id)
 			=> _manager.IsActive(id);
 
+		/// TODO: вместо T возвращать UIRequestToken<T>!
 		/// <summary>
 		/// Показать попап по типу (убирает в очередь текущее)
 		/// Внимательно смотреть за передаваемыми аргументами,
@@ -79,6 +82,42 @@ namespace UI
 		public T Show<T>(object args = null, PopupMode? overrideMode = null)
 			where T : UIWidget, IPopup
 			=> _manager.Show<T>(args, overrideMode);
+
+		/// <summary>
+		/// Обновляем аргументы для уже открытого попапа
+		/// </summary>
+		/// <remarks>
+		/// Есть вероятность, что попап переиспользуется в другой логике (решение будет позже,
+		/// вместо инстанса будет возвращен токен в Show)
+		/// </remarks>
+		public void Update<T>(T popup, object args)
+			where T : UIWidget, IPopup
+		{
+			if (!IsActive(popup))
+				throw GUIDebug.Exception("Trying to update a popup that is not active");
+
+			_manager.Update(popup, args);
+		}
+
+		/// <summary>
+		/// Обновляем аргументы для уже попапа если он открыт, если нет -> false
+		/// </summary>
+		/// <remarks>
+		/// Есть вероятность, что попап переиспользуется в другой логике (решение будет позже,
+		/// вместо инстанса будет возвращен токен в Show)
+		/// </remarks>
+		public bool TryUpdate<T>([CanBeNull] T popup, object args)
+			where T : UIWidget, IPopup
+		{
+			if (popup == null)
+				return false;
+
+			if (!IsActive(popup))
+				return false;
+
+			_manager.Update(popup, args);
+			return true;
+		}
 
 		public void TryHide(IPopup popup)
 			=> _manager.TryHide(popup);

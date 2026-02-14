@@ -109,6 +109,9 @@ namespace UI.Popups
 			if (_current == popup && _current.Active)
 				return true;
 
+			if (_standalones.ContainsValue(popup))
+				return true;
+
 			return _queue.Contains(popup);
 		}
 
@@ -128,6 +131,9 @@ namespace UI.Popups
 		{
 			if (_current is UIWidget castCurrent)
 				yield return castCurrent;
+
+			foreach (var (popup, _) in _standalones)
+				yield return popup as UIWidget;
 		}
 
 		internal void TryHide(IPopup popup)
@@ -198,6 +204,36 @@ namespace UI.Popups
 			args ??= popup.GetArgs();
 			_queue.Enqueue(popup, args, addToLast);
 			Enqueued?.Invoke(popup, args, addToLast);
+		}
+
+		internal void Update(IPopup popup, object newArgs)
+		{
+			foreach (var (standalonePopup, _) in _standalones)
+			{
+				if (standalonePopup != popup)
+					continue;
+
+				popup.Hide(true, true);
+				popup.Show(newArgs, true);
+				_standalones[popup] = newArgs;
+				return;
+			}
+
+			if (_current == popup)
+			{
+				popup.Hide(true,true);
+				popup.Show(newArgs, true);
+				return;
+			}
+
+			foreach (var (queuePopup, _) in _queue)
+			{
+				if (queuePopup != popup)
+					continue;
+
+				_queue.Update(popup, newArgs);
+				return;
+			}
 		}
 
 		private void TryShowNext()

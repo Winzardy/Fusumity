@@ -21,7 +21,7 @@ namespace UI.Popups
 		/// При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		/// получить через GetArgs() в своих целях (скрыть попап на время).
 		/// Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(object args);
+		internal void Show(object args, bool? immediate = null);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
@@ -169,7 +169,7 @@ namespace UI.Popups
 			base.Initialize();
 		}
 
-		void IPopup.Show(object boxedArgs)
+		void IPopup.Show(object boxedArgs, bool? immediateOrNull = null)
 		{
 			if (boxedArgs != null)
 			{
@@ -191,8 +191,9 @@ namespace UI.Popups
 				_args = args;
 			}
 
-			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
-			SetActive(true, suppressAnyFlag);
+			var immediateBySuppressFlag = suppressFlag != SuppressFlag.None;
+			immediateOrNull.TryGetValue(out var immediate);
+			SetActive(true, immediateBySuppressFlag || immediate);
 			DisableSuppress();
 		}
 

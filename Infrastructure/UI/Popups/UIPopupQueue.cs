@@ -23,6 +23,11 @@ namespace UI.Popups
 			_queue = null;
 		}
 
+		public void Update(IPopup popup, TArgs args)
+		{
+			SetArgsInternal(popup, args);
+		}
+
 		public void Enqueue(IPopup popup, TArgs args)
 		{
 			Enqueue(popup, args, _addToLast);
@@ -30,9 +35,14 @@ namespace UI.Popups
 
 		public void Enqueue(IPopup popup, TArgs args, bool addToLast)
 		{
-			_args[popup] = args;
+			SetArgsInternal(popup, args);
 
 			_queue.AddFirst(popup);
+		}
+
+		private void SetArgsInternal(IPopup popup, TArgs args)
+		{
+			_args[popup] = args;
 		}
 
 		public bool IsEmpty() => _queue.Count <= 0;
