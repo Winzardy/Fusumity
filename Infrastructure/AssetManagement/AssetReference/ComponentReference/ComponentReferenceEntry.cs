@@ -28,6 +28,8 @@ namespace AssetManagement
 		}
 
 		public override Type AssetType => typeof(T);
+
+		public override string ToString() => assetReference.ToString();
 	}
 
 	[Serializable]
@@ -54,5 +56,6 @@ namespace AssetManagement
 		public static bool operator !=(ComponentReferenceEntry a, ComponentReferenceEntry b) => !(a == b);
 		public override bool Equals(object obj) => this == obj as ComponentReferenceEntry;
 		public override int GetHashCode() => AssetReference.GetHashCode();
+		public override string ToString() => AssetReference.ToString();
 	}
 }

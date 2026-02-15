@@ -37,6 +37,7 @@ namespace AssetManagement
 		public static bool operator !=(AssetReferenceEntry<T> a, AssetReferenceEntry<T> b) => !(a == b);
 		public override bool Equals(object obj) => this == obj as AssetReferenceEntry<T>;
 		public override int GetHashCode() => assetReference.GetHashCode();
+		public override string ToString() => assetReference.ToString();
 	}
 
 	[Serializable]
@@ -67,6 +68,7 @@ namespace AssetManagement
 		public static bool operator !=(AssetReferenceEntry a, AssetReferenceEntry b) => !(a == b);
 		public override bool Equals(object obj) => this == obj as AssetReferenceEntry;
 		public override int GetHashCode() => assetReference.GetHashCode();
+		public override string ToString() => assetReference.ToString();
 	}
 
 	public interface IAssetReferenceEntry

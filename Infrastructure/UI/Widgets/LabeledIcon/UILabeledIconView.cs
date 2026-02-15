@@ -94,10 +94,11 @@ namespace Game.UI
 				SetActive(!ViewModel.IsEmpty);
 			}
 
+			_spriteAssigner.TryCancelOrClear(_layout.icon);
+
 			if (ViewModel.Icon.IsEmptyOrInvalid())
 			{
 				_layout.icon.sprite = _defaultIconSprite;
-				_layout.icon.color = _defaultIconColor;
 			}
 			else
 			{

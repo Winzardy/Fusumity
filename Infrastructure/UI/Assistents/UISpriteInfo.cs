@@ -14,5 +14,16 @@ namespace UI
 
 		public static implicit operator UISpriteInfo(Sprite sprite) => new() { sprite = sprite };
 		public static implicit operator UISpriteInfo(AssetReferenceEntry<Sprite> reference) => new() { reference = reference };
+
+		public override string ToString()
+		{
+			if (sprite != null)
+				return sprite.name;
+
+			if (!reference.IsEmptyOrInvalid())
+				return reference.ToString();
+
+			return "empty";
+		}
 	}
 }

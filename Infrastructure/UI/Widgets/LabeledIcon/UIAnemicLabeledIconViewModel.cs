@@ -36,7 +36,7 @@ namespace Game.UI
 				Icon = default;
 
 			if (!Label.IsNullOrEmpty())
-				Label = default;
+				Label = null;
 
 			if (_iconColor.HasValue)
 				IconColor = default;
@@ -60,5 +60,7 @@ namespace Game.UI
 			_labelColor = default;
 			_labelStyle = default;
 		}
+
+		public bool IsEmpty() => _icon.IsEmptyOrInvalid() && _label.IsNullOrEmpty();
 	}
 }

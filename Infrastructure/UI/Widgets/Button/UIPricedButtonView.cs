@@ -48,9 +48,14 @@ namespace UI
 			}
 
 			if (ViewModel.PrimaryPrice != null)
+			{
 				_primaryPrice?.Update(ViewModel.PrimaryPrice);
+			}
 			else
+			{
 				_primaryPrice?.ClearViewModel();
+				_primaryPrice?.SetActive(false);
+			}
 		}
 	}
 

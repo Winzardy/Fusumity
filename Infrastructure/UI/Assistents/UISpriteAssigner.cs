@@ -53,7 +53,7 @@ namespace UI
 			if (image == null || iconRef.IsEmptyOrInvalid())
 				return;
 
-			SetSprite(image, iconRef, callback);
+			SetSprite(image, iconRef, callback, disableDuringLoad);
 		}
 
 		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry<Sprite> entry)
