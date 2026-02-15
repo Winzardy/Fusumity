@@ -29,6 +29,8 @@ namespace AssetManagement
 #endif
 		}
 
+		public string AssetGuid { get => assetReference.AssetGUID; }
+
 		public static implicit operator bool(AssetReferenceEntry<T> entry) => !entry.IsEmptyOrInvalid();
 
 		public static bool operator ==(AssetReferenceEntry<T> a, AssetReferenceEntry<T> b) => a.SameAsset(b);
@@ -76,6 +78,7 @@ namespace AssetManagement
 		public const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif
 		public AssetReference AssetReference { get; }
+		public string AssetGuid { get => AssetReference.AssetGUID; }
 
 		public int ReleaseDelayMs => 0;
 

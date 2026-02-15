@@ -1,7 +1,6 @@
 ﻿using Fusumity.MVVM.UI;
-using System;
-using JetBrains.Annotations;
 using Sapientia.Extensions;
+using System;
 using UI;
 using UnityEngine;
 
@@ -15,7 +14,6 @@ namespace Game.UI
 		private Sprite _defaultIconSprite;
 		private Color _defaultIconColor;
 		private string _defaultLabelText;
-		private string _defaultSubLabelText;
 
 		public UILabeledIconView(UILabeledIconLayout layout, bool disableIfEmpty = false) : base(layout)
 		{
@@ -28,13 +26,11 @@ namespace Game.UI
 			}
 
 			_defaultLabelText = _layout.label.text;
-			if (_layout.labelButton != null)
-				Subscribe(_layout.labelButton, HandleLabelClicked);
 
 			AddDisposable(_spriteAssigner = new UISpriteAssigner());
 
-			if (_layout.iconButton != null)
-				Subscribe(_layout.iconButton, HandleIconClicked);
+			Subscribe(_layout.labelButton, HandleLabelClicked);
+			Subscribe(_layout.iconButton, HandleIconClicked);
 		}
 
 		protected override void OnUpdate(ILabeledIconViewModel viewModel)
@@ -132,9 +128,7 @@ namespace Game.UI
 		}
 
 		private void HandleIconClicked() => ViewModel?.IconClick();
-
 		private void HandleLabelClicked() => ViewModel?.LabelClick();
-		private void HandleSubLabelClicked() => ViewModel?.SubLabelClick();
 	}
 
 	public interface ILabeledIconViewModel
@@ -156,10 +150,6 @@ namespace Game.UI
 		event Action IconColorChanged;
 
 		public void LabelClick()
-		{
-		}
-
-		public void SubLabelClick()
 		{
 		}
 
