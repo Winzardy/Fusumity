@@ -13,14 +13,29 @@ namespace UI
 			return ActionBus.Register(element);
 		}
 
-		public static ActionBusElement Subscribe(UILabeledButtonLayout layout, Action action)
+		public static ActionBusElement Subscribe(this UIButtonLayout layout, Action action)
 		{
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
-		public static ActionBusElement Subscribe(UIStatefulButtonLayout layout, Action action)
+		public static ActionBusElement Subscribe(this UILabeledButtonLayout layout, Action action)
 		{
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
+		}
+
+		public static ActionBusElement Subscribe(this UIStatefulButtonLayout layout, Action action)
+		{
+			return Subscribe(layout.button, action, layout.uId, layout.groupId);
+		}
+
+		public static void Unsubscribe(this UIButtonLayout button, Action action)
+		{
+			Unsubscribe(button.button, action);
+		}
+
+		public static void Unsubscribe(this UILabeledButtonLayout button, Action action)
+		{
+			Unsubscribe(button.button, action);
 		}
 
 		public static void Unsubscribe(this Button button, Action action)

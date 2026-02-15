@@ -1,5 +1,5 @@
 using System;
-using JetBrains.Annotations;
+using System.Diagnostics.CodeAnalysis;
 using TMPro;
 using UI;
 using UnityEngine;
@@ -16,18 +16,12 @@ namespace Fusumity.MVVM.UI
 		{
 		}
 
-		protected void Subscribe(Button button, Action action, string uId = null, string groupId = null)
+		protected void Subscribe([MaybeNull] Button button, Action action, string uId = null, string groupId = null)
 		{
-			if (button == null)
+			if (button != null)
 			{
-				GameObject parent = null;
-				if (action.Target is IView view)
-					parent = view.GameObject;
-				GUIDebug.LogWarning($"Attempt to subscribe a null button (uId: {uId ?? "null"}, groupId: {groupId ?? "null"})", parent);
-				return;
+				AddSubscription(button.Subscribe(action, uId, groupId, false));
 			}
-
-			AddSubscription(button.Subscribe(action, uId, groupId, false));
 		}
 
 		protected void Subscribe(UILabeledButtonLayout layout, Action action)

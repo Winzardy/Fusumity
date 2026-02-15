@@ -102,6 +102,7 @@ namespace UI.Windows
 		/// </summary>
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
+		public bool TryGet<T>(out T window) where T : UIWidget, IWindow => _manager.TryGet(out window);
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 		void IWidgetDispatcher.HideAll() => _manager.HideAll();

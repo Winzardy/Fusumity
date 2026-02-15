@@ -235,7 +235,7 @@ namespace UI.Windows
 		protected sealed override void OnLayoutInstalledInternal()
 		{
 			if (_layout.close)
-				_layout.close.Subscribe(OnCloseClicked);
+				_layout.close.Subscribe(OnCloseClicked, _layout.uId, _layout.groupId);
 
 			base.OnLayoutInstalledInternal();
 		}

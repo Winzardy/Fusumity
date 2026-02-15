@@ -88,7 +88,7 @@ namespace UI
 			if (!_layout.disableDefaultLabel && _layout.label)
 				_defaultLabelText = _layout.label.text;
 
-			_layout.button.Subscribe(OnClicked);
+			_layout.Subscribe(OnClicked);
 
 			base.OnLayoutInstalledInternal();
 		}

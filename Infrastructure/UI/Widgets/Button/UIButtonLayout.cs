@@ -1,8 +1,8 @@
+using ActionBusSystem;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
-using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UI
@@ -32,6 +32,12 @@ namespace UI
 		public StateSwitcher<string> styleSwitcher;
 
 		public override TMP_Text Label => label;
+
+		[Space]
+		[ConstDropdown(typeof(ActionBusElementType))]
+		public string uId;
+		[ConstDropdown(typeof(ActionBusGroupType))]
+		public string groupId;
 
 		protected override void Reset()
 		{
