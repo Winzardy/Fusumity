@@ -27,6 +27,11 @@ namespace UI
 			_customCamera = customCamera;
 		}
 
+		public bool HasMarkerSnappedTo(Transform worldObject)
+		{
+			return _usedMarkers.ContainsKey(worldObject);
+		}
+
         public UIMarker SnapMarkerTo(Transform worldObject, Vector2 screenOffset = default)
         {
             var token = Add(new UIMarkerArgs<EmptyArgs>
