@@ -126,7 +126,7 @@ namespace Content.ScriptableObjects.Editor
 					break;
 
 				case nameof(ContentScriptableObject.techDescription):
-					attributes.Add(new TextAreaAttribute());
+					attributes.Add(new TextAreaAttribute(1,3));
 					attributes.Add(new EnableIfAttribute("_useTechDescription"));
 					attributes.Add(new ShowIfAttribute("ShowTechDescriptionEditor"));
 					break;

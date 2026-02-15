@@ -5,7 +5,7 @@ using Fusumity.Attributes;
 namespace Localization
 {
 	[Conditional("UNITY_EDITOR")]
-	public class LocKeyParentAttribute : ParentAttribute
+	public class LocKeyParentAttribute : Attribute, IAttributeConvertible
 	{
 		public string FieldName { get; private set; }
 
@@ -14,7 +14,7 @@ namespace Localization
 			FieldName = fieldName;
 		}
 
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new LocKeyAttribute(FieldName);
 	}
 }

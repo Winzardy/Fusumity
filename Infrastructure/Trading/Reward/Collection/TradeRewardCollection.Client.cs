@@ -1,6 +1,5 @@
 #if CLIENT
 using System;
-using System.Collections.Generic;
 using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 
@@ -14,12 +13,15 @@ namespace Trading
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
 		lightIconColorA: A)]
-	public partial class TradeRewardCollection
+	public partial class TradeRewardCollection : ITradeRewardRepresentable
 	{
 		/// <summary>
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
 		public bool Filter(Type type) => type.HasAttribute<SerializableAttribute>();
+
+		public string visual;
+		public string VisualId { get => visual; }
 	}
 }
 #endif

@@ -4,16 +4,16 @@ using System.Diagnostics;
 namespace Fusumity.Attributes
 {
 	[Conditional("UNITY_EDITOR")]
-	public class TimeFromMsSuffixLabelParentAttribute : ParentAttribute
+	public class TimeFromMsSuffixLabelParentAttribute : Attribute, IAttributeConvertible
 	{
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new TimeFromMsSuffixLabelAttribute();
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public class TimeFromSecSuffixLabelParentAttribute : ParentAttribute
+	public class TimeFromSecSuffixLabelParentAttribute : Attribute, IAttributeConvertible
 	{
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new TimeFromSecSuffixLabelAttribute();
 	}
 }

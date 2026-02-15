@@ -28,8 +28,8 @@ namespace Fusumity.Editor
 					attributes.Add(new MaxValueAttribute(MAX));
 
 					foreach (var parentAttribute in parentProperty.Attributes)
-						if (parentAttribute is ParentAttribute attribute)
-							attributes.Add(isHolder ? attribute : attribute.Convert());
+						if (parentAttribute is IAttributeConvertible attribute)
+							attributes.Add(isHolder ? parentAttribute : attribute.Convert());
 
 					break;
 
@@ -38,8 +38,8 @@ namespace Fusumity.Editor
 					attributes.Add(new HorizontalGroupAttribute());
 
 					foreach (var parentAttribute in parentProperty.Attributes)
-						if (parentAttribute is ParentAttribute attribute)
-							attributes.Add(isHolder ? attribute : attribute.Convert());
+						if (parentAttribute is IAttributeConvertible attribute)
+							attributes.Add(isHolder ? parentAttribute : attribute.Convert());
 
 					attributes.Add(new MinValueAttribute(MIN));
 					break;

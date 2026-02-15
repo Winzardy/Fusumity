@@ -22,6 +22,9 @@ namespace Fusumity.Editor.Drawers
 		{
 			var childrenCount = Property.Children.Count;
 
+			if (Attribute.Space > 0)
+				GUILayout.Space(Attribute.Space);
+
 			FusumityEditorGUILayout.BeginCardBox(new Color(Attribute.R, Attribute.G, Attribute.B, Attribute.A));
 
 			if (!Attribute.Label.IsNullOrEmpty())

@@ -39,8 +39,8 @@ namespace Fusumity.Editor
 					attributes.Add(new HorizontalGroupAttribute(width: 0.3f));
 					attributes.Add(new HideLabelAttribute());
 					foreach (var parentAttribute in parentProperty.Attributes)
-						if (parentAttribute is ParentAttribute attribute)
-							attributes.Add(isHolder ? attribute : attribute.Convert());
+						if (parentAttribute is IAttributeConvertible attribute)
+							attributes.Add(isHolder ? parentAttribute : attribute.Convert());
 
 					break;
 			}

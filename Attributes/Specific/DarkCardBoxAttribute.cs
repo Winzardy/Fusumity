@@ -17,6 +17,8 @@ namespace Fusumity.Attributes
 		public string Label { get; }
 		public bool UseLabelSeparator { get; set; }
 
+		public int Space { get; set; }
+
 		public ColorCardBoxAttribute(float r, float g, float b, float a = 1f, string groupId = "", float order = 0, string label = null,
 			bool useLabelSeparator = false) : base(groupId, order)
 		{

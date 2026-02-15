@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 namespace Fusumity.Attributes
 {
 	[Conditional("UNITY_EDITOR")]
-	public class UnitParentAttribute : ParentAttribute
+	public class UnitParentAttribute : Attribute, IAttributeConvertible
 	{
 		/// <summary>The unit of underlying value.</summary>
 		public Units Base = Units.Unset;
@@ -81,7 +81,7 @@ namespace Fusumity.Attributes
 			this.DisplayName = display;
 		}
 
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new UnitAttribute(Base)
 			{
 				Display = Display,

@@ -55,10 +55,10 @@ namespace Fusumity.Editor
 			{
 				foreach (var parentAttribute in parentProperty.Attributes)
 				{
-					if (parentAttribute is ParentAttribute attribute)
+					if (parentAttribute is IAttributeConvertible attribute)
 					{
 						attributes.Add(typeof(IContainer).IsAssignableFrom(member.DeclaringType)
-							? attribute
+							? parentAttribute
 							: attribute.Convert());
 					}
 				}

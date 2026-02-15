@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Fusumity.Attributes.Odin
 {
 	[Conditional("UNITY_EDITOR")]
-	public class MinimumParentAttribute : ParentAttribute
+	public class MinimumParentAttribute : Attribute, IAttributeConvertible
 	{
 		/// <summary>
 		/// The minimum value for the property.
@@ -34,7 +34,7 @@ namespace Fusumity.Attributes.Odin
 			this.Expression = expression;
 		}
 
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new MinimumAttribute(MinValue)
 			{
 				Expression = Expression

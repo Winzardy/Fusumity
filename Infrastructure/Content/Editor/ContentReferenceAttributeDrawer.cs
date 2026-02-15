@@ -106,7 +106,7 @@ namespace Content.Editor
 		{
 			base.Initialize();
 
-			if (Property.Parent.ValueEntry.WeakSmartValue is IContentReference _)
+			if (Property.Parent?.ValueEntry?.WeakSmartValue is IContentReference _)
 				_mode = ContentDrawerMode.Reference;
 			else
 				_mode = TargetMode;

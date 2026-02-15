@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 namespace Fusumity.Attributes
 {
 	[Conditional("UNITY_EDITOR")]
-	public class PropertyRangeParentAttribute : ParentAttribute
+	public class PropertyRangeParentAttribute : Attribute, IAttributeConvertible
 	{
 		/// <summary>The minimum value.</summary>
 		public double Min;
@@ -67,7 +67,7 @@ namespace Fusumity.Attributes
 			this.MaxGetter = maxGetter;
 		}
 
-		public override Attribute Convert()
+		public Attribute Convert()
 			=> new PropertyRangeAttribute(Min, Max)
 			{
 				MinGetter = MinGetter,
