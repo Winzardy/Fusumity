@@ -187,6 +187,14 @@ namespace UI.Screens
 			SetActive(false, immediate);
 		}
 
+		protected override bool AutomaticLayoutClearingInternal()
+		{
+			if (_resetting.HasValue(out var resetting) && !resetting)
+				return false;
+
+			return base.AutomaticLayoutClearingInternal();
+		}
+
 		protected sealed override void OnEndedClosingInternal()
 		{
 			if (_resetting.HasValue)

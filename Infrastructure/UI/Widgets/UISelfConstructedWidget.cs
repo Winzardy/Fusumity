@@ -57,7 +57,9 @@ namespace UI
 		protected sealed override void OnDeactivatedInternal(bool immediate)
 		{
 			if (!suppressFlag.HasFlag(SuppressFlag.Events))
+			{
 				CancelSetupLayout();
+			}
 
 			base.OnDeactivatedInternal(immediate);
 		}
@@ -72,9 +74,8 @@ namespace UI
 					return true;
 				}
 
-				WaitBeforeDestroyAsync().Forget();
-
-				return false;
+				WaitBeforeDestroyAsync()
+					.Forget();
 			}
 
 			return false;
