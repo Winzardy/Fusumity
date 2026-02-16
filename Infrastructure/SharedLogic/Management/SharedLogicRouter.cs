@@ -25,7 +25,7 @@ namespace SharedLogic
 			var node = _root.GetNode<TimeSharedNode>();
 			using (node.ProviderSuppressScope())
 			{
-				var timeSetCommand = new TimeSetCommand(_dateTimeProvider.DateTimeWithoutOffset.Ticks);
+				var timeSetCommand = new TimeSetCommand(_dateTimeProvider.DateTimeWithoutOffset.Ticks, _root.Revision);
 				if (!timeSetCommand.Validate(_root, out var exception))
 				{
 					SLDebug.LogException(exception);
