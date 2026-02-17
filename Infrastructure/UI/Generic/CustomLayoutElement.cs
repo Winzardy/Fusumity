@@ -46,7 +46,7 @@ namespace UI
 
 		public float maxHeight
 		{
-			get => _maxWidthRect ? _maxWidthRect.rect.height : _maxHeight;
+			get => _maxHeightRect ? _maxHeightRect.rect.height : _maxHeight;
 			set
 			{
 				if (CustomSetPropertyUtility.SetStruct(ref _maxHeight, value))
@@ -117,24 +117,24 @@ namespace UI
 		public override float preferredHeight
 		{
 			get => _useMaxHeight ? GetMaxHeight() : base.preferredHeight;
-			set => base.preferredWidth = _useMaxHeight ? GetMaxHeight() : value;
+			set => base.preferredHeight = _useMaxHeight ? GetMaxHeight() : value;
 		}
 
 		private float GetMaxWidth()
 		{
 			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
-			_ignoreOnGettingPreferredSize = true;
-
 			try
 			{
-				if (transform.TryGetComponent(out Image image))
-				{
-					if (!image.enabled)
-						return base.preferredWidth;
-				}
+				if (transform.TryGetComponent(out Graphic graphic) && !graphic.enabled)
+					return base.preferredWidth;
+
+				if(_ignoreOnGettingPreferredSize)
+					return base.preferredWidth;
+
+				_ignoreOnGettingPreferredSize = true;
 
 				var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
-				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+
 				return baseValue > maxWidth ? maxWidth : baseValue;
 			}
 			catch (Exception e)
@@ -142,18 +142,37 @@ namespace UI
 				GUIDebug.LogWarning(e.Message, transform);
 				return base.preferredWidth;
 			}
+			finally
+			{
+				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+			}
 		}
 
 		private float GetMaxHeight()
 		{
 			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
-			_ignoreOnGettingPreferredSize = true;
+			try
+			{
+				if (transform.TryGetComponent(out Graphic graphic) && !graphic.enabled)
+					return base.preferredHeight;
 
-			var baseValue = LayoutUtility.GetPreferredHeight(transform as RectTransform);
+				if(_ignoreOnGettingPreferredSize)
+					return base.preferredHeight;
 
-			_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+				_ignoreOnGettingPreferredSize = true;
 
-			return baseValue > maxHeight ? maxHeight : baseValue;
+				var baseValue = LayoutUtility.GetPreferredHeight(transform as RectTransform);
+				return baseValue > maxHeight ? maxHeight : baseValue;
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogWarning(e.Message, transform);
+				return base.preferredHeight;
+			}
+			finally
+			{
+				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+			}
 		}
 	}
 }

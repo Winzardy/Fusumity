@@ -14,18 +14,18 @@ namespace UI
 #if UNITY_EDITOR
 		public override IEnumerable<object> GetVariants()
 		{
-			if (_allCollectedStates.IsNullOrEmpty())
-				yield break;
-
-			foreach (var state in _allCollectedStates)
-				yield return state;
+			if (!_allCollectedStates.IsNullOrEmpty())
+			{
+				foreach (var state in _allCollectedStates)
+					yield return state;
+			}
 
 			if (_variants.IsNullOrEmpty())
 				yield break;
 
 			foreach (var variant in _variants)
 			{
-				if (_allCollectedStates.ContainsElement(variant))
+				if (!_allCollectedStates.IsNullOrEmpty() && _allCollectedStates.ContainsElement(variant))
 					continue;
 
 				yield return variant;
