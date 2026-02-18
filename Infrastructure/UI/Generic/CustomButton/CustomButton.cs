@@ -42,6 +42,9 @@ namespace UI
 
 		public List<ButtonTransition> transitions = new();
 
+		[OptionalSuffixLabel]
+		public StateSwitcher<bool> interactableSwitcher;
+
 		protected override void Awake()
 		{
 			base.Awake();
@@ -66,6 +69,9 @@ namespace UI
 
 			for (int i = 0; i < transitions.Count; i++)
 				transitions[i].DoStateTransition(state.ToInt(), instant);
+
+			if (interactableSwitcher != null)
+				interactableSwitcher.Switch(state != SelectionState.Disabled, instant);
 		}
 
 		private void DoSpriteStateTransition(SelectionState state, in SpriteStateTransition transition)

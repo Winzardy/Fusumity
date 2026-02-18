@@ -404,6 +404,9 @@ namespace Fusumity.Utility
 
 		public static FieldInfo[] GetConstantFieldInfos(this Type type)
 		{
+			if(type == null)
+				return Array.Empty<FieldInfo>();
+
 			FieldInfo[] fieldInfos = type.GetFields(BindingFlags.Public |
 				BindingFlags.Static | BindingFlags.FlattenHierarchy);
 

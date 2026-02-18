@@ -38,6 +38,8 @@ namespace Fusumity.Editor.Drawers
 		private List<T> _values;
 		private Dictionary<T, string> _namesMap;
 
+		private Type _targetType;
+
 		public override bool CanDrawTypeFilter(Type type)
 		{
 			if (type == typeof(string))
@@ -48,8 +50,12 @@ namespace Fusumity.Editor.Drawers
 
 		protected override void Initialize()
 		{
+			_targetType = Attribute.Type;
+			if (!Attribute.TypeName.IsNullOrEmpty())
+				ReflectionUtility.TryGetType(Attribute.TypeName, out _targetType);
+
 			var consts = ReflectionUtility
-				.GetConstantFieldInfos(Attribute.Type)?
+				.GetConstantFieldInfos(_targetType)?
 				.Where(x => x.FieldType == typeof(T))?
 				.ToArray();
 
@@ -65,7 +71,7 @@ namespace Fusumity.Editor.Drawers
 
 			foreach (var info in consts)
 			{
-				var value = (T)info.GetValue(null);
+				var value = (T) info.GetValue(null);
 				var name = GetFormattedName(info.Name);
 
 				if (Attribute.DisplayValue)
@@ -101,9 +107,7 @@ namespace Fusumity.Editor.Drawers
 			if (Attribute.EnsureDefaultValue && !defaultFound)
 			{
 				var defaultValue =
-					typeof(T) == typeof(string) ?
-					(T)(object)"" :
-					default(T);
+					typeof(T) == typeof(string) ? (T) (object) "" : default(T);
 
 				if (defaultValue != null)
 				{
@@ -118,7 +122,8 @@ namespace Fusumity.Editor.Drawers
 		{
 			if (_values == null)
 			{
-				SirenixEditorGUI.MessageBox(GetErrorMessage(), MessageType.Error, GlobalConfig<GeneralDrawerConfig>.Instance.MessageBoxFontSize);
+				SirenixEditorGUI.MessageBox(GetErrorMessage(), MessageType.Error,
+					GlobalConfig<GeneralDrawerConfig>.Instance.MessageBoxFontSize);
 
 				var color = GUI.backgroundColor;
 				GUI.backgroundColor = Color.red;
@@ -156,13 +161,13 @@ namespace Fusumity.Editor.Drawers
 		{
 			return
 				value != null &&
-				_namesMap.TryGetValue(value, out var name) ?
-				name :
-				NONE;
+				_namesMap.TryGetValue(value, out var name)
+					? name
+					: NONE;
 		}
 
 		private string GetErrorMessage() =>
 			$"Possible type mismatch: " +
-			$"Could not find any consts of type <b>[{typeof(T).Name}]</b> within <b>[{Attribute.Type.Name}]</b>";
+			$"Could not find any consts of type <b>[{typeof(T).Name}]</b> within <b>[{_targetType?.Name}]</b>";
 	}
 }

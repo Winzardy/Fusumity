@@ -28,12 +28,10 @@ namespace UI
 			get => base.color;
 			set
 			{
-				base.color = color;
+				base.color = value;
 
 				foreach (var graphic in graphics)
-				{
-					graphic.color = color;
-				}
+					graphic.color = value;
 			}
 		}
 

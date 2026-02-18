@@ -1,4 +1,6 @@
-﻿using Fusumity.Utility;
+﻿using System.Collections.Generic;
+using Fusumity.Utility;
+using Sapientia.Collections;
 using UI;
 using UnityEngine;
 
@@ -14,13 +16,33 @@ namespace Fusumity.MVVM.UI
 		where TView : UIView<TViewModel, TViewLayout>
 		where TViewLayout : UIBaseLayout
 	{
+		private RectTransform _root;
+
 		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)
 		{
+			_root = layout.root;
 			layout.template.SetActive(false);
 		}
 
 		public UIViewCollection(TViewLayout prefab, RectTransform root = null) : base(prefab, root)
 		{
+			_root = root;
+		}
+
+		public void UpdateOrDeactivate(IEnumerable<TViewModel> collection)
+		{
+			if (_root == null)
+				throw GUIDebug.Exception("Root can't be null!");
+
+			if (!collection.IsNullOrEmpty())
+			{
+				_root.SetActive(true);
+				Update(collection);
+			}
+			else
+			{
+				_root.SetActive(false);
+			}
 		}
 	}
 }
