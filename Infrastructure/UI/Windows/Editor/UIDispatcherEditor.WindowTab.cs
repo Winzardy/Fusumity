@@ -29,13 +29,14 @@ namespace UI.Windows.Editor
 				return;
 			}
 
+			var autoClear = window is IBoundedView {AutoDisposeViewModel: true};
 			WindowMode targetMode = mode ? mode : WindowMode.Default;
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
 				.MakeGenericMethod(window.GetType())
-				.Invoke(_dispatcher, new []
+				.Invoke(_dispatcher, new[]
 				{
-					argsInspector.GetArgs(),
+					argsInspector.GetArgs(autoClear),
 					targetMode
 				});
 		}

@@ -111,6 +111,8 @@ namespace Localization.Editor
 
 			var originalColor = GUI.color;
 			var canBeEmpty = Property.GetAttribute<CanBeNullAttribute>() != null;
+			if (Property.ParentType == typeof(LocKey))
+				canBeEmpty = Property.Parent.GetAttribute<CanBeNullAttribute>() != null;
 			GUI.color = contains
 				? originalColor
 				: !canBeEmpty

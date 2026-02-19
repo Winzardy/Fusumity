@@ -107,13 +107,15 @@ namespace UI
 		bool IsToggled { get; }
 		[CanBeNull] string Style { get; }
 
-		event Action<bool> ToggleStateChanged;
+		event ToggleDelegate ToggleStateChanged;
 		event Action StyleChanged;
 		event Action IconChanged;
 		event Action LabelChanged;
 
 		void Click();
 	}
+
+	public delegate void ToggleDelegate(bool immediate = true);
 
 	public static class ToggleButtonStyle
 	{

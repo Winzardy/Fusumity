@@ -21,15 +21,10 @@ namespace ZenoTween.Participant.Tweens
 
 		public Toggle<RectTransform> from;
 
-		public bool x = true;
-
-		[ShowIf(nameof(x))]
-		public Toggle<float> maxX;
-
-		public bool y = true;
-
-		[ShowIf(nameof(y))]
-		public Toggle<float> maxY;
+		[LabelText("X")]
+		public Toggle<OptionalRange<float>> useX = new(new OptionalRange<float>());
+		[LabelText("Y")]
+		public Toggle<OptionalRange<float>> useY = new(new OptionalRange<float>());
 
 		[Space]
 		public float duration = 0.5f;
@@ -59,27 +54,32 @@ namespace ZenoTween.Participant.Tweens
 				() => root.rect.size,
 				newSize =>
 				{
-					if (x)
+					if (useX)
 					{
-						root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
-							maxX
-								? newSize.x > maxX.value
-									? maxX.value
-									: newSize.x
-								: newSize.x);
+						var valueX = Clamp(newSize.x, in useX.value);
+						root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, valueX);
 					}
 
-					if (y)
-						root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-							maxY
-								? newSize.y > maxY.value
-									? maxY.value
-									: newSize.y
-								: newSize.y);
+					if (useY)
+					{
+						var valueY = Clamp(newSize.y, in useY.value);
+						root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, valueY);
+					}
 				},
 				to.rect.size,
 				duration
 			);
+		}
+
+		private static float Clamp(float value, in OptionalRange<float> range)
+		{
+			if (range.min)
+				value = Mathf.Max(value, range.min);
+
+			if (range.max)
+				value = Mathf.Min(value, range.max);
+
+			return value;
 		}
 	}
 }

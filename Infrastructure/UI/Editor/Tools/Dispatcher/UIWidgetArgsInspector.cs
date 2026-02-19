@@ -49,7 +49,15 @@ namespace UI.Editor
 			_shouldTryCreateFirstArgs = true;
 		}
 
-		public object GetArgs() => _args;
+		public object GetArgs(bool autoClearOnDispose = true)
+		{
+			var args = _args;
+
+			if (autoClearOnDispose && args is IDisposable)
+				_args = null;
+
+			return args;
+		}
 
 		[OnInspectorGUI]
 		private void OnInspectorGUI()

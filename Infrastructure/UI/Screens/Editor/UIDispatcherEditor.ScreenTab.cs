@@ -27,12 +27,13 @@ namespace UI.Screens.Editor
 				return;
 			}
 
+			var autoClear = screen is IBoundedView {AutoDisposeViewModel: true};
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
 				.MakeGenericMethod(screen.GetType())
 				.Invoke(_dispatcher, new object[]
 				{
-					argsInspector.GetArgs()
+					argsInspector.GetArgs(autoClear)
 				});
 		}
 

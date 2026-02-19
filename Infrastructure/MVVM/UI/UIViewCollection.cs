@@ -20,7 +20,6 @@ namespace Fusumity.MVVM.UI
 
 		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)
 		{
-			_root = layout.root;
 			layout.template.SetActive(false);
 		}
 
@@ -34,7 +33,7 @@ namespace Fusumity.MVVM.UI
 			if (_root == null)
 				throw GUIDebug.Exception("Root can't be null!");
 
-			if (!collection.IsNullOrEmpty())
+			if (collection != null && !collection.IsNullOrEmpty())
 			{
 				_root.SetActive(true);
 				Update(collection);

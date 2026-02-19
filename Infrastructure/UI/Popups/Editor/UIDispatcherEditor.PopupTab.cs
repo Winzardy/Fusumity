@@ -27,12 +27,13 @@ namespace UI.Popups.Editor
 				return;
 			}
 
+			var autoClear = popup is IBoundedView {AutoDisposeViewModel: true};
 			_dispatcher?.GetType()
 				.GetMethod(nameof(_dispatcher.Show))?
 				.MakeGenericMethod(popup.GetType())
 				.Invoke(_dispatcher, new[]
 				{
-					argsInspector.GetArgs(),
+					argsInspector.GetArgs(autoClear),
 					mode ? new PopupMode?(mode.value) : null
 				});
 		}

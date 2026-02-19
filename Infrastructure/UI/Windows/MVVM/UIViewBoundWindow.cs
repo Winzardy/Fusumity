@@ -4,7 +4,7 @@ using Sapientia;
 
 namespace UI.Windows
 {
-	public abstract class UIViewBoundWindow<TViewModel, TView, TLayout> : UIWindow<TLayout, TViewModel>
+	public abstract class UIViewBoundWindow<TViewModel, TView, TLayout> : UIWindow<TLayout, TViewModel>, IBoundedView
 		where TView : class, IView<TViewModel>
 		where TLayout : UIBaseWindowLayout
 	{

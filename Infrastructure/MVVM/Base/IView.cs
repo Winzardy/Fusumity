@@ -70,18 +70,18 @@ namespace Fusumity.MVVM
 
 		public void ClearViewModel(bool dispose = false)
 		{
-			if (ViewModel != null)
+			if (ViewModel == null)
+				return;
+
+			_bindings?.Dispose();
+			OnClear(ViewModel);
+
+			if (dispose && ViewModel is IDisposable disposable)
 			{
-				_bindings?.Dispose();
-				OnClear(ViewModel);
-
-				if (dispose && ViewModel is IDisposable disposable)
-				{
-					disposable.Dispose();
-				}
-
-				ViewModel = default;
+				disposable.Dispose();
 			}
+
+			ViewModel = default;
 		}
 
 		/// <summary>
@@ -155,6 +155,7 @@ namespace Fusumity.MVVM
 		{
 			AddSubscription(new ClickableSubscription<T>(clickable, handler));
 		}
+
 		#endregion Disposables
 
 		#region Bindings
@@ -169,6 +170,7 @@ namespace Fusumity.MVVM
 			var lazyCd = _bindings ??= new CompositeDisposable();
 			lazyCd.AddDisposable(new BindingSubscription<T>(binding, handler));
 		}
+
 		#endregion Bindings
 	}
 

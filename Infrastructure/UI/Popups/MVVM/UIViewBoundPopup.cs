@@ -5,7 +5,7 @@ using Fusumity.MVVM;
 
 namespace UI.Popups
 {
-	public abstract class UIViewBoundPopup<TViewModel, TView, TLayout> : UIPopup<TLayout, TViewModel>
+	public abstract class UIViewBoundPopup<TViewModel, TView, TLayout> : UIPopup<TLayout, TViewModel>, IBoundedView
 		where TView : class, IView<TViewModel>
 		where TLayout : UIBasePopupLayout
 	{

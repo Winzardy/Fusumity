@@ -13,7 +13,7 @@ namespace UI
 		public bool IsToggled { get; private set; }
 		public string Style { get; private set; }
 
-		public event Action<bool> ToggleStateChanged;
+		public event ToggleDelegate ToggleStateChanged;
 		public event Action IconChanged;
 		public event Action LabelChanged;
 		public event Action StyleChanged;

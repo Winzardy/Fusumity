@@ -4,7 +4,7 @@ using Sapientia;
 
 namespace UI.Screens
 {
-	public abstract class UIViewBoundScreen<TViewModel, TView, TLayout> : UIScreen<TLayout, TViewModel>
+	public abstract class UIViewBoundScreen<TViewModel, TView, TLayout> : UIScreen<TLayout, TViewModel>, IBoundedView
 		where TView : class, IView<TViewModel>
 		where TLayout : UIBaseScreenLayout
 	{
