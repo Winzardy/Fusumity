@@ -51,6 +51,7 @@ namespace UI.Editor
 
 		public object GetArgs(bool autoClearOnDispose = true)
 		{
+			TryCreatePolymorphic();
 			var args = _args;
 
 			if (autoClearOnDispose && args is IDisposable)
@@ -97,15 +98,7 @@ namespace UI.Editor
 			{
 				if (_shouldTryCreateFirstArgs)
 				{
-					if (_args == null)
-					{
-						_args = _argsType.GetAllTypes()
-							.First()
-							.CreateInstanceSafe(out var exception);
-
-						if (exception != null)
-							GUIDebug.LogException(exception);
-					}
+					TryCreatePolymorphic();
 
 					_shouldTryCreateFirstArgs = false;
 				}
@@ -149,6 +142,20 @@ namespace UI.Editor
 					}
 				}
 			}
+		}
+
+		private void TryCreatePolymorphic()
+		{
+			if (!_argsType.IsPolymorphic())
+				return;
+			if (_args != null)
+				return;
+			_args = _argsType.GetAllTypes()
+				.First()
+				.CreateInstanceSafe(out var exception);
+
+			if (exception != null)
+				GUIDebug.LogException(exception);
 		}
 
 		private void TryClearTree()
