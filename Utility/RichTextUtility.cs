@@ -41,6 +41,12 @@ namespace Fusumity.Utility
 			return $"<color=#{htmlColor}>{text}</color>";
 		}
 
+		public static string ColorText(this string text, Color? color)
+			=> ColorText(text, color ?? default, color.HasValue);
+
+		public static string ColorText(this object obj, Color? color)
+			=> ColorText(obj.ToString(), color ?? default, color.HasValue);
+
 		public static string FontText(this string text, string fontName)
 		{
 			return $"<font={fontName}>{text}</font>";
@@ -65,6 +71,7 @@ namespace Fusumity.Utility
 		{
 			return $"<size={size}>{text}</size>";
 		}
+
 		public static string GetSpriteTag(string atlas, string name, Color? color = null)
 		{
 			if (color.HasValue)

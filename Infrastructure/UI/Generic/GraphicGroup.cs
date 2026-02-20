@@ -54,7 +54,8 @@ namespace UI
 				if (!graphic)
 				{
 #if UNITY_EDITOR
-					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+					if (!autoCollectGraphicsOnRuntime)
+						GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
 #endif
 					continue;
 				}
@@ -76,7 +77,8 @@ namespace UI
 				if (!graphic)
 				{
 #if UNITY_EDITOR
-					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+					if (!autoCollectGraphicsOnRuntime)
+						GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
 #endif
 					continue;
 				}
@@ -97,7 +99,8 @@ namespace UI
 				if (!graphic)
 				{
 #if UNITY_EDITOR
-					GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
+					if (!autoCollectGraphicsOnRuntime)
+						GUIDebug.LogError($"Empty graphic in group [ {name} ]", this);
 #endif
 					continue;
 				}
