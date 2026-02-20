@@ -39,7 +39,7 @@ namespace UI
 			var entry = ContentManager.Get<UILayerConfig>(id);
 			var layout = UIFactory.CreateLayout(entry.template);
 
-			layout.MoveTo(UIFactory.scene);
+			layout.MoveToScene(UIFactory.scene);
 
 			layout.name = string.Format(NAME_FORMAT, id);
 			layout.canvas.sortingOrder = entry.sortOrder;

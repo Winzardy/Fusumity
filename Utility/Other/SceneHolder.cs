@@ -45,13 +45,13 @@ namespace Fusumity.Utility
 
 	public static class SceneHolderExtensions
 	{
-		public static void MoveTo<T>(this T component, SceneHolder holder)
+		public static void MoveToScene<T>(this T component, SceneHolder holder)
 			where T : Component
 		{
-			component.gameObject.MoveTo(holder);
+			component.gameObject.MoveToScene(holder);
 		}
 
-		public static void MoveTo(this GameObject go, SceneHolder holder)
+		public static void MoveToScene(this GameObject go, SceneHolder holder)
 		{
 			holder.MoveToHolder(go);
 		}

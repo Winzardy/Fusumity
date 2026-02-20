@@ -13,14 +13,14 @@ namespace Audio
 		public AudioEventPlayer CreatePlayer(string name)
 		{
 			var go = new GameObject(name);
-			go.MoveTo(_root);
+			go.MoveToScene(_root);
 			return go.AddComponent<AudioEventPlayer>();
 		}
 
 		public AudioListener CreateListener(string name)
 		{
 			var go = new GameObject(name);
-			go.MoveTo(_root);
+			go.MoveToScene(_root);
 			return go.AddComponent<AudioListener>();
 		}
 	}

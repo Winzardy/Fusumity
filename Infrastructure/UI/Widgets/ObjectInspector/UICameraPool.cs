@@ -32,7 +32,7 @@ namespace UI
 				gameObject.transform.position = new Vector3(100, _i * 100);
 
 				var camera = gameObject.AddComponent<Camera>();
-				gameObject.MoveTo(UIFactory.scene);
+				gameObject.MoveToScene(UIFactory.scene);
 
 				return camera;
 			}

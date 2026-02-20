@@ -122,14 +122,14 @@ namespace Booting.UI
 		{
 			_eventSystem = UnityObject.Instantiate(eventSystemPrefab);
 			_eventSystem.name = _eventSystem.name.Remove("(Clone)");
-			_eventSystem.MoveTo(UIFactory.scene);
+			_eventSystem.MoveToScene(UIFactory.scene);
 		}
 
 		private void CreateInputRouter()
 		{
 			_inputRouter = UnityObject.Instantiate(inputRouter);
 			_inputRouter.name = "[Input Router]";
-			_inputRouter.MoveTo(UIFactory.scene);
+			_inputRouter.MoveToScene(UIFactory.scene);
 			_inputRouter.SetActive(false);
 
 			_inputRouter.RegisterAsService<IInputRouter>();
