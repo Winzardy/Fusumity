@@ -43,9 +43,9 @@ namespace Fusumity.MVVM
 
 		public BaseViewCollection(TViewLayout prefab, Transform root = null)
 		{
-			_pool = root != null ?
-				new ViewPool<TViewModel, TView, TViewLayout>(prefab, root, CreateViewInstance, DisposeViewInstance) :
-				new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
+			_pool = root != null
+				? new ViewPool<TViewModel, TView, TViewLayout>(prefab, root, CreateViewInstance, DisposeViewInstance)
+				: new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
 
 			_utilizedViews = new List<TView>();
 		}
@@ -82,6 +82,12 @@ namespace Fusumity.MVVM
 					Update(view, viewModel);
 				}
 			}
+
+			OnUpdate(viewModels);
+		}
+
+		protected virtual void OnUpdate(IEnumerable<TViewModel> viewModels)
+		{
 		}
 
 		public TView Get(TViewModel viewModel)
