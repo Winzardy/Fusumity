@@ -34,6 +34,7 @@ namespace Content.ScriptableObjects.Editor
 			public Formatting formatting = Formatting.None;
 
 			[PropertySpace(2, 10)]
+			[NonSerialized]
 			public bool revealInFinder = true;
 
 			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
