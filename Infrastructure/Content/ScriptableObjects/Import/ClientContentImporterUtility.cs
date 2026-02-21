@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 
@@ -46,8 +47,28 @@ namespace Content.ScriptableObjects
 					list.Add(entry);
 			}
 
-			foreach (var scriptableObject in database.scriptableObjects)
+			foreach (var
+#if UNITY_EDITOR
+					(
+#endif
+					scriptableObject
+#if UNITY_EDITOR
+					, index)
+#endif
+				in database.scriptableObjects
+#if UNITY_EDITOR
+					.WithIndex()
+#endif
+			)
 			{
+#if UNITY_EDITOR
+				if (scriptableObject == null)
+				{
+					ContentDebug.LogError($"ScriptableObject by index [ {index} ] is null while importing database [ {database.name} ]",
+						database);
+					continue;
+				}
+#endif
 				if (TryImport(scriptableObject, clone, out entry))
 				{
 					if (predicate?.Invoke(entry) ?? true)
@@ -58,8 +79,14 @@ namespace Content.ScriptableObjects
 
 		private static bool TryImport(ContentScriptableObject target, bool clone, out IContentEntry entry)
 		{
-			entry = target.Import(clone);
-			return entry != null;
+			if (target != null)
+			{
+				entry = target.Import(clone);
+				return entry != null;
+			}
+
+			entry = null;
+			return false;
 		}
 	}
 }

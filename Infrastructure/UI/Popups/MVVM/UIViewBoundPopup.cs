@@ -1,7 +1,6 @@
-﻿using Fusumity.MVVM.UI;
-using Sapientia;
-using System;
+﻿using System;
 using Fusumity.MVVM;
+using Sapientia;
 
 namespace UI.Popups
 {
@@ -15,7 +14,7 @@ namespace UI.Popups
 		/// <br></br>
 		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
-		public abstract bool AutoDisposeViewModel { get; }
+		public virtual bool AutoDisposeViewModel { get => true; }
 
 		protected TView _view;
 		protected Action _onClose;
