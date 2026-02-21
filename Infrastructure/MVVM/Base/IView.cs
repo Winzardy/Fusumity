@@ -222,6 +222,7 @@ namespace Fusumity.MVVM
 	/// </summary>
 	public interface IExternallyOwnedDisposable : IDisposable
 	{
+		/// <inheritdoc cref="IExternallyOwnedDisposable"/>
 		bool IsExternallyOwned { get; }
 	}
 }
