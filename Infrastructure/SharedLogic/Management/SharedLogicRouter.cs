@@ -20,7 +20,7 @@ namespace SharedLogic
 			//_localCacheInfoProvider = localCacheInfoProvider;
 		}
 
-		public bool ExecuteCommand<T>(in T command) where T : struct, ICommand
+		public bool ExecuteCommand<T>(ref T command) where T : struct, ICommand
 		{
 			var node = _root.GetNode<TimeSharedNode>();
 			using (node.ProviderSuppressScope())

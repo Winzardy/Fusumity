@@ -18,10 +18,10 @@ namespace SharedLogic
 			get => _instance;
 		}
 
-		public static bool ExecuteCommand<T>(in T command)
+		public static bool ExecuteCommand<T>(ref T command)
 			where T : struct, ICommand
 		{
-			return router.ExecuteCommand(in command);
+			return router.ExecuteCommand(ref command);
 		}
 	}
 
@@ -39,6 +39,9 @@ namespace SharedLogic
 
 		public static bool ExecuteCommand<T>(this ISharedRoot _, in T command)
 			where T : struct, ICommand
-			=> SharedLogicManager.ExecuteCommand(in command);
+		{
+			ref var hack = ref Unsafe.AsRef(in command);
+			return SharedLogicManager.ExecuteCommand(ref hack);
+		}
 	}
 }
