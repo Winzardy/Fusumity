@@ -160,7 +160,7 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool EnsureIsSet(this in NativeBitArray bitArray, int pos)
+		public static bool EnsureIsSet(this ref NativeBitArray bitArray, int pos)
 		{
 			if (pos < 0 || bitArray.Length <= pos)
 				return false;
