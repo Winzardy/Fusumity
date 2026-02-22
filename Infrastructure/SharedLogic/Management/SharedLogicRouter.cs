@@ -6,12 +6,12 @@ namespace SharedLogic
 	{
 		private ISharedRoot _root;
 		private ICommandRunner _runner;
-		private IDateTimeProvider _dateTimeProvider;
+		private ISystemTimeProvider _dateTimeProvider;
 		//private ISharedLogicLocalCacheInfoProvider _localCacheInfoProvider;
 
-		public long Timestamp => _dateTimeProvider.DateTimeWithoutOffset.Ticks;
+		public long Timestamp => _dateTimeProvider.SystemTime.Ticks;
 
-		public SharedLogicRouter(ISharedRoot root, IDateTimeProvider dateTimeProvider, ICommandRunner runner)
+		public SharedLogicRouter(ISharedRoot root, ISystemTimeProvider dateTimeProvider, ICommandRunner runner)
 			//ISharedLogicLocalCacheInfoProvider localCacheInfoProvider)
 		{
 			_root = root;
@@ -25,7 +25,7 @@ namespace SharedLogic
 			var node = _root.GetNode<TimeSharedNode>();
 			using (node.ProviderSuppressScope())
 			{
-				var timeSetCommand = new TimeSetCommand(_dateTimeProvider.DateTimeWithoutOffset.Ticks, _root.Revision);
+				var timeSetCommand = new TimeSetCommand(_dateTimeProvider.SystemTime.Ticks, _root.Revision);
 				if (!timeSetCommand.Validate(_root, out var exception))
 				{
 					SLDebug.LogException(exception);

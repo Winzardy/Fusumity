@@ -4,13 +4,13 @@ using Sapientia;
 
 namespace SharedLogic
 {
-	public class SharedDateTimeProvider : IDateTimeProvider
+	public class SharedDateTimeProvider : ISystemTimeProvider
 	{
 		private const string LOCAL_SAVE_DELTA_CACHE_KEY = "server_datetime_delta_cache";
 
 		private TimeSpan _timeDelta;
 
-		public DateTime DateTimeWithoutOffset => DateTime.UtcNow + _timeDelta;
+		public DateTime SystemTime => DateTime.UtcNow + _timeDelta;
 
 		public SharedDateTimeProvider()
 		{
