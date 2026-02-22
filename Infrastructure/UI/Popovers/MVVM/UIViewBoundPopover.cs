@@ -14,7 +14,7 @@ namespace UI.Popovers
 		/// <br></br>
 		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
-		public abstract bool AutoDisposeViewModel { get; }
+		public virtual bool AutoDisposeViewModel { get => true; }
 
 		protected TView _view;
 		protected Action _onClose;

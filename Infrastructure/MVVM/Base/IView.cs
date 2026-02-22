@@ -70,18 +70,32 @@ namespace Fusumity.MVVM
 
 		public void ClearViewModel(bool dispose = false)
 		{
-			if (ViewModel == null)
-				return;
-
-			_bindings?.Dispose();
-			OnClear(ViewModel);
-
-			if (dispose && ViewModel is IDisposable disposable)
+			if (ViewModel != null)
 			{
-				disposable.Dispose();
-			}
+				_bindings?.Dispose();
+				OnClear(ViewModel);
 
-			ViewModel = default;
+				if (dispose)
+					TryDispose();
+
+				ViewModel = default;
+			}
+		}
+
+		private void TryDispose()
+		{
+			switch (ViewModel)
+			{
+				case IExternallyOwnedDisposable externallyOwned:
+				{
+					if (!externallyOwned.IsExternallyOwned)
+						externallyOwned.Dispose();
+					break;
+				}
+				case IDisposable disposable:
+					disposable.Dispose();
+					break;
+			}
 		}
 
 		/// <summary>
@@ -199,5 +213,16 @@ namespace Fusumity.MVVM
 		protected virtual void OnSetActive(bool active)
 		{
 		}
+	}
+
+	/// <summary>
+	/// Указывает, что жизненный цикл объекта может контролироваться извне.
+	/// Если <see cref="IsExternallyOwned"/> равно <c>true</c>,
+	/// текущий потребитель не должен вызывать Dispose
+	/// </summary>
+	public interface IExternallyOwnedDisposable : IDisposable
+	{
+		/// <inheritdoc cref="IExternallyOwnedDisposable"/>
+		bool IsExternallyOwned { get; }
 	}
 }
