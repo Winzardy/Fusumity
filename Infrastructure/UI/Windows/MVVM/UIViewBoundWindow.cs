@@ -14,7 +14,7 @@ namespace UI.Windows
 		/// <br></br>
 		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
-		public virtual bool AutoDisposeViewModel { get => true; }
+		public abstract bool AutoDisposeViewModel { get; }
 
 		protected TView _view;
 		protected Action _onClose;
