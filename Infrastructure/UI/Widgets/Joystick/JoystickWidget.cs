@@ -24,6 +24,10 @@ namespace UI.Joystick
 
 		public event Action<Vector2> Updated;
 
+		public JoystickWidget(JoystickWidgetLayout layout) : base(layout)
+		{
+		}
+
 		protected override void OnLayoutInstalled()
 		{
 			ServiceLocator.Get<UnityObjectsRegistry>().Register(_layout);
@@ -44,10 +48,10 @@ namespace UI.Joystick
 				stick.color = _layout.normalColor;
 
 			_pressAnimation = DOTween.Sequence()
-			   .Pause()
-			   .SetAutoKill(false)
-			   .Append(frame.DOColor(_layout.pressColor, _layout.colorTweenDuration))
-			   .Join(stick.DOColor(_layout.pressColor, _layout.colorTweenDuration));
+				.Pause()
+				.SetAutoKill(false)
+				.Append(frame.DOColor(_layout.pressColor, _layout.colorTweenDuration))
+				.Join(stick.DOColor(_layout.pressColor, _layout.colorTweenDuration));
 		}
 
 		protected override void OnLayoutCleared()
