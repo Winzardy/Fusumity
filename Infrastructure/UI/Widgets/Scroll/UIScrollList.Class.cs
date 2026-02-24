@@ -9,6 +9,15 @@ namespace UI.Scroll
 		where TItemLayout : UIScrollItemLayout
 		where TValue : class
 	{
+		public UIScrollListC(UIScrollLayout layout) : base(layout)
+		{
+			SetActive(true);
+		}
+
+		public UIScrollListC()
+		{
+		}
+
 		public void Show(IEnumerable<TValue> data, bool preservePosition = false, bool immediate = false)
 		{
 			using (ListPool<ScrollListItemСArgs<TValue>>.Get(out var list))

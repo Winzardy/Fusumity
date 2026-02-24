@@ -24,8 +24,13 @@ namespace UI.Joystick
 
 		public event Action<Vector2> Updated;
 
+		public JoystickWidget()
+		{
+		}
+
 		public JoystickWidget(JoystickWidgetLayout layout) : base(layout)
 		{
+			SetActive(true);
 		}
 
 		protected override void OnLayoutInstalled()

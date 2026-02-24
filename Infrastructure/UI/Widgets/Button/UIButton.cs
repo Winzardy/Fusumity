@@ -38,6 +38,7 @@ namespace UI
 		}
 	}
 
+	// TODO: переделать, оставить Label и Interactable, label => LabelViewModel
 	public interface IButtonViewModel
 	{
 		public AssetReferenceEntry<Sprite> IconReference { get; }
