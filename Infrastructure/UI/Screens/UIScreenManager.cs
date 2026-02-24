@@ -61,7 +61,7 @@ namespace UI.Screens
 
 		void IDisposable.Dispose()
 		{
-			ClearAll();
+			DisposeAll();
 
 			_queue.Dispose();
 
@@ -98,7 +98,21 @@ namespace UI.Screens
 			return true;
 		}
 
-		internal void HideAll() => TryHideAll(true);
+		internal void ClearAll()
+		{
+			foreach (var (screen, _) in _queue)
+				screen.Clear();
+			_queue.Clear();
+
+			if (_current != null && _current == _default.screen)
+				return;
+
+			_current?.Clear();
+			SetCurrent(null);
+
+			if (_default.screen != null)
+				Show(_default.screen, _default.args);
+		}
 
 		internal bool TryHide<T>()
 			where T : UIWidget, IScreen
@@ -120,19 +134,17 @@ namespace UI.Screens
 		internal IDisposable Prepare<T>(Action callback) where T : UIWidget, IScreen
 			=> Get<T>().Prepare(callback);
 
-		internal void ClearAll()
+		internal void DisposeAll()
 		{
 			foreach (var screen in _screens.Values)
-			{
-				Clear(screen, false);
-			}
+				Dispose(screen, false);
 
 			_screens.Clear();
 		}
 
-		internal void Clear(IScreen screen)
+		internal void Dispose(IScreen screen)
 		{
-			Clear(screen, true);
+			Dispose(screen, true);
 		}
 
 		internal bool IsActive<T>() where T : UIWidget, IScreen
@@ -191,7 +203,7 @@ namespace UI.Screens
 			screen.RequestedClose += OnRequestedClose;
 		}
 
-		private void Clear(IScreen screen, bool full)
+		private void Dispose(IScreen screen, bool full)
 		{
 			screen.RequestedClose -= OnRequestedClose;
 			screen.Dispose();

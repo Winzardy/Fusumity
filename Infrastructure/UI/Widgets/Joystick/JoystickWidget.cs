@@ -44,15 +44,16 @@ namespace UI.Joystick
 				stick.color = _layout.normalColor;
 
 			_pressAnimation = DOTween.Sequence()
-			   .Pause()
-			   .SetAutoKill(false)
-			   .Append(frame.DOColor(_layout.pressColor, _layout.colorTweenDuration))
-			   .Join(stick.DOColor(_layout.pressColor, _layout.colorTweenDuration));
+				.Pause()
+				.SetAutoKill(false)
+				.Append(frame.DOColor(_layout.pressColor, _layout.colorTweenDuration))
+				.Join(stick.DOColor(_layout.pressColor, _layout.colorTweenDuration));
 		}
 
 		protected override void OnLayoutCleared()
 		{
-			ServiceLocator.Get<UnityObjectsRegistry>().Unregister(_layout);
+			if (ServiceLocator.TryGet(out UnityObjectsRegistry registry))
+				registry.Unregister(_layout);
 
 			_layout.onDrag -= OnDrag;
 			_layout.onPointerUp -= OnPointerUp;

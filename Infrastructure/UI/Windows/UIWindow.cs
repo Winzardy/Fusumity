@@ -27,6 +27,8 @@ namespace UI.Windows
 
 		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
+		internal void Clear();
+
 		public Type GetArgsType();
 	}
 
@@ -173,6 +175,14 @@ namespace UI.Windows
 		{
 			_resetting = reset;
 			SetActive(false, immediate);
+		}
+
+		void IWindow.Clear()
+		{
+			if (Active)
+				SetActive(false, true);
+
+			ClearLayout();
 		}
 
 		protected sealed override void OnEndedClosingInternal()

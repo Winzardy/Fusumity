@@ -28,6 +28,7 @@ namespace UI.Popups
 
 		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
+		internal void Clear();
 	}
 
 	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyArgs>
@@ -223,6 +224,15 @@ namespace UI.Popups
 		}
 
 		object IPopup.GetArgs() => GetArgs();
+
+		void IPopup.Clear()
+		{
+			if(Active)
+				SetActive(false, true);
+
+			ClearLayout();
+		}
+
 		Type IPopup.GetArgsType() => typeof(TArgs);
 
 		private protected virtual object GetArgs() => _args;
