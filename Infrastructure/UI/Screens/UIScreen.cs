@@ -27,6 +27,7 @@ namespace UI.Screens
 
 		internal void Hide(bool reset, bool immediate = false);
 		internal object GetArgs();
+		internal void Clear();
 
 		internal IDisposable Prepare(Action callback);
 	}
@@ -193,6 +194,14 @@ namespace UI.Screens
 				return false;
 
 			return base.AutomaticLayoutClearingInternal();
+		}
+
+		void IScreen.Clear()
+		{
+			if(Active)
+				SetActive(false, true);
+
+			ClearLayout();
 		}
 
 		protected sealed override void OnEndedClosingInternal()

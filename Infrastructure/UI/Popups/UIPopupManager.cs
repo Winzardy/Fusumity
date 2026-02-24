@@ -72,17 +72,17 @@ namespace UI.Popups
 			_standalones = null;
 		}
 
-		internal void HideAll() => TryHideAll(true);
-
-		internal void TryHideAll(bool immediate = false)
+		internal void ClearAll()
 		{
+			foreach (var (popup, _) in _queue)
+				popup.Clear();
 			_queue.Clear();
 
-			_current?.Hide(true, immediate);
+			_current?.Clear();
 			_current = null;
 
 			foreach (var (standalone, _) in _standalones)
-				standalone.Hide(true, immediate);
+				standalone.Clear();
 			_standalones.Clear();
 		}
 
@@ -221,7 +221,7 @@ namespace UI.Popups
 
 			if (_current == popup)
 			{
-				popup.Hide(true,true);
+				popup.Hide(true, true);
 				popup.Show(newArgs, true);
 				return;
 			}

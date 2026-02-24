@@ -105,6 +105,6 @@ namespace UI.Windows
 		public bool TryGet<T>(out T window) where T : UIWidget, IWindow => _manager.TryGet(out window);
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
-		void IWidgetDispatcher.HideAll() => _manager.HideAll();
+		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
 	}
 }

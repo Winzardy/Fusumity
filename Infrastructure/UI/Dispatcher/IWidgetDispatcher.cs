@@ -5,6 +5,6 @@ namespace UI
 	public interface IWidgetDispatcher
 	{
 		public IEnumerable<UIWidget> GetAllActive();
-		public void HideAll();
+		public void ClearAll();
 	}
 }

@@ -136,6 +136,6 @@ namespace UI.Screens
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
-		void IWidgetDispatcher.HideAll() => _manager.HideAll();
+		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
 	}
 }

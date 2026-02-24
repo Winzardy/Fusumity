@@ -61,7 +61,8 @@ namespace UI.Joystick
 
 		protected override void OnLayoutCleared()
 		{
-			ServiceLocator.Get<UnityObjectsRegistry>().Unregister(_layout);
+			if (ServiceLocator.TryGet(out UnityObjectsRegistry registry))
+				registry.Unregister(_layout);
 
 			_layout.onDrag -= OnDrag;
 			_layout.onPointerUp -= OnPointerUp;

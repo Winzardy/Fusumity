@@ -70,7 +70,7 @@ namespace UI.Windows
 
 		void IDisposable.Dispose()
 		{
-			ClearAll();
+			DisposeAll();
 
 			_queue.Dispose();
 
@@ -102,7 +102,15 @@ namespace UI.Windows
 			return true;
 		}
 
-		internal void HideAll() => TryHideAll(true);
+		internal void ClearAll()
+		{
+			foreach (var (window, _) in _queue)
+				window.Clear();
+			_queue.Clear();
+
+			_current.window?.Clear();
+			SetCurrent(null, null);
+		}
 
 		internal bool TryHide<T>()
 			where T : UIWidget, IWindow
@@ -121,19 +129,17 @@ namespace UI.Windows
 			TryHide(window, false);
 		}
 
-		internal void ClearAll()
+		internal void DisposeAll()
 		{
 			foreach (var window in _windows.Values)
-			{
-				Clear(window, false);
-			}
+				Dispose(window, false);
 
 			_windows.Clear();
 		}
 
-		internal void Clear(IWindow window)
+		internal void Dispose(IWindow window)
 		{
-			Clear(window, true);
+			Dispose(window, true);
 		}
 
 		internal bool IsActive<T>() where T : UIWidget, IWindow
@@ -184,7 +190,7 @@ namespace UI.Windows
 			window.RequestedClose += OnRequestedClose;
 		}
 
-		private void Clear(IWindow window, bool full)
+		private void Dispose(IWindow window, bool full)
 		{
 			window.RequestedClose -= OnRequestedClose;
 			window.Dispose();
