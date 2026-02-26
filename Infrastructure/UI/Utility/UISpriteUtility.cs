@@ -29,7 +29,7 @@ namespace UI
 			}
 		}
 
-		public static void TrySetSprite(this UISpriteAssigner assigner, Image image, UISpriteInfo info, Action callback = null, bool disableDuringLoad = false, Sprite defaultIcon = null)
+		public static void TrySetSprite(this UISpriteAssigner assigner, Image image, UISpriteInfo info, Action callback = null, bool disableDuringLoad = true, Sprite defaultIcon = null)
 		{
 			if (image == null)
 				return;

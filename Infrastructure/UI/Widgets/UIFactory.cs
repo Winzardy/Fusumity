@@ -83,6 +83,7 @@ namespace UI
 		private static void FinalizeLayout<TLayout>(TLayout layout, string prefix)
 			where TLayout : UIBaseLayout
 		{
+#if UNITY_EDITOR
 			var split = layout.name
 				.Remove(UNITY_CLONE_POSTFIX)
 				.Split(NAME_SEPARATOR);
@@ -92,6 +93,7 @@ namespace UI
 					.GetCompositeString(vertical: false, numerate: false, separator: DISPLAY_NAME_SEPARATOR)
 				: split[0];
 			layout.name = $"{prefix}{name}";
+#endif
 		}
 
 		public static void Destroy<TLayout>(TLayout layout)
