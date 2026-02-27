@@ -39,17 +39,17 @@ namespace WLog
 	public enum WLogType
 	{
 		None = 0,
-		Assert = 1 << 0,
-		Debug = 1 << 1,
-		Warning = 1 << 2,
+		Debug = 1 << 0,
+		Warning = 1 << 1,
+		Assert = 1 << 2,
 		Error = 1 << 3,
 		Exception = 1 << 4,
 
-		All = Assert | Debug | Warning | Error | Exception,
+		All = Debug | Warning | Assert | Error | Exception,
 
-		AssertAndHigher = Assert | DebugAndHigher,
 		DebugAndHigher = Debug | WarningAndHigher,
-		WarningAndHigher = Warning | ErrorAndHigher,
+		WarningAndHigher = Warning | AssertAndHigher,
+		AssertAndHigher = Assert | ErrorAndHigher,
 		ErrorAndHigher = Error | Exception,
 	}
 
@@ -57,6 +57,22 @@ namespace WLog
 	{
 		Start,
 		End
+	}
+
+	public static class WLogTypeExtension
+	{
+		public static LogType ToUnityLogType(this WLogType logType)
+		{
+			return logType switch
+			{
+				WLogType.Debug => LogType.Log,
+				WLogType.Warning => LogType.Warning,
+				WLogType.Assert => LogType.Assert,
+				WLogType.Error => LogType.Error,
+				WLogType.Exception => LogType.Exception,
+				_ => throw new ArgumentOutOfRangeException(nameof(logType), logType, null)
+			};
+		}
 	}
 
 	public class WLogContext
@@ -93,7 +109,7 @@ namespace WLog
 
 		public bool IsLogTypeAllowed(WLogType logType)
 		{
-			return LogType.HasFlag(logType);
+			return LogType.HasFlag(logType) && UnityDebug.unityLogger.IsLogTypeAllowed(logType.ToUnityLogType());
 		}
 	}
 
