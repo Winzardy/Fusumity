@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Sapientia.Collections;
+using Sapientia.Extensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Sapientia.Collections;
-using Sapientia.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,6 +37,42 @@ namespace Fusumity.Editor.Utility
 			return AssetDatabase.FindAssets(filter, searchInFolders)
 			   .Select(AssetDatabase.GUIDToAssetPath)
 			   .Select(AssetDatabase.LoadAssetAtPath<GameObject>);
+		}
+
+		public static bool TryGetAssetByName<T>(string name, out T obj) where T : UnityObject
+		{
+			var guids = AssetDatabase.FindAssets($"{name} t:{typeof(T).Name}");
+			for (int i = 0; i < guids.Length; i++)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				if (asset != null && asset.name == name)
+				{
+					obj = asset;
+					return true;
+				}
+			}
+
+			obj = null;
+			return false;
+		}
+
+		public static bool TryGetAsset<T>(Func<T, bool> predicate, out T obj) where T : UnityObject
+		{
+			var guids = GetAssetsGuids<T>();
+			for (int i = 0; i < guids.Length; i++)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				if (asset != null && predicate.Invoke(asset))
+				{
+					obj = asset;
+					return true;
+				}
+			}
+
+			obj = null;
+			return false;
 		}
 
 		public static T GetAsset<T>(Func<string, bool> pathPredicate) where T : UnityObject
