@@ -1,4 +1,6 @@
 #if CLIENT
+using System.Collections.Generic;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 
 namespace Trading
@@ -22,6 +24,21 @@ namespace Trading
 
 		public string visual;
 		public string VisualId { get => visual; }
+
+		protected internal override IEnumerable<TradeRewardDrop> OnEnumerateDrop(Tradeboard board, TradeRewardDrop parent)
+		{
+			if (visual.IsNullOrEmpty() && ITradeRewardRepresentableWithCount.IsVisualIgnore(board))
+			{
+				foreach (var reward in GetCurrentStage(board)
+					.reward
+					.OnEnumerateDrop(board, parent))
+					yield return reward;
+			}
+			else
+			{
+				yield return new TradeRewardDrop(this, parent);
+			}
+		}
 	}
 }
 #endif

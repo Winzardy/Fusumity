@@ -2,8 +2,12 @@
 using System;
 using System.Collections.Generic;
 using Sapientia;
+using Sapientia.Collections;
+using Sapientia.Deterministic;
 using Sapientia.Evaluators;
+using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
+using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 
 namespace Trading
@@ -36,6 +40,29 @@ namespace Trading
 		public string visual;
 		public string VisualId { get => visual; }
 		ref readonly EvaluatedValue<Blackboard, int> ITradeRewardRepresentableWithCount.Count { get => ref count; }
+
+		protected internal override IEnumerable<TradeRewardDrop> OnEnumerateDrop(Tradeboard board, TradeRewardDrop parent)
+		{
+			if (visual.IsNullOrEmpty() || ITradeRewardRepresentableWithCount.IsVisualIgnore(board))
+			{
+				using (ListPool<int>.Get(out var weightByItem))
+				{
+					items.Fill(board as Blackboard, weightByItem);
+					var totalWeight = weightByItem.TotalWeight();
+					foreach (var (item, i) in items.WithIndex())
+					{
+						var rate = (Fix64) weightByItem[i] / totalWeight;
+						rate *= parent.rate;
+						foreach (var drop in item.reward.OnEnumerateDrop(board, new TradeRewardDrop(item.reward, rate)))
+							yield return drop;
+					}
+				}
+			}
+			else
+			{
+				yield return new TradeRewardDrop(this, parent);
+			}
+		}
 	}
 }
 #endif
