@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AssetManagement;
+using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
@@ -64,6 +65,9 @@ namespace UI.Popups
 
 			if (_args is ICloseRequestor requestor)
 				requestor.CloseRequested += RequestCloseInternal;
+
+			if (_layout.close != null && _args is ICloseAvailability availability)
+				_layout.close.SetActive(availability.CloseAvailable);
 
 			OnShow(ref _args);
 		}
@@ -235,7 +239,7 @@ namespace UI.Popups
 
 		void IPopup.Clear()
 		{
-			if(Active)
+			if (Active)
 				SetActive(false, true);
 
 			ClearLayout();

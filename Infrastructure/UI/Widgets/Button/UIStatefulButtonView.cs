@@ -31,6 +31,8 @@ namespace UI
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
+			SetActive(true);
+
 			if (_layout.label != null)
 				viewModel.Label.Bind(UpdateLabel);
 
@@ -52,6 +54,11 @@ namespace UI
 
 			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
+		}
+
+		protected override void OnNullViewModel()
+		{
+			SetActive(false);
 		}
 
 		private void UpdateLabel(string text)
