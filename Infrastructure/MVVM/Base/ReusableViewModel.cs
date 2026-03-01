@@ -17,6 +17,7 @@ namespace Fusumity.MVVM
 	/// <summary>
 	/// Only inherit from it in specific scenarios, when you are absolutely sure you need it.
 	/// </summary>
+	[Obsolete("НЕ ИСПОЛЬЗОВАТЬ, я его снесу нахуй")]
 	public abstract class ReusableViewModel<TModel> : IDisposable
 	{
 		protected TModel _model;
