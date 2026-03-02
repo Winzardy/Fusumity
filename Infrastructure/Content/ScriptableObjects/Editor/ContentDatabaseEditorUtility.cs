@@ -292,7 +292,10 @@ namespace Content.ScriptableObjects.Editor
 
 							all.Add(scriptableObject);
 							Refresh(scriptableObject);
-							TryAddToGenerator(scriptableObject, dictionary);
+							if (ContentAutoConstantsGeneratorMenu.IsEnable)
+							{
+								TryAddToGenerator(scriptableObject, dictionary);
+							}
 						}
 					}
 
@@ -300,8 +303,11 @@ namespace Content.ScriptableObjects.Editor
 					{
 						database.scriptableObjects = new List<ContentScriptableObject>(all);
 
-						foreach (var (type, content) in dictionary)
-							ContentConstantGenerator.Generate(type, content);
+						if (ContentAutoConstantsGeneratorMenu.IsEnable)
+						{
+							foreach (var (type, content) in dictionary)
+								ContentConstantGenerator.Generate(type, content);
+						}
 
 						database.Sort();
 					}
