@@ -33,6 +33,10 @@ namespace UI
 		protected override void OnClear(IPricedButtonViewModel viewModel)
 		{
 			viewModel.PricesChanged -= UpdatePrices;
+
+			_button.ClearViewModel();
+			_price.Reset();
+			_primaryPrice?.ClearViewModel();
 		}
 
 		private void UpdatePrices()
