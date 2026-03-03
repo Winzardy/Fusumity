@@ -166,13 +166,21 @@ namespace UI
 		{
 			OnBeforeSetupTemplate();
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
-			cancellationToken.ThrowIfCancellationRequested();
+			if (cancellationToken.IsCancellationRequested)
+			{
+				LayoutReference.Release();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			ClearTemplateSafe();
 
 			await SetupTemplateAsync(template, cancellationToken);
+			if (cancellationToken.IsCancellationRequested)
+			{
+				LayoutClearingAndReleaseTemplateSafe();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 			OnAfterSetupTemplate();
-			cancellationToken.ThrowIfCancellationRequested();
 
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
@@ -185,7 +193,11 @@ namespace UI
 			LayoutClearingAndReleaseTemplateSafe();
 
 			var layout = await UIFactory.CreateLayoutAsync(template, LayerRectTransform, LayoutPrefixName, cancellationToken);
-			cancellationToken.ThrowIfCancellationRequested();
+			if (cancellationToken.IsCancellationRequested)
+			{
+				UIFactory.Destroy(layout);
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			SetupLayout(layout);
 
