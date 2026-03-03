@@ -1,6 +1,7 @@
 #if CLIENT
 using System;
 using System.Collections.Generic;
+using Content;
 using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
@@ -22,6 +23,7 @@ namespace Trading
 		/// </summary>
 		public bool Filter(Type type) => type.HasAttribute<SerializableAttribute>();
 
+		[ClientOnly]
 		public string visual;
 		public string VisualId { get => visual; }
 

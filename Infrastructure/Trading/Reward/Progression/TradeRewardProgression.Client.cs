@@ -1,5 +1,6 @@
 #if CLIENT
 using System.Collections.Generic;
+using Content;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 
@@ -22,7 +23,9 @@ namespace Trading
 		{
 		}
 
+		[ClientOnly]
 		public string visual;
+
 		public string VisualId { get => visual; }
 
 		protected internal override IEnumerable<TradeRewardDrop> OnEnumerateDrop(Tradeboard board, TradeRewardDrop parent)

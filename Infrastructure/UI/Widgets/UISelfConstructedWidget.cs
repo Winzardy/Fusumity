@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using AssetManagement;
+using Fusumity.Reactive;
 using Sapientia;
 using Sapientia.Utility;
 using UnityEngine;
@@ -57,9 +58,7 @@ namespace UI
 		protected sealed override void OnDeactivatedInternal(bool immediate)
 		{
 			if (!suppressFlag.HasFlag(SuppressFlag.Events))
-			{
 				CancelSetupLayout();
-			}
 
 			base.OnDeactivatedInternal(immediate);
 		}
@@ -89,9 +88,7 @@ namespace UI
 			OnLayoutClearedInternal();
 			DisposeAndClearChildren();
 
-			if (_template)
-				UIFactory.Destroy(_layout);
-
+			UIFactory.Destroy(_layout);
 			_layout = null;
 		}
 
@@ -180,6 +177,7 @@ namespace UI
 				LayoutClearingAndReleaseTemplateSafe();
 				cancellationToken.ThrowIfCancellationRequested();
 			}
+
 			OnAfterSetupTemplate();
 
 #if UNITY_EDITOR

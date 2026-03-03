@@ -51,7 +51,7 @@ namespace UI.Popups
 
 			InitializeAssetsPreloader();
 
-			_queue = new();
+			_queue       = new();
 			_standalones = new();
 		}
 
@@ -106,7 +106,7 @@ namespace UI.Popups
 
 		internal bool IsActive<T>(T popup) where T : UIWidget, IPopup
 		{
-			if (_current == popup && _current.Active)
+			if (_current == popup)
 				return true;
 
 			if (_standalones.ContainsValue(popup))
@@ -208,13 +208,14 @@ namespace UI.Popups
 
 		internal void Update(IPopup popup, object newArgs)
 		{
+			var immediate = popup.Active;
 			foreach (var (standalonePopup, _) in _standalones)
 			{
 				if (standalonePopup != popup)
 					continue;
 
 				popup.Hide(true, true);
-				popup.Show(newArgs, true);
+				popup.Show(newArgs, immediate);
 				_standalones[popup] = newArgs;
 				return;
 			}
@@ -222,7 +223,7 @@ namespace UI.Popups
 			if (_current == popup)
 			{
 				popup.Hide(true, true);
-				popup.Show(newArgs, true);
+				popup.Show(newArgs, immediate);
 				return;
 			}
 
