@@ -101,9 +101,12 @@ namespace Content.ScriptableObjects.Editor
 			{
 				database.scriptableObjects.Add(scriptableObject);
 				scriptableObject.SyncedUpdate();
+
+				database.OnUpdateContent();
+				EditorUtility.SetDirty(database);
+				AssetDatabase.SaveAssetIfDirty(database);
 			}
 		}
-
 
 		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
 		{
@@ -127,6 +130,10 @@ namespace Content.ScriptableObjects.Editor
 			void Remove(ContentDatabaseScriptableObject database)
 			{
 				database.scriptableObjects.Remove(scriptableObject);
+
+				database.OnUpdateContent();
+				EditorUtility.SetDirty(database);
+				AssetDatabase.SaveAssetIfDirty(database);
 			}
 		}
 
