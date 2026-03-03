@@ -2,7 +2,9 @@
 using System.Reflection;
 using Fusumity.Editor;
 using Fusumity.Editor.Utility;
+using Fusumity.Utility;
 using Sapientia.Extensions.Reflection;
+using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -35,6 +37,8 @@ namespace Content.ScriptableObjects.Editor
 
 		protected void DrawContentEntryInspector()
 		{
+			DrawSyncButton();
+
 			var originalForceHideMonoScriptInEditor = ForceHideMonoScriptInEditor;
 			ForceHideMonoScriptInEditor = true;
 			{
@@ -58,7 +62,7 @@ namespace Content.ScriptableObjects.Editor
 							var fieldInfo = parentType.GetField(IContentEntrySource.ENTRY_FIELD_NAME,
 								BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 							fieldInfo?.FieldType.GetGenericArguments()[0]
-							   .DrawMonoScriptReference(ref _cacheMonoScript, GUILayout.Width(_cacheWidth!.Value));
+								.DrawMonoScriptReference(ref _cacheMonoScript, GUILayout.Width(_cacheWidth!.Value));
 						}
 					}
 					else
@@ -72,6 +76,55 @@ namespace Content.ScriptableObjects.Editor
 				DrawDefaultInspector();
 			}
 			ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+		}
+
+		private static GUIStyle _richButtonStyle;
+
+		private void DrawSyncButton()
+		{
+			if (target is not ContentScriptableObject so)
+				return;
+			if (!so.NeedSync())
+				return;
+
+			_richButtonStyle ??= new GUIStyle(GUI.skin.button)
+			{
+				richText  = true,
+				alignment = TextAnchor.MiddleCenter
+			};
+
+			var space = "       ";
+			var buttonLabel =
+				space +
+				"\ud83d\udea7".PercentSizeText(80) +
+				"  ".PercentSizeText(75) +
+				"Sync".PercentSizeText(110) +
+				space;
+			GUILayout.Space(10);
+			GUILayout.BeginHorizontal();
+			{
+				GUILayout.FlexibleSpace();
+
+				GUIHelper.PushColor(GetSyncButtonColor());
+
+				if (GUILayout.Button(buttonLabel, _richButtonStyle, GUILayout.Width(150), GUILayout.Height(35)))
+				{
+					so.Sync();
+					ContentDatabaseEditorUtility.AddToDatabase(so);
+				}
+
+				GUIHelper.PopColor();
+
+				GUILayout.FlexibleSpace();
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Space(10);
+		}
+
+		private static Color GetSyncButtonColor()
+		{
+			Sirenix.Utilities.Editor.GUIHelper.RequestRepaint();
+			return Color.HSVToRGB(Mathf.Cos((float) EditorApplication.timeSinceStartup + 1f) * 0.225f + 0.325f, 1, 1);
 		}
 	}
 
@@ -89,7 +142,7 @@ namespace Content.ScriptableObjects.Editor
 
 		static ContentEntryMonoScriptVisibilityMenu()
 		{
-			_enable = EditorPrefs.GetBool(PATH, false);
+			_enable                     =  EditorPrefs.GetBool(PATH, false);
 			EditorApplication.delayCall += () => { Toggle(_enable); };
 		}
 

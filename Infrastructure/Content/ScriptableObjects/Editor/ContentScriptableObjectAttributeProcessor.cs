@@ -9,8 +9,10 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
+using Clipboard = Fusumity.Utility.Clipboard;
 
 namespace Content.ScriptableObjects.Editor
 {
@@ -99,34 +101,8 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new PropertySpaceAttribute(4));
 					break;
 
-				case nameof(ContentScriptableObject.Sync):
-					if (member is MethodInfo method)
-					{
-						if (method.GetParameters().Length > 0)
-							break;
-					}
-
-					var space = "       ";
-					var buttonLabel = space +
-						"\ud83d\udea7".PercentSizeText(80) + //🚧
-						"  ".PercentSizeText(75) +
-						"Sync".PercentSizeText(110) +
-						space;
-
-					var buttonAttribute = new ButtonAttribute(buttonLabel, ButtonSizes.Large);
-					buttonAttribute.Stretch = false;
-					buttonAttribute.ButtonAlignment = 0.5f;
-					attributes.Add(buttonAttribute);
-
-					attributes.Add(new PropertySpaceAttribute(10, 10));
-					attributes.Add(new ShowIfAttribute(nameof(ContentScriptableObject.NeedSync)));
-					attributes.Add(new PropertyOrderAttribute(-100));
-					var className = nameof(ContentScriptableObjectAttributeProcessor);
-					attributes.Add(new GUIColorAttribute($"@{className}.{nameof(GetSyncButtonColor)}()"));
-					break;
-
 				case nameof(ContentScriptableObject.techDescription):
-					attributes.Add(new TextAreaAttribute(1,3));
+					attributes.Add(new TextAreaAttribute(1, 3));
 					attributes.Add(new EnableIfAttribute("_useTechDescription"));
 					attributes.Add(new ShowIfAttribute("ShowTechDescriptionEditor"));
 					break;

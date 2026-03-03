@@ -78,6 +78,58 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
+		public static void AddToDatabase(ContentScriptableObject scriptableObject)
+		{
+			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
+
+			MiscDatabaseScriptableObject miscDatabase = null;
+			foreach (var database in dbs)
+			{
+				if (IsMatch(database, scriptableObject))
+				{
+					Add(database);
+					return;
+				}
+
+				if (database is MiscDatabaseScriptableObject misc)
+					miscDatabase = misc;
+			}
+
+			Add(miscDatabase);
+
+			void Add(ContentDatabaseScriptableObject database)
+			{
+				database.scriptableObjects.Add(scriptableObject);
+				scriptableObject.SyncedUpdate();
+			}
+		}
+
+
+		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
+		{
+			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
+
+			MiscDatabaseScriptableObject miscDatabase = null;
+			foreach (var database in dbs)
+			{
+				if (IsMatch(database, scriptableObject))
+				{
+					Remove(database);
+					return;
+				}
+
+				if (database is MiscDatabaseScriptableObject misc)
+					miscDatabase = misc;
+			}
+
+			Remove(miscDatabase);
+
+			void Remove(ContentDatabaseScriptableObject database)
+			{
+				database.scriptableObjects.Remove(scriptableObject);
+			}
+		}
+
 		public static void SyncContent()
 		{
 			var scriptableObjects = AssetDatabaseUtility.GetAssets<ContentScriptableObject>()
@@ -218,8 +270,7 @@ namespace Content.ScriptableObjects.Editor
 
 						scriptableObject.Sync();
 
-						var type = scriptableObject.GetType();
-						if (type.Namespace == moduleName)
+						if (IsMatch(moduleName, scriptableObject))
 						{
 							if (!ValidateByCollisions(scriptableObject, scriptableObjects, ref collisionsMap))
 								collided = true;
@@ -261,6 +312,18 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			return !collided;
+		}
+
+		private static bool IsMatch(ContentDatabaseScriptableObject database, ContentScriptableObject scriptableObject)
+		{
+			var moduleName = database.GetType().Namespace;
+			return IsMatch(moduleName, scriptableObject);
+		}
+
+		private static bool IsMatch(string moduleName, ContentScriptableObject scriptableObject)
+		{
+			var type = scriptableObject.GetType();
+			return type.Namespace == moduleName;
 		}
 
 		private static bool SyncDatabase(this MiscDatabaseScriptableObject database,
@@ -482,7 +545,7 @@ namespace Content.ScriptableObjects.Editor
 
 			if (!collisionsMap.TryGetValue(type, out var checker))
 			{
-				checker = new HashSet<string>();
+				checker             = new HashSet<string>();
 				collisionsMap[type] = checker;
 			}
 
