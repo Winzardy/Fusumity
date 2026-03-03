@@ -64,7 +64,9 @@ namespace UI
 		private void UpdateLabel(string text)
 		{
 			_layout.label.text = text;
-			_layout.label.SetActive(!text.IsNullOrEmpty());
+			var active = !text.IsNullOrEmpty();
+			_layout.label.SetActive(active);
+			_layout.labelGroup.SetActiveSafe(active);
 		}
 
 		private void UpdateStyle()

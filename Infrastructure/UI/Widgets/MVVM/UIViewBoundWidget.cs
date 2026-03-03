@@ -1,0 +1,128 @@
+using System;
+using AssetManagement;
+using Fusumity.MVVM;
+
+namespace UI.MVVM
+{
+	public abstract class UIViewBoundWidget<TViewModel, TView, TLayout> : UISelfConstructedLayerWidget<TLayout, TViewModel>, IBoundedView
+		where TView : class, IView<TViewModel>
+		where TLayout : UIBaseLayout
+	{
+		/// <summary>
+		/// Dispose current view model every time the view is updated
+		/// and upon window opening/closing.
+		/// <br></br>
+		/// Don't do it if you're using view model as cache elsewhere.
+		/// </summary>
+		public abstract bool AutoDisposeViewModel { get; }
+
+		protected TView _view;
+		protected Action _onClose;
+
+		private string _layer;
+		private ComponentReferenceEntry<TLayout> _assetRef;
+		protected override ComponentReferenceEntry LayoutReference { get => _assetRef; }
+		protected override string Layer { get => _layer; }
+
+		public UIViewBoundWidget(string layer, ComponentReferenceEntry<TLayout> assetRef)
+		{
+			_layer = layer;
+			_assetRef = assetRef;
+		}
+
+		protected abstract TView CreateView(TLayout layout);
+
+		/// <summary>
+		/// Action will be called upon window deactivation
+		/// (it is hidden and removed from the queue).
+		/// </summary>
+		public void CallOnViewClosure(Action action)
+		{
+			_onClose = action;
+		}
+
+		protected sealed override void OnLayoutInstalled()
+		{
+			_view = CreateView(_layout);
+
+			OnViewCreated();
+		}
+
+		protected override void OnLayoutCleared()
+		{
+			if (_view == null)
+				return;
+
+			BeforeViewDisposed();
+			TryAutoDisposeViewModel();
+
+			if (_view is IDisposable disposable)
+				disposable.Dispose();
+			OnViewDisposed();
+
+			_view = null;
+		}
+
+		/// <summary>
+		/// Update currently open view. Is ignored if window is closed.
+		/// Call that manually where you need it.
+		/// </summary>
+		public void TryUpdateView(TViewModel viewModel)
+		{
+			if (!Active)
+				return;
+
+			TryAutoDisposeViewModel();
+			_view?.Update(viewModel);
+
+			OnViewUpdated();
+		}
+
+		protected override sealed void OnShow(ref TViewModel viewModel)
+		{
+			TryAutoDisposeViewModel();
+			_view.Update(viewModel);
+
+			OnViewShown();
+		}
+
+		protected override void OnReset(bool deactivate)
+		{
+			TryAutoDisposeViewModel();
+
+			_onClose?.Invoke();
+			OnViewHidden();
+
+			base.OnReset(deactivate);
+		}
+
+		protected virtual void OnViewCreated()
+		{
+		}
+
+		protected virtual void BeforeViewDisposed()
+		{
+		}
+
+		protected virtual void OnViewDisposed()
+		{
+		}
+
+		protected virtual void OnViewShown()
+		{
+		}
+
+		protected virtual void OnViewHidden()
+		{
+		}
+
+		protected virtual void OnViewUpdated()
+		{
+		}
+
+		protected void TryAutoDisposeViewModel()
+		{
+			_view?.ClearViewModel(AutoDisposeViewModel);
+		}
+	}
+}

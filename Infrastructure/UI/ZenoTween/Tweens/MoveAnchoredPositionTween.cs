@@ -14,10 +14,14 @@ namespace ZenoTween.Participant.Tweens
 
 		[Space]
 		[InlineToggle(nameof(useStartValue), "From")]
-		public Vector3 endValue = Vector3.zero;
+		[InlineButton(nameof(SetCurrentForEnd), "Current")]
+		public Vector2 endValue = Vector2.zero;
+
 		public bool useStartValue = false;
+
 		[ShowIf(nameof(useStartValue))]
-		public Vector3 startValue;
+		[InlineButton(nameof(SetCurrentForStart), "Current")]
+		public Vector2 startValue;
 
 		[Space]
 		public float duration = 0.5f;
@@ -40,6 +44,16 @@ namespace ZenoTween.Participant.Tweens
 		{
 			if (rectTransform == null)
 				owner.TryGetComponent(out rectTransform);
+		}
+
+		private void SetCurrentForEnd()
+		{
+			endValue = rectTransform.anchoredPosition;
+		}
+
+		private void SetCurrentForStart()
+		{
+			startValue = rectTransform.anchoredPosition;
 		}
 	}
 }

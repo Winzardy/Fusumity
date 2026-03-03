@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace UI.Tabs
 {
-	public class DefaultTabAnimator : BaseWidgetAnimator<UIBaseTabLayout, ITab>
+	public class DefaultTabAnimator : BaseWidgetAnimator<UIBaseTabLayout, ITab>, IWidgetAnimator<UIBaseTabLayout>
 	{
 		private const float OPENING_TIME = 0.4f;
 		private const float CLOSING_TIME = 0.5f;

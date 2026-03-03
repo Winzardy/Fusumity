@@ -8,7 +8,7 @@ namespace UI
 	{
 		protected override void OnFill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)
 		{
-			keyToSequenceFactory[WidgetAnimationType.SPINNING] = CreateSpinnerSequence;
+			keyToSequenceFactory[AnimationType.SPINNING] = CreateSpinnerSequence;
 		}
 
 		private Sequence CreateSpinnerSequence()

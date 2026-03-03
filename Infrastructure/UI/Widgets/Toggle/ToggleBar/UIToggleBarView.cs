@@ -8,7 +8,7 @@ namespace UI
 	{
 		private UIToggleButtonsCollection _collection;
 
-		public UIToggleBarView(UIToggleBarLayout layout, Func<IWidgetAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
+		public UIToggleBarView(UIToggleBarLayout layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 		{
 			AddDisposable(_collection = new UIToggleButtonsCollection(layout, animatorFactory));
 
@@ -47,9 +47,9 @@ namespace UI
 
 	public class UIToggleButtonsCollection : UIViewCollection<IToggleButtonViewModel, UIToggleButtonView, UIToggleButtonLayout>
 	{
-		private Func<IWidgetAnimator<UIToggleButtonLayout>> _animatorFactory;
+		private Func<IUIAnimator<UIToggleButtonLayout>> _animatorFactory;
 
-		public UIToggleButtonsCollection(UIToggleBarLayout layout, Func<IWidgetAnimator<UIToggleButtonLayout>> animatorFactory = null) :
+		public UIToggleButtonsCollection(UIToggleBarLayout layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) :
 			base(layout)
 		{
 			_animatorFactory = animatorFactory;

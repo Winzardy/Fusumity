@@ -6,6 +6,11 @@ using UnityEngine;
 
 namespace Fusumity.MVVM
 {
+	public interface IViewCollection<TViewModel>
+	{
+		void Update(IEnumerable<TViewModel> viewModels);
+	}
+
 	/// <summary>
 	/// Collection of views that expands dynamically using single template prefab,
 	/// and caches resulting instances in the underlying pool.
@@ -25,7 +30,7 @@ namespace Fusumity.MVVM
 		protected override void Update(TView view, TViewModel viewModel) => view.Update(viewModel);
 	}
 
-	public abstract class BaseViewCollection<TViewModel, TView, TViewLayout> : IDisposable, IEnumerable<TView>
+	public abstract class BaseViewCollection<TViewModel, TView, TViewLayout> : IDisposable, IEnumerable<TView>, IViewCollection<TViewModel>
 		where TView : class, IView<TViewModel>
 		where TViewLayout : MonoBehaviour
 	{

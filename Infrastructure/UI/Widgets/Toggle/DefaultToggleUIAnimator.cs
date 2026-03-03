@@ -8,8 +8,8 @@ namespace UI
 	{
 		protected override void OnFill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)
 		{
-			keyToSequenceFactory[WidgetAnimationType.TOGGLE_ENABLING] = CreateEnablingSequence;
-			keyToSequenceFactory[WidgetAnimationType.TOGGLE_DISABLING] = CreateDisablingSequence;
+			keyToSequenceFactory[AnimationType.TOGGLE_ENABLING] = CreateEnablingSequence;
+			keyToSequenceFactory[AnimationType.TOGGLE_DISABLING] = CreateDisablingSequence;
 		}
 
 		private Sequence CreateEnablingSequence()

@@ -1,6 +1,6 @@
 ﻿namespace UI
 {
-	public class WidgetAnimationType
+	public class AnimationType
 	{
 		public const string OPENING = AnimationLayer.VISIBILITY_NAME + AnimationLayer.SEPARATOR + "opening";
 		public const string CLOSING = AnimationLayer.VISIBILITY_NAME + AnimationLayer.SEPARATOR + "closing";

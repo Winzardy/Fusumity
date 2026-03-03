@@ -1,6 +1,7 @@
 ﻿using ActionBusSystem;
 using Fusumity.Attributes.Odin;
 using Game.UI;
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,9 @@ namespace UI
 		[OptionalSuffixLabel]
 		public TMP_Text label;
 
+		[Indent]
+		public GameObject[] labelGroup;
+
 		public Image icon;
 
 		[Space]
@@ -23,6 +27,7 @@ namespace UI
 
 		public UIAdBannerLayout adBanner;
 		public UILabeledIconLayout labeledIcon;
+
 
 		[Space]
 		[ConstDropdown(typeof(ActionBusElementType))]

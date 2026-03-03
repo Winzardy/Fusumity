@@ -9,8 +9,8 @@ namespace UI
 		protected override void OnFill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)
 		{
 			//TODO: проблема что он переопределяет, нужно подумать как решить кейс когда мы хотим разные режимы смешивания, как у Opening и Closing
-			keyToSequenceFactory[WidgetAnimationType.MARKER_ENABLING] = CreateEnablingSequence;
-			keyToSequenceFactory[WidgetAnimationType.MARKER_DISABLING] = CreateDisablingSequence;
+			keyToSequenceFactory[AnimationType.MARKER_ENABLING] = CreateEnablingSequence;
+			keyToSequenceFactory[AnimationType.MARKER_DISABLING] = CreateDisablingSequence;
 		}
 
 		protected override void OnCreateOpeningSequence(ref Sequence sequence)

@@ -45,7 +45,7 @@ namespace Game.UI
 
 			viewModel.LabelChanged += HandleLabelChanged;
 			viewModel.LabelColorChanged += UpdateLabelColor;
-			viewModel.LabelStyleChanged += HandleLabelStyleChanged;
+			viewModel.StyleChanged += HandleLabelStyleChanged;
 
 			viewModel.IconChanged += UpdateIcon;
 			viewModel.IconColorChanged += UpdateIconColor;
@@ -55,7 +55,7 @@ namespace Game.UI
 		{
 			viewModel.LabelChanged -= HandleLabelChanged;
 			viewModel.LabelColorChanged -= UpdateLabelColor;
-			viewModel.LabelStyleChanged -= HandleLabelStyleChanged;
+			viewModel.StyleChanged -= HandleLabelStyleChanged;
 
 			viewModel.IconChanged -= UpdateIcon;
 			viewModel.IconColorChanged -= UpdateIconColor;
@@ -81,7 +81,7 @@ namespace Game.UI
 		private void HandleLabelStyleChanged()
 		{
 			if (_layout.labelStyleSwitcher)
-				_layout.labelStyleSwitcher.Switch(ViewModel.LabelStyle);
+				_layout.labelStyleSwitcher.Switch(ViewModel.Style);
 		}
 
 		private void UpdateIcon()
@@ -136,7 +136,7 @@ namespace Game.UI
 	{
 		string Label { get; }
 		Color? LabelColor { get => null; }
-		string LabelStyle { get => null; }
+		string Style { get => null; }
 
 		UISpriteInfo Icon { get; }
 		Color? IconColor { get => null; }
@@ -145,7 +145,7 @@ namespace Game.UI
 
 		event Action LabelChanged;
 		event Action LabelColorChanged;
-		event Action LabelStyleChanged;
+		event Action StyleChanged;
 
 		event Action IconChanged;
 		event Action IconColorChanged;

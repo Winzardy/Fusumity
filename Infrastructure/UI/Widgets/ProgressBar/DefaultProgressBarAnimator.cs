@@ -9,7 +9,7 @@ namespace UI
 	{
 		protected override void OnFill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)
 		{
-			keyToSequenceFactory[WidgetAnimationType.PROGRESS_BAR] = CreateSequence;
+			keyToSequenceFactory[AnimationType.PROGRESS_BAR] = CreateSequence;
 		}
 
 		private Sequence CreateSequence()

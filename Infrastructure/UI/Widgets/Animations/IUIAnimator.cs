@@ -18,11 +18,9 @@ namespace UI
 	/// <summary>
 	/// Animator for open/close animations
 	/// </summary>
-	public interface IWidgetAnimator : IDisposable
+	public interface IZenoAnimator : IDisposable
 	{
 		public string LastKey { get; }
-
-		public void Setup(UIWidget widget);
 
 		public void Play(in WidgetAnimationArgs args, bool immediate = false);
 
@@ -33,7 +31,7 @@ namespace UI
 		public void Resume(string key);
 	}
 
-	public interface IWidgetAnimator<in TLayout> : IWidgetAnimator
+	public interface IUIAnimator<in TLayout> : IZenoAnimator
 		where TLayout : UIBaseLayout
 	{
 		public bool SetupLayout(TLayout layout);

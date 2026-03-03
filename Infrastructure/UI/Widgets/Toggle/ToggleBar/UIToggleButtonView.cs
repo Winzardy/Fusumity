@@ -9,9 +9,9 @@ namespace UI
 	public class UIToggleButtonView : UIView<IToggleButtonViewModel, UIToggleButtonLayout>
 	{
 		private UISpriteAssigner _iconAssigner;
-		private IWidgetAnimator<UIToggleButtonLayout> _animator;
+		private IUIAnimator<UIToggleButtonLayout> _animator;
 
-		public UIToggleButtonView(UIToggleButtonLayout layout, IWidgetAnimator<UIToggleButtonLayout> animator = null) : base(layout)
+		public UIToggleButtonView(UIToggleButtonLayout layout, IUIAnimator<UIToggleButtonLayout> animator = null) : base(layout)
 		{
 			AddDisposable(_iconAssigner = new UISpriteAssigner());
 			Subscribe(layout, HandleClicked);
@@ -57,7 +57,7 @@ namespace UI
 			if (_animator != null)
 			{
 				var key =
-					isToggled ? WidgetAnimationType.TOGGLE_ENABLING : WidgetAnimationType.TOGGLE_DISABLING;
+					isToggled ? AnimationType.TOGGLE_ENABLING : AnimationType.TOGGLE_DISABLING;
 
 				_animator.Play(key, immediate);
 			}
