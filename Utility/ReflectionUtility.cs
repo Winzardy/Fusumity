@@ -404,7 +404,7 @@ namespace Fusumity.Utility
 
 		public static FieldInfo[] GetConstantFieldInfos(this Type type)
 		{
-			if(type == null)
+			if (type == null)
 				return Array.Empty<FieldInfo>();
 
 			FieldInfo[] fieldInfos = type.GetFields(BindingFlags.Public |
@@ -430,18 +430,26 @@ namespace Fusumity.Utility
 			return values;
 		}
 
-		public static bool TryFindFieldRecursively(this object obj, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default) => TryFindFieldRecursively(obj.GetType(), name, out info, flags);
+		public static bool TryFindFieldRecursively(this object obj, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default)
+			=> TryFindFieldRecursively(obj.GetType(), name, out info, flags);
+
 		public static bool TryFindFieldRecursively(this Type targetType, string name, out FieldInfo info, BindingFlags flags = BindingFlags.Default)
+			=> TryFindMemberRecursively(targetType, (x) => x.GetField(name, flags), out info);
+
+		public static bool TryFindPropertyRecursively(this Type targetType, string name, out PropertyInfo info, BindingFlags flags = BindingFlags.Default)
+			=> TryFindMemberRecursively(targetType, (x) => x.GetProperty(name, flags), out info);
+
+		public static bool TryFindMemberRecursively<T>(this Type targetType, Func<Type, T> getter, out T info) where T : MemberInfo
 		{
 			var type = targetType;
 
 			do
 			{
-				var fi = type.GetField(name, flags);
+				var found = getter.Invoke(type);
 
-				if (fi != null)
+				if (found != null)
 				{
-					info = fi;
+					info = found;
 					return true;
 				}
 				else
@@ -508,6 +516,6 @@ namespace Fusumity.Utility
 		}
 
 		public void SetValue<TValue>(T obj, TValue value) => _field.SetValue(obj, value);
-		public TValue GetValue<TValue>(T obj) => (TValue) _field.GetValue(obj);
+		public TValue GetValue<TValue>(T obj) => (TValue)_field.GetValue(obj);
 	}
 }

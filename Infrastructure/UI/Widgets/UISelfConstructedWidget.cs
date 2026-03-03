@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using AssetManagement;
+using Fusumity.Reactive;
 using Sapientia;
 using Sapientia.Utility;
 using UnityEngine;
@@ -57,9 +58,7 @@ namespace UI
 		protected sealed override void OnDeactivatedInternal(bool immediate)
 		{
 			if (!suppressFlag.HasFlag(SuppressFlag.Events))
-			{
 				CancelSetupLayout();
-			}
 
 			base.OnDeactivatedInternal(immediate);
 		}
@@ -89,9 +88,7 @@ namespace UI
 			OnLayoutClearedInternal();
 			DisposeAndClearChildren();
 
-			if (_template)
-				UIFactory.Destroy(_layout);
-
+			UIFactory.Destroy(_layout);
 			_layout = null;
 		}
 
@@ -166,13 +163,22 @@ namespace UI
 		{
 			OnBeforeSetupTemplate();
 			var template = await LayoutReference.LoadAsync<TLayout>(cancellationToken);
-			cancellationToken.ThrowIfCancellationRequested();
+			if (cancellationToken.IsCancellationRequested)
+			{
+				LayoutReference.Release();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			ClearTemplateSafe();
 
 			await SetupTemplateAsync(template, cancellationToken);
+			if (cancellationToken.IsCancellationRequested)
+			{
+				LayoutClearingAndReleaseTemplateSafe();
+				cancellationToken.ThrowIfCancellationRequested();
+			}
+
 			OnAfterSetupTemplate();
-			cancellationToken.ThrowIfCancellationRequested();
 
 #if UNITY_EDITOR
 			_layout.prefab = LayoutReference.EditorAsset;
@@ -185,7 +191,11 @@ namespace UI
 			LayoutClearingAndReleaseTemplateSafe();
 
 			var layout = await UIFactory.CreateLayoutAsync(template, LayerRectTransform, LayoutPrefixName, cancellationToken);
-			cancellationToken.ThrowIfCancellationRequested();
+			if (cancellationToken.IsCancellationRequested)
+			{
+				UIFactory.Destroy(layout);
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			SetupLayout(layout);
 

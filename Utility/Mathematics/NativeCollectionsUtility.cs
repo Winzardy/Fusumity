@@ -10,6 +10,14 @@ namespace Fusumity.Utility
 {
 	public static unsafe class NativeCollectionsUtility
 	{
+		public static NativeArray<T> ToNativeArray<T>(this Sapientia.Collections.UnsafeList<T> list, Allocator allocator)
+			where T: unmanaged
+		{
+			var result = new NativeArray<T>(list.count, allocator);
+			list.GetSpan().CopyTo(result.GetSpan());
+			return result;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Fill<T>(this UnsafeList<T> list, in T value, int startIndex, int length) where T : unmanaged
 		{
@@ -136,7 +144,7 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Resize<T>(this ref NativeArray<T> array, int newSize, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory) where T : unmanaged
+		public static void Resize<T>(this NativeArray<T> array, int newSize, Allocator allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory) where T : unmanaged
 		{
 			var newArray = new NativeArray<T>(newSize, allocator, options);
 			MemoryExt.MemCopy<T>(array.GetSafePtr(), newArray.GetSafePtr(), array.Length.Min(newSize));
@@ -145,14 +153,14 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void EnsureLength(this ref NativeBitArray bitArray, int length, NativeArrayOptions options =  NativeArrayOptions.ClearMemory)
+		public static void EnsureLength(this ref UnsafeBitArray bitArray, int length, NativeArrayOptions options =  NativeArrayOptions.ClearMemory)
 		{
 			if (bitArray.Length < length)
 				bitArray.Resize(length, options);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void EnsureSet(this ref NativeBitArray bitArray, int pos, bool value)
+		public static void EnsureSet(this ref UnsafeBitArray bitArray, int pos, bool value)
 		{
 			if (bitArray.Length <= pos)
 				bitArray.Resize(pos + 1, NativeArrayOptions.ClearMemory);
@@ -160,9 +168,25 @@ namespace Fusumity.Utility
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool EnsureIsSet(this ref NativeBitArray bitArray, int pos)
+		public static void EnsureSet(this NativeBitArray bitArray, int pos, bool value)
+		{
+			if (bitArray.Length <= pos)
+				bitArray.Resize(pos + 1, NativeArrayOptions.ClearMemory);
+			bitArray.Set(pos, value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool EnsureIsSet(this ref UnsafeBitArray bitArray, int pos)
 		{
 			if (pos < 0 || bitArray.Length <= pos)
+				return false;
+			return bitArray.IsSet(pos);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool EnsureIsSet(this NativeBitArray bitArray, int pos)
+		{
+			if (pos < 0 || !bitArray.IsCreated || bitArray.Length <= pos)
 				return false;
 			return bitArray.IsSet(pos);
 		}

@@ -1,7 +1,6 @@
 ﻿using System;
 using Fusumity.MVVM;
 using Sapientia;
-using UnityEngine;
 
 namespace UI.Windows
 {

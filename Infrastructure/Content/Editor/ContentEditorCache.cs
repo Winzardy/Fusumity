@@ -38,7 +38,12 @@ namespace Content.Editor
 			_cache ??= new();
 			_cache.Clear();
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
-				_cache[scriptableObject.ToGuid()] = scriptableObject;
+				Register(scriptableObject);
+		}
+
+		public static void Register(ScriptableObject scriptableObject)
+		{
+			_cache[scriptableObject.ToGuid()] = scriptableObject;
 		}
 
 		public static void Refresh<T>(IUniqueContentEntrySource<T> source)

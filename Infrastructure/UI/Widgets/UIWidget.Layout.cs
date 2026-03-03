@@ -29,6 +29,8 @@ namespace UI
 		private bool _visible;
 		private bool _open;
 
+		private bool _layoutInstalled;
+
 		/// <summary>
 		/// Флаг отвечающий за подавление разного функционала
 		/// </summary>
@@ -236,20 +238,20 @@ namespace UI
 				if (visible)
 				{
 					startCallback = OnBeganOpeningInternal;
-					endCallback = OnEndedOpeningInternal;
+					endCallback   = OnEndedOpeningInternal;
 				}
 				else
 				{
 					startCallback = OnBeganClosingInternal;
-					endCallback = OnEndedClosingInternal;
+					endCallback   = OnEndedClosingInternal;
 				}
 			}
 
 			return new WidgetAnimationArgs
 			{
-				key = visible ? AnimationType.OPENING : AnimationType.CLOSING,
+				key           = visible ? AnimationType.OPENING : AnimationType.CLOSING,
 				startCallback = startCallback,
-				endCallback = endCallback
+				endCallback   = endCallback
 			};
 		}
 
@@ -439,6 +441,14 @@ namespace UI
 		/// </remarks>
 		protected internal virtual void OnLayoutInstalledInternal()
 		{
+			if (_layoutInstalled)
+			{
+				GUIDebug.LogError("Layout is already installed!");
+				return;
+			}
+
+			_layoutInstalled = true;
+
 			_layout.SignalReceived += OnLayoutSignalReceivedInternal;
 			OnLayoutInstalled();
 		}
@@ -449,6 +459,11 @@ namespace UI
 		/// </remarks>
 		protected internal virtual void OnLayoutClearedInternal()
 		{
+			if (!_layoutInstalled)
+				return;
+
+			_layoutInstalled = false;
+
 			_layout.SignalReceived -= OnLayoutSignalReceivedInternal;
 			LayoutCleared?.Invoke(_layout);
 			OnLayoutCleared();

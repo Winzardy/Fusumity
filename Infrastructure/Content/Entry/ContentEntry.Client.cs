@@ -1,10 +1,32 @@
+#if !UNITY_EDITOR && CLIENT
+#define CONTENT_ENTRY_AUTO_REGISTER
+#endif
 using System;
+using UnityEngine;
 
 namespace Content
 {
-	public sealed partial class ContentEntry<T>
+	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver
 	{
 		public void SetValue(in T newValue) => ContentEditValue = newValue;
+
+		void ISerializationCallbackReceiver.OnBeforeSerialize()
+		{
+		}
+
+		void ISerializationCallbackReceiver.OnAfterDeserialize()
+		{
+#if CONTENT_ENTRY_AUTO_REGISTER
+			ContentManager.Register(this);
+#endif
+		}
+
+		~ContentEntry()
+		{
+#if CONTENT_ENTRY_AUTO_REGISTER
+			ContentManager.Unregister(this);
+#endif
+		}
 	}
 
 	public partial struct ContentEntry<T, TFilter> : IFilteredContentEntry

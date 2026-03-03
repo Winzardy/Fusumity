@@ -30,5 +30,15 @@ namespace Content.ScriptableObjects.Editor
 
 			return paths;
 		}
+
+		private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options)
+		{
+			var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(assetPath);
+
+			if (asset != null)
+				ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+
+			return AssetDeleteResult.DidNotDelete;
+		}
 	}
 }

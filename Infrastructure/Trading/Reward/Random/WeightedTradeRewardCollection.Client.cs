@@ -1,6 +1,7 @@
 #if CLIENT
 using System;
 using System.Collections.Generic;
+using Content;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Deterministic;
@@ -37,6 +38,7 @@ namespace Trading
 			return count.value > 1;
 		}
 
+		[ClientOnly]
 		public string visual;
 		public string VisualId { get => visual; }
 		ref readonly EvaluatedValue<Blackboard, int> ITradeRewardRepresentableWithCount.Count { get => ref count; }
