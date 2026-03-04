@@ -94,16 +94,6 @@ namespace Advertising
 		public event AdDisplayFinished AdDisplayFinished;
 	}
 
-	public enum AdPlacementType
-	{
-		Rewarded, //обычно это видео, но сейчас это могут быть еще и мини игры
-		Interstitial,
-
-		//Не стал поддерживать, можно добавить в будущем если это необходимо
-		//Banner
-		//Native
-	}
-
 	#region Rewarded Delegates
 
 	public delegate void RewardedClicked(AdPlacementEntry placement, object rawData = null);
