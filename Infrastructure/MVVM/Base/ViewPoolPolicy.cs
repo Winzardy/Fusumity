@@ -128,6 +128,9 @@ namespace Fusumity.MVVM
 			Func<TLayout, TView> activator,
 			Action<TView> destructor = null) : base(rootName, destructor)
 		{
+			if (prefab == null)
+				throw new NullReferenceException("Prefab cannot be null");
+
 			_prefab = prefab;
 			_activator = activator;
 			_viewName = typeof(TView).Name;
@@ -137,6 +140,9 @@ namespace Fusumity.MVVM
 			Func<TLayout, TView> activator,
 			Action<TView> destructor = null) : base(poolRoot, destructor)
 		{
+			if (prefab == null)
+				throw new NullReferenceException("Prefab cannot be null");
+
 			_prefab = prefab;
 			_activator = activator;
 			_viewName = typeof(TView).Name;
