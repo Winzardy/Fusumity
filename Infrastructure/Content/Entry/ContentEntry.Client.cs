@@ -2,7 +2,6 @@
 #define CONTENT_ENTRY_BUFFER
 #endif
 using System;
-using Content.Management;
 using UnityEngine;
 
 namespace Content
@@ -18,7 +17,7 @@ namespace Content
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 #if CONTENT_ENTRY_BUFFER
-			ContentEntryBuffer.Push(this);
+			Management.ContentEntryBuffer.Push(this);
 #endif
 		}
 	}
