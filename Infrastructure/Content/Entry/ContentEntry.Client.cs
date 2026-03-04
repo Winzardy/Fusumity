@@ -1,7 +1,8 @@
 #if !UNITY_EDITOR && CLIENT
-#define CONTENT_ENTRY_AUTO_REGISTER
+#define CONTENT_ENTRY_BUFFER
 #endif
 using System;
+using Content.Management;
 using UnityEngine;
 
 namespace Content
@@ -16,8 +17,8 @@ namespace Content
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			ContentManager.Register(this);
+#if CONTENT_ENTRY_BUFFER
+			ContentEntryBuffer.Push(this);
 #endif
 		}
 	}
