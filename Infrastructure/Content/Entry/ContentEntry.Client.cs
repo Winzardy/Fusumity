@@ -17,7 +17,7 @@ namespace Content
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 #if CONTENT_ENTRY_BUFFER
-			Management.ContentEntryBuffer.Push(this);
+			Management.ContentEntryBuffer.Add(this);
 #endif
 		}
 	}
