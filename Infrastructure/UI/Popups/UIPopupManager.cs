@@ -117,7 +117,7 @@ namespace UI.Popups
 
 		internal bool IsActive(string id)
 		{
-			if (_current.Id == id && _current.Active)
+			if (_current.Id == id)
 				return true;
 
 			foreach (var (popup, _) in _queue)
@@ -208,7 +208,15 @@ namespace UI.Popups
 
 		internal void Update(IPopup popup, object newArgs)
 		{
-			var immediate = popup.Active;
+			var immediate = popup.Open;
+
+			if (_current == popup)
+			{
+				popup.Hide(true, true);
+				popup.Show(newArgs, immediate);
+				return;
+			}
+
 			foreach (var (standalonePopup, _) in _standalones)
 			{
 				if (standalonePopup != popup)
@@ -217,13 +225,6 @@ namespace UI.Popups
 				popup.Hide(true, true);
 				popup.Show(newArgs, immediate);
 				_standalones[popup] = newArgs;
-				return;
-			}
-
-			if (_current == popup)
-			{
-				popup.Hide(true, true);
-				popup.Show(newArgs, immediate);
 				return;
 			}
 

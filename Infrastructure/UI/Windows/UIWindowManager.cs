@@ -146,7 +146,7 @@ namespace UI.Windows
 		{
 			if (TryGet<T>(out var window))
 			{
-				if (_current.window == window && _current.window.Active)
+				if (_current.window == window)
 					return true;
 
 				if (_queue.Contains(window))
@@ -158,7 +158,7 @@ namespace UI.Windows
 
 		internal bool IsActive(string id)
 		{
-			if (_current.window?.Id == id && _current.window!.IsActive())
+			if (_current.window?.Id == id)
 				return true;
 
 			foreach (var (window, _) in _queue)

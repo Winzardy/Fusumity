@@ -151,7 +151,7 @@ namespace UI.Screens
 		{
 			if (TryGet<T>(out var screen))
 			{
-				if (_current == screen && _current.Active)
+				if (_current == screen)
 					return true;
 
 				if (_queue.Contains(screen))

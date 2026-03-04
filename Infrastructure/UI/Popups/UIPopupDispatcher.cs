@@ -66,7 +66,7 @@ namespace UI
 		/// </summary>
 		public bool IsActive<T>(T popup)
 			where T : UIWidget, IPopup
-			=> _manager.IsActive<T>(popup);
+			=> _manager.IsActive(popup);
 
 		public bool IsActive(string id)
 			=> _manager.IsActive(id);
