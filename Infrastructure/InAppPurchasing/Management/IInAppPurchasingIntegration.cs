@@ -103,13 +103,6 @@ namespace InAppPurchasing
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 	}
 
-	public enum IAPProductType
-	{
-		Consumable,
-		NonConsumable,
-		Subscription
-	}
-
 	#region Delegates
 
 	/// <param name="live">
