@@ -20,13 +20,6 @@ namespace Content
 			ContentManager.Register(this);
 #endif
 		}
-
-		~ContentEntry()
-		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			ContentManager.Unregister(this);
-#endif
-		}
 	}
 
 	public partial struct ContentEntry<T, TFilter> : IFilteredContentEntry
