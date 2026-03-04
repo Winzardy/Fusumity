@@ -132,17 +132,4 @@ namespace InAppPurchasing
 	public delegate void PromotionalPurchaseIntercepted(IAPProductEntry product, object rawData = null);
 
 	#endregion
-
-	public struct PurchaseReceipt
-	{
-		public IAPProductType productType;
-		public string productId;
-
-		public IAPBillingEntry billing;
-
-		public string transactionId;
-		public string receipt;
-
-		public bool isRestored;
-	}
 }
