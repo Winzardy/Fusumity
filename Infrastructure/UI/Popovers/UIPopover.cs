@@ -153,7 +153,7 @@ namespace UI.Popovers
 
 		void IPopover.Attach(UIWidget host, RectTransform customAnchor = null)
 		{
-			_host = host;
+			_host         = host;
 			_customAnchor = customAnchor;
 
 			UpdateParentTransformBindSafe();
@@ -165,7 +165,7 @@ namespace UI.Popovers
 
 		void IPopover.Detach()
 		{
-			_host = null;
+			_host         = null;
 			_customAnchor = null;
 
 			UpdateParentTransformBindSafe();
@@ -175,6 +175,8 @@ namespace UI.Popovers
 
 		void IPopover.Show(object boxedArgs)
 		{
+			TryResetInternal();
+
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -202,13 +204,7 @@ namespace UI.Popovers
 
 		protected sealed override void OnEndedClosingInternal()
 		{
-			if (_resetting.HasValue)
-			{
-				if (_resetting.Value)
-					Reset(false);
-
-				_resetting = null;
-			}
+			TryResetInternal();
 
 			base.OnEndedClosingInternal();
 		}
@@ -264,6 +260,17 @@ namespace UI.Popovers
 
 			_layout.transform
 				.SetParent(parentRectTransform, false);
+		}
+
+		private void TryResetInternal()
+		{
+			if (!_resetting.TryGetValue(out var resetting))
+				return;
+
+			if (resetting)
+				Reset(false);
+
+			_resetting = null;
 		}
 	}
 }
