@@ -139,6 +139,8 @@ namespace UI.Windows
 
 		void IWindow.Show(object boxedArgs, bool immediate = false)
 		{
+			TryResetInternal();
+
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -199,13 +201,7 @@ namespace UI.Windows
 
 		protected sealed override void OnEndedClosingInternal()
 		{
-			if (_resetting.TryGetValue(out var reset))
-			{
-				if (reset)
-					Reset(false);
-
-				_resetting = null;
-			}
+			TryResetInternal();
 
 			base.OnEndedClosingInternal();
 		}
@@ -288,6 +284,17 @@ namespace UI.Windows
 					$"Passed wrong args ({boxedArgs.GetType()}) to window of type [{GetType()}] (need type: {typeof(TArgs)})");
 
 			return args;
+		}
+
+		private void TryResetInternal()
+		{
+			if (!_resetting.TryGetValue(out var resetting))
+				return;
+
+			if (resetting)
+				Reset(false);
+
+			_resetting = null;
 		}
 	}
 }

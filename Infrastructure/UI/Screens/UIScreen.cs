@@ -152,6 +152,8 @@ namespace UI.Screens
 
 		void IScreen.Show(object boxedArgs)
 		{
+			TryResetInternal();
+
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -210,13 +212,7 @@ namespace UI.Screens
 
 		protected sealed override void OnEndedClosingInternal()
 		{
-			if (_resetting.HasValue)
-			{
-				if (_resetting.Value)
-					Reset(false);
-
-				_resetting = null;
-			}
+			TryResetInternal();
 
 			base.OnEndedClosingInternal();
 		}
@@ -238,6 +234,17 @@ namespace UI.Screens
 		}
 
 		public Type GetArgsType() => typeof(TArgs);
+
+		private void TryResetInternal()
+		{
+			if (!_resetting.TryGetValue(out var resetting))
+				return;
+
+			if (resetting)
+				Reset(false);
+
+			_resetting = null;
+		}
 
 		protected override string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Sapientia.Utility;
 using System.Collections.Generic;
 using Fusumity.Utility;
 

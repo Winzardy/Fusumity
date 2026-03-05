@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Fusumity.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using UnityEngine;
 using Object = UnityEngine.Object;
 

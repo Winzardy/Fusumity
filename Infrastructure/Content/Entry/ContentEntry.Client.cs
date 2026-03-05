@@ -1,5 +1,5 @@
 #if !UNITY_EDITOR && CLIENT
-#define CONTENT_ENTRY_AUTO_REGISTER
+#define CONTENT_ENTRY_BUFFER
 #endif
 using System;
 using UnityEngine;
@@ -16,15 +16,8 @@ namespace Content
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			ContentManager.Register(this);
-#endif
-		}
-
-		~ContentEntry()
-		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			ContentManager.Unregister(this);
+#if CONTENT_ENTRY_BUFFER
+			ContentEntryBuffer.Add(this);
 #endif
 		}
 	}
@@ -41,10 +34,10 @@ namespace Content
 	/// </summary>
 	public interface IFilteredContentEntry
 	{
-		public IContentEntry Entry { get; }
+		IContentEntry Entry { get; }
 
-		public Type Type { get; }
+		Type Type { get; }
 
-		public void SetValue(object value);
+		void SetValue(object value);
 	}
 }

@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Fusumity.Utility;
 using Sapientia.Extensions.Reflection;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
@@ -21,6 +21,8 @@ namespace Trading.Editor
 			switch (member.Name)
 			{
 				case nameof(TradeRewardProgression.stages):
+					if (!IsInsideCollection(parentProperty))
+						attributes.Add(new IndentAttribute(-1));
 					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 					{
 						FilterTypesFunction = $"@{nameof(TradeCostProgressionAttributeProcessor)}.{nameof(Filter)}($type, $property)"
@@ -40,9 +42,6 @@ namespace Trading.Editor
 					attributes.Add(new PropertySpaceAttribute(5));
 					break;
 			}
-
-			if (!IsInsideCollection(parentProperty))
-				attributes.Add(new IndentAttribute(-1));
 		}
 
 		public static bool Filter(Type type, InspectorProperty property)
