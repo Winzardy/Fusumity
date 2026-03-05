@@ -78,11 +78,31 @@ namespace UI.Popups
 			OnViewUpdated();
 		}
 
-		protected sealed override void OnShow(ref TViewModel viewModel)
+		protected sealed override void OnShow(in TViewModel viewModel)
 		{
 			TryAutoDisposeViewModel();
 			_view.Update(viewModel);
+
+			_view.OnShow();
+			OnViewShow();
+		}
+
+		protected override void OnHide(in TViewModel _)
+		{
+			_view.OnHide();
+			OnViewHide();
+		}
+
+		protected override void OnEndedOpening()
+		{
+			_view.OnShown();
 			OnViewShown();
+		}
+
+		protected override void OnEndedClosing()
+		{
+			_view.OnHidden();
+			OnViewHidden();
 		}
 
 		protected override void OnReset(bool deactivate)
@@ -107,7 +127,15 @@ namespace UI.Popups
 		{
 		}
 
+		protected virtual void OnViewShow()
+		{
+		}
+
 		protected virtual void OnViewShown()
+		{
+		}
+
+		protected virtual void OnViewHide()
 		{
 		}
 

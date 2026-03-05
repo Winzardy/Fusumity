@@ -11,7 +11,7 @@ namespace UI
 	/// <summary>
 	/// Детектор тапа по области (rect)
 	/// </summary>
-	public class UIBaseRectTapDetector : IDisposable
+	public class UIRectTapDetector : IDisposable
 	{
 		private IInputReader _inputReader;
 
@@ -25,7 +25,7 @@ namespace UI
 		private bool _subscribed;
 		private bool _active = true;
 
-		public UIBaseRectTapDetector(
+		public UIRectTapDetector(
 			IInputReader inputReader,
 			RectTransform rect,
 			Action outOfBoundsCallback = null,
@@ -37,7 +37,7 @@ namespace UI
 			SetInputReader(inputReader);
 		}
 
-		public UIBaseRectTapDetector(
+		public UIRectTapDetector(
 			RectTransform rect,
 			Action outOfBoundsCallback = null,
 			Action inBoundsCallback = null,
@@ -91,7 +91,7 @@ namespace UI
 				_rects.Remove(rect);
 		}
 
-		protected void SetInputReader(IInputReader inputReader)
+		public void SetInputReader(IInputReader inputReader)
 		{
 			TryClearInputReader();
 

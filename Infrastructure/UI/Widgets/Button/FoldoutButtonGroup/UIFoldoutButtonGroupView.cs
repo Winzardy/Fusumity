@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Fusumity.MVVM;
 using Fusumity.MVVM.UI;
+using InputManagement;
 
 namespace UI.FoldoutButtonGroup
 {
@@ -9,13 +11,19 @@ namespace UI.FoldoutButtonGroup
 		private UIToggleButtonView _toggle;
 		private UIStatefulButtonCollection _items;
 
-		private UIAnimator<UIFoldoutButtonGroupLayout> _animator;
+		private UIRectTapDetector _tapDetector;
 
 		public UIFoldoutButtonGroupView(UIFoldoutButtonGroupLayout layout) : base(layout)
 		{
-			AddDisposable(_items = new UIStatefulButtonCollection(layout.items));
+			AddDisposable(_items  = new UIStatefulButtonCollection(layout.items));
 			AddDisposable(_toggle = new UIToggleButtonView(layout.toggle));
-			AddDisposable(_animator = new UIAnimator<UIFoldoutButtonGroupLayout>(layout));
+			AddDisposable(_tapDetector = new UIRectTapDetector
+				(
+					layout.rectTransform,
+					HandleOutOfBoundsClicked,
+					rects: _layout.items.rectTransform
+				)
+			);
 		}
 
 		protected override void OnUpdate(IFoldoutButtonGroupViewModel viewModel)
@@ -27,25 +35,17 @@ namespace UI.FoldoutButtonGroup
 
 			_toggle.Update(viewModel.Toggle);
 
-			UpdateGroup(true);
-			viewModel.Toggle.ToggleStateChanged += HandleToggleStateChanged;
+			_tapDetector.SetInputReader(viewModel.InputReader);
 		}
 
 		protected override void OnClear(IFoldoutButtonGroupViewModel viewModel)
 		{
 			viewModel.ItemsUpdated -= HandleItemsUpdated;
-
-			viewModel.Toggle.ToggleStateChanged -= HandleToggleStateChanged;
 		}
 
 		protected override void OnNullViewModel()
 		{
 			SetActive(false);
-		}
-
-		private void HandleToggleStateChanged(bool immediate)
-		{
-			UpdateGroup(immediate);
 		}
 
 		private void HandleItemsUpdated()
@@ -58,21 +58,22 @@ namespace UI.FoldoutButtonGroup
 			_items.Update(ViewModel.Items);
 		}
 
-		private void UpdateGroup(bool immediate)
+		private void HandleOutOfBoundsClicked()
 		{
-			_animator.Play(ViewModel.Toggle.IsToggled
-					? AnimationType.OPENING
-					: AnimationType.CLOSING,
-				immediate);
+			ViewModel.ClickOutOfBounds();
 		}
 	}
 
 	public interface IFoldoutButtonGroupViewModel
 	{
+		IInputReader InputReader { get; }
+
 		IToggleButtonViewModel Toggle { get; }
 
 		IEnumerable<IStatefulButtonViewModel> Items { get; }
 
 		event Action ItemsUpdated;
+
+		void ClickOutOfBounds();
 	}
 }

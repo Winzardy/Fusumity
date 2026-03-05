@@ -46,7 +46,7 @@ namespace UI.Popovers
 		public static implicit operator PopoverToken(PopoverToken<T> token)
 			=> new(token._token, token._generation);
 
-		internal bool IsValid() => _token != null && _generation == _token.Generation;
+		public bool IsValid() => _token != null && _generation == _token.Generation;
 	}
 
 	public readonly struct PopoverToken : IDisposable
@@ -74,6 +74,8 @@ namespace UI.Popovers
 		}
 
 		internal bool IsValid() => _generation == _token.Generation;
+
+
 	}
 
 	public static class PopoverTokenExtensions
@@ -111,13 +113,19 @@ namespace UI.Popovers
 		public T Popover => _popover;
 		int IPopoverToken.Generation => _generation;
 
+		public event Action Released;
+
 		internal void Bind(T popover, PopoverReleaser<T> releaser)
 		{
 			_releaser = releaser;
 			_popover = popover;
 		}
 
-		void IPopoverToken.Release(bool immediate) => Release(immediate);
+		void IPopoverToken.Release(bool immediate)
+		{
+			Released?.Invoke();
+			Release(immediate);
+		}
 
 		private void Release(bool immediate = false)
 		{

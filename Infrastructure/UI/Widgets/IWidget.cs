@@ -21,6 +21,7 @@ namespace UI
 		public bool Open { get; }
 
 		public RectTransform RectTransform { get; }
+		public UIBaseLayout BaseLayout { get; }
 
 		public event WidgetShownDelegate Shown;
 		public event WidgetHiddenDelegate Hidden;

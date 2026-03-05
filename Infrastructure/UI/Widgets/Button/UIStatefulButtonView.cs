@@ -43,7 +43,7 @@ namespace UI
 			UpdateStyle();
 			UpdateInteractable();
 
-			viewModel.StyleChanged += UpdateStyle;
+			viewModel.StyleChanged        += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
 		}
 
@@ -52,7 +52,7 @@ namespace UI
 			if (_layout.label != null)
 				viewModel.Label.Release();
 
-			viewModel.StyleChanged -= UpdateStyle;
+			viewModel.StyleChanged        -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
 		}
 

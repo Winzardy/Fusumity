@@ -4,9 +4,8 @@ using UnityEngine;
 
 namespace UI
 {
-	public class UIWidgetPopoverShowPolicy : IPopoverShowPolicy
+	public class DefaultWidgetPopoverShowPolicy : IAutoDisposePopoverShowPolicy
 	{
-		private PopoverToken _token;
 		private UIWidget _widget;
 		private RectTransform _customAnchor;
 
@@ -24,9 +23,7 @@ namespace UI
 		public event Action AnchorUpdated;
 		public event PopoverDelegate Disposed;
 
-		public IPopover Popover { get => _token.Popover; }
-
-		public UIWidgetPopoverShowPolicy(UIWidget widget, RectTransform customAnchor = null)
+		public DefaultWidgetPopoverShowPolicy(UIWidget widget, RectTransform customAnchor = null)
 		{
 			_widget       = widget;
 			_customAnchor = customAnchor;
@@ -43,7 +40,9 @@ namespace UI
 		{
 			Disposed?.Invoke(false);
 
-			_widget.Shown -= HandleShown;
+			_widget.Shown           -= HandleShown;
+			_widget.LayoutInstalled -= HandleLayoutInstalled;
+			_widget.LayoutCleared   -= HandleLayoutCleared;
 
 			if (_widget.BaseLayout != null)
 				_widget.BaseLayout.BeforeDestroy -= HandleBeforeDestroy;
@@ -67,12 +66,6 @@ namespace UI
 		private void HandleShown(IWidget widget)
 		{
 			Shown?.Invoke(false);
-		}
-
-		public void Bind<T>(PopoverToken<T> token)
-			where T : UIWidget, IPopover
-		{
-			_token = token;
 		}
 	}
 }

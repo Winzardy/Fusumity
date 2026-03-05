@@ -19,8 +19,10 @@ namespace UI
 		{
 		}
 
-		public UIWidget(TLayout layout)
+		public UIWidget(TLayout layout, string layer = null)
 		{
+			if (layer != null)
+				SetLayer(layer);
 			SetupLayout(layout);
 			Initialize();
 		}
@@ -148,7 +150,7 @@ namespace UI
 			else if (Active && !_clearedArgs)
 				OnHide(); //Отписка со старым args!
 
-			_args = default;
+			_args        = default;
 			_clearedArgs = true;
 
 			base.OnReset(deactivate);

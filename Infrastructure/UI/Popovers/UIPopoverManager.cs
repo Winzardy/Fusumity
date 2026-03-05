@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sapientia.Utility;
@@ -20,6 +21,13 @@ namespace UI.Popovers
 		event Action AnchorUpdated;
 
 		event PopoverDelegate Disposed;
+	}
+
+	/// <summary>
+	/// Будет диспоузится вместе с токеном...
+	/// </summary>
+	public interface IAutoDisposePopoverShowPolicy : IPopoverShowPolicy
+	{
 	}
 
 	public delegate void PopoverDelegate(bool immediate);
@@ -58,7 +66,7 @@ namespace UI.Popovers
 			_cts?.Trigger();
 		}
 
-		internal void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args)
+		internal void Show<T>(ref PopoverToken<T> token, [NotNull] IPopoverShowPolicy policy, object args, bool immediate = false)
 			where T : UIWidget, IPopover
 		{
 			if (token.IsValid() && token.Popover.Visible)
@@ -69,8 +77,11 @@ namespace UI.Popovers
 
 			var pooledToken = Pool<PooledPopoverToken<T>>.Get();
 
+			if (policy is IAutoDisposePopoverShowPolicy)
+				pooledToken.Released += OnTokenReleased;
+
 			if (policy.IsShown)
-				ShowInternal(false);
+				ShowInternal(immediate);
 
 			policy.Shown         += OnPolicyShown;
 			policy.Hidden        += OnPolicyHidden;
@@ -78,6 +89,12 @@ namespace UI.Popovers
 			policy.Disposed      += OnPolicyDisposed;
 
 			token = pooledToken;
+
+			void OnTokenReleased()
+			{
+				Clear(false);
+				policy.Dispose();
+			}
 
 			void OnPolicyShown(bool immediate) => ShowInternal(immediate);
 			void OnPolicyHidden(bool immediate) => HideInternal(immediate);
@@ -106,6 +123,9 @@ namespace UI.Popovers
 
 			void Clear(bool immediate)
 			{
+				if (policy is IAutoDisposePopoverShowPolicy)
+					pooledToken.Released -= OnTokenReleased;
+
 				HideInternal(immediate);
 
 				policy.Shown         -= OnPolicyShown;

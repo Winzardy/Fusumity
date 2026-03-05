@@ -30,33 +30,32 @@ namespace UI
 			_manager = null;
 		}
 
-		public UIWidgetPopoverShowPolicy Show<T>(ref PopoverToken<T> popoverToken,
+		public void Show<T>(ref PopoverToken<T> popoverToken,
 			UIWidget host,
 			object args = null,
-			RectTransform customAnchor = null)
+			RectTransform customAnchor = null,
+			bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var policy = new UIWidgetPopoverShowPolicy(host, customAnchor);
-			Show(ref popoverToken, policy, args);
-			return policy;
+			var policy = new DefaultWidgetPopoverShowPolicy(host, customAnchor);
+			Show(ref popoverToken, policy, args, immediate);
 		}
 
-		public UIWidgetPopoverShowPolicy Show<T>(UIWidget host,
+		public PopoverToken<T> Show<T>(UIWidget host,
 			object args = null,
-			RectTransform customAnchor = null)
+			RectTransform customAnchor = null,
+			bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var policy = new UIWidgetPopoverShowPolicy(host, customAnchor);
-			var token = Show<T>(policy, args);
-			policy.Bind(token);
-			return policy;
+			var policy = new DefaultWidgetPopoverShowPolicy(host, customAnchor);
+			return Show<T>(policy, args, immediate);
 		}
 
-		public PopoverToken<T> Show<T>(IPopoverShowPolicy policy, object args = null)
+		public PopoverToken<T> Show<T>(IPopoverShowPolicy policy, object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
 		{
 			var token = new PopoverToken<T>();
-			_manager.Show(ref token, policy, args);
+			_manager.Show(ref token, policy, args, immediate);
 			return token;
 		}
 
@@ -65,9 +64,13 @@ namespace UI
 		/// В отличие от <see cref="Show{T}(UIWidget, UIBaseLayout, object)"/>,
 		/// повторные вызовы с тем же токеном позволяют переоткрывать поповер из одной и той же точки.
 		/// </summary>
-		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null)
+		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
-			=> _manager.Show(ref token, policy, args);
+			=> _manager.Show(ref token, policy, args, immediate);
+
+		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout baseLayout, object args = null, bool immediate = false)
+			where T : UIWidget, IPopover
+			=> Show(ref token, new DefaultPopoverShowPolicy(baseLayout), args, immediate);
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

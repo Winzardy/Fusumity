@@ -19,14 +19,14 @@ namespace UI.Popovers
 		Type GetArgsType();
 		internal object GetArgs();
 
+		void UpdateAnchor(RectTransform anchor);
+
 		internal void Initialize(in UIPopoverConfig config);
 
 		internal void Show(object args, bool immediate);
 
 		internal void Attach(RectTransform anchor);
 		internal void Detach();
-
-		internal void UpdateAnchor(RectTransform anchor);
 
 		internal event Action<IPopover> RequestedClose;
 
@@ -49,10 +49,10 @@ namespace UI.Popovers
 			if (_args is ICloseRequestor requestor)
 				requestor.CloseRequested += RequestCloseInternal;
 
-			OnShow(ref _args);
+			OnShow(in _args);
 		}
 
-		protected abstract void OnShow(ref TArgs args);
+		protected abstract void OnShow(in TArgs args);
 
 		protected sealed override void OnHide()
 		{
@@ -62,10 +62,10 @@ namespace UI.Popovers
 			if (_suppressHide)
 				return;
 
-			OnHide(ref _args);
+			OnHide(in _args);
 		}
 
-		protected virtual void OnHide(ref TArgs args)
+		protected virtual void OnHide(in TArgs args)
 		{
 		}
 
@@ -155,7 +155,7 @@ namespace UI.Popovers
 			ClearAnchor();
 		}
 
-		void IPopover.UpdateAnchor(RectTransform anchor)
+		public void UpdateAnchor(RectTransform anchor)
 		{
 			UpdateAnchorInternal(anchor);
 		}

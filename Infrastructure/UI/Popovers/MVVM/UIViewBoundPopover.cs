@@ -77,12 +77,31 @@ namespace UI.Popovers
 			OnViewUpdated();
 		}
 
-		protected override sealed void OnShow(ref TViewModel viewModel)
+		protected override sealed void OnShow(in TViewModel viewModel)
 		{
 			TryAutoDisposeViewModel();
 			_view.Update(viewModel);
 
+			_view.OnShow();
+			OnViewShow();
+		}
+
+		protected override void OnHide(in TViewModel _)
+		{
+			_view.OnHide();
+			OnViewHide();
+		}
+
+		protected override void OnEndedOpening()
+		{
+			_view.OnShown();
 			OnViewShown();
+		}
+
+		protected override void OnEndedClosing()
+		{
+			_view.OnHidden();
+			OnViewHidden();
 		}
 
 		protected override void OnReset(bool deactivate)
@@ -107,7 +126,15 @@ namespace UI.Popovers
 		{
 		}
 
+		protected virtual void OnViewShow()
+		{
+		}
+
 		protected virtual void OnViewShown()
+		{
+		}
+
+		protected virtual void OnViewHide()
 		{
 		}
 

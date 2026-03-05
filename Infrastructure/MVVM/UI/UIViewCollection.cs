@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using UI;
@@ -34,6 +35,7 @@ namespace Fusumity.MVVM.UI
 		public UIViewCollection(TViewLayout prefab, RectTransform root = null) : base(prefab, root)
 		{
 			_root = root;
+			_root.SetActive(false);
 		}
 
 		public void UpdateOrDeactivate(IEnumerable<TViewModel> collection)
@@ -41,7 +43,7 @@ namespace Fusumity.MVVM.UI
 			if (_root == null)
 				throw GUIDebug.Exception("Root can't be null!");
 
-			if (collection != null && !collection.IsNullOrEmpty())
+			if (!collection.IsNullOrEmpty())
 			{
 				_root.SetActive(true);
 				Update(collection);

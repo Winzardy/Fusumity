@@ -60,10 +60,10 @@ namespace UI.Windows
 			if (_layout.close != null && _args is ICloseAvailability availability)
 				_layout.close.SetActive(availability.CloseAvailable);
 
-			OnShow(ref _args);
+			OnShow(in _args);
 		}
 
-		protected abstract void OnShow(ref TArgs args);
+		protected abstract void OnShow(in TArgs args);
 
 		protected sealed override void OnHide()
 		{
