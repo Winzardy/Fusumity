@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Notifications",
-        "Fusumity"
+        "Fusumity",
+        "Sapientia"
     ],
     "includePlatforms": [
         "Editor"

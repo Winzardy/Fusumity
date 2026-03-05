@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Fusumity.Utility;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 
