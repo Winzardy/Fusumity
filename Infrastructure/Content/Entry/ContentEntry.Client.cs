@@ -17,7 +17,7 @@ namespace Content
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
 #if CONTENT_ENTRY_BUFFER
-			Management.ContentEntryBuffer.Add(this);
+			ContentEntryBuffer.Add(this);
 #endif
 		}
 	}
@@ -34,10 +34,10 @@ namespace Content
 	/// </summary>
 	public interface IFilteredContentEntry
 	{
-		public IContentEntry Entry { get; }
+		IContentEntry Entry { get; }
 
-		public Type Type { get; }
+		Type Type { get; }
 
-		public void SetValue(object value);
+		void SetValue(object value);
 	}
 }
