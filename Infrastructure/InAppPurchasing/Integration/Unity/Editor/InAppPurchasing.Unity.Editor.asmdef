@@ -2,11 +2,11 @@
     "name": "InAppPurchasing.Unity.Editor",
     "rootNamespace": "",
     "references": [
-        "InAppPurchasing.Unity",
-        "Generic",
-        "Fusumity",
-        "InAppPurchasing",
-        "GUID:17eb6086fb1b4f13b640ba906df3d2b7"
+        "GUID:bd19eebbdc0e4584bf6b263e36eb94d5",
+        "GUID:654382813eaecb745b280d09244d1037",
+        "GUID:fab36cbdbe761a64b85aac0ec85e5c7c",
+        "GUID:8ea5470c933a94df69ee968f36fab71c",
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0"
     ],
     "includePlatforms": [
         "Editor"
