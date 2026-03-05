@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Messaging;
+using Sapientia;
 using Sirenix.OdinInspector;
 
 namespace Booting.Messaging
@@ -16,7 +17,7 @@ namespace Booting.Messaging
 	{
 		public override int Priority => HIGH_PRIORITY;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var bus = new MessageBus();
 			Messenger.Set(bus);

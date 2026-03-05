@@ -23,11 +23,11 @@ namespace UI.Popovers
 			_pools = null;
 		}
 
-		public T Get<T>(UIWidget host, RectTransform customAnchor = null)
+		public T Get<T>(RectTransform anchor)
 			where T : UIWidget, IPopover
 		{
 			var pool = GetOrCreatePool<T>();
-			return pool.Get(host, customAnchor);
+			return pool.Get(anchor);
 		}
 
 		public void Release<T>(T popover)
@@ -42,7 +42,6 @@ namespace UI.Popovers
 		{
 			if (_pools.TryGetValue(typeof(T), out var rawPool))
 				return (PopoverPool<T>) rawPool;
-
 
 			var pool = new PopoverPool<T>(_factory);
 			_pools[typeof(T)] = pool;

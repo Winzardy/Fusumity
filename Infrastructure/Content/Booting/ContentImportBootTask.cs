@@ -4,6 +4,7 @@ using AssetManagement;
 using Content;
 using Content.ScriptableObjects;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sirenix.OdinInspector;
 
 namespace Booting.Content
@@ -19,7 +20,7 @@ namespace Booting.Content
 
 		public AssetLabelReferenceEntry label;
 
-		public override async UniTask RunAsync(CancellationToken token = default)
+		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var importer = new ClientContentImporter(label);
 			await ContentManager.PopulateAsync(importer, token);

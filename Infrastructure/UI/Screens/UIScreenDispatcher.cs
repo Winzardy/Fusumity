@@ -41,10 +41,6 @@ namespace UI.Screens
 			_manager.Hidden += OnHidden;
 		}
 
-		public UIScreenDispatcher()
-		{
-		}
-
 		public void Dispose()
 		{
 			_manager.Shown -= OnShown;

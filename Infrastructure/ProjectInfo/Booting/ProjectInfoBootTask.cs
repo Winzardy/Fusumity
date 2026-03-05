@@ -3,6 +3,7 @@ using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
 using ProjectInformation;
+using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace Booting.ProjectInformation
 	{
 		public override int Priority => HIGH_PRIORITY - 30;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var options = ContentManager.Get<ProjectInfoConfig>();
 			var platform = GetTargetPlatform();

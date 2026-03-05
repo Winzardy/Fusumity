@@ -43,19 +43,15 @@ namespace UI
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
-			_manager.Hidden += OnHidden;
+			_manager.Shown    += OnShown;
+			_manager.Hidden   += OnHidden;
 			_manager.Enqueued += OnEnqueued;
-		}
-
-		public UIPopupDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
-			_manager.Hidden -= OnHidden;
+			_manager.Shown    -= OnShown;
+			_manager.Hidden   -= OnHidden;
 			_manager.Enqueued -= OnEnqueued;
 
 			_manager = null;

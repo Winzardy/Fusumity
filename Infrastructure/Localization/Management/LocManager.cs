@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Sapientia;
 
 namespace Localization
@@ -17,7 +20,7 @@ namespace Localization
 		public static bool IsInitialized
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => resolver != null;
+			get => resolver != null && resolver.IsInitialized;
 		}
 
 		public static string CurrentLocaleCode => resolver.CurrentLocaleCode;
@@ -32,16 +35,13 @@ namespace Localization
 			remove => resolver.CurrentLocaleCodeUpdated -= value;
 		}
 
-		public static event Action LanguageChanged
-		{
-			add => resolver.LocaleUpdated += value;
-			remove => resolver.LocaleUpdated -= value;
-		}
+		public static event Action LanguageChanged { add => resolver.LocaleUpdated += value; remove => resolver.LocaleUpdated -= value; }
 
 		public static bool Has(string key) => resolver.Has(key);
 
 		/// <returns>Перевод слова по ключу (текущего выбранного языка)</returns>
 		public static string Get(string key, string defaultValue = null) => resolver.Get(key, defaultValue);
+
 		public static string GetFormatted(string key, params (string tag, string value)[] toReplace)
 		{
 			var localized = Get(key);
@@ -62,5 +62,8 @@ namespace Localization
 
 		public static IEnumerable<string> GetAllLanguages()
 			=> resolver.GetAllLanguages();
+
+		public static UniTask AddTable(LocTableReference tableRef, CancellationToken token)
+			=> resolver.AddTable(tableRef, token);
 	}
 }

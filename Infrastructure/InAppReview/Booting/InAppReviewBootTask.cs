@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Sirenix.OdinInspector;
 using InAppReview;
+using Sapientia;
 #if USE_GOOGLE_PLAY
 using InAppReview.GooglePlay;
 #elif UNITY_IOS
@@ -21,7 +22,7 @@ namespace Booting.InAppReview
 	{
 		public override int Priority => HIGH_PRIORITY - 130;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			IInAppReviewStorePlatform platform = null;
 

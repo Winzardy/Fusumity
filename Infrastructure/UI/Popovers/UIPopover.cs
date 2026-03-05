@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using AssetManagement;
+using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
-using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
@@ -12,20 +13,25 @@ namespace UI.Popovers
 {
 	public interface IPopover : IWidget, IIdentifiable
 	{
-		public void RequestClose();
-		public Type GetArgsType();
-		internal object GetArgs();
+		protected internal RectTransform Anchor { get; }
 
-		internal event Action<IPopover> RequestedClose;
+		void RequestClose();
+		Type GetArgsType();
+		internal object GetArgs();
 
 		internal void Initialize(in UIPopoverConfig config);
 
-		internal void Show(object args);
+		internal void Show(object args, bool immediate);
 
-		//TODO: -> UIWidget
-		protected internal UIWidget Host { get; }
-		internal void Attach(UIWidget parent, RectTransform customAnchor = null);
+		internal void Attach(RectTransform anchor);
 		internal void Detach();
+
+		internal void UpdateAnchor(RectTransform anchor);
+
+		internal event Action<IPopover> RequestedClose;
+
+		UniTask WaitOpeningAsync(CancellationToken? cancellationToken = null);
+		UniTask WaitClosingAsync(CancellationToken? cancellationToken = null);
 	}
 
 	public abstract class UIPopover<TLayout> : UIBasePopover<TLayout, EmptyArgs>
@@ -80,10 +86,7 @@ namespace UI.Popovers
 	public abstract class UIBasePopover<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopover
 		where TLayout : UIBasePopoverLayout
 	{
-		protected internal UIWidget _host;
-
-		[CanBeNull]
-		protected internal RectTransform _customAnchor;
+		protected internal RectTransform _anchor;
 
 		private const string LAYOUT_PREFIX_NAME = "[Popover] ";
 
@@ -98,24 +101,15 @@ namespace UI.Popovers
 
 		string IIdentifiable.Id => Id;
 
-		public ref TArgs vm => ref _args;
+		public ref TArgs ViewModel => ref _args;
 
 		private event Action<IPopover> RequestedClose;
 
 		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
-		UIWidget IPopover.Host => _host;
+		RectTransform IPopover.Anchor => _anchor;
 
-		protected override string Layer
-		{
-			get
-			{
-				if (_layout)
-					return _host?.Layer ?? LayerType.POPOVERS;
-
-				return LayerType.POPOVERS;
-			}
-		}
+		protected override string Layer => LayerType.POPOVERS;
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
@@ -151,10 +145,33 @@ namespace UI.Popovers
 			base.OnLayoutInstalledInternal();
 		}
 
-		void IPopover.Attach(UIWidget host, RectTransform customAnchor = null)
+		void IPopover.Attach(RectTransform anchor)
 		{
-			_host = host;
-			_customAnchor = customAnchor;
+			UpdateAnchorInternal(anchor);
+		}
+
+		void IPopover.Detach()
+		{
+			ClearAnchor();
+		}
+
+		void IPopover.UpdateAnchor(RectTransform anchor)
+		{
+			UpdateAnchorInternal(anchor);
+		}
+
+		private void UpdateAnchorInternal(RectTransform anchor)
+		{
+			if (anchor == null)
+			{
+				ClearAnchor();
+				return;
+			}
+
+			if (_anchor == anchor)
+				return;
+
+			_anchor = anchor;
 
 			UpdateParentTransformBindSafe();
 			if (_layout)
@@ -163,17 +180,16 @@ namespace UI.Popovers
 				_layoutResetRequest = true;
 		}
 
-		void IPopover.Detach()
+		private void ClearAnchor()
 		{
-			_host = null;
-			_customAnchor = null;
+			_anchor = null;
 
 			UpdateParentTransformBindSafe();
 			SetActive(false, true, false);
 			Reset(false);
 		}
 
-		void IPopover.Show(object boxedArgs)
+		void IPopover.Show(object boxedArgs, bool immediate)
 		{
 			if (boxedArgs != null)
 			{
@@ -196,7 +212,7 @@ namespace UI.Popovers
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
-			SetActive(true, suppressAnyFlag);
+			SetActive(true, suppressAnyFlag || immediate);
 			DisableSuppress();
 		}
 
@@ -258,12 +274,10 @@ namespace UI.Popovers
 			if (!_layout)
 				return;
 
-			var parentRectTransform = _customAnchor;
-			if (!_customAnchor)
-				parentRectTransform = _host?.RectTransform ?? UIDispatcher.GetLayer(Layer).rectTransform;
-
-			_layout.transform
-				.SetParent(parentRectTransform, false);
+			var parent = _anchor != null
+				? _anchor
+				: UIDispatcher.GetLayer(Layer).rectTransform;
+			_layout.transform.SetParent(parent, false);
 		}
 	}
 }

@@ -8,6 +8,22 @@ using UnityEngine;
 
 namespace UI.Popovers
 {
+	public interface IPopoverShowPolicy : IDisposable
+	{
+		RectTransform Anchor { get; }
+
+		bool IsShown { get; }
+
+		event PopoverDelegate Shown;
+		event PopoverDelegate Hidden;
+
+		event Action AnchorUpdated;
+
+		event PopoverDelegate Disposed;
+	}
+
+	public delegate void PopoverDelegate(bool immediate);
+
 	/// <summary>
 	/// Для управления используйте <see cref="UIPopoverDispatcher"/>
 	/// </summary>
@@ -42,58 +58,70 @@ namespace UI.Popovers
 			_cts?.Trigger();
 		}
 
-		/// <param name="host">Виджет к которому привязан поповер</param>
-		internal void Show<T>(ref PopoverToken<T> token, UIWidget host, object args, RectTransform customAnchor = null)
+		internal void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args)
 			where T : UIWidget, IPopover
 		{
 			if (token.IsValid() && token.Popover.Visible)
 			{
-				token.Popover.Show(args);
+				token.Popover.Show(args, true);
 				return;
 			}
 
-			var popover = _pool.Get<T>(host, customAnchor);
-			_active.Add(popover);
-			_queue.Add(popover);
+			var pooledToken = Pool<PooledPopoverToken<T>>.Get();
 
-			var pooledToken = GetToken(popover);
+			if (policy.IsShown)
+				ShowInternal(false);
 
-			popover.Show(args);
-			popover.Hidden += OnHidden;
-			popover.RequestedClose += OnRequestedClose;
-
-			host.LayoutCleared += OnSourceLayoutCleared;
+			policy.Shown         += OnPolicyShown;
+			policy.Hidden        += OnPolicyHidden;
+			policy.AnchorUpdated += OnPolicyAnchorUpdated;
+			policy.Disposed      += OnPolicyDisposed;
 
 			token = pooledToken;
 
-			// Принудительно убрать поповер в пул (что происходит при OnHidden)
-			void OnSourceLayoutCleared(UIBaseLayout _) => OnHidden(popover);
+			void OnPolicyShown(bool immediate) => ShowInternal(immediate);
+			void OnPolicyHidden(bool immediate) => HideInternal(immediate);
+			void OnPolicyAnchorUpdated() => pooledToken.Popover?.UpdateAnchor(policy.Anchor);
+			void OnPolicyDisposed(bool immediate) => Clear(immediate);
 
-			void OnHidden(IWidget _)
+			void ShowInternal(bool immediate)
 			{
-				host.LayoutCleared -= OnSourceLayoutCleared;
+				var popover = pooledToken.Popover;
+				if (popover == null)
+				{
+					popover = _pool.Get<T>(policy.Anchor);
+					pooledToken.Bind(popover, Release);
 
-				popover.Hidden -= OnHidden;
-				popover.RequestedClose -= OnRequestedClose;
+					popover.RequestedClose += HandlePopoverRequestedClose;
+					popover.Hidden         += OnPopoverHidden;
 
+					_active.Add(popover);
+					_queue.Add(popover);
+				}
+
+				popover.Show(args, immediate);
+			}
+
+			void HideInternal(bool immediate) => pooledToken.Popover?.SetActive(false, immediate);
+
+			void Clear(bool immediate)
+			{
+				HideInternal(immediate);
+
+				policy.Shown         -= OnPolicyShown;
+				policy.Hidden        -= OnPolicyHidden;
+				policy.Disposed      -= OnPolicyDisposed;
+				policy.AnchorUpdated -= OnPolicyAnchorUpdated;
+			}
+
+			void OnPopoverHidden(IWidget widget)
+			{
+				var popover = widget as IPopover;
+				popover!.Hidden -= OnPopoverHidden;
+
+				Clear(false);
 				ReleaseToken(pooledToken);
 			}
-
-			void OnRequestedClose(IPopover _)
-			{
-				if (!popover.Active)
-					return;
-
-				popover.SetActive(false); // -> приведет к OnHidden
-			}
-		}
-
-		private PooledPopoverToken<T> GetToken<T>(T popover)
-			where T : UIWidget, IPopover
-		{
-			var token = Pool<PooledPopoverToken<T>>.Get();
-			token.Bind(popover, Release);
-			return token;
 		}
 
 		private void ReleaseToken<T>(PooledPopoverToken<T> token)
@@ -101,13 +129,22 @@ namespace UI.Popovers
 		{
 			var popover = token.Popover;
 
-			if (!_active.Contains(popover))
+			if (!_active.Remove(popover))
 				return;
 
+			popover.RequestedClose -= HandlePopoverRequestedClose;
+
 			_pool.Release(popover);
-			_active.Remove(popover);
 			_queue.Remove(popover);
 			Pool<PooledPopoverToken<T>>.Release(token);
+		}
+
+		private void HandlePopoverRequestedClose(IPopover popover)
+		{
+			if (!popover.Active)
+				return;
+
+			popover.SetActive(false);
 		}
 
 		private void Release<T>(PooledPopoverToken<T> token, bool immediate)

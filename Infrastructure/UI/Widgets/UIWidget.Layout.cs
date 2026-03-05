@@ -61,6 +61,7 @@ namespace UI
 		public sealed override event WidgetLayoutClearedDelegate LayoutCleared;
 
 		public sealed override RectTransform RectTransform => _layout ? _layout.rectTransform : null;
+		public sealed override UIBaseLayout BaseLayout => Layout;
 
 		public UIWidget()
 		{

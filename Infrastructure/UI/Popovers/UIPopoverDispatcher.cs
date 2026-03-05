@@ -18,51 +18,56 @@ namespace UI
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
+			_manager.Shown  += OnShown;
 			_manager.Hidden += OnHidden;
-		}
-
-		public UIPopoverDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
+			_manager.Shown  -= OnShown;
 			_manager.Hidden -= OnHidden;
 
 			_manager = null;
 		}
 
-		/// <param name="customAnchor">
-		/// Якорь для позиционирования. Если <c>null</c>, используется <see cref="RectTransform"/>.
-		/// <paramref name="host"/>'а.
-		/// </param>
-		public PopoverToken<T> Show<T>(UIWidget host,
+		public UIWidgetPopoverShowPolicy Show<T>(ref PopoverToken<T> popoverToken,
+			UIWidget host,
 			object args = null,
 			RectTransform customAnchor = null)
 			where T : UIWidget, IPopover
 		{
+			var policy = new UIWidgetPopoverShowPolicy(host, customAnchor);
+			Show(ref popoverToken, policy, args);
+			return policy;
+		}
+
+		public UIWidgetPopoverShowPolicy Show<T>(UIWidget host,
+			object args = null,
+			RectTransform customAnchor = null)
+			where T : UIWidget, IPopover
+		{
+			var policy = new UIWidgetPopoverShowPolicy(host, customAnchor);
+			var token = Show<T>(policy, args);
+			policy.Bind(token);
+			return policy;
+		}
+
+		public PopoverToken<T> Show<T>(IPopoverShowPolicy policy, object args = null)
+			where T : UIWidget, IPopover
+		{
 			var token = new PopoverToken<T>();
-			_manager.Show(ref token, host, args, customAnchor);
+			_manager.Show(ref token, policy, args);
 			return token;
 		}
 
 		/// <summary>
 		/// Показывает поповер с возможностью переиспользовать ранее полученный токен.
-		/// В отличие от <see cref="Show{T}(UIWidget, IPopoverArgs, RectTransform)"/>,
+		/// В отличие от <see cref="Show{T}(UIWidget, UIBaseLayout, object)"/>,
 		/// повторные вызовы с тем же токеном позволяют переоткрывать поповер из одной и той же точки.
 		/// </summary>
-		/// <param name="customAnchor">
-		/// Якорь для позиционирования. Если <c>null</c>, используется <see cref="RectTransform"/>.
-		/// <paramref name="host"/>'а.
-		/// </param>
-		public void Show<T>(ref PopoverToken<T> token,
-			UIWidget host,
-			object args = null,
-			RectTransform customAnchor = null)
+		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null)
 			where T : UIWidget, IPopover
-			=> _manager.Show(ref token, host, args, customAnchor);
+			=> _manager.Show(ref token, policy, args);
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

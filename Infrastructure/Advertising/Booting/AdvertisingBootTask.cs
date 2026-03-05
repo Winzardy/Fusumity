@@ -11,6 +11,7 @@ using Sapientia;
 using Sirenix.OdinInspector;
 #if FAKE
 using Advertising.Fake;
+
 #else
 using Content;
 using Advertising.UnityLevelPlay;
@@ -33,7 +34,7 @@ namespace Booting.Advertising
 		private IAdvertisingService _offlineService;
 		private IAdvertisingIntegration _integration;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 #if FAKE
 			_integration = new FakeAdIntegration();

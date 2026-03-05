@@ -2,7 +2,7 @@ using Sirenix.OdinInspector;
 
 namespace UI.Popovers
 {
-	public abstract class UIViewBoundScreenLayout<TLayout> : UIBasePopoverLayout
+	public abstract class UIViewBoundPopoverLayout<TLayout> : UIBasePopoverLayout
 		where TLayout : UIBaseLayout
 	{
 		[BoxGroup]

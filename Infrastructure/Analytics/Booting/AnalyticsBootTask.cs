@@ -3,6 +3,7 @@ using System.Threading;
 using Analytics;
 using Content;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace Booting.Analytics
 
 		public bool @await;
 
-		public override async UniTask RunAsync(CancellationToken token = default)
+		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AnalyticsSettings>();
 			var isValidationEnabled = Application.isEditor || Debug.isDebugBuild;

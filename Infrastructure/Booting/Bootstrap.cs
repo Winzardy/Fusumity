@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
+using Sapientia;
 using Sapientia.Reflection;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -43,6 +44,7 @@ namespace Booting
 
 			var loadingTime = 0f;
 			string passedTimeStr;
+			using var blackboard = new Blackboard();
 			foreach (var task in tasks)
 			{
 				if (!task.Active)
@@ -50,7 +52,7 @@ namespace Booting
 
 				var sinceStartup = Time.realtimeSinceStartup;
 
-				await task.RunAsync(token);
+				await task.RunAsync(blackboard,token);
 
 				var passedTime = Time.realtimeSinceStartup - sinceStartup;
 				passedTimeStr = passedTime

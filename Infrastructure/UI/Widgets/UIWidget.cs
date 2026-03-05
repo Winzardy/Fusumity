@@ -46,6 +46,7 @@ namespace UI
 		protected virtual bool UseCustomReset => false;
 
 		public abstract RectTransform RectTransform { get; }
+		public abstract UIBaseLayout BaseLayout { get; }
 
 		public string Layer { get; protected set; }
 
@@ -186,7 +187,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет станет видимым
 		/// </summary>
-		public async UniTask WaitOpening(CancellationToken? cancellationToken = null)
+		public async UniTask WaitOpeningAsync(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{
@@ -209,7 +210,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет скроется
 		/// </summary>
-		public async UniTask WaitClosing(CancellationToken? cancellationToken = null)
+		public async UniTask WaitClosingAsync(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{

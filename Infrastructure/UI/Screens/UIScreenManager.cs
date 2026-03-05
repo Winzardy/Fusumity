@@ -1,7 +1,6 @@
-﻿using Fusumity.Utility;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using Fusumity.Utility;
 
 namespace UI.Screens
 {

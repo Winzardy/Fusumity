@@ -37,17 +37,13 @@ namespace UI.Windows
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
+			_manager.Shown  += OnShown;
 			_manager.Hidden += OnHidden;
-		}
-
-		public UIWindowDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
+			_manager.Shown  -= OnShown;
 			_manager.Hidden -= OnHidden;
 
 			_manager = null;
@@ -102,6 +98,7 @@ namespace UI.Windows
 		/// </summary>
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
+
 		public bool TryGet<T>(out T window) where T : UIWidget, IWindow => _manager.TryGet(out window);
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();

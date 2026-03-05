@@ -5,6 +5,7 @@ using Sirenix.OdinInspector;
 using Content;
 using Fusumity.Utility;
 using Notifications;
+using Sapientia;
 
 #if UNITY_ANDROID
 using Notifications.Android;
@@ -25,7 +26,7 @@ namespace Booting.Notifications
 
 		private INotificationPlatform _platform;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			_platform = new EditorNotificationPlatform();

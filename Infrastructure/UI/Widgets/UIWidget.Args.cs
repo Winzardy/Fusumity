@@ -98,13 +98,13 @@ namespace UI
 		public async UniTask ShowAsync(TArgs args, bool equals = true, CancellationToken? cancellationToken = null)
 		{
 			Show(in args, equals: equals);
-			await WaitOpening(cancellationToken);
+			await WaitOpeningAsync(cancellationToken);
 		}
 
 		public async UniTask HideAsync(bool reset = true, CancellationToken? cancellationToken = null)
 		{
 			Hide(false);
-			await WaitClosing(cancellationToken);
+			await WaitClosingAsync(cancellationToken);
 			if (reset)
 				Reset(false);
 		}
