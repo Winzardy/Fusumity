@@ -121,14 +121,14 @@ namespace Localization
 			=> LocalizationSettings.AvailableLocales.Locales.Select(x => x.LocaleName);
 
 		private void OnSelectedLocaleChanged(Locale locale)
-			=> SetLocaleAsync(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
+			=> LoadAndSetLocaleAsync(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
 
-		private async UniTask InitializeLocaleAsync(CancellationToken token = default) => await SetLocaleAsync(null, token);
+		private async UniTask InitializeLocaleAsync(CancellationToken token = default) => await LoadAndSetLocaleAsync(null, token);
 
-		private async UniTask SetLocaleAsync(Locale locale, CancellationToken token = default)
+		private async UniTask LoadAndSetLocaleAsync(Locale locale, CancellationToken token = default)
 		{
-			locale ??= LocalizationSettings.SelectedLocale;
 			var full = _currentLocale != locale;
+			locale ??= LocalizationSettings.SelectedLocale;
 			foreach (var reference in _refToHandle.Keys)
 			{
 				var currentHandle = _refToHandle[reference];
