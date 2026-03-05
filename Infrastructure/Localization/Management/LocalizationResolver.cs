@@ -46,6 +46,12 @@ namespace Localization
 
 		public async UniTask InitializeAsync(CancellationToken token = default)
 		{
+			if (_initialized)
+			{
+				LocalizationDebug.LogWarning("Already initialized!");
+				return;
+			}
+
 			await LocalizationSettings.InitializationOperation
 				.WithCancellation(token);
 			await InitializeLocaleAsync(token);
@@ -53,6 +59,14 @@ namespace Localization
 			LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
 
 			_initialized = true;
+		}
+
+		public void Dispose()
+		{
+			if (!_initialized)
+				return;
+
+			LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
 		}
 
 		public async UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token = default)
@@ -66,11 +80,6 @@ namespace Localization
 			{
 				LocalizationDebug.LogWarning("Already  exists a locale with ID: " + tableRef.id);
 			}
-		}
-
-		public void Dispose()
-		{
-			LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
 		}
 
 		internal bool Has(string key) => TryGet(key, out _);
