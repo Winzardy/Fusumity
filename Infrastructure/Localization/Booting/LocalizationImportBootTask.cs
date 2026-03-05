@@ -18,11 +18,25 @@ namespace Booting.Localization
 
 		public LocTableReference tableReference;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		public bool await;
+
+		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{
-			if (!LocManager.IsInitialized)
-				await UniTask.WaitUntil(() => LocManager.IsInitialized, cancellationToken: token);
-			await LocManager.AddTableAsync(tableReference, token);
+			if (@await)
+				await ImportAsync(blackboard, token);
+			else
+				ImportAsync(blackboard, token)
+					.Forget();
+		}
+
+		private async UniTask ImportAsync(Blackboard blackboard, CancellationToken token)
+		{
+			using (blackboard.Register(tableReference, tableReference))
+			{
+				if (!LocManager.IsInitialized)
+					await UniTask.WaitUntil(() => LocManager.IsInitialized, cancellationToken: token);
+				await LocManager.AddTableAsync(tableReference, token);
+			}
 		}
 	}
 }
