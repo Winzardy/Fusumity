@@ -48,19 +48,19 @@ namespace Localization
 		{
 			await LocalizationSettings.InitializationOperation
 				.WithCancellation(token);
-			await SetLocale(token);
+			await InitializeLocaleAsync(token);
 
 			LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
 
 			_initialized = true;
 		}
 
-		public async UniTask AddTable(LocTableReference tableRef, CancellationToken token = default)
+		public async UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token = default)
 		{
 			if (!_refToHandle.Contains(tableRef))
 			{
 				_refToHandle.SetOrAdd(tableRef, default);
-				await SetLocale(token);
+				await InitializeLocaleAsync(token);
 			}
 			else
 			{
@@ -121,35 +121,44 @@ namespace Localization
 			=> LocalizationSettings.AvailableLocales.Locales.Select(x => x.LocaleName);
 
 		private void OnSelectedLocaleChanged(Locale locale)
-			=> SetLocale(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
+			=> SetLocaleAsync(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
 
-		private async UniTask SetLocale(CancellationToken token = default) => await SetLocale(null, token);
+		private async UniTask InitializeLocaleAsync(CancellationToken token = default) => await SetLocaleAsync(null, token);
 
-		private async UniTask SetLocale(Locale locale, CancellationToken token = default)
+		private async UniTask SetLocaleAsync(Locale locale, CancellationToken token = default)
 		{
+			locale ??= LocalizationSettings.SelectedLocale;
+			var full = _currentLocale != locale;
 			foreach (var reference in _refToHandle.Keys)
 			{
+				var currentHandle = _refToHandle[reference];
+
+				// Тут пропускаем загрузку если и так загружено...
+				if (currentHandle.IsValid() && currentHandle.Status == AsyncOperationStatus.Succeeded && !full)
+					continue;
+
 				var handle = LocalizationSettings.StringDatabase.GetTableAsync(reference.id, locale);
 
 				await handle
 					.WithCancellation(token);
 
-				if (handle.Status != AsyncOperationStatus.Succeeded)
+				if (!handle.IsValid() || handle.Status != AsyncOperationStatus.Succeeded)
 				{
+					LocalizationDebug.LogError(
+						$"Not found table by name [ {reference} ] for locale [ {locale.LocaleName} ]",
+						this);
+
 					handle.ReleaseSafe();
-					return;
+					continue;
 				}
 
-				_refToHandle[reference].ReleaseSafe();
+				if (currentHandle.IsValid())
+					currentHandle.ReleaseSafe();
 
 				_refToHandle.SetOrAdd(reference, handle);
-
-				if (!handle.IsValid())
-					LocalizationDebug.LogError($"Not found table by name [ {reference} ] for locale [ {_currentLocale.LocaleName} ]",
-						this);
 			}
 
-			_currentLocale = LocalizationSettings.SelectedLocale;
+			_currentLocale = locale;
 			CurrentLocaleCodeUpdated?.Invoke(_currentLocale.Identifier.Code);
 			LocaleUpdated?.Invoke();
 

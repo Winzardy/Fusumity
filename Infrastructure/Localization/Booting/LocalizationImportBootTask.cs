@@ -22,7 +22,7 @@ namespace Booting.Localization
 		{
 			if (!LocManager.IsInitialized)
 				await UniTask.WaitUntil(() => LocManager.IsInitialized, cancellationToken: token);
-			await LocManager.AddTable(tableReference, token);
+			await LocManager.AddTableAsync(tableReference, token);
 		}
 	}
 }

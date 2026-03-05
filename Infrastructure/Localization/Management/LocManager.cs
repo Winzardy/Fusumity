@@ -63,7 +63,7 @@ namespace Localization
 		public static IEnumerable<string> GetAllLanguages()
 			=> resolver.GetAllLanguages();
 
-		public static UniTask AddTable(LocTableReference tableRef, CancellationToken token)
-			=> resolver.AddTable(tableRef, token);
+		public static UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token)
+			=> resolver.AddTableAsync(tableRef, token);
 	}
 }
