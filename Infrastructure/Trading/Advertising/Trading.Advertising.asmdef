@@ -2,7 +2,7 @@
     "name": "Trading.Advertising",
     "rootNamespace": "",
     "references": [
-        "GUID:6dec8a5bf86841e59bcb2c2957cbac16",
+        "Advertising",
         "GUID:bd10b8cc39d09ac4e9c31728752096c0",
         "GUID:5178fdc142b4c42dfa60a02d476ababc",
         "GUID:6a63a8ba787a4d3dbcde5dae5a8df517",
