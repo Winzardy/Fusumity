@@ -237,9 +237,9 @@ namespace UI
 		public static implicit operator bool(UIWidget widget) => widget != null;
 	}
 
-	public delegate void WidgetShownDelegate(IWidget widget);
+	public delegate void WidgetShownDelegate(IWidget widget, bool immediate = false);
 
-	public delegate void WidgetHiddenDelegate(IWidget widget);
+	public delegate void WidgetHiddenDelegate(IWidget widget, bool immediate = false);
 
 	public delegate void WidgetLayoutClearedDelegate([CanBeNull] UIBaseLayout layout);
 

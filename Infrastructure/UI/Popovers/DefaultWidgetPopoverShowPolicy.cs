@@ -32,6 +32,7 @@ namespace UI
 				widget.BaseLayout.BeforeDestroy += HandleBeforeDestroy;
 
 			_widget.Shown           += HandleShown;
+			_widget.Hidden          += HandleHidden;
 			_widget.LayoutInstalled += HandleLayoutInstalled;
 			_widget.LayoutCleared   += HandleLayoutCleared;
 		}
@@ -63,9 +64,14 @@ namespace UI
 			Hidden?.Invoke(true);
 		}
 
-		private void HandleShown(IWidget widget)
+		private void HandleShown(IWidget widget, bool immediate)
 		{
-			Shown?.Invoke(false);
+			Shown?.Invoke(immediate);
+		}
+
+		private void HandleHidden(IWidget widget, bool immediate)
+		{
+			Hidden?.Invoke(immediate);
 		}
 	}
 }

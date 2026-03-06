@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace UI.Popovers
 {
-	public interface IPopoverShowPolicy : IDisposable
+	public interface IPopoverShowPolicy
 	{
 		RectTransform Anchor { get; }
 
@@ -19,14 +19,12 @@ namespace UI.Popovers
 		event PopoverDelegate Hidden;
 
 		event Action AnchorUpdated;
-
-		event PopoverDelegate Disposed;
 	}
 
 	/// <summary>
 	/// Будет диспоузится вместе с токеном...
 	/// </summary>
-	public interface IAutoDisposePopoverShowPolicy : IPopoverShowPolicy
+	public interface IAutoDisposePopoverShowPolicy : IPopoverShowPolicy, IDisposable
 	{
 	}
 
@@ -86,20 +84,19 @@ namespace UI.Popovers
 			policy.Shown         += OnPolicyShown;
 			policy.Hidden        += OnPolicyHidden;
 			policy.AnchorUpdated += OnPolicyAnchorUpdated;
-			policy.Disposed      += OnPolicyDisposed;
 
 			token = pooledToken;
 
 			void OnTokenReleased()
 			{
 				Clear(false);
-				policy.Dispose();
+				if (policy is IAutoDisposePopoverShowPolicy disposablePolicy)
+					disposablePolicy.Dispose();
 			}
 
 			void OnPolicyShown(bool immediate) => ShowInternal(immediate);
 			void OnPolicyHidden(bool immediate) => HideInternal(immediate);
 			void OnPolicyAnchorUpdated() => pooledToken.Popover?.UpdateAnchor(policy.Anchor);
-			void OnPolicyDisposed(bool immediate) => Clear(immediate);
 
 			void ShowInternal(bool immediate)
 			{
@@ -130,16 +127,15 @@ namespace UI.Popovers
 
 				policy.Shown         -= OnPolicyShown;
 				policy.Hidden        -= OnPolicyHidden;
-				policy.Disposed      -= OnPolicyDisposed;
 				policy.AnchorUpdated -= OnPolicyAnchorUpdated;
 			}
 
-			void OnPopoverHidden(IWidget widget)
+			void OnPopoverHidden(IWidget widget, bool immediate)
 			{
 				var popover = widget as IPopover;
 				popover!.Hidden -= OnPopoverHidden;
 
-				Clear(false);
+				Clear(immediate);
 				ReleaseToken(pooledToken);
 			}
 		}
