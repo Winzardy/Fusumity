@@ -16,11 +16,12 @@ namespace Fusumity.Editor
 		public static Color objectFieldBackgroundColor
 		{
 			get => EditorGUIUtility.isProSkin
-					? new Color(40 / 256f, 40 / 256f, 40 / 256f, 1)
-					: new Color(237 / 256f, 237 / 256f, 237 / 256f, 1);
+				? new Color(40 / 256f, 40 / 256f, 40 / 256f, 1)
+				: new Color(237 / 256f, 237 / 256f, 237 / 256f, 1);
 		}
 
 		public static bool drawAssetReference = true;
+		public static bool drawInlineEditor = false;
 	}
 
 	public static partial class FusumityEditorGUILayout
@@ -124,13 +125,13 @@ namespace Fusumity.Editor
 			if (!EditorGUIUtility.hierarchyMode && useIndent)
 			{
 				var offset = SirenixEditorGUI.FoldoutWidth + 3;
-				position.x -= offset;
+				position.x     -= offset;
 				position.width += offset;
 			}
 
 			var origin = GUI.enabled;
 			GUI.enabled = true;
-			foldout = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
+			foldout     = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
 			GUI.enabled = origin;
 			if (SirenixEditorGUI.BeginFadeGroup(fadeGroupKey, foldout))
 			{
@@ -148,7 +149,7 @@ namespace Fusumity.Editor
 							EditorGUI.indentLevel--;
 					}
 					FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-					OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+					OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
 				}
 			}
 
@@ -178,10 +179,10 @@ namespace Fusumity.Editor
 			var clipboardToolbar = new GUIContent(string.Empty, null, $"{CLIPBOARD_TOOLBAR_PREFIX}{copiedText}");
 			if (drawButton)
 			{
-				clipboardButtonRect = clipboardButtonRect.AlignRight(18);
+				clipboardButtonRect        =  clipboardButtonRect.AlignRight(18);
 				clipboardButtonRect.height -= 2;
-				clipboardButtonRect.y += 1;
-				clipboardButtonRect.x -= 0.5f;
+				clipboardButtonRect.y      += 1;
+				clipboardButtonRect.x      -= 0.5f;
 
 				{
 					var originColor = GUI.color;
@@ -197,7 +198,7 @@ namespace Fusumity.Editor
 
 				if (rawMode)
 				{
-					clipboardButtonRect2 = clipboardButtonRect;
+					clipboardButtonRect2   =  clipboardButtonRect;
 					clipboardButtonRect2.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					var originColor = GUI.color;
 					{
@@ -214,13 +215,13 @@ namespace Fusumity.Editor
 			var rawModeToolbar = new GUIContent(string.Empty, null, "Raw Mode");
 			var rawModeButtonRect = clipboardButtonRect.AlignRight(drawButton ? 36 : 18);
 			rawModeButtonRect.height -= 2;
-			rawModeButtonRect.y += 0.5f;
-			rawModeButtonRect.x -= 0.5f;
+			rawModeButtonRect.y      += 0.5f;
+			rawModeButtonRect.x      -= 0.5f;
 			if (!rawMode)
 			{
-				rawModeButtonRect.y += 1;
-				rawModeButtonRect.x += 0.5f;
-				rawModeButtonRect.width -= 0.5f;
+				rawModeButtonRect.y      += 1;
+				rawModeButtonRect.x      += 0.5f;
+				rawModeButtonRect.width  -= 0.5f;
 				rawModeButtonRect.height -= 0.5f;
 			}
 
@@ -266,21 +267,21 @@ namespace Fusumity.Editor
 				if (GUI.Button(clipboardButtonRect, clipboardToolbar, SirenixGUIStyles.ToolbarButton))
 					Clipboard.Copy(copiedText);
 
-				clipboardButtonRect.width = 11;
-				clipboardButtonRect.x += 3f;
+				clipboardButtonRect.width =  11;
+				clipboardButtonRect.x     += 3f;
 				SdfIcons.DrawIcon(clipboardButtonRect, SdfIconType.Clipboard, SirenixGUIStyles.IconButton.normal.textColor);
 
 				EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
 
-				copiedText = guid.high.ToString();
+				copiedText               = guid.high.ToString();
 				clipboardToolbar.tooltip = $"{CLIPBOARD_TOOLBAR_PREFIX}{copiedText}";
 				if (rawMode)
 				{
 					if (GUI.Button(clipboardButtonRect2, clipboardToolbar, SirenixGUIStyles.ToolbarButton))
 						Clipboard.Copy(guid.high.ToString());
 
-					clipboardButtonRect2.width = 11;
-					clipboardButtonRect2.x += 3f;
+					clipboardButtonRect2.width =  11;
+					clipboardButtonRect2.x     += 3f;
 
 					SdfIcons.DrawIcon(clipboardButtonRect2, SdfIconType.Clipboard, SirenixGUIStyles.IconButton.normal.textColor);
 
@@ -291,8 +292,8 @@ namespace Fusumity.Editor
 			if (GUI.Button(rawModeButtonRect, rawModeToolbar, GUIStyle.none))
 				rawMode = !rawMode;
 
-			rawModeButtonRect.width = 11;
-			rawModeButtonRect.x += 3f;
+			rawModeButtonRect.width =  11;
+			rawModeButtonRect.x     += 3f;
 			SdfIcons.DrawIcon(rawModeButtonRect, rawMode ? SdfIconType.EyeFill : SdfIconType.EyeSlashFill,
 				SirenixGUIStyles.IconButton.normal.textColor);
 
@@ -326,8 +327,8 @@ namespace Fusumity.Editor
 				{
 					alignment = TextAnchor.MiddleCenter,
 					fontStyle = FontStyle.Bold,
-					padding = new RectOffset(10, 10, 10, 10),
-					fontSize = 20
+					padding   = new RectOffset(10, 10, 10, 10),
+					fontSize  = 20
 				};
 
 				icon ??= EditorGUIUtility.IconContent("console.warnicon");
@@ -403,7 +404,7 @@ namespace Fusumity.Editor
 
 			var lastRect = GUILayoutUtility.GetLastRect();
 			textStyle ??= suffixLabelStyleCache;
-			width = textStyle.CalcWidth(text);
+			width     =   textStyle.CalcWidth(text);
 
 			var labelRect = lastRect.AlignLeft(width, offset);
 			GUI.Label(labelRect, text, textStyle);
@@ -412,7 +413,7 @@ namespace Fusumity.Editor
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null, float offset = 4f)
 		{
 			suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
-			suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
+			suffixLabelStyleCache.hover.textColor  = textColor ?? Color.gray;
 
 			if (overlay)
 			{
