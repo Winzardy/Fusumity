@@ -48,8 +48,8 @@ namespace Content.ScriptableObjects.Editor
 					var scriptable = so.ScriptableContentEntry.ScriptableObject;
 
 					var classHelperName = nameof(FusumityEditorGUIHelper);
-					var memberHelperName = nameof(FusumityEditorGUIHelper.drawAssetReference);
-					attributes.Add(new EnableIfAttribute($"@{classHelperName}.{memberHelperName}"));
+					var memberHelperName = nameof(FusumityEditorGUIHelper.drawInlineEditor);
+					attributes.Add(new DisableIfAttribute($"@{classHelperName}.{memberHelperName}"));
 
 					if (scriptable && !scriptable.name.IsNullOrEmpty())
 					{
