@@ -149,6 +149,7 @@ namespace UI.Popups
 			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущий активный попап
 			if (_current != popup)
 			{
+				PreRelease(popup);
 				Release(popup);
 				return;
 			}
@@ -256,6 +257,7 @@ namespace UI.Popups
 
 		private async UniTaskVoid ReleaseWhenHiddenAsync(IPopup popup, CancellationToken cancellationToken)
 		{
+			PreRelease(popup);
 			await UniTask.WaitWhile(popup.IsVisible, cancellationToken: cancellationToken);
 
 			if (cancellationToken.IsCancellationRequested)
@@ -278,8 +280,12 @@ namespace UI.Popups
 
 		private void Release(IPopup popup)
 		{
-			popup.RequestedClose -= TryHide;
 			_pool.Release(popup);
+		}
+
+		private void PreRelease(IPopup popup)
+		{
+			popup.RequestedClose -= TryHide;
 		}
 
 		#region Delegates
