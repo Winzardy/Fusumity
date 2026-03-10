@@ -5,14 +5,15 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
+using UnityEngine;
 
 namespace UI.Popups
 {
 	public interface IPopup : IWidget, IIdentifiable
 	{
-		public PopupMode Mode { get; }
-		public Type GetArgsType();
-		public void RequestClose();
+		PopupMode Mode { get; }
+		Type GetArgsType();
+		void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
 
@@ -22,7 +23,7 @@ namespace UI.Popups
 		/// При запросе открытия окна аргументы копируются в окно, далее могут измениться и эти аргументы система может
 		/// получить через GetArgs() в своих целях (скрыть попап на время).
 		/// Получается аргументы задают состояние окна от начала до конца использования.</param>
-		internal void Show(object args, bool? immediate = null);
+		internal void Show(object args, bool immediate = false);
 
 		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
@@ -110,7 +111,7 @@ namespace UI.Popups
 			else if (Active && !_clearedArgs)
 				OnHide(); //Отписка со старым args!
 
-			_args = default;
+			_args        = default;
 			_clearedArgs = true;
 
 			base.OnReset(deactivate);
@@ -174,8 +175,10 @@ namespace UI.Popups
 			base.Initialize();
 		}
 
-		void IPopup.Show(object boxedArgs, bool? immediateOrNull = null)
+		void IPopup.Show(object boxedArgs, bool immediate = false)
 		{
+			TryResetInternal();
+
 			if (boxedArgs != null)
 			{
 				var args = UnboxedArgs(boxedArgs);
@@ -197,7 +200,6 @@ namespace UI.Popups
 			}
 
 			var immediateBySuppressFlag = suppressFlag != SuppressFlag.None;
-			immediateOrNull.TryGetValue(out var immediate);
 			SetActive(true, immediateBySuppressFlag || immediate);
 			DisableSuppress();
 		}
@@ -224,13 +226,7 @@ namespace UI.Popups
 
 		protected sealed override void OnEndedClosingInternal()
 		{
-			if (_resetting.HasValue)
-			{
-				if (_resetting.Value)
-					Reset(false);
-
-				_resetting = null;
-			}
+			TryResetInternal();
 
 			base.OnEndedClosingInternal();
 		}
@@ -307,6 +303,20 @@ namespace UI.Popups
 		{
 			error = string.Empty;
 			return true;
+		}
+
+		private bool TryResetInternal()
+		{
+			if (!_resetting.TryGetValue(out var resetting))
+				return false;
+
+			if (resetting)
+			{
+				Reset(false);
+			}
+
+			_resetting = null;
+			return resetting;
 		}
 	}
 }

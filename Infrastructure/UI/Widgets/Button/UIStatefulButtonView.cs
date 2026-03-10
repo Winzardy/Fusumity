@@ -1,4 +1,5 @@
 ﻿using System;
+using ActionBusSystem;
 using Fusumity.MVVM.UI;
 using Fusumity.Utility;
 using Game.UI;
@@ -11,6 +12,8 @@ namespace UI
 		private UIAdBannerView _adBanner;
 		private UILabeledIconView _labeledIcon;
 		private UISpriteAssigner _assigner;
+
+		private ActionBusElement _clickElement;
 
 		public event Action<UIStatefulButtonView> Clicked;
 
@@ -26,7 +29,7 @@ namespace UI
 				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon, true));
 			}
 
-			Subscribe(layout, HandleClick);
+			_clickElement = Subscribe(layout, HandleClick);
 		}
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
@@ -92,6 +95,14 @@ namespace UI
 			}
 
 			_assigner.TrySetSprite(_layout.icon, ViewModel.Icon);
+		}
+
+		public void IgnoreLocking(bool ignore)
+		{
+			if (_clickElement == null || _clickElement.IsDisposed)
+				return;
+
+			_clickElement.IsLockResistant = ignore;
 		}
 
 		private void HandleClick()

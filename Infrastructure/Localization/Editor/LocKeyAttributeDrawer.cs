@@ -6,6 +6,7 @@ using Fusumity.Editor.Utility;
 using Fusumity.Utility;
 using JetBrains.Annotations;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
@@ -13,10 +14,12 @@ using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Localization.Settings;
+using Clipboard = Fusumity.Utility.Clipboard;
+using ClipboardUtility = Fusumity.Utility.ClipboardUtility;
 
 namespace Localization.Editor
 {
-	public class LocKeyAttributeDrawer : OdinAttributeDrawer<LocKeyAttribute, string>
+	public class LocKeyAttributeDrawer : OdinAttributeDrawer<LocKeyAttribute, string>, IDefinesGenericMenuItems
 	{
 		private const string INDENT_SPACE = "    ";
 
@@ -43,7 +46,7 @@ namespace Localization.Editor
 		protected override void Initialize()
 		{
 			allKeys = LocManager.GetAllKeysEditor()
-			   .ToList();
+				.ToList();
 			var selectedKey = ValueEntry.SmartValue;
 			CreateSelector(selectedKey);
 		}
@@ -68,7 +71,6 @@ namespace Localization.Editor
 				if (_selector.selectedValue != selectedKey)
 					_selector.SetSelection(selectedKey);
 			}
-
 
 			var fieldName = Attribute.FieldName;
 			var valueByFieldName = Property.ParentValueProperty.ValueEntry.WeakSmartValue.GetReflectionValue(fieldName);
@@ -145,7 +147,7 @@ namespace Localization.Editor
 				}
 			};
 			style.padding.top += 3;
-			style.alignment = TextAnchor.UpperRight;
+			style.alignment   =  TextAnchor.UpperRight;
 			var shortLabelSize = style.CalcSize(translation);
 			var labelSize = GUI.skin.textField.CalcSize(selectedKey);
 			var sum = shortLabelSize.x + labelSize.x + o + 5f;
@@ -171,16 +173,16 @@ namespace Localization.Editor
 
 						var buttonRect = trianglePosition;
 
-						buttonRect.y += MARGIN_TOP;
-						buttonRect.x += MARGIN_RIGHT;
-						buttonRect.width = SIZE;
-						buttonRect.height = SIZE;
+						buttonRect.y      += MARGIN_TOP;
+						buttonRect.x      += MARGIN_RIGHT;
+						buttonRect.width  =  SIZE;
+						buttonRect.height =  SIZE;
 
 						if (!_textAreaRichText)
 						{
-							buttonRect.y += 1;
-							buttonRect.x += 0.5f;
-							buttonRect.width -= 0.5f;
+							buttonRect.y      += 1;
+							buttonRect.x      += 0.5f;
+							buttonRect.width  -= 0.5f;
 							buttonRect.height -= 0.5f;
 						}
 
@@ -194,11 +196,11 @@ namespace Localization.Editor
 						//GUI.enabled = false;
 						var textAreaStyle = new GUIStyle(GUI.skin.textArea);
 						var padding = textAreaStyle.padding;
-						padding.top = 3 + 14;
-						padding.left += 3;
-						padding.bottom = 4;
-						textAreaStyle.padding = padding;
-						textAreaStyle.richText = _textAreaRichText;
+						padding.top            =  3 + 14;
+						padding.left           += 3;
+						padding.bottom         =  4;
+						textAreaStyle.padding  =  padding;
+						textAreaStyle.richText =  _textAreaRichText;
 
 						GUILayout.TextArea(translation, textAreaStyle);
 						var textAreaRect = GUILayoutUtility.GetLastRect();
@@ -213,7 +215,7 @@ namespace Localization.Editor
 						};
 
 						labelStyle.normal.textColor = new Color(0.5f, 0.5f, 0.5f);
-						labelStyle.hover.textColor = new Color(0.5f, 0.5f, 0.5f);
+						labelStyle.hover.textColor  = new Color(0.5f, 0.5f, 0.5f);
 						var labelRect = textAreaRect.AlignLeft(textAreaRect.width - 54).AlignTop(15).Padding(3, 0, 0, 0);
 						labelRect.y += 2;
 						GUI.Label(labelRect, TEXT_AREA_LABEL, labelStyle);
@@ -260,15 +262,15 @@ namespace Localization.Editor
 
 			if (useDetailed && shortTranslateLabel.Length > 3)
 			{
-				shortTranslateLabel = $"{translation.Substring(0, maxLenght.Min(shortTranslateLabel.Length) - 3)}...  ";
+				shortTranslateLabel    =  $"{translation.Substring(0, maxLenght.Min(shortTranslateLabel.Length) - 3)}...  ";
 				style.normal.textColor *= 0.5f;
-				style.hover.textColor *= 0.5f;
+				style.hover.textColor  *= 0.5f;
 			}
 
 			GUI.Label(shortTranslatePosition, shortTranslateLabel, style);
 
 			label.tooltip = originalTooltip;
-			GUI.color = originalColor;
+			GUI.color     = originalColor;
 
 			SdfIcons.DrawIcon(trianglePosition, !_selector.show ? SdfIconType.CaretDownFill : SdfIconType.CaretUpFill);
 		}
@@ -285,13 +287,13 @@ namespace Localization.Editor
 			_selector.AddToolbarFunctionButtons(new FunctionButtonInfo
 			{
 				action = SelectAsset,
-				icon = EditorIcons.List
+				icon   = EditorIcons.List
 			});
 		}
 
 		private Rect AlignRight(Rect rect, float width, float offset = 0)
 		{
-			rect.x = rect.x + rect.width - width - offset;
+			rect.x     = rect.x + rect.width - width - offset;
 			rect.width = width;
 			return rect;
 		}
@@ -309,7 +311,7 @@ namespace Localization.Editor
 			if (!translate.IsNullOrWhiteSpace())
 			{
 				translate = translate.Replace("\\", string.Empty)
-				   .Replace("/", string.Empty);
+					.Replace("/", string.Empty);
 			}
 
 			var path = key; //.Replace("_", "/");
@@ -319,6 +321,18 @@ namespace Localization.Editor
 		private void OnSelected(string key)
 		{
 			ValueEntry.WeakSmartValue = key;
+		}
+
+		public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
+		{
+			genericMenu.AddItem(
+				new GUIContent("Copy Translate"),
+				false,
+				() =>
+				{
+					var translate = LocManager.GetEditor(ValueEntry.SmartValue, _language);
+					translate.CopyToClipboard();
+				});
 		}
 	}
 }

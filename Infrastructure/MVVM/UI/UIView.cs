@@ -1,3 +1,4 @@
+using ActionBusSystem;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using TMPro;
@@ -16,22 +17,26 @@ namespace Fusumity.MVVM.UI
 		{
 		}
 
-		protected void Subscribe([MaybeNull] Button button, Action action, string uId = null, string groupId = null)
+		protected ActionBusElement Subscribe([MaybeNull] Button button, Action action, string uId = null, string groupId = null)
 		{
 			if (button != null)
 			{
-				AddSubscription(button.Subscribe(action, uId, groupId, false));
+				var element = button.Subscribe(action, uId, groupId, false);
+				AddSubscription(element);
+				return element;
 			}
+
+			return null;
 		}
 
-		protected void Subscribe(UILabeledButtonLayout layout, Action action)
+		protected ActionBusElement Subscribe(UILabeledButtonLayout layout, Action action)
 		{
-			Subscribe(layout.button, action, layout.uId, layout.groupId);
+			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
-		protected void Subscribe(UIStatefulButtonLayout layout, Action action)
+		protected ActionBusElement Subscribe(UIStatefulButtonLayout layout, Action action)
 		{
-			Subscribe(layout.button, action, layout.uId, layout.groupId);
+			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
 		protected void Bind(TMP_Text label, ILabelViewModel viewModel)

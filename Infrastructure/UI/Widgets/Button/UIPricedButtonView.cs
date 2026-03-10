@@ -17,7 +17,7 @@ namespace UI
 		public UIPricedButtonView(UIPricedButtonLayout layout) : base(layout)
 		{
 			AddDisposable(_button = new UIStatefulButtonView(layout));
-			AddDisposable(_price = new UILabeledIconCollection(layout.prices));
+			AddDisposable(_price  = new UILabeledIconCollection(layout.prices));
 			if (layout.primaryPrice)
 				AddDisposable(_primaryPrice = new UILabeledIconView(layout.primaryPrice));
 		}
@@ -41,15 +41,7 @@ namespace UI
 
 		private void UpdatePrices()
 		{
-			if (ViewModel.Prices.IsNullOrEmpty())
-			{
-				_layout.prices.root.SetActive(false);
-			}
-			else
-			{
-				_layout.prices.root.SetActive(true);
-				_price.Update(ViewModel.Prices);
-			}
+			_price.UpdateOrDeactivate(ViewModel.Prices);
 
 			if (ViewModel.PrimaryPrice != null)
 			{

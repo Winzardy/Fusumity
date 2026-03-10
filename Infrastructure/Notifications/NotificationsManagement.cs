@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Fusumity.Reactive;
-using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
+using Sapientia.Utility;
 
 namespace Notifications
 {

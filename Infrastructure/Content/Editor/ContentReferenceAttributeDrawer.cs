@@ -7,6 +7,7 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
@@ -472,13 +473,16 @@ namespace Content.Editor
 									var originalForceHideMonoScriptInEditor = OdinEditor.ForceHideMonoScriptInEditor;
 									OdinEditor.ForceHideMonoScriptInEditor = false;
 									var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
+									var originalDrawInlineEditor = FusumityEditorGUIHelper.drawInlineEditor;
 									FusumityEditorGUIHelper.drawAssetReference = useDropdown;
+									FusumityEditorGUIHelper.drawInlineEditor = true;
 
 									_inlineEditor.OnInspectorGUI();
 
 									//Scripts/
 									FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-									OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+									FusumityEditorGUIHelper.drawInlineEditor   = originalDrawInlineEditor;
+									OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
 
 									//Hierarchy/
 									EditorGUIUtility.hierarchyMode = originHierarchyMode;
