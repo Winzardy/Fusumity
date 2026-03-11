@@ -35,7 +35,6 @@ namespace Fusumity.MVVM.UI
 		public UIViewCollection(TViewLayout prefab, RectTransform root = null) : base(prefab, root)
 		{
 			_root = root;
-			_root.SetActive(false);
 		}
 
 		public void UpdateOrDeactivate(IEnumerable<TViewModel> collection)

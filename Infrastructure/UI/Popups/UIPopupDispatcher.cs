@@ -14,7 +14,7 @@ namespace UI
 		/// Активация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
 		/// А активация вызывается лишь когда окно полностью закрыли
 		/// </summary>
-		public event Action<IPopup, object> Activated;
+		public event UIPopupActivatedDelegate Activated;
 
 		/// <summary>
 		/// Деактивация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
@@ -149,4 +149,6 @@ namespace UI
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
 	}
+
+	public delegate void UIPopupActivatedDelegate(IPopup popup, object args);
 }

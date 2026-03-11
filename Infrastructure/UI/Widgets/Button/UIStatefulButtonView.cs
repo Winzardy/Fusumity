@@ -48,6 +48,11 @@ namespace UI
 
 			viewModel.StyleChanged        += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
+
+			if (!viewModel.ActionBusUniqueId.IsNullOrEmpty() || !viewModel.ActionBusGroupId.IsNullOrEmpty())
+			{
+				UpdateClickElement(viewModel.ActionBusUniqueId, viewModel.ActionBusGroupId);
+			}
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
@@ -57,6 +62,16 @@ namespace UI
 
 			viewModel.StyleChanged        -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
+
+			UpdateClickElement();
+		}
+
+		private void UpdateClickElement(string uid = null, string groupId = null)
+		{
+			DisposeAndRemoveDisposable(_clickElement);
+			_clickElement = Subscribe(_layout.button, HandleClick,
+				uid ?? _layout.uId,
+				groupId ?? _layout.groupId);
 		}
 
 		protected override void OnNullViewModel()
@@ -123,6 +138,9 @@ namespace UI
 		UISpriteInfo Icon { get => default; }
 		IAdBannerViewModel AdBanner { get => null; }
 		ILabeledIconViewModel LabeledIcon { get => null; }
+
+		string ActionBusUniqueId { get => null; }
+		string ActionBusGroupId { get => null; }
 
 		event Action StyleChanged;
 		event Action InteractableChanged;

@@ -24,14 +24,17 @@ namespace Fusumity.MVVM
 		/// Начали показ
 		/// </summary>
 		void OnShow();
+
 		/// <summary>
 		/// Закончили показ
 		/// </summary>
 		void OnShown();
+
 		/// <summary>
 		/// Начали закрытие
 		/// </summary>
 		void OnHide();
+
 		/// <summary>
 		/// Закончили закрытие
 		/// </summary>
@@ -173,6 +176,17 @@ namespace Fusumity.MVVM
 		{
 			var lazyCd = _disposables ??= new CompositeDisposable();
 			lazyCd.AddDisposable(disposable);
+		}
+
+		protected void DisposeAndRemoveDisposable(IDisposable disposable)
+		{
+			disposable.Dispose();
+			RemoveDisposable(disposable);
+		}
+
+		protected void RemoveDisposable(IDisposable disposable)
+		{
+			_disposables?.RemoveDisposable(disposable);
 		}
 
 		protected void AddSubscription<T>(BaseSubscription<T> subscription) where T : Delegate

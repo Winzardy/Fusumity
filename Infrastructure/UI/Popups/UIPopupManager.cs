@@ -117,7 +117,7 @@ namespace UI.Popups
 
 		internal bool IsActive(string id)
 		{
-			if (_current != null && _current.Id == id)
+			if (_current?.Id == id)
 				return true;
 
 			foreach (var (popup, _) in _queue)

@@ -8,12 +8,12 @@ namespace UI.Windows
 		private UIWindowManager _manager;
 
 		/// <summary>
-		/// Активация окна, даже если окно в очереди
+		/// Активация окна (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IWindow> Activated;
 
 		/// <summary>
-		/// Деактивация окна, даже если окно в очереди
+		/// Деактивация окна (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IWindow> Deactivated;
 

@@ -8,12 +8,12 @@ namespace UI.Screens
 		private UIScreenManager _manager;
 
 		/// <summary>
-		/// Активация окна, даже если окно в очереди
+		/// Активация экрана (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IScreen> Activated;
 
 		/// <summary>
-		/// Деактивация окна, даже если окно в очереди
+		/// Деактивация экрана (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IScreen> Deactivated;
 
@@ -37,13 +37,13 @@ namespace UI.Screens
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
+			_manager.Shown  += OnShown;
 			_manager.Hidden += OnHidden;
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
+			_manager.Shown  -= OnShown;
 			_manager.Hidden -= OnHidden;
 
 			_manager = null;
