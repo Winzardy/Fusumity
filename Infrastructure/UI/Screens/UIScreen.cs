@@ -10,8 +10,9 @@ namespace UI.Screens
 {
 	public interface IScreen : IWidget, IIdentifiable
 	{
-		public void RequestClose();
-		public Type GetArgsType();
+		void RequestClose();
+		Type GetArgsType();
+		object GetArgs();
 
 		internal event Action<IScreen> RequestedClose;
 
@@ -27,71 +28,10 @@ namespace UI.Screens
 		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset, bool immediate = false);
-		internal object GetArgs();
+
 		internal void Clear();
 
 		internal IDisposable Prepare(Action callback);
-	}
-
-	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyArgs>
-		where TLayout : UIBaseScreenLayout
-	{
-		private protected sealed override object GetArgs() => null;
-
-		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
-
-		protected virtual bool CanShow(out string error)
-		{
-			error = string.Empty;
-			return true;
-		}
-	}
-
-	public abstract class UIScreen<TLayout, TArgs> : UIBaseScreen<TLayout, TArgs>
-		where TLayout : UIBaseScreenLayout
-	{
-		private bool _suppressHide;
-
-		protected sealed override void OnShow()
-		{
-			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested += RequestCloseInternal;
-
-			if (_layout.close != null && _args is ICloseAvailability availability)
-				_layout.close.SetActive(availability.CloseAvailable);
-
-			OnShow(in _args);
-		}
-
-		protected abstract void OnShow(in TArgs args);
-
-		protected sealed override void OnHide()
-		{
-			if (_args is ICloseRequestor requestor)
-				requestor.CloseRequested -= RequestCloseInternal;
-
-			if (_suppressHide)
-				return;
-
-			OnHide(in _args);
-		}
-
-		protected virtual void OnHide(in TArgs args)
-		{
-		}
-
-		protected override void OnBeforeSetupTemplate()
-		{
-			if (typeof(TArgs) == typeof(EmptyArgs))
-			{
-				_suppressHide = !Active;
-				return;
-			}
-
-			_suppressHide = _args == null;
-		}
-
-		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 
 	/// <summary>
@@ -102,15 +42,16 @@ namespace UI.Screens
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Screen] ";
 
+		protected UIScreenConfig _config;
 		protected TArgs _args;
-
-		private UIScreenConfig _config;
 
 		private bool? _resetting;
 
+		private event Action<IScreen> RequestedClose;
+
 		string IIdentifiable.Id => Id;
 
-		public ref TArgs vm => ref _args;
+		public ref TArgs ViewModel => ref _args;
 
 		#region Layout
 
@@ -121,11 +62,12 @@ namespace UI.Screens
 
 		#endregion
 
+		public override WidgetFlags Flags { get => _config.flags; }
+
 		protected override string Layer => LayerType.SCREENS;
+		string IWidget.Layer => Layer;
 
 		protected override bool UseSetAsLastSibling => false;
-
-		private event Action<IScreen> RequestedClose;
 
 		event Action<IScreen> IScreen.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
@@ -204,7 +146,7 @@ namespace UI.Screens
 
 		void IScreen.Clear()
 		{
-			if(Active)
+			if (Active)
 				SetActive(false, true);
 
 			ClearLayout();
@@ -289,5 +231,66 @@ namespace UI.Screens
 
 			return args;
 		}
+	}
+
+	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyArgs>
+		where TLayout : UIBaseScreenLayout
+	{
+		private protected sealed override object GetArgs() => null;
+
+		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
+
+		protected virtual bool CanShow(out string error)
+		{
+			error = string.Empty;
+			return true;
+		}
+	}
+
+	public abstract class UIScreen<TLayout, TArgs> : UIBaseScreen<TLayout, TArgs>
+		where TLayout : UIBaseScreenLayout
+	{
+		private bool _suppressHide;
+
+		protected sealed override void OnShow()
+		{
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested += RequestCloseInternal;
+
+			if (_layout.close != null && _args is ICloseAvailability availability)
+				_layout.close.SetActive(availability.CloseAvailable);
+
+			OnShow(in _args);
+		}
+
+		protected abstract void OnShow(in TArgs args);
+
+		protected sealed override void OnHide()
+		{
+			if (_args is ICloseRequestor requestor)
+				requestor.CloseRequested -= RequestCloseInternal;
+
+			if (_suppressHide)
+				return;
+
+			OnHide(in _args);
+		}
+
+		protected virtual void OnHide(in TArgs args)
+		{
+		}
+
+		protected override void OnBeforeSetupTemplate()
+		{
+			if (typeof(TArgs) == typeof(EmptyArgs))
+			{
+				_suppressHide = !Active;
+				return;
+			}
+
+			_suppressHide = _args == null;
+		}
+
+		protected override void OnAfterSetupTemplate() => _suppressHide = false;
 	}
 }

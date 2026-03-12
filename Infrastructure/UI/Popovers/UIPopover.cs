@@ -86,30 +86,28 @@ namespace UI.Popovers
 	public abstract class UIBasePopover<TLayout, TArgs> : UIClosableRootWidget<TLayout>, IPopover
 		where TLayout : UIBasePopoverLayout
 	{
-		protected internal RectTransform _anchor;
-
 		private const string LAYOUT_PREFIX_NAME = "[Popover] ";
 
 		private UIPopoverConfig _config;
-
 		private bool? _resetting;
+		private object _context;
+		private bool _layoutResetRequest;
 
 		protected TArgs _args;
-		private object _context;
 
-		private bool _layoutResetRequest;
+		protected internal RectTransform _anchor;
+
+		private event Action<IPopover> RequestedClose;
 
 		string IIdentifiable.Id => Id;
 
 		public ref TArgs ViewModel => ref _args;
 
-		private event Action<IPopover> RequestedClose;
-
 		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
-
 		RectTransform IPopover.Anchor => _anchor;
 
 		protected override string Layer => LayerType.POPOVERS;
+		string IWidget.Layer => Layer;
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);

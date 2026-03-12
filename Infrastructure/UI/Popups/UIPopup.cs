@@ -5,7 +5,6 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
-using UnityEngine;
 
 namespace UI.Popups
 {
@@ -13,6 +12,7 @@ namespace UI.Popups
 	{
 		PopupMode Mode { get; }
 		Type GetArgsType();
+		object GetArgs();
 		void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
@@ -29,7 +29,7 @@ namespace UI.Popups
 		internal bool CanShow(object args, out string error);
 
 		internal void Hide(bool reset, bool immediate = false);
-		internal object GetArgs();
+
 		internal void Clear();
 	}
 
@@ -131,26 +131,28 @@ namespace UI.Popups
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Popup] ";
 
-		private UIPopupConfig _config;
-
 		private bool? _resetting;
-
-		protected TArgs _args;
 		private object _context;
 
-		string IIdentifiable.Id => Id;
+		protected UIPopupConfig _config;
+		protected TArgs _args;
 
 		private event Action<IPopup> RequestedClose;
+
+		string IIdentifiable.Id => Id;
 
 		event Action<IPopup> IPopup.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 
 		protected override string Layer => LayerType.POPUPS;
+		string IWidget.Layer => Layer;
 
 		protected virtual PopupMode Mode => PopupMode.Default;
 
 		PopupMode IPopup.Mode => Mode;
 
 		protected ref TArgs vm => ref _args;
+
+		public override WidgetFlags Flags { get => _config.flags; }
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);

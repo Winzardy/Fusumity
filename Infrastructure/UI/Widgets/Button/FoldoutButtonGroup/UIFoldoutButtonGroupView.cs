@@ -60,7 +60,7 @@ namespace UI.FoldoutButtonGroup
 
 		private void HandleOutOfBoundsClicked()
 		{
-			ViewModel.ClickOutOfBounds();
+			ViewModel?.ClickOutOfBounds();
 		}
 	}
 

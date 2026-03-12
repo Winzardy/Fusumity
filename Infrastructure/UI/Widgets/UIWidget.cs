@@ -48,7 +48,9 @@ namespace UI
 		public abstract RectTransform RectTransform { get; }
 		public abstract UIBaseLayout BaseLayout { get; }
 
-		public string Layer { get; protected set; }
+		public virtual WidgetFlags Flags { get => WidgetFlags.None; }
+
+		public virtual string Layer { get; protected set; }
 
 		public abstract event WidgetShownDelegate Shown;
 		public abstract event WidgetHiddenDelegate Hidden;

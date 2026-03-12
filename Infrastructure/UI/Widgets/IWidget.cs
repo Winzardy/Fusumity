@@ -24,6 +24,7 @@ namespace UI
 		UIBaseLayout BaseLayout { get; }
 
 		string Layer { get; }
+		WidgetFlags Flags { get; }
 
 		event WidgetShownDelegate Shown;
 		event WidgetHiddenDelegate Hidden;
@@ -52,5 +53,17 @@ namespace UI
 		bool IsActive() => Active;
 		bool IsVisible() => Visible;
 		bool IsOpen() => Open;
+	}
+
+	[Flags]
+	public enum WidgetFlags
+	{
+		None,
+
+		/// <summary>
+		/// Указывает, что виджет полностью окклюзирует игровой экран.
+		/// Может использоваться для отключения рендера сцены и оптимизации производительности
+		/// </summary>
+		Fullscreen = 1 << 0
 	}
 }

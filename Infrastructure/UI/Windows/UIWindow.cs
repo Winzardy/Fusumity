@@ -5,14 +5,11 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
-using UnityEngine;
 
 namespace UI.Windows
 {
 	public interface IWindow : IWidget, IIdentifiable
 	{
-		public void RequestClose();
-
 		internal event Action<IWindow> RequestedClose;
 
 		internal void Initialize(UIWindowConfig config);
@@ -23,14 +20,13 @@ namespace UI.Windows
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
 		internal void Show(object args, bool immediate = false);
 
-		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
-
 		internal void Hide(bool reset, bool immediate = false);
-		internal object GetArgs();
 		internal void Clear();
 
-		public Type GetArgsType();
+		void RequestClose();
+		Type GetArgsType();
+		object GetArgs();
 	}
 
 	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
@@ -99,18 +95,19 @@ namespace UI.Windows
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Window] ";
 
+		private UIWindowConfig _config;
 		private bool? _resetting;
-
-		protected UIWindowConfig _config;
 
 		protected TArgs _args;
 		protected TArgs ViewModel => _args;
 
-		string IIdentifiable.Id => Id;
-
 		private event Action<IWindow> RequestedClose;
 
+		string IIdentifiable.Id => Id;
+
 		event Action<IWindow> IWindow.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
+
+		public override WidgetFlags Flags { get => _config.flags; }
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
@@ -118,6 +115,7 @@ namespace UI.Windows
 		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		protected override string Layer => LayerType.WINDOWS;
+		string IWidget.Layer => Layer;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{

@@ -14,7 +14,7 @@ namespace UI
 		/// Активация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
 		/// А активация вызывается лишь когда окно полностью закрыли
 		/// </summary>
-		public event UIPopupActivatedDelegate Activated;
+		public event Action<IPopup> Activated;
 
 		/// <summary>
 		/// Деактивация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
@@ -127,7 +127,7 @@ namespace UI
 		private void OnEnqueued(IPopup popup, object args, bool addToLast)
 		{
 			if (!addToLast)
-				Activated?.Invoke(popup, args);
+				Activated?.Invoke(popup);
 		}
 
 		private void OnShown(IPopup popup, bool fromQueue)
@@ -135,7 +135,7 @@ namespace UI
 			Shown?.Invoke(popup);
 
 			if (!fromQueue)
-				Activated?.Invoke(popup, popup.GetArgs());
+				Activated?.Invoke(popup);
 		}
 
 		private void OnHidden(IPopup popup, bool fromQueue)
@@ -149,6 +149,4 @@ namespace UI
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
 	}
-
-	public delegate void UIPopupActivatedDelegate(IPopup popup, object args);
 }

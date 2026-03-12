@@ -8,6 +8,7 @@ namespace UI.Screens
 	[Documentation("https://www.notion.so/winzardy/Screen-d93ff2905584402fbaaeb55d06e3276e?pvs=4")]
 	public struct UIScreenConfig
 	{
+		public WidgetFlags flags;
 		public UILayoutEntry<UIBaseScreenLayout> layout;
 	}
 }

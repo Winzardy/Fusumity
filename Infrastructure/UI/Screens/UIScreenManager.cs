@@ -200,12 +200,12 @@ namespace UI.Screens
 		{
 			_screens[screen.GetType()] = screen;
 
-			screen.RequestedClose += OnRequestedClose;
+			screen.RequestedClose += HandleRequestedClose;
 		}
 
 		private void Dispose(IScreen screen, bool full)
 		{
-			screen.RequestedClose -= OnRequestedClose;
+			screen.RequestedClose -= HandleRequestedClose;
 			screen.Dispose();
 
 			if (full)
@@ -253,7 +253,7 @@ namespace UI.Screens
 				Show(_default.screen, _default.args, false);
 		}
 
-		private void OnRequestedClose(IScreen screen) => TryHide(screen);
+		private void HandleRequestedClose(IScreen screen) => TryHide(screen);
 
 		private void Show(IScreen screen, object args, bool fromQueue = false)
 		{
