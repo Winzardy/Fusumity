@@ -53,7 +53,7 @@ namespace UI.Popups
 			}
 
 			BeforeViewDisposed();
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
@@ -72,7 +72,7 @@ namespace UI.Popups
 			if (!Active)
 				return;
 
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 			_view?.Update(viewModel);
 
 			OnViewUpdated();
@@ -80,14 +80,14 @@ namespace UI.Popups
 
 		protected sealed override void OnShow(ref TViewModel viewModel)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 			OnViewShown();
 		}
 
 		protected override void OnReset(bool deactivate)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel(true);
 
 			_onClose?.Invoke();
 			OnViewHidden();
@@ -119,9 +119,9 @@ namespace UI.Popups
 		{
 		}
 
-		protected void TryAutoDisposeViewModel()
+		protected void TryСlearViewAndAutoDisposeViewModel(bool dispose = false)
 		{
-			_view?.ClearViewModel(AutoDisposeViewModel);
+			_view?.ClearViewModel(AutoDisposeViewModel && dispose);
 		}
 	}
 }
