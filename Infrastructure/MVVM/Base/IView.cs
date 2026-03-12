@@ -1,6 +1,7 @@
 ﻿using Fusumity.Utility;
 using Sapientia.Extensions;
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Fusumity.MVVM
@@ -86,13 +87,13 @@ namespace Fusumity.MVVM
 		/// View model updated.
 		/// Provided argument will never be null.
 		/// </summary>
-		protected abstract void OnUpdate(TViewModel viewModel);
+		protected abstract void OnUpdate([NotNull] TViewModel viewModel);
 
 		/// <summary>
 		/// View model cleared.
 		/// Provided argument will never be null.
 		/// </summary>
-		protected virtual void OnClear(TViewModel viewModel)
+		protected virtual void OnClear([NotNull] TViewModel viewModel)
 		{
 		}
 
