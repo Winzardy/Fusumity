@@ -39,7 +39,7 @@ namespace UI.Popups
 		internal event HiddenDelegate Hidden;
 		internal event EnqueuedDelegate Enqueued;
 
-		internal (IPopup, object) Current => (_current, _current?.GetArgs());
+		internal (IPopup popup, object args) Current => (_current, _current?.GetArgs());
 
 		internal IEnumerable<KeyValuePair<IPopup, object>> Queue => _queue;
 		internal IEnumerable<KeyValuePair<IPopup, object>> Standalones => _standalones;

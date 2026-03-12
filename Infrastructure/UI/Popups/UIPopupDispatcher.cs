@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NUnit.Framework;
+using Sapientia.Collections;
 using UI.Popups;
 
 namespace UI
@@ -123,6 +124,17 @@ namespace UI
 		/// </summary>
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
+
+		public bool Any()
+		{
+			if (_manager.Current.popup != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
 
 		private void OnEnqueued(IPopup popup, object args, bool addToLast)
 		{

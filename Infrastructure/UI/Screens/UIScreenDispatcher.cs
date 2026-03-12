@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 
 namespace UI.Screens
 {
@@ -124,6 +125,17 @@ namespace UI.Screens
 		public bool TryGet<T>(out T screen)
 			where T : UIWidget, IScreen =>
 			_manager.TryGet(out screen);
+
+		public bool Any()
+		{
+			if (_manager.Current.screen != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
 
 		/// <summary>
 		/// Попробовать закрыть текущее окно

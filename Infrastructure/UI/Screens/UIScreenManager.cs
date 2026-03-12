@@ -18,7 +18,7 @@ namespace UI.Screens
 
 		private readonly UIRootWidgetQueue<IScreen, object> _queue;
 
-		internal (IScreen, object) Current => (_current, _current?.GetArgs());
+		internal (IScreen screen, object args) Current => (_current, _current?.GetArgs());
 		internal (IScreen, object) Default => _default;
 		internal IEnumerable<KeyValuePair<IScreen, object>> Queue => _queue;
 

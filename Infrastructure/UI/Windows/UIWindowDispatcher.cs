@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 
 namespace UI.Windows
 {
@@ -100,6 +101,17 @@ namespace UI.Windows
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
 		public bool TryGet<T>(out T window) where T : UIWidget, IWindow => _manager.TryGet(out window);
+
+		public bool Any()
+		{
+			if (_manager.Current.window != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
