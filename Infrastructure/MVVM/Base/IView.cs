@@ -117,7 +117,7 @@ namespace Fusumity.MVVM
 		/// View model cleared.
 		/// Provided argument will never be null.
 		/// </summary>
-		protected virtual void OnClear(TViewModel viewModel)
+		protected virtual void OnClear([NotNull] TViewModel viewModel)
 		{
 		}
 

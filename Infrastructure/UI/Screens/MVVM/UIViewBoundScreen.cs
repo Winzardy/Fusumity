@@ -53,7 +53,7 @@ namespace UI.Screens
 			}
 
 			BeforeViewDisposed();
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
@@ -71,7 +71,7 @@ namespace UI.Screens
 			if (!Active)
 				return;
 
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 			_view?.Update(viewModel);
 
 			OnViewUpdated();
@@ -79,7 +79,7 @@ namespace UI.Screens
 
 		protected override sealed void OnShow(in TViewModel viewModel)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 
 			_view.OnShow();
@@ -106,7 +106,7 @@ namespace UI.Screens
 
 		protected override void OnReset(bool deactivate)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel(true);
 
 			_onClose?.Invoke();
 			OnViewHidden();
@@ -146,9 +146,9 @@ namespace UI.Screens
 		{
 		}
 
-		protected void TryAutoDisposeViewModel()
+		protected void TryСlearViewAndAutoDisposeViewModel(bool dispose = false)
 		{
-			_view?.ClearViewModel(AutoDisposeViewModel);
+			_view?.ClearViewModel(AutoDisposeViewModel && dispose);
 		}
 	}
 }
