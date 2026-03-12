@@ -27,9 +27,6 @@ namespace UI
 
 		private bool _clearedArgs = true;
 
-		public ref readonly TArgs args => ref _args;
-		public ref readonly TArgs vm => ref _args;
-
 		public UISelfConstructedLayerWidget()
 		{
 		}
@@ -157,10 +154,15 @@ namespace UI
 			else if (Active && !_clearedArgs)
 				OnHide(); //Отписка со старым args!
 
-			_args = default;
+			UpdateArgs(default);
 			_clearedArgs = true;
 
 			base.OnReset(deactivate);
+		}
+
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
 		}
 
 		protected virtual void OnSetupDefaultAnimator()
@@ -173,6 +175,6 @@ namespace UI
 			return args == null;
 		}
 
-		public static implicit operator TArgs(UISelfConstructedLayerWidget<TLayout, TArgs> widget) => widget.args;
+		public static implicit operator TArgs(UISelfConstructedLayerWidget<TLayout, TArgs> widget) => widget._args;
 	}
 }

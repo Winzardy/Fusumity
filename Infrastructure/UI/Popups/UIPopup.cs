@@ -111,7 +111,7 @@ namespace UI.Popups
 			else if (Active && !_clearedArgs)
 				OnHide(); //Отписка со старым args!
 
-			_args        = default;
+			UpdateArgs(default);
 			_clearedArgs = true;
 
 			base.OnReset(deactivate);
@@ -149,8 +149,6 @@ namespace UI.Popups
 		protected virtual PopupMode Mode => PopupMode.Default;
 
 		PopupMode IPopup.Mode => Mode;
-
-		protected ref TArgs vm => ref _args;
 
 		public override WidgetFlags Flags { get => _config.flags; }
 
@@ -198,12 +196,17 @@ namespace UI.Popups
 					SetActive(false, true, false);
 				}
 
-				_args = args;
+				UpdateArgs(in args);
 			}
 
 			var immediateBySuppressFlag = suppressFlag != SuppressFlag.None;
 			SetActive(true, immediateBySuppressFlag || immediate);
 			DisableSuppress();
+		}
+
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
 		}
 
 		bool IPopup.CanShow(object boxedArgs, out string error)

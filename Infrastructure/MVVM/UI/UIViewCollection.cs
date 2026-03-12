@@ -11,6 +11,8 @@ namespace Fusumity.MVVM.UI
 	{
 		RectTransform Root { get; }
 		void UpdateOrDeactivate(IEnumerable<TViewModel> collection);
+
+		void Reset();
 	}
 	// only really needed for the UI constraints.
 

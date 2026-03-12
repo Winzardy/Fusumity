@@ -19,6 +19,8 @@ namespace UI.Popovers
 		protected TView _view;
 		protected Action _onClose;
 
+		public TViewModel ViewModel { get => _view != null ? _view.ViewModel : default; }
+
 		protected abstract TView CreateView(TLayout layout);
 
 		/// <summary>
@@ -70,6 +72,8 @@ namespace UI.Popovers
 		{
 			if (!Active)
 				return;
+
+			UpdateArgs(viewModel);
 
 			TryСlearViewAndAutoDisposeViewModel();
 			_view?.Update(viewModel);

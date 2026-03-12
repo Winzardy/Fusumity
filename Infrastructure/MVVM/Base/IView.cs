@@ -19,6 +19,8 @@ namespace Fusumity.MVVM
 
 	public interface IView<TViewModel> : IView
 	{
+		TViewModel ViewModel { get; }
+
 		void Update(TViewModel viewModel);
 
 		/// <summary>

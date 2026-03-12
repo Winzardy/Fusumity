@@ -51,7 +51,6 @@ namespace UI.Screens
 
 		string IIdentifiable.Id => Id;
 
-		public ref TArgs ViewModel => ref _args;
 
 		#region Layout
 
@@ -113,12 +112,17 @@ namespace UI.Screens
 					SetActive(false, true, false);
 				}
 
-				_args = args;
+				UpdateArgs(in args);
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
 			SetActive(true, suppressAnyFlag);
 			DisableSuppress();
+		}
+
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
 		}
 
 		object IScreen.GetArgs() => GetArgs();

@@ -101,8 +101,6 @@ namespace UI.Popovers
 
 		string IIdentifiable.Id => Id;
 
-		public ref TArgs ViewModel => ref _args;
-
 		event Action<IPopover> IPopover.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
 		RectTransform IPopover.Anchor => _anchor;
 
@@ -208,12 +206,17 @@ namespace UI.Popovers
 					SetActive(false, true, false);
 				}
 
-				_args = args;
+				UpdateArgs(in args);
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
 			SetActive(true, suppressAnyFlag || immediate);
 			DisableSuppress();
+		}
+
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
 		}
 
 		protected sealed override void OnEndedClosingInternal()
@@ -224,6 +227,7 @@ namespace UI.Popovers
 		}
 
 		public Type GetArgsType() => typeof(TArgs);
+		public TArgs GetArgs() => _args;
 
 		object IPopover.GetArgs() => _args;
 

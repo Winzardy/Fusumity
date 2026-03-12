@@ -99,7 +99,6 @@ namespace UI.Windows
 		private bool? _resetting;
 
 		protected TArgs _args;
-		protected TArgs ViewModel => _args;
 
 		private event Action<IWindow> RequestedClose;
 
@@ -156,12 +155,17 @@ namespace UI.Windows
 					SetActive(false, true, false);
 				}
 
-				_args = args;
+				UpdateArgs(in args);
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
 			SetActive(true, suppressAnyFlag || immediate);
 			DisableSuppress();
+		}
+
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
 		}
 
 		object IWindow.GetArgs() => GetArgs();

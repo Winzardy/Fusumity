@@ -36,11 +36,14 @@ namespace UI.FoldoutButtonGroup
 			_toggle.Update(viewModel.Toggle);
 
 			_tapDetector.SetInputReader(viewModel.InputReader);
+			_tapDetector.SetActive(true);
 		}
 
 		protected override void OnClear(IFoldoutButtonGroupViewModel viewModel)
 		{
 			viewModel.ItemsUpdated -= HandleItemsUpdated;
+
+			_tapDetector.SetActive(false);
 		}
 
 		protected override void OnNullViewModel()
