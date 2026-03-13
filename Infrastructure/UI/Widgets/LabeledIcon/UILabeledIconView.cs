@@ -43,6 +43,8 @@ namespace Game.UI
 			UpdateIconColor();
 			UpdateLabelColor();
 
+			UpdateStyle();
+
 			viewModel.LabelChanged += HandleLabelChanged;
 			viewModel.LabelColorChanged += UpdateLabelColor;
 			viewModel.StyleChanged += HandleLabelStyleChanged;
@@ -79,6 +81,11 @@ namespace Game.UI
 		}
 
 		private void HandleLabelStyleChanged()
+		{
+			UpdateStyle();
+		}
+
+		private void UpdateStyle()
 		{
 			if (_layout.labelStyleSwitcher)
 				_layout.labelStyleSwitcher.Switch(ViewModel.Style);

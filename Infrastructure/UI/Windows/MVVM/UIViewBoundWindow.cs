@@ -73,6 +73,9 @@ namespace UI.Windows
 			if (!Active)
 				return;
 
+			if(Equals(ViewModel, viewModel))
+				return;
+
 			UpdateArgs(viewModel);
 
 			TryСlearViewAndAutoDisposeViewModel();

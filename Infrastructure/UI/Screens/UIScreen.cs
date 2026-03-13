@@ -11,8 +11,6 @@ namespace UI.Screens
 	public interface IScreen : IWidget, IIdentifiable
 	{
 		void RequestClose();
-		Type GetArgsType();
-		object GetArgs();
 
 		internal event Action<IScreen> RequestedClose;
 
@@ -50,7 +48,6 @@ namespace UI.Screens
 		private event Action<IScreen> RequestedClose;
 
 		string IIdentifiable.Id => Id;
-
 
 		#region Layout
 
@@ -125,8 +122,8 @@ namespace UI.Screens
 			_args = args;
 		}
 
-		object IScreen.GetArgs() => GetArgs();
-		private protected virtual object GetArgs() => _args;
+		public Type GetArgsType() => typeof(TArgs);
+		public object GetArgs() => _args;
 
 		bool IScreen.CanShow(object boxedArgs, out string error)
 		{
@@ -178,8 +175,6 @@ namespace UI.Screens
 		{
 			RequestedClose?.Invoke(this);
 		}
-
-		public Type GetArgsType() => typeof(TArgs);
 
 		private void TryResetInternal()
 		{
@@ -240,8 +235,6 @@ namespace UI.Screens
 	public abstract class UIScreen<TLayout> : UIBaseScreen<TLayout, EmptyArgs>
 		where TLayout : UIBaseScreenLayout
 	{
-		private protected sealed override object GetArgs() => null;
-
 		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)

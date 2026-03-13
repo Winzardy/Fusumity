@@ -11,8 +11,7 @@ namespace UI.Popups
 	public interface IPopup : IWidget, IIdentifiable
 	{
 		PopupMode Mode { get; }
-		Type GetArgsType();
-		object GetArgs();
+
 		void RequestClose();
 
 		internal event Action<IPopup> RequestedClose;
@@ -36,8 +35,6 @@ namespace UI.Popups
 	public abstract class UIPopup<TLayout> : UIBasePopup<TLayout, EmptyArgs>
 		where TLayout : UIBasePopupLayout
 	{
-		private protected sealed override object GetArgs() => null;
-
 		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
@@ -236,8 +233,6 @@ namespace UI.Popups
 			base.OnEndedClosingInternal();
 		}
 
-		object IPopup.GetArgs() => GetArgs();
-
 		void IPopup.Clear()
 		{
 			if (Active)
@@ -246,9 +241,8 @@ namespace UI.Popups
 			ClearLayout();
 		}
 
-		Type IPopup.GetArgsType() => typeof(TArgs);
-
-		private protected virtual object GetArgs() => _args;
+		public Type GetArgsType() => typeof(TArgs);
+		public object GetArgs() => _args;
 
 		public override void RequestClose()
 		{

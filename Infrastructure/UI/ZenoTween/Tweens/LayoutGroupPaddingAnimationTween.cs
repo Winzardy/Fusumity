@@ -1,8 +1,5 @@
 ﻿using System;
 using DG.Tweening;
-using DG.Tweening.Core;
-using DG.Tweening.Plugins.Options;
-using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +15,7 @@ namespace ZenoTween.Participant.Tweens
 
 		public HorizontalOrVerticalLayoutGroup group;
 
+		[InfoBox("Вставка, копирование, может привести к крашу редактора", InfoMessageType.Warning)]
 		public RectOffset to;
 
 		[Space]
@@ -43,9 +41,10 @@ namespace ZenoTween.Participant.Tweens
 			);
 
 			RectOffset GetPadding() => group.padding;
+
 			void SetPadding(RectOffset padding)
 			{
-				group.padding = padding;
+				group.padding       =   padding;
 				_cacheRectTransform ??= group.transform as RectTransform;
 				LayoutRebuilder.ForceRebuildLayoutImmediate(_cacheRectTransform);
 			}

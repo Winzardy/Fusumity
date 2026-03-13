@@ -73,6 +73,9 @@ namespace UI.Screens
 			if (!Active)
 				return;
 
+			if (Equals(ViewModel, viewModel))
+				return;
+
 			UpdateArgs(viewModel);
 
 			TryСlearViewAndAutoDisposeViewModel();

@@ -23,36 +23,22 @@ namespace UI
 
 		public float maxWidth
 		{
-			get => _maxWidthRect ? _maxWidthRect.rect.width : _maxWidth;
+			get
+			{
+				if (!_useMaxWidth)
+					return -1;
+
+				return _maxWidthRect ? _maxWidthRect.rect.width : _maxWidth;
+			}
 			set
 			{
+				_useMaxWidth = value >= 0;
 				if (CustomSetPropertyUtility.SetStruct(ref _maxWidth, value))
 					SetDirty();
 			}
 		}
 
-		#endregion
-
-		#region Max Height
-
-		[SerializeField]
-		private bool _useMaxHeight;
-
-		[SerializeField]
-		private RectTransform _maxHeightRect;
-
-		[SerializeField]
-		private float _maxHeight;
-
-		public float maxHeight
-		{
-			get => _maxHeightRect ? _maxHeightRect.rect.height : _maxHeight;
-			set
-			{
-				if (CustomSetPropertyUtility.SetStruct(ref _maxHeight, value))
-					SetDirty();
-			}
-		}
+		public RectTransform MaxWidthRect { get => _maxWidthRect; set => _maxWidthRect = value; }
 
 		#endregion
 
@@ -73,8 +59,46 @@ namespace UI
 
 				return _minWidthRect ? _minWidthRect.rect.width : base.minWidth;
 			}
-			set => base.minWidth = value;
+			set
+			{
+				_useMinWidth  = value >= 0;
+				base.minWidth = value;
+			}
 		}
+
+		public RectTransform MinWidthRect { get => _minWidthRect; set => _minWidthRect = value; }
+
+		#endregion
+
+		#region Max Height
+
+		[SerializeField]
+		private bool _useMaxHeight;
+
+		[SerializeField]
+		private RectTransform _maxHeightRect;
+
+		[SerializeField]
+		private float _maxHeight;
+
+		public float maxHeight
+		{
+			get
+			{
+				if (!_useMaxHeight)
+					return -1;
+
+				return _maxHeightRect ? _maxHeightRect.rect.height : _maxHeight;
+			}
+			set
+			{
+				_useMaxHeight = value >= 0;
+				if (CustomSetPropertyUtility.SetStruct(ref _maxHeight, value))
+					SetDirty();
+			}
+		}
+
+		public RectTransform MaxHeightRect { get => _maxHeightRect; set => _maxHeightRect = value; }
 
 		#endregion
 
@@ -95,8 +119,14 @@ namespace UI
 
 				return _minHeightRect ? _minHeightRect.rect.height : base.minHeight;
 			}
-			set => base.minHeight = value;
+			set
+			{
+				_useMinHeight  = value >= 0;
+				base.minHeight = value;
+			}
 		}
+
+		public RectTransform MinHeightRect { get => _minHeightRect; set => _minHeightRect = value; }
 
 		#endregion
 
@@ -128,7 +158,7 @@ namespace UI
 				if (transform.TryGetComponent(out Graphic graphic) && !graphic.enabled)
 					return base.preferredWidth;
 
-				if(_ignoreOnGettingPreferredSize)
+				if (_ignoreOnGettingPreferredSize)
 					return base.preferredWidth;
 
 				_ignoreOnGettingPreferredSize = true;
@@ -156,7 +186,7 @@ namespace UI
 				if (transform.TryGetComponent(out Graphic graphic) && !graphic.enabled)
 					return base.preferredHeight;
 
-				if(_ignoreOnGettingPreferredSize)
+				if (_ignoreOnGettingPreferredSize)
 					return base.preferredHeight;
 
 				_ignoreOnGettingPreferredSize = true;

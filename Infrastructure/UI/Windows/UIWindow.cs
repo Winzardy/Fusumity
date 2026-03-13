@@ -25,15 +25,11 @@ namespace UI.Windows
 		internal void Clear();
 
 		void RequestClose();
-		Type GetArgsType();
-		object GetArgs();
 	}
 
 	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
 		where TLayout : UIBaseWindowLayout
 	{
-		private protected sealed override object GetArgs() => null;
-
 		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
@@ -168,10 +164,8 @@ namespace UI.Windows
 			_args = args;
 		}
 
-		object IWindow.GetArgs() => GetArgs();
-		Type IWindow.GetArgsType() => typeof(TArgs);
-
-		private protected virtual object GetArgs() => _args;
+		public Type GetArgsType() => typeof(TArgs);
+		public object GetArgs() => _args;
 
 		bool IWindow.CanShow(object boxedArgs, out string error)
 		{

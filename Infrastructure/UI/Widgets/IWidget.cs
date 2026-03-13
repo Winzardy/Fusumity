@@ -5,6 +5,9 @@ namespace UI
 {
 	public partial interface IWidget : IDisposable
 	{
+		Type GetArgsType() => typeof(EmptyArgs);
+		object GetArgs() => null;
+
 		/// <summary>
 		///Когда виджет активирован (начало анимации - начало закрывание)
 		/// </summary>

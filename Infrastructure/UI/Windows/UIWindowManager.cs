@@ -222,7 +222,8 @@ namespace UI.Windows
 			if (fromQueue)
 				immediate = context.overlaid;
 
-			window.Show(context.args, immediate);
+			if (!context.overlaid)
+				window.Show(context.args, immediate);
 
 			if (_current.window != window)
 			{
@@ -231,7 +232,9 @@ namespace UI.Windows
 			}
 
 			SetCurrent(window, context.mode);
-			Shown?.Invoke(window, fromQueue);
+
+			if (!context.overlaid)
+				Shown?.Invoke(window, fromQueue);
 		}
 
 		private void TryHide(IWindow window, bool fromQueue)
@@ -296,7 +299,7 @@ namespace UI.Windows
 		private void SetCurrent(IWindow window, WindowMode? mode)
 		{
 			_current.window = window;
-			_current.mode = mode;
+			_current.mode   = mode;
 		}
 
 		#region Delegates

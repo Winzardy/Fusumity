@@ -73,6 +73,9 @@ namespace UI.Popovers
 			if (!Active)
 				return;
 
+			if (Equals(ViewModel, viewModel))
+				return;
+
 			UpdateArgs(viewModel);
 
 			TryСlearViewAndAutoDisposeViewModel();
@@ -93,6 +96,8 @@ namespace UI.Popovers
 		protected override void OnHide(in TViewModel _)
 		{
 			_view.OnHide();
+			_view.ClearViewModel();
+
 			OnViewHide();
 		}
 
