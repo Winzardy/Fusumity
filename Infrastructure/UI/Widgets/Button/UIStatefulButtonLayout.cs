@@ -28,7 +28,6 @@ namespace UI
 		public UIAdBannerLayout adBanner;
 		public UILabeledIconLayout labeledIcon;
 
-
 		[Space]
 		[ConstDropdown(typeof(ActionBusElementType))]
 		public string uId;

@@ -1,6 +1,8 @@
 using Fusumity.MVVM.UI;
 using System;
 using System.Collections.Generic;
+using ActionBusSystem;
+using Sapientia.Extensions;
 
 namespace UI
 {
@@ -8,12 +10,14 @@ namespace UI
 	{
 		private UIToggleButtonsCollection _collection;
 
+		private ActionBusElement _backClickElement;
+
 		public UIToggleBarView(UIToggleBarLayout layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 		{
 			AddDisposable(_collection = new UIToggleButtonsCollection(layout, animatorFactory));
 
 			if (layout.back != null)
-				Subscribe(layout.back, HandleBackClicked);
+				_backClickElement = Subscribe(layout.back, HandleBackClicked, _layout.backButtonUniqueId, _layout.backButtonGroupId);
 		}
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)
@@ -22,11 +26,26 @@ namespace UI
 
 			_collection.Update(viewModel.Buttons);
 			viewModel.ButtonsChanged += HandleButtonsChanged;
+
+			if (!viewModel.BackButtonActionBusUniqueId.IsNullOrEmpty() || !viewModel.BackButtonActionBusGroupId.IsNullOrEmpty())
+				UpdateBackClickElement(viewModel.BackButtonActionBusUniqueId, viewModel.BackButtonActionBusGroupId);
 		}
 
 		protected override void OnClear(IToggleBarViewModel viewModel)
 		{
 			viewModel.ButtonsChanged -= HandleButtonsChanged;
+			UpdateBackClickElement();
+		}
+
+		private void UpdateBackClickElement(string uid = null, string groupId = null)
+		{
+			if (_layout.back == null)
+				return;
+
+			DisposeAndRemoveDisposable(_backClickElement);
+			_backClickElement = Subscribe(_layout.back, HandleBackClicked,
+				uid ?? _layout.backButtonUniqueId,
+				groupId ?? _layout.backButtonGroupId);
 		}
 
 		protected override void OnNullViewModel()
@@ -67,6 +86,9 @@ namespace UI
 		/// Full set of buttons has changed.
 		/// </summary>
 		event Action ButtonsChanged;
+
+		string BackButtonActionBusUniqueId { get => null; }
+		string BackButtonActionBusGroupId { get => null; }
 
 		void ClickBack()
 		{
