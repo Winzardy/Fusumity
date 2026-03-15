@@ -120,19 +120,13 @@ namespace UI.Popovers
 			_popover  = popover;
 		}
 
-		void IPopoverToken.Release(bool immediate)
-		{
-			Released?.Invoke();
-			Release(immediate);
-		}
-
-		private void Release(bool immediate = false)
-		{
-			_releaser?.Invoke(this, immediate);
-		}
+		void IPopoverToken.Release(bool immediate) => Release(immediate);
+		private void Release(bool immediate = false) => _releaser?.Invoke(this, immediate);
 
 		void IPoolable.Release()
 		{
+			Released?.Invoke();
+
 			_generation++;
 			_releaser = null;
 			_popover  = null;

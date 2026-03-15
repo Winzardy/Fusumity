@@ -41,6 +41,7 @@ namespace UI
 			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
 			policy.Bind(host, OnReleaseRequested, customAnchor);
 			Show(ref popoverToken, policy, args, immediate);
+
 			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
 		}
 
@@ -53,6 +54,7 @@ namespace UI
 			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
 			policy.Bind(host, OnReleaseRequested, customAnchor);
 			return Show<T>(policy, args, immediate);
+
 			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
 		}
 
@@ -64,6 +66,17 @@ namespace UI
 			var policy = Pool<DefaultPopoverShowPolicy>.Get();
 			policy.Bind(layout, OnReleaseRequested);
 			return Show<T>(policy, args, immediate);
+
+			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
+		}
+
+		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout layout, object args = null, bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			var policy = Pool<DefaultPopoverShowPolicy>.Get();
+			policy.Bind(layout, OnReleaseRequested);
+			Show(ref token, policy, args, immediate);
+
 			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
 		}
 
@@ -83,15 +96,6 @@ namespace UI
 		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
 			=> _manager.Show(ref token, policy, args, immediate);
-
-		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout layout, object args = null, bool immediate = false)
-			where T : UIWidget, IPopover
-		{
-			var policy = Pool<DefaultPopoverShowPolicy>.Get();
-			policy.Bind(layout, OnReleaseRequested);
-			Show(ref token, policy, args, immediate);
-			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
-		}
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

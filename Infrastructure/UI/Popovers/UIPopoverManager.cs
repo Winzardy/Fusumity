@@ -134,10 +134,14 @@ namespace UI.Popovers
 			void OnPopoverHidden(IWidget widget, bool immediate)
 			{
 				var popover = widget as IPopover;
-				popover!.Hidden -= OnPopoverHidden;
+				popover!.RequestedClose -= HandlePopoverRequestedClose;
+				popover!.Hidden         -= OnPopoverHidden;
 
 				Clear(immediate);
 				ReleaseToken(pooledToken);
+
+				if (policy is IPoolablePopoverShowPolicy releasable)
+					releasable.ReleaseRequest();
 			}
 		}
 
