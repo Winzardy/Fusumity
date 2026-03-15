@@ -63,7 +63,7 @@ namespace UI.Popovers.Editor
 			if (popover == null)
 				return;
 
-			argsInspector.SetType(popover.GetArgsType());
+			argsInspector.SetType(popover.GetDeclaredArgsType());
 		}
 
 		private void OnHostChanged()

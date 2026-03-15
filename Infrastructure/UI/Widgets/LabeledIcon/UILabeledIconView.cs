@@ -1,7 +1,7 @@
-﻿using Fusumity.MVVM.UI;
-using Sapientia.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Fusumity.MVVM.UI;
+using Sapientia.Extensions;
 using UI;
 using UnityEngine;
 

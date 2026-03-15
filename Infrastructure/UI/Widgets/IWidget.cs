@@ -5,7 +5,7 @@ namespace UI
 {
 	public partial interface IWidget : IDisposable
 	{
-		Type GetArgsType() => typeof(EmptyArgs);
+		Type GetDeclaredArgsType() => typeof(EmptyArgs);
 		object GetArgs() => null;
 
 		/// <summary>

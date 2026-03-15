@@ -4,10 +4,12 @@ using UnityEngine;
 
 namespace UI
 {
-	public class DefaultWidgetPopoverShowPolicy : IAutoDisposePopoverShowPolicy
+	public class DefaultWidgetPopoverShowPolicy : IPoolablePopoverShowPolicy
 	{
 		private UIWidget _widget;
 		private RectTransform _customAnchor;
+		private Action _onReleaseRequest;
+
 
 		public RectTransform Anchor
 		{
@@ -21,11 +23,15 @@ namespace UI
 		public event PopoverDelegate Shown;
 		public event PopoverDelegate Hidden;
 		public event Action AnchorUpdated;
-		public event PopoverDelegate Disposed;
 
-		public DefaultWidgetPopoverShowPolicy(UIWidget widget, RectTransform customAnchor = null)
+		public void Dispose() => Clear();
+
+		public void Bind(UIWidget widget, Action onReleaseRequest, RectTransform customAnchor = null)
 		{
+			Clear();
+
 			_widget       = widget;
+			_onReleaseRequest = onReleaseRequest;
 			_customAnchor = customAnchor;
 
 			if (_widget.BaseLayout != null)
@@ -37,9 +43,10 @@ namespace UI
 			_widget.LayoutCleared   += HandleLayoutCleared;
 		}
 
-		public void Dispose()
+		private void Clear()
 		{
-			Disposed?.Invoke(false);
+			if (_widget == null)
+				return;
 
 			_widget.Shown           -= HandleShown;
 			_widget.LayoutInstalled -= HandleLayoutInstalled;
@@ -48,6 +55,10 @@ namespace UI
 			if (_widget.BaseLayout != null)
 				_widget.BaseLayout.BeforeDestroy -= HandleBeforeDestroy;
 		}
+
+		public void Release() => Clear();
+
+		public void ReleaseRequest() => _onReleaseRequest.Invoke();
 
 		private void HandleLayoutInstalled(UIBaseLayout layout)
 		{

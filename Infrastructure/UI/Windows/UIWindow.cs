@@ -164,7 +164,7 @@ namespace UI.Windows
 			_args = args;
 		}
 
-		public Type GetArgsType() => typeof(TArgs);
+		public Type GetDeclaredArgsType() => typeof(TArgs);
 		public object GetArgs() => _args;
 
 		bool IWindow.CanShow(object boxedArgs, out string error)

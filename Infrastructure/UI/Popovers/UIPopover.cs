@@ -16,8 +16,6 @@ namespace UI.Popovers
 		protected internal RectTransform Anchor { get; }
 
 		void RequestClose();
-		Type GetArgsType();
-		internal object GetArgs();
 
 		void UpdateAnchor(RectTransform anchor);
 
@@ -226,10 +224,9 @@ namespace UI.Popovers
 			base.OnEndedClosingInternal();
 		}
 
-		public Type GetArgsType() => typeof(TArgs);
+		public Type GetDeclaredArgsType() => typeof(TArgs);
+		object IWidget.GetArgs() => _args;
 		public TArgs GetArgs() => _args;
-
-		object IPopover.GetArgs() => _args;
 
 		public override void RequestClose()
 		{

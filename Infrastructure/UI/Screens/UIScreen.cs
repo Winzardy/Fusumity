@@ -122,7 +122,7 @@ namespace UI.Screens
 			_args = args;
 		}
 
-		public Type GetArgsType() => typeof(TArgs);
+		public Type GetDeclaredArgsType() => typeof(TArgs);
 		public object GetArgs() => _args;
 
 		bool IScreen.CanShow(object boxedArgs, out string error)

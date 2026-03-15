@@ -241,7 +241,7 @@ namespace UI.Popups
 			ClearLayout();
 		}
 
-		public Type GetArgsType() => typeof(TArgs);
+		public Type GetDeclaredArgsType() => typeof(TArgs);
 		public object GetArgs() => _args;
 
 		public override void RequestClose()

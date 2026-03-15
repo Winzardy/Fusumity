@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sapientia.Pooling;
 using UI.Popovers;
 using UnityEngine;
 
@@ -37,8 +38,10 @@ namespace UI
 			bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var policy = new DefaultWidgetPopoverShowPolicy(host, customAnchor);
+			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
+			policy.Bind(host, OnReleaseRequested, customAnchor);
 			Show(ref popoverToken, policy, args, immediate);
+			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
 		}
 
 		public PopoverToken<T> Show<T>(UIWidget host,
@@ -47,8 +50,21 @@ namespace UI
 			bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var policy = new DefaultWidgetPopoverShowPolicy(host, customAnchor);
+			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
+			policy.Bind(host, OnReleaseRequested, customAnchor);
 			return Show<T>(policy, args, immediate);
+			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
+		}
+
+		public PopoverToken<T> Show<T>(UIBaseLayout layout,
+			object args = null,
+			bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			var policy = Pool<DefaultPopoverShowPolicy>.Get();
+			policy.Bind(layout, OnReleaseRequested);
+			return Show<T>(policy, args, immediate);
+			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
 		}
 
 		public PopoverToken<T> Show<T>(IPopoverShowPolicy policy, object args = null, bool immediate = false)
@@ -68,9 +84,14 @@ namespace UI
 			where T : UIWidget, IPopover
 			=> _manager.Show(ref token, policy, args, immediate);
 
-		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout baseLayout, object args = null, bool immediate = false)
+		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout layout, object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
-			=> Show(ref token, new DefaultPopoverShowPolicy(baseLayout), args, immediate);
+		{
+			var policy = Pool<DefaultPopoverShowPolicy>.Get();
+			policy.Bind(layout, OnReleaseRequested);
+			Show(ref token, policy, args, immediate);
+			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
+		}
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

@@ -100,7 +100,7 @@ namespace UI.Popovers.Editor
 
 				void DrawArgsField()
 				{
-					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, popoverArgs, popover.GetArgsType(), false);
+					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, popoverArgs, popover.GetDeclaredArgsType(), false);
 				}
 
 				void Body()

@@ -44,7 +44,7 @@ namespace UI.Screens.Editor
 			if (screen == null)
 				return;
 
-			argsInspector.SetType(screen.GetArgsType());
+			argsInspector.SetType(screen.GetDeclaredArgsType());
 		}
 	}
 }

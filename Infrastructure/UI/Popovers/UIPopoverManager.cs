@@ -24,8 +24,9 @@ namespace UI.Popovers
 	/// <summary>
 	/// Будет диспоузится вместе с токеном...
 	/// </summary>
-	public interface IAutoDisposePopoverShowPolicy : IPopoverShowPolicy, IDisposable
+	public interface IPoolablePopoverShowPolicy : IPopoverShowPolicy, IDisposable, IPoolable
 	{
+		void ReleaseRequest();
 	}
 
 	public delegate void PopoverDelegate(bool immediate);
@@ -75,7 +76,7 @@ namespace UI.Popovers
 
 			var pooledToken = Pool<PooledPopoverToken<T>>.Get();
 
-			if (policy is IAutoDisposePopoverShowPolicy)
+			if (policy is IPoolablePopoverShowPolicy)
 				pooledToken.Released += OnTokenReleased;
 
 			if (policy.IsShown)
@@ -90,8 +91,8 @@ namespace UI.Popovers
 			void OnTokenReleased()
 			{
 				Clear(false);
-				if (policy is IAutoDisposePopoverShowPolicy disposablePolicy)
-					disposablePolicy.Dispose();
+				if (policy is IPoolablePopoverShowPolicy releasable)
+					releasable.ReleaseRequest();
 			}
 
 			void OnPolicyShown(bool immediate) => ShowInternal(immediate);
@@ -120,7 +121,7 @@ namespace UI.Popovers
 
 			void Clear(bool immediate)
 			{
-				if (policy is IAutoDisposePopoverShowPolicy)
+				if (policy is IPoolablePopoverShowPolicy)
 					pooledToken.Released -= OnTokenReleased;
 
 				HideInternal(immediate);
