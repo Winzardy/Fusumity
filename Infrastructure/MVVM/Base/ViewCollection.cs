@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Sapientia.Collections;
 using UnityEngine;
 
 namespace Fusumity.MVVM
@@ -158,6 +159,28 @@ namespace Fusumity.MVVM
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
+		}
+
+		protected virtual IEqualityComparer<TViewModel> GetComparer() => EqualityComparer<TViewModel>.Default;
+
+		public bool ElementModelsEqual(IEnumerable<TViewModel> other)
+		{
+			if (other == null)
+				return UtilizedCount == 0;
+
+			var comparer = GetComparer();
+			using var enumerator = other.GetEnumerator();
+
+			for (int i = 0; i < UtilizedCount; i++)
+			{
+				if (!enumerator.MoveNext())
+					return false;
+
+				if (!comparer.Equals(_utilizedViews[i].ViewModel, enumerator.Current))
+					return false;
+			}
+
+			return !enumerator.MoveNext();
 		}
 	}
 }

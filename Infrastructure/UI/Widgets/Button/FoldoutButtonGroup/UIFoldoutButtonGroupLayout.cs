@@ -1,6 +1,6 @@
 using Fusumity.MVVM.UI;
 
-namespace UI.FoldoutButtonGroup
+namespace UI
 {
 	public class UIFoldoutButtonGroupLayout : UIBaseLayout
 	{

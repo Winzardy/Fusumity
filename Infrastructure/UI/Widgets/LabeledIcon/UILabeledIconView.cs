@@ -1,6 +1,7 @@
 ﻿using Fusumity.MVVM.UI;
 using Sapientia.Extensions;
 using System;
+using System.Collections.Generic;
 using UI;
 using UnityEngine;
 
@@ -22,7 +23,7 @@ namespace Game.UI
 			if (_layout.icon != null)
 			{
 				_defaultIconSprite = _layout.icon.sprite;
-				_defaultIconColor = _layout.icon.color;
+				_defaultIconColor  = _layout.icon.color;
 			}
 
 			_defaultLabelText = _layout.label.text;
@@ -45,21 +46,21 @@ namespace Game.UI
 
 			UpdateStyle();
 
-			viewModel.LabelChanged += HandleLabelChanged;
+			viewModel.LabelChanged      += HandleLabelChanged;
 			viewModel.LabelColorChanged += UpdateLabelColor;
-			viewModel.StyleChanged += HandleLabelStyleChanged;
+			viewModel.StyleChanged      += HandleLabelStyleChanged;
 
-			viewModel.IconChanged += UpdateIcon;
+			viewModel.IconChanged      += UpdateIcon;
 			viewModel.IconColorChanged += UpdateIconColor;
 		}
 
 		protected override void OnClear(ILabeledIconViewModel viewModel)
 		{
-			viewModel.LabelChanged -= HandleLabelChanged;
+			viewModel.LabelChanged      -= HandleLabelChanged;
 			viewModel.LabelColorChanged -= UpdateLabelColor;
-			viewModel.StyleChanged -= HandleLabelStyleChanged;
+			viewModel.StyleChanged      -= HandleLabelStyleChanged;
 
-			viewModel.IconChanged -= UpdateIcon;
+			viewModel.IconChanged      -= UpdateIcon;
 			viewModel.IconColorChanged -= UpdateIconColor;
 		}
 
@@ -164,5 +165,32 @@ namespace Game.UI
 		public void IconClick()
 		{
 		}
+	}
+
+	public sealed class LabeledIconComparer : IEqualityComparer<ILabeledIconViewModel>
+	{
+		public static LabeledIconComparer Instance { get; } = new();
+
+		public static bool Equals(ILabeledIconViewModel a, ILabeledIconViewModel b)
+		{
+			return Instance.EqualsInternal(a, b);
+		}
+
+		private bool EqualsInternal(ILabeledIconViewModel a, ILabeledIconViewModel b)
+		{
+			if (a == null || b == null)
+				return a == b;
+
+			return a.Label == b.Label &&
+				a.Style == b.Style &&
+				a.LabelColor == b.LabelColor &&
+				a.Icon.Equals(b.Icon) &&
+				a.IconColor == b.IconColor;
+		}
+
+		bool IEqualityComparer<ILabeledIconViewModel>.Equals(ILabeledIconViewModel a, ILabeledIconViewModel b)
+			=> EqualsInternal(a, b);
+
+		int IEqualityComparer<ILabeledIconViewModel>.GetHashCode(ILabeledIconViewModel obj) => obj.GetHashCode();
 	}
 }

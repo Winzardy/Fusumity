@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Fusumity.MVVM;
 using Fusumity.MVVM.UI;
 using InputManagement;
 
-namespace UI.FoldoutButtonGroup
+namespace UI
 {
 	public class UIFoldoutButtonGroupView : UIView<IFoldoutButtonGroupViewModel, UIFoldoutButtonGroupLayout>
 	{
