@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Sapientia.Pooling;
+using UI.Layers;
 using UI.Popovers;
 using UnityEngine;
 
@@ -31,18 +32,63 @@ namespace UI
 			_manager = null;
 		}
 
-		public void Show<T>(ref PopoverToken<T> popoverToken,
+		/// <inheritdoc cref="Show{T}(ref PopoverToken{T}, IPopoverShowPolicy, object, bool)"/>
+		public void Show<T>(ref PopoverToken<T> token,
 			UIWidget host,
 			object args = null,
 			RectTransform customAnchor = null,
 			bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
-			policy.Bind(host, OnReleaseRequested, customAnchor);
-			Show(ref popoverToken, policy, args, immediate);
+			if (TryUpdate(ref token, args))
+				return;
 
-			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
+			token = Show<T>(host, args, customAnchor, immediate);
+		}
+
+		/// <inheritdoc cref="Show{T}(ref PopoverToken{T}, IPopoverShowPolicy, object, bool)"/>
+		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout anchor, object args = null, bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			if (TryUpdate(ref token, args))
+				return;
+
+			token = Show<T>(anchor, args, immediate);
+		}
+
+		/// <inheritdoc cref="Show{T}(ref PopoverToken{T}, IPopoverShowPolicy, object, bool)"/>
+		public void Show<T>(ref PopoverToken<T> token, object args = null, bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			if (TryUpdate(ref token, args))
+				return;
+
+			token = Show<T>(args, immediate);
+		}
+
+		/// <summary>
+		/// Показывает поповер с возможностью переиспользовать ранее полученный токен.
+		/// В отличие от <see cref="Show{T}(object, bool)"/>,
+		/// повторные вызовы с тем же токеном позволяют переоткрывать поповер из одной и той же точки.
+		/// </summary>
+		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null, bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			if (TryUpdate(ref token, args))
+				return;
+
+			token = Show<T>(policy, args, immediate);
+		}
+
+		public PopoverToken<T> Show<T>(UIBaseLayout anchor,
+			object args = null,
+			bool immediate = false)
+			where T : UIWidget, IPopover
+		{
+			var policy = Pool<DefaultPopoverShowPolicy>.Get();
+			policy.Bind(anchor, OnReleaseRequested);
+			return Show<T>(policy, args, immediate);
+			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
 		}
 
 		public PopoverToken<T> Show<T>(UIWidget host,
@@ -54,48 +100,36 @@ namespace UI
 			var policy = Pool<DefaultWidgetPopoverShowPolicy>.Get();
 			policy.Bind(host, OnReleaseRequested, customAnchor);
 			return Show<T>(policy, args, immediate);
-
 			void OnReleaseRequested() => Pool<DefaultWidgetPopoverShowPolicy>.Release(policy);
 		}
 
-		public PopoverToken<T> Show<T>(UIBaseLayout layout,
-			object args = null,
-			bool immediate = false)
+		public PopoverToken<T> Show<T>(object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
 		{
 			var policy = Pool<DefaultPopoverShowPolicy>.Get();
-			policy.Bind(layout, OnReleaseRequested);
+			var anchor = UIDispatcher.GetLayer(LayerType.POPOVERS);
+			policy.Bind(anchor, OnReleaseRequested);
 			return Show<T>(policy, args, immediate);
-
-			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
-		}
-
-		public void Show<T>(ref PopoverToken<T> token, UIBaseLayout layout, object args = null, bool immediate = false)
-			where T : UIWidget, IPopover
-		{
-			var policy = Pool<DefaultPopoverShowPolicy>.Get();
-			policy.Bind(layout, OnReleaseRequested);
-			Show(ref token, policy, args, immediate);
-
 			void OnReleaseRequested() => Pool<DefaultPopoverShowPolicy>.Release(policy);
 		}
 
 		public PopoverToken<T> Show<T>(IPopoverShowPolicy policy, object args = null, bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			var token = new PopoverToken<T>();
-			_manager.Show(ref token, policy, args, immediate);
-			return token;
+			return _manager.Show<T>(policy, args, immediate);
 		}
 
-		/// <summary>
-		/// Показывает поповер с возможностью переиспользовать ранее полученный токен.
-		/// В отличие от <see cref="Show{T}(UIWidget, UIBaseLayout, object)"/>,
-		/// повторные вызовы с тем же токеном позволяют переоткрывать поповер из одной и той же точки.
-		/// </summary>
-		public void Show<T>(ref PopoverToken<T> token, IPopoverShowPolicy policy, object args = null, bool immediate = false)
+		private bool TryUpdate<T>(ref PopoverToken<T> token, object args)
 			where T : UIWidget, IPopover
-			=> _manager.Show(ref token, policy, args, immediate);
+		{
+			if (token.IsValid() && token.Popover.Visible)
+			{
+				token.Popover.Show(args, true);
+				return true;
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Попробовать закрыть последний открытый поповер

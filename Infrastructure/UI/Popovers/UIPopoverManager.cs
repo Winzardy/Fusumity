@@ -65,15 +65,9 @@ namespace UI.Popovers
 			_cts?.Trigger();
 		}
 
-		internal void Show<T>(ref PopoverToken<T> token, [NotNull] IPopoverShowPolicy policy, object args, bool immediate = false)
+		internal PopoverToken<T> Show<T>([NotNull] IPopoverShowPolicy policy, object args, bool immediate = false)
 			where T : UIWidget, IPopover
 		{
-			if (token.IsValid() && token.Popover.Visible)
-			{
-				token.Popover.Show(args, true);
-				return;
-			}
-
 			var pooledToken = Pool<PooledPopoverToken<T>>.Get();
 
 			if (policy is IPoolablePopoverShowPolicy)
@@ -86,7 +80,7 @@ namespace UI.Popovers
 			policy.Hidden        += OnPolicyHidden;
 			policy.AnchorUpdated += OnPolicyAnchorUpdated;
 
-			token = pooledToken;
+			return pooledToken;
 
 			void OnTokenReleased()
 			{
@@ -105,7 +99,7 @@ namespace UI.Popovers
 				if (popover == null)
 				{
 					popover = _pool.Get<T>(policy.Anchor);
-					pooledToken.Bind(popover, Release);
+					pooledToken.Bind(popover, policy, Release);
 
 					popover.RequestedClose += HandlePopoverRequestedClose;
 					popover.Hidden         += OnPopoverHidden;
