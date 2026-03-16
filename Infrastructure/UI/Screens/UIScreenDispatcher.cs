@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 
 namespace UI.Screens
 {
@@ -8,12 +9,12 @@ namespace UI.Screens
 		private UIScreenManager _manager;
 
 		/// <summary>
-		/// Активация окна, даже если окно в очереди
+		/// Активация экрана (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IScreen> Activated;
 
 		/// <summary>
-		/// Деактивация окна, даже если окно в очереди
+		/// Деактивация экрана (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IScreen> Deactivated;
 
@@ -37,17 +38,13 @@ namespace UI.Screens
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
+			_manager.Shown  += OnShown;
 			_manager.Hidden += OnHidden;
-		}
-
-		public UIScreenDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
+			_manager.Shown  -= OnShown;
 			_manager.Hidden -= OnHidden;
 
 			_manager = null;
@@ -128,6 +125,17 @@ namespace UI.Screens
 		public bool TryGet<T>(out T screen)
 			where T : UIWidget, IScreen =>
 			_manager.TryGet(out screen);
+
+		public bool Any()
+		{
+			if (_manager.Current.screen != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
 
 		/// <summary>
 		/// Попробовать закрыть текущее окно

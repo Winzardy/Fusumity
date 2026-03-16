@@ -2,6 +2,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using InputManagement;
+using Sapientia;
 using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
 
@@ -18,7 +19,7 @@ namespace Booting.Input
 
 		private IInputReader _inputReader;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 #if UNITY_EDITOR
 			_inputReader = new DesktopInputReader();

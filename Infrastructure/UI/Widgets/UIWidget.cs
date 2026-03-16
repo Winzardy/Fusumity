@@ -46,8 +46,11 @@ namespace UI
 		protected virtual bool UseCustomReset => false;
 
 		public abstract RectTransform RectTransform { get; }
+		public abstract UIBaseLayout BaseLayout { get; }
 
-		public string Layer { get; protected set; }
+		public virtual WidgetFlags Flags { get => WidgetFlags.None; }
+
+		public virtual string Layer { get; protected set; }
 
 		public abstract event WidgetShownDelegate Shown;
 		public abstract event WidgetHiddenDelegate Hidden;
@@ -186,7 +189,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет станет видимым
 		/// </summary>
-		public async UniTask WaitOpening(CancellationToken? cancellationToken = null)
+		public async UniTask WaitOpeningAsync(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{
@@ -209,7 +212,7 @@ namespace UI
 		/// <summary>
 		/// Подождать пока виджет скроется
 		/// </summary>
-		public async UniTask WaitClosing(CancellationToken? cancellationToken = null)
+		public async UniTask WaitClosingAsync(CancellationToken? cancellationToken = null)
 		{
 			if (cancellationToken.HasValue)
 			{
@@ -236,9 +239,9 @@ namespace UI
 		public static implicit operator bool(UIWidget widget) => widget != null;
 	}
 
-	public delegate void WidgetShownDelegate(IWidget widget);
+	public delegate void WidgetShownDelegate(IWidget widget, bool immediate = false);
 
-	public delegate void WidgetHiddenDelegate(IWidget widget);
+	public delegate void WidgetHiddenDelegate(IWidget widget, bool immediate = false);
 
 	public delegate void WidgetLayoutClearedDelegate([CanBeNull] UIBaseLayout layout);
 

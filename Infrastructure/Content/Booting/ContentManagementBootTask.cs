@@ -3,6 +3,7 @@ using System.Threading;
 using Content;
 using Content.Management;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
 using Content.ScriptableObjects.Editor;
@@ -19,7 +20,7 @@ namespace Booting.Content
 	{
 		public override int Priority => HIGH_PRIORITY - 20;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var resolver = new ContentResolver();
 			ContentManager.Set(resolver);

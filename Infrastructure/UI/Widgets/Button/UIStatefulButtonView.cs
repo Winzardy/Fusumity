@@ -46,8 +46,13 @@ namespace UI
 			UpdateStyle();
 			UpdateInteractable();
 
-			viewModel.StyleChanged += UpdateStyle;
+			viewModel.StyleChanged        += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
+
+			if (!viewModel.ActionBusUniqueId.IsNullOrEmpty() || !viewModel.ActionBusGroupId.IsNullOrEmpty())
+			{
+				UpdateClickElement(viewModel.ActionBusUniqueId, viewModel.ActionBusGroupId);
+			}
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
@@ -55,8 +60,18 @@ namespace UI
 			if (_layout.label != null)
 				viewModel.Label.Release();
 
-			viewModel.StyleChanged -= UpdateStyle;
+			viewModel.StyleChanged        -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
+
+			UpdateClickElement();
+		}
+
+		private void UpdateClickElement(string uid = null, string groupId = null)
+		{
+			DisposeAndRemoveDisposable(_clickElement);
+			_clickElement = Subscribe(_layout.button, HandleClick,
+				uid ?? _layout.uId,
+				groupId ?? _layout.groupId);
 		}
 
 		protected override void OnNullViewModel()
@@ -67,7 +82,9 @@ namespace UI
 		private void UpdateLabel(string text)
 		{
 			_layout.label.text = text;
-			_layout.label.SetActive(!text.IsNullOrEmpty());
+			var active = !text.IsNullOrEmpty();
+			_layout.label.SetActive(active);
+			_layout.labelGroup.SetActiveSafe(active);
 		}
 
 		private void UpdateStyle()
@@ -121,6 +138,9 @@ namespace UI
 		UISpriteInfo Icon { get => default; }
 		IAdBannerViewModel AdBanner { get => null; }
 		ILabeledIconViewModel LabeledIcon { get => null; }
+
+		string ActionBusUniqueId { get => null; }
+		string ActionBusGroupId { get => null; }
 
 		event Action StyleChanged;
 		event Action InteractableChanged;

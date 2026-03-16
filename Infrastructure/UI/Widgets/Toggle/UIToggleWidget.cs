@@ -75,7 +75,7 @@ namespace UI
 			if (_layout.activitySwitcher)
 				_layout.activitySwitcher.Switch(isOn);
 
-			var key = isOn ? WidgetAnimationType.TOGGLE_ENABLING : WidgetAnimationType.TOGGLE_DISABLING;
+			var key = isOn ? AnimationType.TOGGLE_ENABLING : AnimationType.TOGGLE_DISABLING;
 			_animator.Play(key, immediate);
 		}
 

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Sapientia.Collections;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
@@ -20,66 +21,103 @@ namespace Localization
 	/// </remarks>
 	public partial class LocalizationResolver : IDisposable
 	{
-		private LocTableReference _tableReference;
+		private bool _initialized;
+		private HashMap<LocTableReference, AsyncOperationHandle<StringTable>> _refToHandle;
 
-		private StringTable _table;
 		private Locale _currentLocale;
-		private AsyncOperationHandle<StringTable> _handle;
 
-		public string CurrentLocaleCode => _currentLocale.Identifier.Code;
+		public bool IsInitialized { get => _initialized; }
+
+		public string CurrentLocaleCode { get { return _currentLocale.Identifier.Code; } }
 
 		/// <summary>
 		/// Display Name, то что мы показываем пользователю
 		/// </summary>
-		public string CurrentLanguage => GetDisplayName();
+		public string CurrentLanguage { get { return GetDisplayName(); } }
 
 		public event Action<string> CurrentLocaleCodeUpdated;
 		public event Action LocaleUpdated;
 
-		public LocalizationResolver(in LocTableReference tableReference)
+		public LocalizationResolver(in LocTableReference tableRef)
 		{
-			_tableReference = tableReference;
+			_refToHandle = new HashMap<LocTableReference, AsyncOperationHandle<StringTable>>();
+			_refToHandle.SetOrAdd(tableRef, default);
 		}
 
 		public async UniTask InitializeAsync(CancellationToken token = default)
 		{
+			if (_initialized)
+			{
+				LocalizationDebug.LogWarning("Already initialized!");
+				return;
+			}
+
 			await LocalizationSettings.InitializationOperation
 				.WithCancellation(token);
-			await SetLocale(token);
+			await InitializeLocaleAsync(token);
 
 			LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+
+			_initialized = true;
 		}
 
 		public void Dispose()
 		{
+			if (!_initialized)
+				return;
+
 			LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
 		}
 
-		internal bool Has(string key)
+		public async UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token = default)
 		{
-			if (_table == null)
-				return false;
+			if (!_refToHandle.Contains(tableRef))
+			{
+				_refToHandle.SetOrAdd(tableRef, default);
+				await InitializeLocaleAsync(token);
+			}
+			else
+			{
+				LocalizationDebug.LogWarning("Already  exists a locale with ID: " + tableRef.id);
+			}
+		}
 
-			return _table.GetEntry(key) != null;
+		internal bool Has(string key) => TryGet(key, out _);
+
+		internal bool TryGet(string key, out string value)
+		{
+			if (!key.IsNullOrEmpty())
+			{
+				if (!_refToHandle.IsNullOrEmpty())
+				{
+					foreach (ref var handle in _refToHandle)
+					{
+						if (handle.IsDefault() || !handle.IsDone)
+							continue;
+
+						var entry = handle.Result.GetEntry(key);
+						if (entry != null)
+						{
+							value = entry.Value;
+							return true;
+						}
+					}
+				}
+			}
+
+			value = null;
+			return false;
 		}
 
 		internal string Get(string key, string defaultValue = null)
 		{
-			if (!_table)
-				return defaultValue;
-
 			if (key.IsNullOrEmpty())
 				throw LocalizationDebug.NullException("Key cannot be null or empty!");
 
-			var entry = _table.GetEntry(key);
-
-			if (entry == null)
-			{
-				LocalizationDebug.LogWarning($"Could not find valid localization for [ {CurrentLanguage}/{key} ]");
+			if (!TryGet(key, out var value))
 				return defaultValue ?? $"#{key.ToUpper()}#".ColorText(UnityColorUtility.ERROR);
-			}
 
-			return entry.Value;
+			return value;
 		}
 
 		internal void SetLanguage(string localeCode)
@@ -92,33 +130,44 @@ namespace Localization
 			=> LocalizationSettings.AvailableLocales.Locales.Select(x => x.LocaleName);
 
 		private void OnSelectedLocaleChanged(Locale locale)
-			=> SetLocale(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
+			=> LoadAndSetLocaleAsync(locale, UnityLifecycle.ApplicationCancellationToken).Forget();
 
-		private async UniTask SetLocale(CancellationToken token = default) => await SetLocale(null, token);
+		private async UniTask InitializeLocaleAsync(CancellationToken token = default) => await LoadAndSetLocaleAsync(null, token);
 
-		private async UniTask SetLocale(Locale locale, CancellationToken token = default)
+		private async UniTask LoadAndSetLocaleAsync(Locale locale, CancellationToken token = default)
 		{
-			var handle = LocalizationSettings.StringDatabase.GetTableAsync(_tableReference.id, locale);
-
-			await handle
-				.WithCancellation(token);
-
-			if (handle.Status != AsyncOperationStatus.Succeeded)
+			var full = _currentLocale != locale;
+			locale ??= LocalizationSettings.SelectedLocale;
+			foreach (var reference in _refToHandle.Keys)
 			{
-				handle.ReleaseSafe();
-				return;
+				var currentHandle = _refToHandle[reference];
+
+				// Тут пропускаем загрузку если и так загружено...
+				if (currentHandle.IsValid() && currentHandle.Status == AsyncOperationStatus.Succeeded && !full)
+					continue;
+
+				var handle = LocalizationSettings.StringDatabase.GetTableAsync(reference.id, locale);
+
+				await handle
+					.WithCancellation(token);
+
+				if (!handle.IsValid() || handle.Status != AsyncOperationStatus.Succeeded)
+				{
+					LocalizationDebug.LogError(
+						$"Not found table by name [ {reference} ] for locale [ {locale.LocaleName} ]",
+						this);
+
+					handle.ReleaseSafe();
+					continue;
+				}
+
+				if (currentHandle.IsValid())
+					currentHandle.ReleaseSafe();
+
+				_refToHandle.SetOrAdd(reference, handle);
 			}
 
-			_handle.ReleaseSafe();
-
-			_handle = handle;
-			_table = handle.Result;
-
-			if (!_table)
-				LocalizationDebug.LogError($"Not found table by name [ {_tableReference} ] for locale [ {_currentLocale.LocaleName} ]",
-					this);
-
-			_currentLocale = LocalizationSettings.SelectedLocale;
+			_currentLocale = locale;
 			CurrentLocaleCodeUpdated?.Invoke(_currentLocale.Identifier.Code);
 			LocaleUpdated?.Invoke();
 

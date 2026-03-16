@@ -1,6 +1,7 @@
-﻿using Fusumity.MVVM.UI;
+﻿using System;
+using System.Collections.Generic;
+using Fusumity.MVVM.UI;
 using Sapientia.Extensions;
-using System;
 using UI;
 using UnityEngine;
 
@@ -22,7 +23,7 @@ namespace Game.UI
 			if (_layout.icon != null)
 			{
 				_defaultIconSprite = _layout.icon.sprite;
-				_defaultIconColor = _layout.icon.color;
+				_defaultIconColor  = _layout.icon.color;
 			}
 
 			_defaultLabelText = _layout.label.text;
@@ -43,21 +44,23 @@ namespace Game.UI
 			UpdateIconColor();
 			UpdateLabelColor();
 
-			viewModel.LabelChanged += HandleLabelChanged;
-			viewModel.LabelColorChanged += UpdateLabelColor;
-			viewModel.LabelStyleChanged += HandleLabelStyleChanged;
+			UpdateStyle();
 
-			viewModel.IconChanged += UpdateIcon;
+			viewModel.LabelChanged      += HandleLabelChanged;
+			viewModel.LabelColorChanged += UpdateLabelColor;
+			viewModel.StyleChanged      += HandleLabelStyleChanged;
+
+			viewModel.IconChanged      += UpdateIcon;
 			viewModel.IconColorChanged += UpdateIconColor;
 		}
 
 		protected override void OnClear(ILabeledIconViewModel viewModel)
 		{
-			viewModel.LabelChanged -= HandleLabelChanged;
+			viewModel.LabelChanged      -= HandleLabelChanged;
 			viewModel.LabelColorChanged -= UpdateLabelColor;
-			viewModel.LabelStyleChanged -= HandleLabelStyleChanged;
+			viewModel.StyleChanged      -= HandleLabelStyleChanged;
 
-			viewModel.IconChanged -= UpdateIcon;
+			viewModel.IconChanged      -= UpdateIcon;
 			viewModel.IconColorChanged -= UpdateIconColor;
 		}
 
@@ -80,8 +83,13 @@ namespace Game.UI
 
 		private void HandleLabelStyleChanged()
 		{
+			UpdateStyle();
+		}
+
+		private void UpdateStyle()
+		{
 			if (_layout.labelStyleSwitcher)
-				_layout.labelStyleSwitcher.Switch(ViewModel.LabelStyle);
+				_layout.labelStyleSwitcher.Switch(ViewModel.Style);
 		}
 
 		private void UpdateIcon()
@@ -136,7 +144,7 @@ namespace Game.UI
 	{
 		string Label { get; }
 		Color? LabelColor { get => null; }
-		string LabelStyle { get => null; }
+		string Style { get => null; }
 
 		UISpriteInfo Icon { get; }
 		Color? IconColor { get => null; }
@@ -145,7 +153,7 @@ namespace Game.UI
 
 		event Action LabelChanged;
 		event Action LabelColorChanged;
-		event Action LabelStyleChanged;
+		event Action StyleChanged;
 
 		event Action IconChanged;
 		event Action IconColorChanged;
@@ -157,5 +165,32 @@ namespace Game.UI
 		public void IconClick()
 		{
 		}
+	}
+
+	public sealed class LabeledIconComparer : IEqualityComparer<ILabeledIconViewModel>
+	{
+		public static LabeledIconComparer Instance { get; } = new();
+
+		public static bool Equals(ILabeledIconViewModel a, ILabeledIconViewModel b)
+		{
+			return Instance.EqualsInternal(a, b);
+		}
+
+		private bool EqualsInternal(ILabeledIconViewModel a, ILabeledIconViewModel b)
+		{
+			if (a == null || b == null)
+				return a == b;
+
+			return a.Label == b.Label &&
+				a.Style == b.Style &&
+				a.LabelColor == b.LabelColor &&
+				a.Icon.Equals(b.Icon) &&
+				a.IconColor == b.IconColor;
+		}
+
+		bool IEqualityComparer<ILabeledIconViewModel>.Equals(ILabeledIconViewModel a, ILabeledIconViewModel b)
+			=> EqualsInternal(a, b);
+
+		int IEqualityComparer<ILabeledIconViewModel>.GetHashCode(ILabeledIconViewModel obj) => obj.GetHashCode();
 	}
 }

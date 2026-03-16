@@ -5,40 +5,47 @@ namespace UI
 {
 	public partial interface IWidget : IDisposable
 	{
+		Type GetDeclaredArgsType() => typeof(EmptyArgs);
+		object GetArgs() => null;
+
 		/// <summary>
 		///Когда виджет активирован (начало анимации - начало закрывание)
 		/// </summary>
-		public bool Active { get; }
+		bool Active { get; }
 
 		/// <summary>
 		///Когда виджет вообще виден на экране (начало анимации - конец анимации)
 		/// </summary>
-		public bool Visible { get; }
+		bool Visible { get; }
 
 		/// <summary>
 		/// Когда виджет проиграл анимацию открытия и уже полностью открыт
 		/// </summary>
-		public bool Open { get; }
+		bool Open { get; }
 
-		public RectTransform RectTransform { get; }
+		RectTransform RectTransform { get; }
+		UIBaseLayout BaseLayout { get; }
 
-		public event WidgetShownDelegate Shown;
-		public event WidgetHiddenDelegate Hidden;
-		public event WidgetLayoutInstalledDelegate LayoutInstalled;
-		public event WidgetLayoutClearedDelegate LayoutCleared;
+		string Layer { get; }
+		WidgetFlags Flags { get; }
 
-		public void Initialize()
+		event WidgetShownDelegate Shown;
+		event WidgetHiddenDelegate Hidden;
+		event WidgetLayoutInstalledDelegate LayoutInstalled;
+		event WidgetLayoutClearedDelegate LayoutCleared;
+
+		void Initialize()
 		{
 		}
 
-		public void Reset();
-		public void Reset(bool deactivate);
+		void Reset();
+		void Reset(bool deactivate);
 
-		public void Refresh()
+		void Refresh()
 		{
 		}
 
-		public void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true)
+		void SetActive(bool active, bool immediate = false, bool useCacheImmediate = true)
 		{
 		}
 
@@ -46,8 +53,20 @@ namespace UI
 		{
 		}
 
-		public bool IsActive() => Active;
-		public bool IsVisible() => Visible;
-		public bool IsOpen() => Open;
+		bool IsActive() => Active;
+		bool IsVisible() => Visible;
+		bool IsOpen() => Open;
+	}
+
+	[Flags]
+	public enum WidgetFlags
+	{
+		None,
+
+		/// <summary>
+		/// Указывает, что виджет полностью окклюзирует игровой экран.
+		/// Может использоваться для отключения рендера сцены и оптимизации производительности
+		/// </summary>
+		Fullscreen = 1 << 0
 	}
 }

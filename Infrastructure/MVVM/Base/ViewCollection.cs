@@ -2,10 +2,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Sapientia.Collections;
 using UnityEngine;
 
 namespace Fusumity.MVVM
 {
+	public interface IViewCollection<TViewModel>
+	{
+		void Update(IEnumerable<TViewModel> viewModels);
+	}
+
 	/// <summary>
 	/// Collection of views that expands dynamically using single template prefab,
 	/// and caches resulting instances in the underlying pool.
@@ -25,7 +32,7 @@ namespace Fusumity.MVVM
 		protected override void Update(TView view, TViewModel viewModel) => view.Update(viewModel);
 	}
 
-	public abstract class BaseViewCollection<TViewModel, TView, TViewLayout> : IDisposable, IEnumerable<TView>
+	public abstract class BaseViewCollection<TViewModel, TView, TViewLayout> : IDisposable, IEnumerable<TView>, IViewCollection<TViewModel>
 		where TView : class, IView<TViewModel>
 		where TViewLayout : MonoBehaviour
 	{
@@ -152,6 +159,28 @@ namespace Fusumity.MVVM
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
+		}
+
+		protected virtual IEqualityComparer<TViewModel> GetComparer() => EqualityComparer<TViewModel>.Default;
+
+		public bool ElementModelsEqual(IEnumerable<TViewModel> other)
+		{
+			if (other == null)
+				return UtilizedCount == 0;
+
+			var comparer = GetComparer();
+			using var enumerator = other.GetEnumerator();
+
+			for (int i = 0; i < UtilizedCount; i++)
+			{
+				if (!enumerator.MoveNext())
+					return false;
+
+				if (!comparer.Equals(_utilizedViews[i].ViewModel, enumerator.Current))
+					return false;
+			}
+
+			return !enumerator.MoveNext();
 		}
 	}
 }

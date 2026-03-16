@@ -226,7 +226,7 @@ namespace UI
 			_calculateOnAnimation = false;
 			_animator?.Play(new()
 			{
-				key = WidgetAnimationType.MARKER_ENABLING,
+				key = AnimationType.MARKER_ENABLING,
 				startCallback = OnStartEnabling
 			}, !animation || force);
 
@@ -244,7 +244,7 @@ namespace UI
 			_calculateOnAnimation = _animator != null;
 			_animator?.Play(new()
 			{
-				key = WidgetAnimationType.MARKER_DISABLING,
+				key = AnimationType.MARKER_DISABLING,
 				endCallback = OnEndDisabling
 			}, !animation || force);
 

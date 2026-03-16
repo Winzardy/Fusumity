@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Fusumity.Utility;
 using Sapientia.Collections;
 using UI;
@@ -6,17 +7,27 @@ using UnityEngine;
 
 namespace Fusumity.MVVM.UI
 {
+	public interface IRootedViewCollection<TViewModel> : IViewCollection<TViewModel>
+	{
+		RectTransform Root { get; }
+		void UpdateOrDeactivate(IEnumerable<TViewModel> collection);
+
+		void Reset();
+	}
 	// only really needed for the UI constraints.
 
 	/// <summary>
 	/// Collection of UI views that expands dynamically using single template prefab,
 	/// and caches resulting instances in the underlying pool.
 	/// </summary>
-	public abstract class UIViewCollection<TViewModel, TView, TViewLayout> : ViewCollection<TViewModel, TView, TViewLayout>
+	public abstract class UIViewCollection<TViewModel, TView, TViewLayout> : ViewCollection<TViewModel, TView, TViewLayout>,
+		IRootedViewCollection<TViewModel>
 		where TView : UIView<TViewModel, TViewLayout>
 		where TViewLayout : UIBaseLayout
 	{
 		private RectTransform _root;
+
+		public RectTransform Root { get => _root; }
 
 		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)
 		{
@@ -33,7 +44,7 @@ namespace Fusumity.MVVM.UI
 			if (_root == null)
 				throw GUIDebug.Exception("Root can't be null!");
 
-			if (collection != null && !collection.IsNullOrEmpty())
+			if (!collection.IsNullOrEmpty())
 			{
 				_root.SetActive(true);
 				Update(collection);

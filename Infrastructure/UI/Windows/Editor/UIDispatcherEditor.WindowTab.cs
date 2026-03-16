@@ -48,7 +48,7 @@ namespace UI.Windows.Editor
 			if (window == null)
 				return;
 
-			argsInspector.SetType(window.GetArgsType());
+			argsInspector.SetType(window.GetDeclaredArgsType());
 		}
 	}
 }

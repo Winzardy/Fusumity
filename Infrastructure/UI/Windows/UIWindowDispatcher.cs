@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 
 namespace UI.Windows
 {
@@ -8,12 +9,12 @@ namespace UI.Windows
 		private UIWindowManager _manager;
 
 		/// <summary>
-		/// Активация окна, даже если окно в очереди
+		/// Активация окна (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IWindow> Activated;
 
 		/// <summary>
-		/// Деактивация окна, даже если окно в очереди
+		/// Деактивация окна (игнорирует окна из очереди)
 		/// </summary>
 		public event Action<IWindow> Deactivated;
 
@@ -37,17 +38,13 @@ namespace UI.Windows
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
+			_manager.Shown  += OnShown;
 			_manager.Hidden += OnHidden;
-		}
-
-		public UIWindowDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
+			_manager.Shown  -= OnShown;
 			_manager.Hidden -= OnHidden;
 
 			_manager = null;
@@ -102,7 +99,19 @@ namespace UI.Windows
 		/// </summary>
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
+
 		public bool TryGet<T>(out T window) where T : UIWidget, IWindow => _manager.TryGet(out window);
+
+		public bool Any()
+		{
+			if (_manager.Current.window != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
 		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();

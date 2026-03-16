@@ -18,10 +18,10 @@ namespace UI.Popovers
 		{
 		}
 
-		internal T Get(UIWidget host, RectTransform customAnchor = null)
+		internal T Get(RectTransform anchor)
 		{
 			var popover = Get();
-			popover.Attach(host, customAnchor);
+			popover.Attach(anchor);
 			EnsureCapacity(popover.Id);
 			return popover;
 		}

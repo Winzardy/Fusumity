@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
+using Sapientia;
 using Sapientia.Extensions;
 
 namespace Booting
@@ -12,7 +13,7 @@ namespace Booting
 
 		public virtual int Priority => 0;
 
-		public abstract UniTask RunAsync(CancellationToken token = default);
+		public abstract UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
 
 		public virtual void OnBootCompleted()
 		{

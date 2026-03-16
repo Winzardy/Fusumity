@@ -8,6 +8,7 @@ namespace UI.Windows
 	[Documentation("https://www.notion.so/winzardy/Window-8f15112b45b24c43b35f72f40dd4771d?pvs=4")]
 	public struct UIWindowConfig
 	{
+		public WidgetFlags flags;
 		public UILayoutEntry<UIBaseWindowLayout> layout;
 	}
 }

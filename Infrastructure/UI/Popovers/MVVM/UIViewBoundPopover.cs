@@ -14,10 +14,12 @@ namespace UI.Popovers
 		/// <br></br>
 		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
-		public virtual bool AutoDisposeViewModel { get => true; }
+		public abstract bool AutoDisposeViewModel { get; }
 
 		protected TView _view;
 		protected Action _onClose;
+
+		public TViewModel ViewModel { get => _view != null ? _view.ViewModel : default; }
 
 		protected abstract TView CreateView(TLayout layout);
 
@@ -53,7 +55,7 @@ namespace UI.Popovers
 			}
 
 			BeforeViewDisposed();
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
@@ -71,23 +73,49 @@ namespace UI.Popovers
 			if (!Active)
 				return;
 
-			TryAutoDisposeViewModel();
+			if (Equals(ViewModel, viewModel))
+				return;
+
+			UpdateArgs(viewModel);
+
+			TryСlearViewAndAutoDisposeViewModel();
 			_view?.Update(viewModel);
 
 			OnViewUpdated();
 		}
 
-		protected override sealed void OnShow(ref TViewModel viewModel)
+		protected override sealed void OnShow(in TViewModel viewModel)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 
+			_view.OnShow();
+			OnViewShow();
+		}
+
+		protected override void OnHide(in TViewModel _)
+		{
+			_view.OnHide();
+			_view.ClearViewModel();
+
+			OnViewHide();
+		}
+
+		protected override void OnEndedOpening()
+		{
+			_view.OnShown();
 			OnViewShown();
+		}
+
+		protected override void OnEndedClosing()
+		{
+			_view.OnHidden();
+			OnViewHidden();
 		}
 
 		protected override void OnReset(bool deactivate)
 		{
-			TryAutoDisposeViewModel();
+			TryСlearViewAndAutoDisposeViewModel(true);
 
 			_onClose?.Invoke();
 			OnViewHidden();
@@ -107,7 +135,15 @@ namespace UI.Popovers
 		{
 		}
 
+		protected virtual void OnViewShow()
+		{
+		}
+
 		protected virtual void OnViewShown()
+		{
+		}
+
+		protected virtual void OnViewHide()
 		{
 		}
 
@@ -119,9 +155,9 @@ namespace UI.Popovers
 		{
 		}
 
-		protected void TryAutoDisposeViewModel()
+		protected void TryСlearViewAndAutoDisposeViewModel(bool dispose = false)
 		{
-			_view?.ClearViewModel(AutoDisposeViewModel);
+			_view?.ClearViewModel(AutoDisposeViewModel && dispose);
 		}
 	}
 }

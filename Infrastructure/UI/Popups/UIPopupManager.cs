@@ -39,7 +39,7 @@ namespace UI.Popups
 		internal event HiddenDelegate Hidden;
 		internal event EnqueuedDelegate Enqueued;
 
-		internal (IPopup, object) Current => (_current, _current?.GetArgs());
+		internal (IPopup popup, object args) Current => (_current, _current?.GetArgs());
 
 		internal IEnumerable<KeyValuePair<IPopup, object>> Queue => _queue;
 		internal IEnumerable<KeyValuePair<IPopup, object>> Standalones => _standalones;
@@ -117,7 +117,7 @@ namespace UI.Popups
 
 		internal bool IsActive(string id)
 		{
-			if (_current != null && _current.Id == id && _current.Active)
+			if (_current?.Id == id)
 				return true;
 
 			foreach (var (popup, _) in _queue)
@@ -209,7 +209,15 @@ namespace UI.Popups
 
 		internal void Update(IPopup popup, object newArgs)
 		{
-			var immediate = popup.Active;
+			var immediate = popup.Open;
+
+			if (_current == popup)
+			{
+				popup.Hide(true, true);
+				popup.Show(newArgs, immediate);
+				return;
+			}
+
 			foreach (var (standalonePopup, _) in _standalones)
 			{
 				if (standalonePopup != popup)
@@ -218,13 +226,6 @@ namespace UI.Popups
 				popup.Hide(true, true);
 				popup.Show(newArgs, immediate);
 				_standalones[popup] = newArgs;
-				return;
-			}
-
-			if (_current == popup)
-			{
-				popup.Hide(true, true);
-				popup.Show(newArgs, immediate);
 				return;
 			}
 

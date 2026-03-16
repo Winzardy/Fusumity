@@ -1,6 +1,7 @@
 ﻿using Fusumity.Utility;
 using Sapientia.Extensions;
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Fusumity.MVVM
@@ -18,7 +19,29 @@ namespace Fusumity.MVVM
 
 	public interface IView<TViewModel> : IView
 	{
+		TViewModel ViewModel { get; }
+
 		void Update(TViewModel viewModel);
+
+		/// <summary>
+		/// Начали показ
+		/// </summary>
+		void OnShow();
+
+		/// <summary>
+		/// Закончили показ
+		/// </summary>
+		void OnShown();
+
+		/// <summary>
+		/// Начали закрытие
+		/// </summary>
+		void OnHide();
+
+		/// <summary>
+		/// Закончили закрытие
+		/// </summary>
+		void OnHidden();
 	}
 
 	public abstract class View<TViewModel> : IView<TViewModel>, IDisposable
@@ -45,6 +68,10 @@ namespace Fusumity.MVVM
 			if (baseModel is TViewModel viewModel)
 			{
 				Update(viewModel);
+			}
+			else if (baseModel is null)
+			{
+				Update(default);
 			}
 			else
 			{
@@ -86,13 +113,13 @@ namespace Fusumity.MVVM
 		/// View model updated.
 		/// Provided argument will never be null.
 		/// </summary>
-		protected abstract void OnUpdate(TViewModel viewModel);
+		protected abstract void OnUpdate([NotNull] TViewModel viewModel);
 
 		/// <summary>
 		/// View model cleared.
 		/// Provided argument will never be null.
 		/// </summary>
-		protected virtual void OnClear(TViewModel viewModel)
+		protected virtual void OnClear([NotNull] TViewModel viewModel)
 		{
 		}
 
@@ -126,6 +153,22 @@ namespace Fusumity.MVVM
 			ClearViewModel();
 		}
 
+		public virtual void OnShow()
+		{
+		}
+
+		public virtual void OnShown()
+		{
+		}
+
+		public virtual void OnHide()
+		{
+		}
+
+		public virtual void OnHidden()
+		{
+		}
+
 		public static implicit operator bool(View<TViewModel> view) => view != null;
 
 		#region Disposables
@@ -136,6 +179,17 @@ namespace Fusumity.MVVM
 		{
 			var lazyCd = _disposables ??= new CompositeDisposable();
 			lazyCd.AddDisposable(disposable);
+		}
+
+		protected void DisposeAndRemoveDisposable(IDisposable disposable)
+		{
+			disposable.Dispose();
+			RemoveDisposable(disposable);
+		}
+
+		protected void RemoveDisposable(IDisposable disposable)
+		{
+			_disposables?.RemoveDisposable(disposable);
 		}
 
 		protected void AddSubscription<T>(BaseSubscription<T> subscription) where T : Delegate

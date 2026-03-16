@@ -41,6 +41,13 @@ namespace UI
 			}
 		}
 
+		public event Action<UIBaseLayout> BeforeDestroy;
+
+		public void OnBeforeDestroy()
+		{
+			BeforeDestroy?.Invoke(this);
+		}
+
 		[ContextMenu("Reset Transform")]
 		protected new virtual void Reset()
 		{

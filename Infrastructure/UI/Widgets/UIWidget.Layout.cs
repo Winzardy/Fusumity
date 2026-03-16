@@ -61,6 +61,7 @@ namespace UI
 		public sealed override event WidgetLayoutClearedDelegate LayoutCleared;
 
 		public sealed override RectTransform RectTransform => _layout ? _layout.rectTransform : null;
+		public sealed override UIBaseLayout BaseLayout => Layout;
 
 		public UIWidget()
 		{
@@ -249,7 +250,7 @@ namespace UI
 
 			return new WidgetAnimationArgs
 			{
-				key           = visible ? WidgetAnimationType.OPENING : WidgetAnimationType.CLOSING,
+				key           = visible ? AnimationType.OPENING : AnimationType.CLOSING,
 				startCallback = startCallback,
 				endCallback   = endCallback
 			};
@@ -272,7 +273,7 @@ namespace UI
 		void IWidget.SetVisible(bool value) => SetVisibleInternal(value);
 
 		protected sealed override void OnVisibleOperationCanceledException(bool openingOrClosing)
-			=> _animator?.Stop(openingOrClosing ? WidgetAnimationType.OPENING : WidgetAnimationType.CLOSING);
+			=> _animator?.Stop(openingOrClosing ? AnimationType.OPENING : AnimationType.CLOSING);
 
 		protected internal void SetVisibleInternal(bool visible) => SetVisibleInternal(visible, true);
 

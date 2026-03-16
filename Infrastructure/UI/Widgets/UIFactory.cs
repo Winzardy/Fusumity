@@ -98,6 +98,9 @@ namespace UI
 
 		public static void Destroy<TLayout>(TLayout layout)
 			where TLayout : UIBaseLayout
-			=> layout.DestroyGameObject();
+		{
+			layout.OnBeforeDestroy();
+			layout.DestroyGameObject();
+		}
 	}
 }

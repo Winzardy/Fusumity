@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 
 namespace Booting
 {
@@ -12,9 +13,9 @@ namespace Booting
 	/// </summary>
 	public interface IBootTask : IDisposable
 	{
-		public bool Active { get; }
-		public int Priority { get; }
-		public UniTask RunAsync(CancellationToken token = default);
-		public void OnBootCompleted();
+		bool Active { get; }
+		int Priority { get; }
+		UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
+		void OnBootCompleted();
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NUnit.Framework;
+using Sapientia.Collections;
 using UI.Popups;
 
 namespace UI
@@ -14,7 +15,7 @@ namespace UI
 		/// Активация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
 		/// А активация вызывается лишь когда окно полностью закрыли
 		/// </summary>
-		public event Action<IPopup, object> Activated;
+		public event Action<IPopup> Activated;
 
 		/// <summary>
 		/// Деактивация попапа. Разница между показом в том что показ вызывается даже когда окно ушло в очередь.
@@ -43,19 +44,15 @@ namespace UI
 		{
 			_manager = manager;
 
-			_manager.Shown += OnShown;
-			_manager.Hidden += OnHidden;
+			_manager.Shown    += OnShown;
+			_manager.Hidden   += OnHidden;
 			_manager.Enqueued += OnEnqueued;
-		}
-
-		public UIPopupDispatcher()
-		{
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown -= OnShown;
-			_manager.Hidden -= OnHidden;
+			_manager.Shown    -= OnShown;
+			_manager.Hidden   -= OnHidden;
 			_manager.Enqueued -= OnEnqueued;
 
 			_manager = null;
@@ -66,7 +63,7 @@ namespace UI
 		/// </summary>
 		public bool IsActive<T>(T popup)
 			where T : UIWidget, IPopup
-			=> _manager.IsActive<T>(popup);
+			=> _manager.IsActive(popup);
 
 		public bool IsActive(string id)
 			=> _manager.IsActive(id);
@@ -128,10 +125,21 @@ namespace UI
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideCurrent() => _manager.TryHideCurrent();
 
+		public bool Any()
+		{
+			if (_manager.Current.popup != null)
+				return true;
+
+			if (!_manager.Queue.IsEmpty())
+				return true;
+
+			return false;
+		}
+
 		private void OnEnqueued(IPopup popup, object args, bool addToLast)
 		{
 			if (!addToLast)
-				Activated?.Invoke(popup, args);
+				Activated?.Invoke(popup);
 		}
 
 		private void OnShown(IPopup popup, bool fromQueue)
@@ -139,7 +147,7 @@ namespace UI
 			Shown?.Invoke(popup);
 
 			if (!fromQueue)
-				Activated?.Invoke(popup, popup.GetArgs());
+				Activated?.Invoke(popup);
 		}
 
 		private void OnHidden(IPopup popup, bool fromQueue)

@@ -142,13 +142,13 @@ namespace UI
 			return false;
 		}
 
-		public void Pause() => _animator.Pause(WidgetAnimationType.SPINNING);
+		public void Pause() => _animator.Pause(AnimationType.SPINNING);
 
-		public void Resume() => _animator.Resume(WidgetAnimationType.SPINNING);
+		public void Resume() => _animator.Resume(AnimationType.SPINNING);
 
-		protected override void OnShow() => _animator.Play(WidgetAnimationType.SPINNING);
+		protected override void OnShow() => _animator.Play(AnimationType.SPINNING);
 
-		protected internal override void OnEndedClosingInternal() => _animator.Stop(WidgetAnimationType.SPINNING, true);
+		protected internal override void OnEndedClosingInternal() => _animator.Stop(AnimationType.SPINNING, true);
 	}
 
 	public interface ISpinner

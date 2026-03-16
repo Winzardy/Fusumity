@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using AssetManagement;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using UnityEngine.Scripting;
 using Sirenix.OdinInspector;
 
@@ -15,7 +16,7 @@ namespace Booting.AssetManagement
 	{
 		public override int Priority => HIGH_PRIORITY - 10;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var provider = new AssetProvider();
 			AssetLoader.Set(provider);

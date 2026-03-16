@@ -5,14 +5,11 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
 using UI.Layers;
-using UnityEngine;
 
 namespace UI.Windows
 {
 	public interface IWindow : IWidget, IIdentifiable
 	{
-		public void RequestClose();
-
 		internal event Action<IWindow> RequestedClose;
 
 		internal void Initialize(UIWindowConfig config);
@@ -23,21 +20,16 @@ namespace UI.Windows
 		///Получается аргументы задают состояние окна от начала до конца использования.</param>
 		internal void Show(object args, bool immediate = false);
 
-		//TODO: поймал кейс в котором окно для корника осталось в очереди, потому что его никто не закрыл (PauseWindow)
 		internal bool CanShow(object args, out string error);
-
 		internal void Hide(bool reset, bool immediate = false);
-		internal object GetArgs();
 		internal void Clear();
 
-		public Type GetArgsType();
+		void RequestClose();
 	}
 
 	public abstract class UIWindow<TLayout> : UIBaseWindow<TLayout, EmptyArgs>
 		where TLayout : UIBaseWindowLayout
 	{
-		private protected sealed override object GetArgs() => null;
-
 		protected sealed override bool CanShow(ref EmptyArgs _, out string error) => CanShow(out error);
 
 		protected virtual bool CanShow(out string error)
@@ -60,10 +52,10 @@ namespace UI.Windows
 			if (_layout.close != null && _args is ICloseAvailability availability)
 				_layout.close.SetActive(availability.CloseAvailable);
 
-			OnShow(ref _args);
+			OnShow(in _args);
 		}
 
-		protected abstract void OnShow(ref TArgs args);
+		protected abstract void OnShow(in TArgs args);
 
 		protected sealed override void OnHide()
 		{
@@ -99,18 +91,18 @@ namespace UI.Windows
 	{
 		private const string LAYOUT_PREFIX_NAME = "[Window] ";
 
+		private UIWindowConfig _config;
 		private bool? _resetting;
 
-		protected UIWindowConfig _config;
-
 		protected TArgs _args;
-		protected TArgs ViewModel => _args;
-
-		string IIdentifiable.Id => Id;
 
 		private event Action<IWindow> RequestedClose;
 
+		string IIdentifiable.Id => Id;
+
 		event Action<IWindow> IWindow.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
+
+		public override WidgetFlags Flags { get => _config.flags; }
 
 		protected override ComponentReferenceEntry LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
@@ -118,6 +110,7 @@ namespace UI.Windows
 		protected override List<AssetReferenceEntry> PreloadAssets => _config.layout.preloadAssets;
 
 		protected override string Layer => LayerType.WINDOWS;
+		string IWidget.Layer => Layer;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
@@ -158,7 +151,7 @@ namespace UI.Windows
 					SetActive(false, true, false);
 				}
 
-				_args = args;
+				UpdateArgs(in args);
 			}
 
 			var suppressAnyFlag = suppressFlag != SuppressFlag.None;
@@ -166,10 +159,13 @@ namespace UI.Windows
 			DisableSuppress();
 		}
 
-		object IWindow.GetArgs() => GetArgs();
-		Type IWindow.GetArgsType() => typeof(TArgs);
+		protected void UpdateArgs(in TArgs args)
+		{
+			_args = args;
+		}
 
-		private protected virtual object GetArgs() => _args;
+		public Type GetDeclaredArgsType() => typeof(TArgs);
+		public object GetArgs() => _args;
 
 		bool IWindow.CanShow(object boxedArgs, out string error)
 		{

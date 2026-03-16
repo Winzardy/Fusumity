@@ -1,7 +1,7 @@
-﻿using Sapientia.Utility;
 using System;
+using Sapientia.Utility;
 using System.Collections.Generic;
-using UnityEngine;
+using Fusumity.Utility;
 
 namespace UI.Screens
 {
@@ -18,7 +18,7 @@ namespace UI.Screens
 
 		private readonly UIRootWidgetQueue<IScreen, object> _queue;
 
-		internal (IScreen, object) Current => (_current, _current?.GetArgs());
+		internal (IScreen screen, object args) Current => (_current, _current?.GetArgs());
 		internal (IScreen, object) Default => _default;
 		internal IEnumerable<KeyValuePair<IScreen, object>> Queue => _queue;
 
@@ -151,7 +151,7 @@ namespace UI.Screens
 		{
 			if (TryGet<T>(out var screen))
 			{
-				if (_current == screen && _current.Active)
+				if (_current == screen)
 					return true;
 
 				if (_queue.Contains(screen))
@@ -200,12 +200,12 @@ namespace UI.Screens
 		{
 			_screens[screen.GetType()] = screen;
 
-			screen.RequestedClose += OnRequestedClose;
+			screen.RequestedClose += HandleRequestedClose;
 		}
 
 		private void Dispose(IScreen screen, bool full)
 		{
-			screen.RequestedClose -= OnRequestedClose;
+			screen.RequestedClose -= HandleRequestedClose;
 			screen.Dispose();
 
 			if (full)
@@ -253,7 +253,7 @@ namespace UI.Screens
 				Show(_default.screen, _default.args, false);
 		}
 
-		private void OnRequestedClose(IScreen screen) => TryHide(screen);
+		private void HandleRequestedClose(IScreen screen) => TryHide(screen);
 
 		private void Show(IScreen screen, object args, bool fromQueue = false)
 		{

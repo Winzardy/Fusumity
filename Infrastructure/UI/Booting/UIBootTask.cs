@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Fusumity.Reactive;
 using Fusumity.Utility;
+using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.ServiceManagement;
 using Sirenix.OdinInspector;
@@ -13,6 +13,7 @@ using UI.Popups;
 using UI.Screens;
 using UI.Windows;
 using UnityEngine.EventSystems;
+using IInitializable = UI.IInitializable;
 
 namespace Booting.UI
 {
@@ -42,8 +43,11 @@ namespace Booting.UI
 
 		public override int Priority => HIGH_PRIORITY - 100;
 
-		public override UniTask RunAsync(CancellationToken token = default)
+		public override UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{
+			if (blackboard.TryGet<DefaultScreenAnimator>(out var loadingScreenAnimator))
+				loadingScreenAnimator.Play(AnimationType.CLOSING);
+
 			InitializeManagement();
 
 			InitializeScreens();
@@ -120,14 +124,14 @@ namespace Booting.UI
 
 		private void CreateEventSystem()
 		{
-			_eventSystem = UnityObject.Instantiate(eventSystemPrefab);
+			_eventSystem      = UnityObject.Instantiate(eventSystemPrefab);
 			_eventSystem.name = _eventSystem.name.Remove("(Clone)");
 			_eventSystem.MoveToScene(UIFactory.scene);
 		}
 
 		private void CreateInputRouter()
 		{
-			_inputRouter = UnityObject.Instantiate(inputRouter);
+			_inputRouter      = UnityObject.Instantiate(inputRouter);
 			_inputRouter.name = "[Input Router]";
 			_inputRouter.MoveToScene(UIFactory.scene);
 			_inputRouter.SetActive(false);

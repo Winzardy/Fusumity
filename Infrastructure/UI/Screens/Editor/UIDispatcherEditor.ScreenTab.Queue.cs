@@ -117,7 +117,7 @@ namespace UI.Screens.Editor
 
 				void DrawArgsField()
 				{
-					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, screenArgs, screen.GetArgsType(), false);
+					SirenixEditorFields.PolymorphicObjectField(GUIContent.none, screenArgs, screen.GetDeclaredArgsType(), false);
 				}
 
 				void Body()

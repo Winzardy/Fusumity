@@ -17,7 +17,7 @@ namespace Game.UI
 		public string Label { get => _label; set { _label = value; LabelChanged?.Invoke(); } }
 		public Color? IconColor { get => _iconColor; set { _iconColor = value; IconColorChanged?.Invoke(); } }
 		public Color? LabelColor { get => _labelColor; set { _labelColor = value; LabelColorChanged?.Invoke(); } }
-		public string LabelStyle { get => _labelStyle; set { _labelStyle = value; LabelStyleChanged?.Invoke(); } }
+		public string Style { get => _labelStyle; set { _labelStyle = value; StyleChanged?.Invoke(); } }
 		public Action LabelClickAction { get; set; }
 		public Action IconClickAction { get; set; }
 
@@ -25,7 +25,7 @@ namespace Game.UI
 		public event Action IconChanged;
 		public event Action IconColorChanged;
 		public event Action LabelColorChanged;
-		public event Action LabelStyleChanged;
+		public event Action StyleChanged;
 
 		public void LabelClick() => LabelClickAction?.Invoke();
 		public void IconClick() => IconClickAction?.Invoke();
@@ -44,8 +44,8 @@ namespace Game.UI
 			if (LabelColor.HasValue)
 				LabelColor = default;
 
-			if (!LabelStyle.IsNullOrEmpty())
-				LabelStyle = default;
+			if (!Style.IsNullOrEmpty())
+				Style = default;
 		}
 
 		/// <summary>

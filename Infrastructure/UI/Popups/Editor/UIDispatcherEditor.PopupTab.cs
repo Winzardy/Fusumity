@@ -45,7 +45,7 @@ namespace UI.Popups.Editor
 			if (popup == null)
 				return;
 
-			argsInspector.SetType(popup.GetArgsType());
+			argsInspector.SetType(popup.GetDeclaredArgsType());
 		}
 	}
 }

@@ -10,7 +10,8 @@
         "UI.Popups",
         "Sapientia",
         "Fusumity",
-        "UI.Popovers"
+        "UI.Popovers",
+        "Booting.App"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

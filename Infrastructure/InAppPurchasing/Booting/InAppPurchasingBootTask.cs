@@ -33,7 +33,7 @@ namespace Booting.InAppPurchasing
 
 		private UniTaskCompletionSource _storePromotionalCompletionSource;
 
-		public override UniTask RunAsync(CancellationToken cancellationToken = default)
+		public override UniTask RunAsync(Blackboard _, CancellationToken cancellationToken = default)
 		{
 			_storePromotionalCompletionSource = new UniTaskCompletionSource();
 

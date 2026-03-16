@@ -35,26 +35,26 @@ namespace UI.Editor
 			_target = target as CustomLayoutElement;
 
 			_maxWidthRectProperty = serializedObject.FindProperty("_maxWidthRect");
-			_useMaxWidthProperty = serializedObject.FindProperty("_useMaxWidth");
-			_maxWidthProperty = serializedObject.FindProperty("_maxWidth");
+			_useMaxWidthProperty  = serializedObject.FindProperty("_useMaxWidth");
+			_maxWidthProperty     = serializedObject.FindProperty("_maxWidth");
 
 			_maxHeightRectProperty = serializedObject.FindProperty("_maxHeightRect");
-			_useMaxHeightProperty = serializedObject.FindProperty("_useMaxHeight");
-			_maxHeightProperty = serializedObject.FindProperty("_maxHeight");
+			_useMaxHeightProperty  = serializedObject.FindProperty("_useMaxHeight");
+			_maxHeightProperty     = serializedObject.FindProperty("_maxHeight");
 
-			_minWidthProperty = serializedObject.FindProperty("m_MinWidth");
+			_minWidthProperty     = serializedObject.FindProperty("m_MinWidth");
 			_minWidthRectProperty = serializedObject.FindProperty("_minWidthRect");
-			_useMinWidthProperty = serializedObject.FindProperty("_useMinWidth");
+			_useMinWidthProperty  = serializedObject.FindProperty("_useMinWidth");
 
-			_minHeightProperty = serializedObject.FindProperty("m_MinHeight");
+			_minHeightProperty     = serializedObject.FindProperty("m_MinHeight");
 			_minHeightRectProperty = serializedObject.FindProperty("_minHeightRect");
-			_useMinHeightProperty = serializedObject.FindProperty("_useMinHeight");
+			_useMinHeightProperty  = serializedObject.FindProperty("_useMinHeight");
 
-			m_PreferredWidth = serializedObject.FindProperty("m_PreferredWidth");
+			m_PreferredWidth  = serializedObject.FindProperty("m_PreferredWidth");
 			m_PreferredHeight = serializedObject.FindProperty("m_PreferredHeight");
-			m_FlexibleWidth = serializedObject.FindProperty("m_FlexibleWidth");
-			m_FlexibleHeight = serializedObject.FindProperty("m_FlexibleHeight");
-			m_LayoutPriority = serializedObject.FindProperty("m_LayoutPriority");
+			m_FlexibleWidth   = serializedObject.FindProperty("m_FlexibleWidth");
+			m_FlexibleHeight  = serializedObject.FindProperty("m_FlexibleHeight");
+			m_LayoutPriority  = serializedObject.FindProperty("m_LayoutPriority");
 		}
 
 		public override void OnInspectorGUI()
@@ -70,11 +70,11 @@ namespace UI.Editor
 				LayoutElementField(_maxWidthProperty, _useMaxWidthProperty, _maxWidthRectProperty);
 				LayoutElementField(_maxWidthRectProperty, _useMaxWidthProperty);
 
-				LayoutElementField(_maxHeightProperty, _useMaxHeightProperty, _maxHeightRectProperty, false);
-				LayoutElementField(_maxHeightRectProperty, _useMaxHeightProperty);
-
 				LayoutElementField(_minWidthProperty, _useMinWidthProperty, _minWidthRectProperty);
 				LayoutElementField(_minWidthRectProperty, _useMinWidthProperty);
+
+				LayoutElementField(_maxHeightProperty, _useMaxHeightProperty, _maxHeightRectProperty, false);
+				LayoutElementField(_maxHeightRectProperty, _useMaxHeightProperty);
 
 				LayoutElementField(_minHeightProperty, _useMinHeightProperty, _minHeightRectProperty, false);
 				LayoutElementField(_minHeightRectProperty, _useMinHeightProperty);
@@ -137,7 +137,7 @@ namespace UI.Editor
 							: ((RectTransform) rectProperty.objectReferenceValue).rect.height
 						: property.floatValue);
 
-				GUI.enabled = true;
+				GUI.enabled                 = true;
 				EditorGUIUtility.labelWidth = 0;
 			}
 

@@ -3,6 +3,7 @@ using System.Threading;
 using Audio;
 using Content;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sirenix.OdinInspector;
 using AudioSettings = Audio.AudioSettings;
 
@@ -20,7 +21,7 @@ namespace Booting.Audio
 		private AudioFactory _factory;
 		private DefaultAudioListenerOwner _listener;
 
-		public override async UniTask RunAsync(CancellationToken token = default)
+		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AudioSettings>();
 

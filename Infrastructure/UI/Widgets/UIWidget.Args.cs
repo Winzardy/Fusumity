@@ -19,8 +19,10 @@ namespace UI
 		{
 		}
 
-		public UIWidget(TLayout layout)
+		public UIWidget(TLayout layout, string layer = null)
 		{
+			if (layer != null)
+				SetLayer(layer);
 			SetupLayout(layout);
 			Initialize();
 		}
@@ -98,13 +100,13 @@ namespace UI
 		public async UniTask ShowAsync(TArgs args, bool equals = true, CancellationToken? cancellationToken = null)
 		{
 			Show(in args, equals: equals);
-			await WaitOpening(cancellationToken);
+			await WaitOpeningAsync(cancellationToken);
 		}
 
 		public async UniTask HideAsync(bool reset = true, CancellationToken? cancellationToken = null)
 		{
 			Hide(false);
-			await WaitClosing(cancellationToken);
+			await WaitClosingAsync(cancellationToken);
 			if (reset)
 				Reset(false);
 		}
@@ -148,7 +150,7 @@ namespace UI
 			else if (Active && !_clearedArgs)
 				OnHide(); //Отписка со старым args!
 
-			_args = default;
+			_args        = default;
 			_clearedArgs = true;
 
 			base.OnReset(deactivate);
