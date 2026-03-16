@@ -147,6 +147,7 @@ namespace UI.Screens
 
 		void IScreen.Clear()
 		{
+			_resetting = true;
 			if (Active)
 				SetActive(false, true);
 

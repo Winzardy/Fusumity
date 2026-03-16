@@ -23,6 +23,12 @@ namespace UI.Popovers
 			_pools = null;
 		}
 
+		internal void ClearAll()
+		{
+			foreach (var pool in _pools.Values)
+				pool.Clear();
+		}
+
 		public T Get<T>(RectTransform anchor)
 			where T : UIWidget, IPopover
 		{
