@@ -57,8 +57,7 @@ namespace UI
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			if (_layout.label != null)
-				viewModel.Label.Release();
+			viewModel.Label.Release();
 
 			viewModel.StyleChanged        -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;

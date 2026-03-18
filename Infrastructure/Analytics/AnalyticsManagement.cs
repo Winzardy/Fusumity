@@ -8,7 +8,6 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Utility;
 using Sapientia.Pooling;
-using Sapientia.Reflection;
 
 namespace Analytics
 {

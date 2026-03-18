@@ -8,8 +8,6 @@ namespace Booting.Audio
 {
 	public class AudioListenerLocator : IAudioListenerLocator
 	{
-		private const string LISTENER_NAME = "AudioListener";
-
 		private IAudioListenerOwner _current;
 		private readonly List<IAudioListenerOwner> _listeners = new();
 
@@ -19,6 +17,12 @@ namespace Booting.Audio
 
 		public void Register(IAudioListenerOwner owner)
 		{
+			if (_listeners.Contains(owner))
+			{
+				AudioDebug.LogWarning("Already registered...");
+				return;
+			}
+
 			_listeners.Add(owner);
 
 			if (_current != null && owner.Priority < _current.Priority)

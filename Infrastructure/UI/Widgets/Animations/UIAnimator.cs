@@ -44,7 +44,7 @@ namespace UI
 
 		public UIAnimator()
 		{
-			_layers = DictionaryPool<string, AnimationLayer>.Get();
+			_layers               = DictionaryPool<string, AnimationLayer>.Get();
 			_keyToSequenceCreator = DictionaryPool<string, Func<Sequence>>.Get();
 
 			OnInitialized();
@@ -86,7 +86,7 @@ namespace UI
 			Fill(_keyToSequenceCreator);
 
 #if UNITY_EDITOR
-			_layout.debugAnimationKeys = _keyToSequenceCreator.Keys.ToArray();
+			_layout.debugAnimationKeys      =  _keyToSequenceCreator.Keys.ToArray();
 			_layout.DebugRequestedAnimation += DebugPlay;
 #endif
 			return true;
@@ -168,7 +168,7 @@ namespace UI
 				layer.tween = null;
 			}
 
-			layer.args = args;
+			layer.args     = args;
 			layer.clipName = clipName;
 
 			Sequence sequence = null;
@@ -203,7 +203,7 @@ namespace UI
 
 			if (immediate)
 			{
-				layer.args = null;
+				layer.args     = null;
 				layer.clipName = null;
 
 				args.startCallback?.Invoke();
@@ -241,6 +241,63 @@ namespace UI
 
 				layer.args.endCallback?.Invoke();
 			}
+		}
+
+		public bool IsPlaying()
+		{
+			foreach (var layer in _layers.Values)
+			{
+				if (layer.tween == null)
+					continue;
+				if (layer.tween.IsPlaying())
+					return true;
+			}
+
+			return false;
+		}
+
+		public bool IsPlaying(string layerName)
+		{
+			if (_layers.TryGetValue(layerName, out var layer))
+			{
+				if (layer.tween == null)
+					return false;
+
+				return layer.tween.IsPlaying();
+			}
+
+			return false;
+		}
+
+		public float GetDuration()
+		{
+			var duration = 0f;
+			foreach (var layer in _layers.Values)
+			{
+				if (layer.tween == null)
+					continue;
+				if (layer.tween.IsPlaying())
+				{
+					var f = layer.tween.Duration();
+					if (f > duration)
+						duration = f;
+				}
+			}
+
+			return duration;
+		}
+
+		public float GetDuration(string layerName)
+		{
+			if (_layers.TryGetValue(layerName, out var layer))
+			{
+				if (layer.tween == null)
+					return 0;
+
+				return layer.tween.IsPlaying() ? layer.tween.Duration() : 0;
+			}
+
+			return 0;
 		}
 
 		private void Fill(Dictionary<string, Func<Sequence>> keyToSequenceFactory)

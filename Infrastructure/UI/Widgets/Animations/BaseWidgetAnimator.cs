@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 
 namespace UI
@@ -20,7 +20,7 @@ namespace UI
 			if (rawWidget is not TWidget widget)
 				throw new Exception($"Invalid widget type [ {typeof(TWidget)} ]");
 
-			_widget = widget;
+			_widget    = widget;
 			_rawWidget = rawWidget;
 		}
 

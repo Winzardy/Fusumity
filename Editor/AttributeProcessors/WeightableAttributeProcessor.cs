@@ -37,6 +37,10 @@ namespace Fusumity.Editor
 			{
 				var totalWeight = 0;
 				var currentWeight = property.ParentValueProperty.ValueEntry.WeakSmartValue is IWeightable current ? current.Weight : 0;
+
+				if (currentWeight <= 0)
+					return string.Empty;
+
 				foreach (var obj in collection)
 				{
 					if (obj is IWeightable weightable)
@@ -45,8 +49,11 @@ namespace Fusumity.Editor
 					}
 				}
 
+				if (totalWeight == 0)
+					totalWeight = 1;
+
 				var percent = (float) currentWeight / totalWeight;
-				return percent.ToString("P4") + SPACE;
+				return percent.ToString("0.####%") + SPACE;
 			}
 
 			return "?%" + SPACE;

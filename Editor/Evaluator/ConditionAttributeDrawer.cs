@@ -33,7 +33,7 @@ namespace Fusumity.Editor
 		{
 			var type = Property.ValueEntry.BaseValueType;
 			var contextType = type.GenericTypeArguments[0];
-			_trueType ??= typeof(NoneCondition<>).MakeGenericType(contextType);
+			_trueType    ??= typeof(NoneCondition<>).MakeGenericType(contextType);
 			_trueDefault ??= (ICondition) Activator.CreateInstance(_trueType);
 
 			if (Property.ValueEntry != null)
@@ -58,22 +58,25 @@ namespace Fusumity.Editor
 					? 0
 					: GUIHelper.BetterLabelWidth;
 
-				var backRect = lastRect;
-				backRect.x += labelWidth + 2;
-				backRect.width = GUIHelper.BetterLabelWidth;
-				backRect.x += 2;
-				backRect.y += 2;
-				backRect.height -= 4;
-				EditorGUI.DrawRect(backRect, FusumityEditorGUIHelper.objectFieldBackgroundColor);
+				if (GUI.enabled)
+				{
+					var backRect = lastRect;
+					backRect.x      += labelWidth + 2;
+					backRect.width  =  GUI.skin.label.CalcWidth(ConditionAttributeProcessor.NONE_CONDITION_LABEL) + 14;
+					backRect.x      += 2;
+					backRect.y      += 2;
+					backRect.height -= 4;
+					EditorGUI.DrawRect(backRect, FusumityEditorGUIHelper.objectFieldBackgroundColor);
 
-				var labelRect = lastRect;
-				labelRect.x += labelWidth + 6;
-				labelRect.width = 11;
-				SdfIcons.DrawIcon(labelRect, ConditionAttributeProcessor.NoneConditionSdfIcon, _iconColor);
+					var labelRect = lastRect;
+					labelRect.x     += labelWidth + 6;
+					labelRect.width =  11;
+					SdfIcons.DrawIcon(labelRect, ConditionAttributeProcessor.NONE_CONDITION_SDF_ICON, _iconColor);
 
-				labelRect.x += 11.5f;
-				labelRect.width = 100;
-				GUI.Label(labelRect, ConditionAttributeProcessor.NoneConditionLabel);
+					labelRect.x     += 11.5f;
+					labelRect.width =  100;
+					GUI.Label(labelRect, ConditionAttributeProcessor.NONE_CONDITION_LABEL);
+				}
 			}
 		}
 

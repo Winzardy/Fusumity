@@ -15,6 +15,7 @@ using Fusumity.Utility;
 using Fusumity.Utility.UserLocator;
 using JetBrains.Annotations;
 using ProjectInformation;
+using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using UnityEngine.Purchasing;
@@ -64,7 +65,13 @@ namespace InAppPurchasing.Unity
 
 		#endregion
 
-		public Dictionary<DistributionEntry, Dictionary<CountryEntry, IAPBillingEntry>> storeToCountryToBilling;
+		public Dictionary<DistributionEntry, BillingScheme> storeToScheme;
+	}
+
+	public struct BillingScheme
+	{
+		public Toggle<IAPBillingEntry> overrideBilling;
+		public Dictionary<CountryEntry, IAPBillingEntry> countryToBilling;
 	}
 
 	public partial class UnityPurchasingIntegration : IInAppPurchasingIntegration, IDetailedStoreListener, IDisposable
@@ -142,10 +149,10 @@ namespace InAppPurchasing.Unity
 			string appIdentifier,
 			UniTaskCompletionSource storePromotionalCompletionSource = null)
 		{
-			_grantCenter = grantCenter;
-			_settings = settings;
-			_distributionPlatform = distributionPlatform;
-			_appIdentifier = appIdentifier;
+			_grantCenter                      = grantCenter;
+			_settings                         = settings;
+			_distributionPlatform             = distributionPlatform;
+			_appIdentifier                    = appIdentifier;
 			_storePromotionalCompletionSource = storePromotionalCompletionSource;
 		}
 
@@ -165,17 +172,21 @@ namespace InAppPurchasing.Unity
 
 				var autoSetDefaultBilling = true;
 
-				if (_settings.storeToCountryToBilling.TryGetValue(_distributionPlatform, out var countryToBilling))
+				if (_settings.storeToScheme.TryGetValue(_distributionPlatform, out var scheme))
 				{
 					var country = await UserLocator.GetCountryAsync(cancellationToken);
 
 					if (country == UserLocator.UNDEFINED)
 						return UnityPurchasingInitializationFailureReason.UnknownCountry;
 
-					if (countryToBilling.TryGetValue(country, out var billing))
+					if (scheme.countryToBilling.TryGetValue(country, out var billing))
 					{
-						_billing = billing;
+						_billing              = billing;
 						autoSetDefaultBilling = false;
+					}
+					else if (scheme.overrideBilling)
+					{
+						_billing = scheme.overrideBilling;
 					}
 				}
 
@@ -206,7 +217,7 @@ namespace InAppPurchasing.Unity
 				{
 					var configuration = builder.Configure<IAppleConfiguration>();
 					_appleCanMakePayments = configuration.canMakePayments;
-					_appleAppReceipt = configuration.appReceipt;
+					_appleAppReceipt      = configuration.appReceipt;
 					configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
 
 					// Данный метод может обрабатывать отозванный продукты (family share)
@@ -241,7 +252,7 @@ namespace InAppPurchasing.Unity
 			_initializationCompletionSource.TrySetResult(UnityPurchasingInitializationFailureReason.None);
 
 			_storeController = controller;
-			_extensions = extensions;
+			_extensions      = extensions;
 
 			switch (_billing)
 			{
@@ -519,12 +530,12 @@ namespace InAppPurchasing.Unity
 				var receipt = new PurchaseReceipt
 				{
 					productType = entry.Type,
-					productId = entry.Id,
+					productId   = entry.Id,
 
 					billing = _billing,
 
 					transactionId = transactionId,
-					receipt = product.receipt
+					receipt       = product.receipt
 				};
 
 				if (_processing.Remove(billingProductId))
