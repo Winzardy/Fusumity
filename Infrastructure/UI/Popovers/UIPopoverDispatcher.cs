@@ -148,6 +148,6 @@ namespace UI
 		}
 
 		IEnumerable<UIWidget> IWidgetDispatcher.GetAllActive() => _manager.GetAllActive();
-		void IWidgetDispatcher.ClearAll() => _manager.HideAll();
+		void IWidgetDispatcher.ClearAll() => _manager.ClearAll();
 	}
 }

@@ -180,10 +180,12 @@ namespace UI.Popovers
 			return true;
 		}
 
-		internal void HideAll()
+		internal void ClearAll()
 		{
 			foreach (var active in _active)
 				active.SetActive(false, true);
+
+			_pool.ClearAll();
 		}
 
 		internal IEnumerable<UIWidget> GetAllActive()

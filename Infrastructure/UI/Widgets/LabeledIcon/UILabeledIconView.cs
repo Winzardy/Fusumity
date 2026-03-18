@@ -158,11 +158,11 @@ namespace Game.UI
 		event Action IconChanged;
 		event Action IconColorChanged;
 
-		public void LabelClick()
+		void LabelClick()
 		{
 		}
 
-		public void IconClick()
+		void IconClick()
 		{
 		}
 	}

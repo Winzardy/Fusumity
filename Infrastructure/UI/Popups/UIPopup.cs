@@ -235,6 +235,7 @@ namespace UI.Popups
 
 		void IPopup.Clear()
 		{
+			_resetting = true;
 			if (Active)
 				SetActive(false, true);
 
