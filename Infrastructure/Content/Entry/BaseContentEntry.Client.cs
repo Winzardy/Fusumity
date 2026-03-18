@@ -24,12 +24,20 @@ namespace Content
 		{
 			get
 			{
+#if UNITY_EDITOR
 				if (ValueType.IsSerializeReference())
 				{
 					_serializeReference ??= new SerializeReference<T>();
 					return ref _serializeReference.Value;
 				}
+#else
+				if(_serializeReference != null)
+				{
+					return ref _serializeReference.Value;
+				}
+#endif
 
+				_serializeReference = null;
 				return ref value;
 			}
 		}

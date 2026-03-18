@@ -4,7 +4,7 @@ namespace UI
 {
 	public interface IWidgetDispatcher
 	{
-		public IEnumerable<UIWidget> GetAllActive();
-		public void ClearAll();
+		IEnumerable<UIWidget> GetAllActive();
+		void ClearAll();
 	}
 }

@@ -7,6 +7,7 @@ namespace UI.Popovers
 {
 	internal interface IPopoverPool : IDisposable
 	{
+		void Clear();
 	}
 
 	internal class PopoverPool<T> : ObjectPool<T>, IPopoverPool

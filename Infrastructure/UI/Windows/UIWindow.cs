@@ -189,6 +189,7 @@ namespace UI.Windows
 
 		void IWindow.Clear()
 		{
+			_resetting = true;
 			if (Active)
 				SetActive(false, true);
 
