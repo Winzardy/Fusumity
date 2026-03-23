@@ -47,6 +47,17 @@ namespace Fusumity.Utility
 #endif
 		}
 
+		public static void SetLayerRecursively(this GameObject obj, int layer)
+		{
+			obj.layer = layer;
+
+			var childCount = obj.transform.childCount;
+			for (var i = 0; i < childCount; i++)
+			{
+				SetLayerRecursively(obj.transform.GetChild(i).gameObject, layer);
+			}
+		}
+
 		public readonly ref struct DisableGameObjectScope
 		{
 			public readonly GameObject gameObject;
