@@ -1,22 +1,24 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace SharedLogic
 {
-	public class CommandBuffer : IDisposable
+	public class CommandBuffer : IDisposable, IEnumerable<ICommand>
 	{
 		private Dictionary<Type, ICommandBuffer> _typeToBuffer;
 
 		private Queue<CommandBufferEntry> _queue;
 
-		public int Count => _queue.Count;
+		public int Count { get => _queue.Count; }
+		public bool IsEmpty { get => _queue.Count == 0; }
 
 		public CommandBuffer()
 		{
 			_typeToBuffer = new();
-			_queue = new();
+			_queue        = new();
 		}
 
 		public void Dispose()
@@ -30,6 +32,8 @@ namespace SharedLogic
 
 		public void Clear()
 		{
+			_queue.Clear();
+
 			foreach (var buffer in _typeToBuffer.Values)
 				buffer.Clear();
 		}
@@ -44,7 +48,7 @@ namespace SharedLogic
 			var index = buffer.Add(in command);
 			_queue.Enqueue(new CommandBufferEntry
 			{
-				type = type,
+				type  = type,
 				index = index
 			});
 		}
@@ -93,6 +97,22 @@ namespace SharedLogic
 		public void AddCommandToList(in CommandBufferEntry entry, SimpleList<ICommand> list)
 		{
 			_typeToBuffer[entry.type].AddCommandToList(entry.index, list);
+		}
+
+		public IEnumerator<ICommand> GetEnumerator()
+		{
+			if (_queue.IsNullOrEmpty())
+				yield break;
+
+			foreach (var entry in _queue)
+			{
+				yield return _typeToBuffer[entry.type].Get(entry.index);
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 
