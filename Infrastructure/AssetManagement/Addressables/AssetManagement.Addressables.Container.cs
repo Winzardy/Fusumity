@@ -21,10 +21,10 @@ namespace AssetManagement
 			{
 				_usages++;
 
-				if (AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
+				if (_cts == null || AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
 				{
 					Release();
-					cancellationToken.ThrowIfCancellationRequested();
+					throw new OperationCanceledException(cancellationToken);
 				}
 
 				using var linkedCts = _cts.Link(cancellationToken);
@@ -77,7 +77,7 @@ namespace AssetManagement
 
 			protected Container(object key, AsyncOperationHandle handle, int usages = 1)
 			{
-				_key = key;
+				_key    = key;
 				_handle = handle;
 				_usages = usages;
 
