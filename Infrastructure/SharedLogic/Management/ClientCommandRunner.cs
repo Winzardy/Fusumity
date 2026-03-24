@@ -11,7 +11,13 @@ namespace SharedLogic
 
 		private CommandBuffer _buffer;
 
-		public ClientCommandRunner(ISharedRoot root, ICommandCenter center, ILogger logger = null)
+		public bool IsEmpty { get => _buffer.IsEmpty; }
+
+		public ClientCommandRunner(
+			ISharedRoot root,
+			ICommandCenter center,
+			// IExceptionHandler exceptionHandler,
+			ILogger logger = null)
 		{
 			_center = center;
 			_root = root;
@@ -26,7 +32,7 @@ namespace SharedLogic
 			_buffer = null;
 		}
 
-		public bool Execute<T>(in T command)
+		public void Execute<T>(in T command)
 			where T : struct, ICommand
 		{
 			var isFirstInQueue = _buffer.Count == 0;
@@ -36,9 +42,9 @@ namespace SharedLogic
 
 			// Только первый в очереди отвечает за выполнение и отправку команд.
 			if (!isFirstInQueue)
-				return false;
+				return;
 
-			while (_buffer.Count > 0)
+			while (!_buffer.IsEmpty)
 			{
 				// В большинстве случае эта валидация уже была, непосредственно перед Execute().
 				// Необходимость в валидации, если предыдущая команда каким-то образом сделала команду в очереди недействительной,
@@ -46,7 +52,8 @@ namespace SharedLogic
 				if (!_buffer.Validate(_root, out var exception))
 				{
 					_logger?.LogException(exception);
-					_buffer.Dequeue();
+					// TODO: КОСТЯ ТУТ НАДО!
+					// exceptionHandler.Handle(exception)
 					break;
 				}
 
@@ -60,6 +67,8 @@ namespace SharedLogic
 				// catch (Exception e)
 				// {
 				// 	_logger?.Exception(e);
+				// TODO: КОСТЯ ТУТ НАДО!
+				// exceptionHandler.Handle(exception)
 				// }
 				// finally
 				// {
@@ -68,7 +77,6 @@ namespace SharedLogic
 			}
 
 			_buffer.Clear();
-			return true;
 		}
 	}
 }

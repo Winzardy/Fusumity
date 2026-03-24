@@ -7,17 +7,14 @@ namespace SharedLogic
 		private ISharedRoot _root;
 		private ICommandRunner _runner;
 		private ISystemTimeProvider _dateTimeProvider;
-		//private ISharedLogicLocalCacheInfoProvider _localCacheInfoProvider;
 
-		public long Timestamp => _dateTimeProvider.SystemTime.Ticks;
+		public long Timestamp { get => _dateTimeProvider.SystemTime.Ticks; }
 
 		public SharedLogicRouter(ISharedRoot root, ISystemTimeProvider dateTimeProvider, ICommandRunner runner)
-			//ISharedLogicLocalCacheInfoProvider localCacheInfoProvider)
 		{
-			_root = root;
+			_root             = root;
 			_dateTimeProvider = dateTimeProvider;
-			_runner = runner;
-			//_localCacheInfoProvider = localCacheInfoProvider;
+			_runner           = runner;
 		}
 
 		public bool ExecuteCommand<T>(ref T command) where T : struct, ICommand
@@ -25,16 +22,19 @@ namespace SharedLogic
 			var node = _root.GetNode<TimeSharedNode>();
 			using (node.ProviderSuppressScope())
 			{
-				var timeSetCommand = new TimeSetCommand(_dateTimeProvider.SystemTime.Ticks, _root.Revision);
-				if (!timeSetCommand.Validate(_root, out var exception))
+				if (_runner.IsEmpty)
 				{
-					SLDebug.LogException(exception);
-					return false;
+					var timeSetCommand = new TimeSetCommand(_dateTimeProvider.SystemTime.Ticks, _root.Revision);
+					if (!timeSetCommand.Validate(_root, out var timeException))
+					{
+						SLDebug.LogException(timeException);
+						return false;
+					}
+
+					_runner.Execute(in timeSetCommand);
 				}
 
-				_runner.Execute(in timeSetCommand);
-
-				if (!command.Validate(_root, out exception))
+				if (!command.Validate(_root, out var exception))
 				{
 					SLDebug.LogException(exception);
 					return false;

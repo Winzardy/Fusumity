@@ -36,7 +36,7 @@ namespace UI
 		{
 			SetActive(true);
 
-			if (_layout.label != null)
+			if (_layout.label != null && viewModel.Label != null)
 				viewModel.Label.Bind(UpdateLabel);
 
 			_adBanner?.Update(viewModel.AdBanner);
@@ -48,30 +48,14 @@ namespace UI
 
 			viewModel.StyleChanged        += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
-
-			if (!viewModel.ActionBusUniqueId.IsNullOrEmpty() || !viewModel.ActionBusGroupId.IsNullOrEmpty())
-			{
-				UpdateClickElement(viewModel.ActionBusUniqueId, viewModel.ActionBusGroupId);
-			}
 		}
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
-			if (_layout.label != null)
-				viewModel.Label.Release();
+			viewModel.Label?.Release();
 
 			viewModel.StyleChanged        -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
-
-			UpdateClickElement();
-		}
-
-		private void UpdateClickElement(string uid = null, string groupId = null)
-		{
-			DisposeAndRemoveDisposable(_clickElement);
-			_clickElement = Subscribe(_layout.button, HandleClick,
-				uid ?? _layout.uId,
-				groupId ?? _layout.groupId);
 		}
 
 		protected override void OnNullViewModel()
@@ -138,9 +122,6 @@ namespace UI
 		UISpriteInfo Icon { get => default; }
 		IAdBannerViewModel AdBanner { get => null; }
 		ILabeledIconViewModel LabeledIcon { get => null; }
-
-		string ActionBusUniqueId { get => null; }
-		string ActionBusGroupId { get => null; }
 
 		event Action StyleChanged;
 		event Action InteractableChanged;
