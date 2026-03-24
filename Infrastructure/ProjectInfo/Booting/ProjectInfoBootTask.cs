@@ -62,7 +62,7 @@ namespace Booting.ProjectInformation
 			var textAsset = Resources.Load<TextAsset>(nameof(BuildInfo));
 			if (textAsset == null)
 			{
-				return CreateUnknownBuildInfo();
+				return BuildInfo.CreateUnknown();
 			}
 
 			try
@@ -71,12 +71,7 @@ namespace Booting.ProjectInformation
 			}
 			catch
 			{
-				return CreateUnknownBuildInfo();
-			}
-
-			BuildInfo CreateUnknownBuildInfo()
-			{
-				return new BuildInfo() { branch = "unknown", commit = "unknown", submodules = new Dictionary<string, string>()};
+				return BuildInfo.CreateUnknown();
 			}
 		}
 	}
