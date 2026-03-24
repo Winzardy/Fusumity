@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Sapientia.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -56,6 +56,39 @@ namespace Fusumity.Utility
 			{
 				SetLayerRecursively(obj.transform.GetChild(i).gameObject, layer);
 			}
+		}
+
+		/// <summary>
+		/// Negative depth - represents objects higher in the hierarchy chain (parents, clamps to root).
+		/// Positive depth - objects cascading down the hierarchy (1 - first child, 2 - first child's first child etc., clamps to deepest available).
+		/// Depth 0 - object itself.
+		/// </summary>
+		public static GameObject GetAtDepth(this GameObject start, int depth)
+		{
+			var current = start.transform;
+
+			if (depth < 0)
+			{
+				for (int i = 0; i < -depth; i++)
+				{
+					if (current.parent == null)
+						break;
+
+					current = current.parent;
+				}
+			}
+			else if (depth > 0)
+			{
+				for (int i = 0; i < depth; i++)
+				{
+					if (current.childCount == 0)
+						break;
+
+					current = current.GetChild(0);
+				}
+			}
+
+			return current.gameObject;
 		}
 
 		public readonly ref struct DisableGameObjectScope
