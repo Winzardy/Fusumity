@@ -15,6 +15,7 @@ namespace Fusumity.Utility
 	public abstract class RegisteredComponent<T> : MonoBehaviour where T : Component
 	{
 		private UnityObjectsRegistry _registry;
+		private bool _isRegistered;
 
 		private void Awake()
 		{
@@ -33,6 +34,34 @@ namespace Fusumity.Utility
 
 		private void Start()
 		{
+			Register();
+			OnStart();
+		}
+
+		private void OnDestroy()
+		{
+			if (!UnityLifecycle.ApplicationQuitting)
+			{
+				if (_isRegistered)
+				{
+					Unregister();
+				}
+
+				OnDispose();
+			}
+		}
+
+		public void Register()
+		{
+			if (_isRegistered)
+			{
+				Debug.LogError(
+					$"Trying to register component [ {gameObject.name} ] twice.",
+					gameObject);
+
+				return;
+			}
+
 			var component = this as T;
 			if (component == null)
 			{
@@ -53,16 +82,22 @@ namespace Fusumity.Utility
 				_registry?.RegisterAfter(component, registrationPredicate);
 			}
 
-			OnStart();
+			_isRegistered = true;
 		}
 
-		private void OnDestroy()
+		public void Unregister()
 		{
-			if (!UnityLifecycle.ApplicationQuitting)
+			if (!_isRegistered)
 			{
-				_registry?.Unregister(this as T);
-				OnDispose();
+				Debug.LogError(
+					$"Trying to unregister not registered component [ {gameObject.name} ]",
+					gameObject);
+
+				return;
 			}
+
+			_registry?.Unregister(this as T);
+			_isRegistered = false;
 		}
 
 		protected virtual void OnInitialize()
