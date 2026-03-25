@@ -1,11 +1,14 @@
 ﻿using ZenoTween;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
 
 namespace UI
 {
 	public class UIToggleButtonLayout : UILabeledButtonLayout
 	{
+		public TMP_Text sublabel;
+
 		[FoldoutGroup("Toggle Animations")]
 		[HorizontalGroup("Toggle Animations/OnOff"), LabelText("On")]
 		[SerializeReference]
@@ -18,7 +21,7 @@ namespace UI
 		[Space]
 		public StateSwitcher<bool> activitySwitcher;
 
-		private void OnValidate()
+		protected internal override void OnValidate()
 		{
 			if (Application.isPlaying)
 				return;

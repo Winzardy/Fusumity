@@ -103,6 +103,7 @@ namespace UI
 	{
 		[CanBeNull] IAssetReferenceEntry<Sprite> Icon { get; }
 		[CanBeNull] string Label { get; }
+		[CanBeNull] ILabelViewModel Sublabel { get => null; }
 
 		bool IsToggled { get; }
 		[CanBeNull] string Style { get; }

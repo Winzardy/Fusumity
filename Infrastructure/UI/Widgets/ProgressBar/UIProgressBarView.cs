@@ -39,8 +39,7 @@ namespace UI
 
 		protected override void OnClear(IProgressBarViewModel viewModel)
 		{
-			if (_layout.label != null)
-				_layout.label.Unbind(viewModel.Label);
+			_layout.label.Unbind(viewModel.Label);
 
 			viewModel.ProgressChanged -= HandleProgressChanged;
 
