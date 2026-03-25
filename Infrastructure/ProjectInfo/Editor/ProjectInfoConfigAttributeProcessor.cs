@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace ProjectInformation.Editor
 {
-	public class AppOptionsAttributeProcessor : OdinAttributeProcessor<ProjectInfoConfig>
+	public class ProjectInfoConfigAttributeProcessor : OdinAttributeProcessor<ProjectInfoConfig>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

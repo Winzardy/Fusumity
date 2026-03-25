@@ -5,7 +5,9 @@
         "Targeting",
         "Content.ScriptableObjects.Editor",
         "Content.ScriptableObjects",
-        "ProjectInfo"
+         "ProjectInfo",
+        "Sapientia",
+        "Generic.Utility"
     ],
     "includePlatforms": [
         "Editor"

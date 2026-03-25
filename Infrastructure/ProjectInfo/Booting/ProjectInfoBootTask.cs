@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace Booting.ProjectInformation
 		{
 			var options = ContentManager.Get<ProjectInfoConfig>();
 			var platform = GetTargetPlatform();
-			var provider = new DefaultProjectInfoAttendant(in options, in platform);
+			var provider = new DefaultProjectInfoAttendant(in options, in platform, GetBuildInfo());
 
 			ProjectInfo.Set(provider);
 			return UniTask.CompletedTask;
@@ -45,6 +46,33 @@ namespace Booting.ProjectInformation
 				RuntimePlatform.WindowsPlayer => PlatformType.WINDOWS_DEBUG,
 				_ => targetPlatform,
 			};
+		}
+
+		private static BuildInfo GetBuildInfo()
+		{
+#if UNITY_EDITOR
+			return BuildInfo.CreateFromGit(GitUtility.GetProjectRoot());
+#else
+			return GetBuildInfoFromResources();
+#endif
+		}
+
+		private static BuildInfo GetBuildInfoFromResources()
+		{
+			var textAsset = Resources.Load<TextAsset>(nameof(BuildInfo));
+			if (textAsset == null)
+			{
+				return BuildInfo.CreateUnknown();
+			}
+
+			try
+			{
+				return JsonUtility.FromJson<BuildInfo>(textAsset.text);
+			}
+			catch
+			{
+				return BuildInfo.CreateUnknown();
+			}
 		}
 	}
 }
