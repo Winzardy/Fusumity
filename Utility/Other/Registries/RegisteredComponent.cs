@@ -72,6 +72,8 @@ namespace Fusumity.Utility
 				return;
 			}
 
+			_isRegistered = true;
+
 			if (registrationPredicate == null ||
 				registrationPredicate.Invoke())
 			{
@@ -81,8 +83,6 @@ namespace Fusumity.Utility
 			{
 				_registry?.RegisterAfter(component, registrationPredicate);
 			}
-
-			_isRegistered = true;
 		}
 
 		public void Unregister()
@@ -96,8 +96,8 @@ namespace Fusumity.Utility
 				return;
 			}
 
-			_registry?.Unregister(this as T);
 			_isRegistered = false;
+			_registry?.Unregister(this as T);
 		}
 
 		protected virtual void OnInitialize()
