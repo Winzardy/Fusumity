@@ -58,6 +58,7 @@ namespace UI
 		public Action Action => null;
 	}
 
+	[Obsolete("Использовать IStatefulButtonViewModel")]
 	public class UIButton : UIWidget<UIButtonLayout, IButtonViewModel>, IClickable<UIButton>
 	{
 		private Sprite _defaultIconSprite;

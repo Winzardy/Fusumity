@@ -7,8 +7,8 @@ namespace UI
 		where TLayout : UIBaseCanvasGroupLayout
 		where TPopover : UIWidget, IPopover
 	{
-		private const float OPENING_TIME = 0.5f;
-		private const float CLOSING_TIME = 0.3f;
+		private const float OPENING_TIME = 0.4f;
+		private const float CLOSING_TIME = 0.15f;
 
 		protected TPopover popover => _widget;
 

@@ -47,7 +47,7 @@ namespace UI
 		[Obsolete("убрать, использовать StateSwitcher<string>")]
 		[ShowIf(nameof(useAnimations)), ReadOnly]
 		[AnimationTweenKey(ANIMATION_KEY_PREFIX), OnValueChanged(nameof(OnDefaultStyleChanged))]
-		public string defaultStyle = ANIMATION_KEY_PREFIX + ButtonStyle.DEFAULT;
+		public string defaultStyle = ANIMATION_KEY_PREFIX + UIButtonStyle.DEFAULT;
 
 		[Space]
 		[ConstDropdown(typeof(ActionBusElementType))]

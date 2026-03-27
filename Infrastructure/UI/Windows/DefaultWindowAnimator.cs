@@ -4,7 +4,7 @@ namespace UI.Windows
 {
 	public class DefaultWindowAnimator : BaseWidgetAnimator<UIBaseContainerLayout>
 	{
-		private const float OPENING_TIME = 0.3f;
+		private const float OPENING_TIME = 0.4f;
 		private const float CLOSING_TIME = 0.15f;
 
 		protected override void OnCreateOpeningSequence(ref Sequence sequence)

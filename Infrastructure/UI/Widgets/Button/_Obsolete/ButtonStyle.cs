@@ -1,6 +1,6 @@
 ﻿namespace UI
 {
-	public class ButtonStyle
+	public class UIButtonStyle
 	{
 		public const string DEFAULT = "default";
 		public const string FOCUS = "focus";
