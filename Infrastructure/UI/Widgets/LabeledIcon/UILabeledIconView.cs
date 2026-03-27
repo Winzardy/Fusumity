@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Fusumity.MVVM.UI;
+using Fusumity.Utility;
 using Sapientia.Extensions;
 using UI;
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace Game.UI
 		private Sprite _defaultIconSprite;
 		private Color _defaultIconColor;
 		private string _defaultLabelText;
+		private bool _defaultIconEnable;
 
 		public UILabeledIconView(UILabeledIconLayout layout, bool disableIfEmpty = false) : base(layout)
 		{
@@ -24,6 +26,7 @@ namespace Game.UI
 			{
 				_defaultIconSprite = _layout.icon.sprite;
 				_defaultIconColor  = _layout.icon.color;
+				_defaultIconEnable = _layout.icon.gameObject.activeSelf;
 			}
 
 			_defaultLabelText = _layout.label.text;
@@ -106,10 +109,12 @@ namespace Game.UI
 
 			if (ViewModel.Icon.IsEmptyOrInvalid())
 			{
+				_layout.icon.SetActive(_defaultIconEnable);
 				_layout.icon.sprite = _defaultIconSprite;
 			}
 			else
 			{
+				_layout.icon.SetActive(true);
 				_spriteAssigner.TrySetSprite(_layout.icon, ViewModel.Icon);
 			}
 		}
