@@ -1,7 +1,7 @@
 ﻿using Fusumity.Utility;
 using Sapientia.Extensions;
 using System;
-using JetBrains.Annotations;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Fusumity.MVVM
@@ -20,28 +20,7 @@ namespace Fusumity.MVVM
 	public interface IView<TViewModel> : IView
 	{
 		TViewModel ViewModel { get; }
-
 		void Update(TViewModel viewModel);
-
-		/// <summary>
-		/// Начали показ
-		/// </summary>
-		void OnShow();
-
-		/// <summary>
-		/// Закончили показ
-		/// </summary>
-		void OnShown();
-
-		/// <summary>
-		/// Начали закрытие
-		/// </summary>
-		void OnHide();
-
-		/// <summary>
-		/// Закончили закрытие
-		/// </summary>
-		void OnHidden();
 	}
 
 	public abstract class View<TViewModel> : IView<TViewModel>, IDisposable
@@ -151,22 +130,6 @@ namespace Fusumity.MVVM
 		public virtual void Reset()
 		{
 			ClearViewModel();
-		}
-
-		public virtual void OnShow()
-		{
-		}
-
-		public virtual void OnShown()
-		{
-		}
-
-		public virtual void OnHide()
-		{
-		}
-
-		public virtual void OnHidden()
-		{
 		}
 
 		public static implicit operator bool(View<TViewModel> view) => view != null;

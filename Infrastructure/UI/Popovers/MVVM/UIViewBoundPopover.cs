@@ -1,6 +1,6 @@
-﻿using System;
-using Fusumity.MVVM;
+﻿using Fusumity.MVVM;
 using Sapientia;
+using System;
 
 namespace UI.Popovers
 {
@@ -59,8 +59,8 @@ namespace UI.Popovers
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
-			OnViewDisposed();
 
+			OnViewDisposed();
 			_view = null;
 		}
 
@@ -89,27 +89,22 @@ namespace UI.Popovers
 			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 
-			_view.OnShow();
 			OnViewShow();
 		}
 
 		protected override void OnHide(in TViewModel _)
 		{
-			_view.OnHide();
 			_view.ClearViewModel();
-
 			OnViewHide();
 		}
 
 		protected override void OnEndedOpening()
 		{
-			_view.OnShown();
 			OnViewShown();
 		}
 
 		protected override void OnEndedClosing()
 		{
-			_view.OnHidden();
 			OnViewHidden();
 		}
 
