@@ -58,7 +58,7 @@ namespace Fusumity.MVVM
 			if (_disposed)
 				return default;
 
-			var child = _root.Children.FirstOrDefault(x => x.Id == id);
+			var child = _root.Children?.FirstOrDefault(x => x.Id == id);
 
 			if (child == null ||
 				child is not NodeStatefulViewModel node)
