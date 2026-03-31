@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace Trading
 {
-	[NotNull]
 	public abstract partial class TradeReward
 	{
 		public static readonly Color COLOR = new(R, G, B, A);

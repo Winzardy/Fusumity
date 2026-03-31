@@ -30,7 +30,7 @@ namespace Fusumity.Editor
 			if (valueEntry == null)
 				return;
 
-			if (NotNullUtility.IsNull(valueEntry))
+			if (NotNullUtility.IsNull(valueEntry) && GUI.enabled)
 			{
 				result.AddError($"Field '{Property.NiceName}' must not be null");
 			}

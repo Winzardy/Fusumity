@@ -1,10 +1,8 @@
 #if CLIENT
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Trading
 {
-	[NotNull]
 	public abstract partial class TradeCost
 	{
 		public static readonly Color COLOR = new(R, G, B, A);
