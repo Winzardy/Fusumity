@@ -59,10 +59,11 @@ namespace SharedLogic
 
 				//try
 				//{
+				_buffer.Send(_center);
+
 				_buffer.Execute(_root);
 				_buffer.OnExecute(_root);
 
-				_buffer.Send(_center);
 				//}
 				// catch (Exception e)
 				// {
