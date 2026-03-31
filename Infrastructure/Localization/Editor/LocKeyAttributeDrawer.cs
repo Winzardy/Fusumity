@@ -115,11 +115,12 @@ namespace Localization.Editor
 			var canBeEmpty = Property.GetAttribute<CanBeNullAttribute>() != null;
 			if (Property.ParentType == typeof(LocKey))
 				canBeEmpty = Property.Parent.GetAttribute<CanBeNullAttribute>() != null;
-			GUI.color = contains
-				? originalColor
-				: !canBeEmpty
-					? SirenixGUIStyles.YellowWarningColor
-					: originalColor;
+			if (GUI.enabled)
+				GUI.color = contains
+					? originalColor
+					: !canBeEmpty
+						? SirenixGUIStyles.YellowWarningColor
+						: originalColor;
 
 			var originalTooltip = label.tooltip;
 			if (contains)

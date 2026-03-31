@@ -1,10 +1,12 @@
 #if CLIENT
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Sapientia.Deterministic;
 using UnityEngine;
 
 namespace Trading
 {
+	[NotNull]
 	public abstract partial class TradeReward
 	{
 		public static readonly Color COLOR = new(R, G, B, A);
@@ -31,7 +33,7 @@ namespace Trading
 		public TradeRewardDrop(TradeReward reward, Fix64 rate)
 		{
 			this.reward = reward;
-			this.rate = rate;
+			this.rate   = rate;
 		}
 
 		public TradeRewardDrop(TradeReward reward, TradeRewardDrop parent)

@@ -42,6 +42,10 @@ namespace Trading
 				yield return new TradeRewardDrop(this, parent);
 			}
 		}
+
+#if UNITY_EDITOR
+		public bool ShowSchemeEditor() => schemeSource == TradeProgressionSchemeSource.Local;
+#endif
 	}
 }
 #endif

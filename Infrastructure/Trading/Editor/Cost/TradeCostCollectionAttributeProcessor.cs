@@ -17,17 +17,17 @@ namespace Trading.Editor
 			switch (member.Name)
 			{
 				case nameof(TradeCostCollection.items):
-					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
-					{
-						FilterTypesFunction = $"@{nameof(TradeCostCollectionAttributeProcessor)}.{nameof(Filter)}($type, $property)"
-					};
-
-					attributes.Add(typeSelectorSettingsAttribute);
+					attributes.Add(GetTypeSelectorAttribute());
 
 					if (!IsInsideCollection(parentProperty))
 						attributes.Add(new IndentAttribute(-1));
 					break;
 			}
+		}
+
+		protected override string GetFilterFunction()
+		{
+			return $"@{nameof(TradeCostCollectionAttributeProcessor)}.{nameof(Filter)}($type, $property)";
 		}
 
 		public static bool Filter(Type type, InspectorProperty property)
@@ -36,7 +36,7 @@ namespace Trading.Editor
 				return false;
 
 			return !typeof(IEnumerable<TradeCost>)
-			   .IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+				.IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
 		}
 
 		private bool IsInsideCollection(InspectorProperty? property)
