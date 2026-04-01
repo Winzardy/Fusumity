@@ -4,19 +4,15 @@ using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using ZenoTween;
 
 namespace UI
 {
-	//[Obsolete("Используйте UIButtonLayout")]
+	[Obsolete("Будет переделан после того как уберем UIButtonWidget")]
 	public class UILabeledButtonLayout : UILocalizedBaseLayout
 	{
 		public const string ANIMATION_KEY_PREFIX = "style/";
-
-		public bool useAnimations;
-		public override bool UseLayoutAnimations => useAnimations;
 
 		public Button button;
 
@@ -45,13 +41,14 @@ namespace UI
 
 		//TODO: убрать, использовать StateSwitcher<string>
 		[Obsolete("убрать, использовать StateSwitcher<string>")]
-		[ShowIf(nameof(useAnimations)), ReadOnly]
-		[AnimationTweenKey(ANIMATION_KEY_PREFIX), OnValueChanged(nameof(OnDefaultStyleChanged))]
+		[ReadOnly]
+		[AnimationTweenKey(ANIMATION_KEY_PREFIX)]
 		public string defaultStyle = ANIMATION_KEY_PREFIX + UIButtonStyle.DEFAULT;
 
 		[Space]
 		[ConstDropdown(typeof(ActionBusElementType))]
 		public string uId;
+
 		[ConstDropdown(typeof(ActionBusGroupType))]
 		public string groupId;
 
@@ -62,14 +59,7 @@ namespace UI
 			base.Reset();
 
 			button = GetComponentInChildren<Button>();
-			label = GetComponentInChildren<TMP_Text>();
-		}
-
-		private void OnDefaultStyleChanged()
-		{
-#if UNITY_EDITOR
-			customSequences.TryPlayEditor(defaultStyle);
-#endif
+			label  = GetComponentInChildren<TMP_Text>();
 		}
 	}
 }

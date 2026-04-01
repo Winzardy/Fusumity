@@ -9,11 +9,15 @@ namespace UI
 	{
 		public TMP_Text sublabel;
 
+		[ReadOnly]
+		[InfoBox("Используйте ActivitySwitcher", InfoMessageType.Warning)]
 		[FoldoutGroup("Toggle Animations")]
 		[HorizontalGroup("Toggle Animations/OnOff"), LabelText("On")]
 		[SerializeReference]
 		public SequenceParticipant onSequence;
 
+		[ReadOnly]
+		[InfoBox("Используйте ActivitySwitcher", InfoMessageType.Warning)]
 		[HorizontalGroup("Toggle Animations/OnOff"), LabelText("Off")]
 		[SerializeReference]
 		public SequenceParticipant offSequence;
