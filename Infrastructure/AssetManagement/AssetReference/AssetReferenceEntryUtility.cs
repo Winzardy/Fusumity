@@ -144,13 +144,12 @@ namespace AssetManagement
 		{
 			return await LoadComponentsAsync<T>(entries, cancellationToken);
 		}
-
+		
 		public static bool IsEmptyOrInvalid(this IAssetReferenceEntry entry) =>
 			entry == null || !(entry.AssetReference?.RuntimeKeyIsValid() ?? false);
 
-		// todo лучше эти два метода "инвертнуть", или хз. Щас очень некрасиво выглядит)
 		public static bool IsValid(this IAssetReferenceEntry entry) =>
-			!IsEmptyOrInvalid(entry);
+			entry is { AssetReference: not null } && entry.AssetReference.RuntimeKeyIsValid();
 
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReferenceEntry> entries,
 			CancellationToken cancellationToken = default)
