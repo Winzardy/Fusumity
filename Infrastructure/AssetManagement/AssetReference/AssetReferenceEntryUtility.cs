@@ -148,6 +148,9 @@ namespace AssetManagement
 		public static bool IsEmptyOrInvalid(this IAssetReferenceEntry entry) =>
 			entry == null || !(entry.AssetReference?.RuntimeKeyIsValid() ?? false);
 
+		public static bool IsValid(this IAssetReferenceEntry entry) =>
+			entry is { AssetReference: not null } && entry.AssetReference.RuntimeKeyIsValid();
+
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReferenceEntry> entries,
 			CancellationToken cancellationToken = default)
 		{

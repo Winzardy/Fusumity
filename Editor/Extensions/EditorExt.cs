@@ -136,8 +136,8 @@ namespace Fusumity.Editor.Extensions
 			{
 				var field = fields[i];
 				if ((restrictSet == null || !restrictSet.Contains(field)) &&
-					(field.IsPublic || field.HasAttribute<SerializeField>()) &&
-					!field.HasAttribute<HideInInspector>())
+				    (field.IsPublic || field.HasAttribute<SerializeField>()) &&
+				    !field.HasAttribute<HideInInspector>())
 				{
 					result.Add(field);
 				}
@@ -167,13 +167,13 @@ namespace Fusumity.Editor.Extensions
 		public static bool IsArrayElement(this SerializedProperty property)
 		{
 			var path = property.propertyPath;
-			return path[path.Length - 1] == ']';
+			return path[^1] == ']';
 		}
 
 		public static int GetElementIndex(this SerializedProperty property)
 		{
 			var path = property.propertyPath;
-			if (path[path.Length - 1] != ']')
+			if (path[^1] != ']')
 				return 0;
 			var beginIndex = path.LastIndexOf("[", StringComparison.Ordinal) + 1;
 			var indexString = path.Substring(beginIndex, path.Length - beginIndex - 1);
@@ -315,12 +315,12 @@ namespace Fusumity.Editor.Extensions
 			new TypeSelectorDrawData(property, label, targetType, currentType, onSelected, insertNull).Draw(position);
 		}
 
-		public static void DrawAssetSelector(this UnityEngine.Object target, Rect position, GUIContent label, Type propertyType, Type targetType, Action<UnityEngine.Object> onSelected)
+		public static void DrawAssetSelector(this Object target, Rect position, GUIContent label, Type propertyType, Type targetType, Action<UnityEngine.Object> onSelected)
 		{
 			new AssetSelectorDrawData(target, label, propertyType, targetType, onSelected).Draw(position);
 		}
 
-		public static void DrawAssetSelector(this UnityEngine.Object target, GUIContent label, Type propertyType, Type targetType, Action<UnityEngine.Object> onSelected)
+		public static void DrawAssetSelector(this Object target, GUIContent label, Type propertyType, Type targetType, Action<Object> onSelected)
 		{
 			var height = EditorGUIUtility.HasObjectThumbnail(propertyType) ? 64f : 18f;
 			var position = EditorGUILayout.GetControlRect(true, height);

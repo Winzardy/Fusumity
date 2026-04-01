@@ -51,7 +51,7 @@ namespace Fusumity.Editor
 				var lastRect = GUILayoutUtility.GetLastRect();
 
 				if (typeof(IProxyEvaluator).IsAssignableFrom(Property.ParentType) &&
-					Property.Parent.ParentType.IsArray)
+				    Property.Parent.ParentType.IsArray)
 					lastRect.x += GUIHelper.CurrentIndentAmount;
 
 				var labelWidth = label == null || label.text.IsNullOrEmpty()
