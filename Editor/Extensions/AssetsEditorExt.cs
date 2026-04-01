@@ -214,7 +214,7 @@ namespace Fusumity.Editor.Extensions
 				var path = AssetDatabase.GUIDToAssetPath(guid);
 				var asset = AssetDatabase.LoadAssetAtPath(path, propertyType);
 
-				if (targetType.IsAssignableFrom(asset.GetType()))
+				if (targetType.IsInstanceOfType(asset))
 					assets.Add((asset, path));
 			}
 

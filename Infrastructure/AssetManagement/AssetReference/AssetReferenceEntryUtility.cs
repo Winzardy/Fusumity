@@ -144,7 +144,7 @@ namespace AssetManagement
 		{
 			return await LoadComponentsAsync<T>(entries, cancellationToken);
 		}
-		
+
 		public static bool IsEmptyOrInvalid(this IAssetReferenceEntry entry) =>
 			entry == null || !(entry.AssetReference?.RuntimeKeyIsValid() ?? false);
 
