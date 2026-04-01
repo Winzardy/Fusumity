@@ -39,7 +39,7 @@ namespace UI
 			if (_layout.label != null && viewModel.Label != null)
 				viewModel.Label.Bind(UpdateLabel);
 
-			_adBanner?.Update(viewModel.AdBanner);
+			UpdateBanner();
 			_labeledIcon?.Update(viewModel.LabeledIcon);
 
 			UpdateIcon();
@@ -61,6 +61,11 @@ namespace UI
 		protected override void OnNullViewModel()
 		{
 			SetActive(false);
+		}
+
+		protected internal void UpdateBanner()
+		{
+			_adBanner?.Update(ViewModel.AdBanner);
 		}
 
 		private void UpdateLabel(string text)
