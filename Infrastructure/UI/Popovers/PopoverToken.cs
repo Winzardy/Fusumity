@@ -74,7 +74,8 @@ namespace UI.Popovers
 			_token.Release(immediate);
 		}
 
-		internal bool IsValid() => _generation == _token.Generation;
+		public bool IsValid() => _token is {RawPopover: not null}
+			&& _generation == _token.Generation;
 	}
 
 	public static class PopoverTokenExtensions
