@@ -6,7 +6,7 @@ namespace UI
 {
 	public static class UIButtonExtensions
 	{
-		public static ActionBusElement Subscribe(this Button button, Action action, string uId = null, string groupId = null, bool allowLinking = true)
+		public static UnityButtonBusElement Subscribe(this Button button, Action action, string uId = null, string groupId = null, bool allowLinking = true)
 		{
 			var element = new UnityButtonBusElement(button, action, uId, groupId);
 			element.AllowLinking = allowLinking;
