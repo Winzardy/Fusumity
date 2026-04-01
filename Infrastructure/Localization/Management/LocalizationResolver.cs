@@ -95,6 +95,12 @@ namespace Localization
 						if (handle.IsDefault() || !handle.IsDone)
 							continue;
 
+						if (!handle.IsValid())
+						{
+							value = string.Empty;
+							return true;
+						}
+
 						var entry = handle.Result.GetEntry(key);
 						if (entry != null)
 						{

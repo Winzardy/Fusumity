@@ -41,6 +41,8 @@ namespace Fusumity.MVVM.UI
 
 		public void SetValue(string value)
 		{
+			if(_value == value)
+				return;
 			_value = value;
 			_onChange?.Invoke(value);
 		}
