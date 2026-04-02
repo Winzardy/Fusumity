@@ -22,7 +22,7 @@ namespace Fusumity.Editor
 	}
 
 	public class NotNullValidator<T> : AttributeValidator<T>
-		where T : System.Attribute
+		where T : Attribute
 	{
 		protected override void Validate(ValidationResult result)
 		{
@@ -30,7 +30,7 @@ namespace Fusumity.Editor
 			if (valueEntry == null)
 				return;
 
-			if (NotNullUtility.IsNull(valueEntry))
+			if (NotNullUtility.IsNull(valueEntry) && GUI.enabled)
 			{
 				result.AddError($"Field '{Property.NiceName}' must not be null");
 			}
@@ -50,7 +50,7 @@ namespace Fusumity.Editor
 
 			var originColor = GUI.color;
 
-			if (isNull)
+			if (isNull && GUI.enabled)
 				GUI.color = NotNullUtility.GetColor(originColor);
 
 			CallNextDrawer(label);
@@ -70,7 +70,7 @@ namespace Fusumity.Editor
 			var isNull = NotNullUtility.IsNull(valueEntry);
 
 			var originColor = GUI.color;
-			if (isNull)
+			if (isNull && GUI.enabled)
 				GUI.color = NotNullUtility.GetColor(originColor);
 
 			CallNextDrawer(label);

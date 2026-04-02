@@ -33,20 +33,32 @@ namespace Fusumity.Editor
 
 		public static string GetSuffixLabel(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is ICollection collection)
+			if (property.ParentValueProperty.ParentValueProperty.ValueEntry.WeakSmartValue is IList collection)
 			{
 				var totalWeight = 0;
 				var currentWeight = property.ParentValueProperty.ValueEntry.WeakSmartValue is IWeightable current ? current.Weight : 0;
-				foreach (var obj in collection)
+
+				if (currentWeight <= 0)
+					return string.Empty;
+
+				var approx = false;
+				foreach (var element in collection)
 				{
-					if (obj is IWeightable weightable)
-					{
+					if (element is not IWeightable weightable)
+						continue;
+
+					if (weightable.Weight >= 0)
 						totalWeight += weightable.Weight;
-					}
+					else
+						approx = true;
 				}
 
+				if (totalWeight == 0)
+					totalWeight = 1;
+
 				var percent = (float) currentWeight / totalWeight;
-				return percent.ToString("P4") + SPACE;
+				var prefix = approx ? "~" : string.Empty;
+				return prefix + percent.ToString("0.####%") + SPACE;
 			}
 
 			return "?%" + SPACE;

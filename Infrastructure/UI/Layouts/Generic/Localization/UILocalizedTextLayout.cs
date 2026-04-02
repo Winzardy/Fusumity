@@ -1,8 +1,10 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine.Serialization;
 
 namespace UI
 {
+	[Obsolete("Не использовать, если нужно есть TMPLocalizer")]
 	public class UILocalizedTextLayout : UILocalizedBaseLayout
 	{
 		[FormerlySerializedAs("placeholder")]

@@ -7,7 +7,7 @@ using Sapientia.Pooling;
 
 namespace Trading
 {
-	public static partial class TradingUtility
+	public static partial class TradeManagerUtility
 	{
 		#region Trade
 
@@ -37,7 +37,7 @@ namespace Trading
 			return true;
 		}
 
-		/// <inheritdoc cref="TradingUtility.FetchAsync(TradeCost, Tradeboard, CancellationToken)"/>
+		/// <inheritdoc cref="TradeManagerUtility.FetchAsync(TradeCost, Tradeboard, CancellationToken)"/>
 		public static async Task<TradeExecuteError?> FetchAsync(TradeConfig trade, Tradeboard tradeboard,
 			CancellationToken cancellationToken = default)
 		{

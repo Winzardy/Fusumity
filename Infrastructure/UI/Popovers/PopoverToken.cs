@@ -74,7 +74,8 @@ namespace UI.Popovers
 			_token.Release(immediate);
 		}
 
-		internal bool IsValid() => _generation == _token.Generation;
+		public bool IsValid() => _token is {RawPopover: not null}
+			&& _generation == _token.Generation;
 	}
 
 	public static class PopoverTokenExtensions
@@ -107,17 +108,22 @@ namespace UI.Popovers
 
 		private PopoverReleaser<T> _releaser;
 
+		private IPopoverShowPolicy _policy;
 		private T _popover;
 
 		public T Popover => _popover;
+		public IPopoverShowPolicy Policy => _policy;
+
 		int IPopoverToken.Generation => _generation;
 
 		public event Action Released;
 
-		internal void Bind(T popover, PopoverReleaser<T> releaser)
+		internal void Bind(T popover, IPopoverShowPolicy policy, PopoverReleaser<T> releaser)
 		{
 			_releaser = releaser;
-			_popover  = popover;
+
+			_policy  = policy;
+			_popover = popover;
 		}
 
 		void IPopoverToken.Release(bool immediate) => Release(immediate);

@@ -21,10 +21,12 @@ namespace Fusumity.Editor
 
 	public class ConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<ICondition>
 	{
-		public static SdfIconType NoneConditionSdfIcon { get => SdfIconType.Check; }
-		public static string NoneConditionLabel { get => "\u2009None (true)"; }
-		public static SdfIconType RejectConditionSdfIcon { get => SdfIconType.X; }
-		public static string RejectConditionLabel { get => "\u2009Reject (false)"; }
+		public const string NONE_CONDITION_LABEL = "\u2009None (true)";
+		public const SdfIconType NONE_CONDITION_SDF_ICON = SdfIconType.Check;
+
+		public const string REJECT_CONDITION_LABEL = "\u2009Reject (false)";
+		public const SdfIconType REJECT_CONDITION_SDF_ICON = SdfIconType.X;
+
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
@@ -43,7 +45,6 @@ namespace Fusumity.Editor
 					break;
 			}
 		}
-
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
@@ -102,11 +103,11 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = "\u2009If / else";
-				settings.Category = "/";
-				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
+				settings.Name           = "\u2009If / else";
+				settings.Category       = "/";
+				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = SdfIconType.Alt;
+				settings.Icon           = SdfIconType.Alt;
 
 				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
 			}
@@ -120,11 +121,11 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = NoneConditionLabel;
-				settings.Category = "/";
-				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
+				settings.Name           = NONE_CONDITION_LABEL;
+				settings.Category       = "/";
+				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = NoneConditionSdfIcon;
+				settings.Icon           = NONE_CONDITION_SDF_ICON;
 
 				typeConfig.SetPriority(valueEntryTypeOfValue, 10001, null);
 			}
@@ -138,11 +139,11 @@ namespace Fusumity.Editor
 					EditorUtility.SetDirty(typeConfig);
 				}
 
-				settings.Name = RejectConditionLabel;
-				settings.Category = "/";
-				settings.DarkIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
+				settings.Name           = REJECT_CONDITION_LABEL;
+				settings.Category       = "/";
+				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
 				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon = RejectConditionSdfIcon;
+				settings.Icon           = REJECT_CONDITION_SDF_ICON;
 
 				typeConfig.SetPriority(valueEntryTypeOfValue, 10000, null);
 			}

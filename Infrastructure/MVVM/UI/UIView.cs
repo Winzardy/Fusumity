@@ -39,6 +39,11 @@ namespace Fusumity.MVVM.UI
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
+		protected ActionBusElement Subscribe(ActionBusButtonScheme scheme, Action action)
+		{
+			return Subscribe(scheme.button, action, scheme.uId, scheme.groupId);
+		}
+
 		protected void Bind(TMP_Text label, ILabelViewModel viewModel)
 		{
 			Bind(viewModel, (x) => label.text = x);

@@ -1,4 +1,5 @@
-﻿using ActionBusSystem;
+﻿using System;
+using ActionBusSystem;
 using Fusumity.Attributes.Odin;
 using Game.UI;
 using Sirenix.OdinInspector;
@@ -32,6 +33,21 @@ namespace UI
 		[ConstDropdown(typeof(ActionBusElementType))]
 		public string uId;
 
+		[ConstDropdown(typeof(ActionBusGroupType))]
+		public string groupId;
+	}
+
+	[HideLabel]
+	[Serializable]
+	public struct ActionBusButtonScheme
+	{
+		public Button button;
+
+		[ShowIf(nameof(button), null)]
+		[ConstDropdown(typeof(ActionBusElementType))]
+		public string uId;
+
+		[ShowIf(nameof(button), null)]
 		[ConstDropdown(typeof(ActionBusGroupType))]
 		public string groupId;
 	}

@@ -19,6 +19,10 @@ namespace Trading
 		public TradeCostProgression()
 		{
 		}
+
+#if UNITY_EDITOR
+		public bool ShowSchemeEditor() => schemeSource == TradeProgressionSchemeSource.Local;
+#endif
 	}
 }
 #endif

@@ -1,5 +1,6 @@
 #if CLIENT
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Sapientia.Deterministic;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ namespace Trading
 		public TradeRewardDrop(TradeReward reward, Fix64 rate)
 		{
 			this.reward = reward;
-			this.rate = rate;
+			this.rate   = rate;
 		}
 
 		public TradeRewardDrop(TradeReward reward, TradeRewardDrop parent)

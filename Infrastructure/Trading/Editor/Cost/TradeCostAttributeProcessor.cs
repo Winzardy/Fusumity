@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Fusumity.Editor.Utility;
 using Sapientia.Utility;
@@ -46,7 +47,7 @@ namespace Trading.Editor
 			out FieldInfo sourceField)
 		{
 			sourceProperty = null;
-			sourceField = null;
+			sourceField    = null;
 
 			for (var p = property; p != null; p = p.Parent)
 			{
@@ -60,7 +61,7 @@ namespace Trading.Editor
 				if (attr.Access != TradeAccessType.ByParent)
 				{
 					sourceProperty = p;
-					sourceField = fi;
+					sourceField    = fi;
 					return attr.Access;
 				}
 			}
@@ -76,12 +77,7 @@ namespace Trading.Editor
 		{
 			base.ProcessSelfAttributes(property, attributes);
 
-			var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
-			{
-				FilterTypesFunction = GetFilterFunction(),
-			};
-
-			attributes.Add(typeSelectorSettingsAttribute);
+			attributes.Add(GetTypeSelectorAttribute());
 		}
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
@@ -89,6 +85,15 @@ namespace Trading.Editor
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 			if (member.TryGetSummary(out var summary))
 				attributes.Add(new TooltipAttribute(summary));
+		}
+
+		protected TypeSelectorSettingsAttribute GetTypeSelectorAttribute()
+		{
+			return new TypeSelectorSettingsAttribute
+			{
+				FilterTypesFunction = GetFilterFunction(),
+				ShowNoneItem        = false
+			};
 		}
 
 		protected virtual string GetFilterFunction()

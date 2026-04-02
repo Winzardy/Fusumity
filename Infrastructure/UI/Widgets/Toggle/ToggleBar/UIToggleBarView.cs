@@ -51,7 +51,7 @@ namespace UI
 	{
 		private Func<IUIAnimator<UIToggleButtonLayout>> _animatorFactory;
 
-		public UIToggleButtonsCollection(UIToggleBarLayout layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) :
+		public UIToggleButtonsCollection(UIViewCollectionLayout<UIToggleButtonLayout> layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) :
 			base(layout)
 		{
 			_animatorFactory = animatorFactory;

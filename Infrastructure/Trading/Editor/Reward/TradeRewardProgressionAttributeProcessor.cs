@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Sapientia.Extensions.Reflection;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -20,49 +19,17 @@ namespace Trading.Editor
 				attributes.Add(new TooltipAttribute(summary));
 			switch (member.Name)
 			{
-				case nameof(TradeRewardProgression.stages):
-					if (!IsInsideCollection(parentProperty))
-						attributes.Add(new IndentAttribute(-1));
-					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
-					{
-						FilterTypesFunction = $"@{nameof(TradeCostProgressionAttributeProcessor)}.{nameof(Filter)}($type, $property)"
-					};
-
-					attributes.Add(typeSelectorSettingsAttribute);
-					attributes.Add(new PropertySpaceAttribute(0, 1));
-
+				case nameof(TradeCostProgression.schemeSource):
+					attributes.Add(new LabelTextAttribute("Progress Source"));
+					break;
+				case nameof(TradeRewardProgression.scheme):
+					attributes.Add(new ShowIfAttribute(nameof(TradeRewardProgression.ShowSchemeEditor)));
 					break;
 
-				case nameof(TradeRewardProgression.condition):
-
-					attributes.Add(new LabelTextAttribute("Increment Condition"));
-					break;
-
-				case nameof(TradeRewardProgression.group):
-					attributes.Add(new PropertySpaceAttribute(5));
+				case nameof(TradeCostProgression.schemeReference):
+					attributes.Add(new HideIfAttribute(nameof(TradeCostProgression.ShowSchemeEditor)));
 					break;
 			}
-		}
-
-		public static bool Filter(Type type, InspectorProperty property)
-		{
-			// if (!TradeRewardProgression.Filter(type, property.Parent))
-			// 	return false;
-
-			return type.HasAttribute<SerializableAttribute>();
-		}
-
-		private bool IsInsideCollection(InspectorProperty? property)
-		{
-			while (property != null)
-			{
-				if (property.Parent?.ChildResolver is IOrderedCollectionResolver)
-					return true;
-
-				property = property.Parent;
-			}
-
-			return false;
 		}
 	}
 
@@ -79,13 +46,49 @@ namespace Trading.Editor
 			{
 				case nameof(TradeRewardProgressionStage.useOverrideCondition):
 					attributes.Add(new LabelTextAttribute("Use Override Increment Condition"));
+					attributes.Add(new ShowIfAttribute("@TradeRewardProgressionStageAttributeProcessor.ShowIf($property)"));
+
 					break;
 
 				case nameof(TradeRewardProgressionStage.overrideCondition):
-					attributes.Add(new ShowIfAttribute(nameof(TradeRewardProgressionStage.useOverrideCondition)));
+					attributes.Add(new ShowIfAttribute("@TradeRewardProgressionStageAttributeProcessor.ShowIfCondition($property)"));
+
 					attributes.Add(new LabelTextAttribute("Increment Condition"));
 					break;
 			}
+		}
+
+		public static bool ShowIf(InspectorProperty property)
+		{
+			if (property
+					.ParentValueProperty? // Stage
+					.ParentValueProperty? // Array
+					.ParentValueProperty? // ContentEntry
+					.ParentValueProperty?
+					.ValueEntry.WeakSmartValue is TradeRewardProgression progression)
+				return progression.schemeSource == TradeProgressionSchemeSource.Local;
+
+			return true;
+		}
+
+		public static bool ShowIfCondition(InspectorProperty property)
+		{
+			if (property.ParentValueProperty?.ValueEntry.WeakSmartValue is not TradeRewardProgressionStage stage)
+				return false;
+
+			if (!stage.useOverrideCondition)
+				return false;
+
+			if (property
+					.ParentValueProperty? // Stage
+					.ParentValueProperty? // Array
+					.ParentValueProperty? // ContentEntry
+					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeCostProgression progression)
+			{
+				return progression.schemeSource == TradeProgressionSchemeSource.Local;
+			}
+
+			return true;
 		}
 	}
 }

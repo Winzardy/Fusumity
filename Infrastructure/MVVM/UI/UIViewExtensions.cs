@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using TMPro;
 using UI;
 
@@ -19,7 +20,7 @@ namespace Fusumity.MVVM.UI
 			}
 		}
 
-		public static void Unbind(this TMP_Text label, ILabelViewModel viewModel)
+		public static void Unbind([CanBeNull] this TMP_Text _, ILabelViewModel viewModel)
 		{
 			viewModel.Release();
 		}
@@ -29,7 +30,7 @@ namespace Fusumity.MVVM.UI
 			viewModel.Bind(layout.SetLabel);
 		}
 
-		public static void Unbind(this UILabelLayout layout, ILabelViewModel viewModel)
+		public static void Unbind([CanBeNull] this UILabelLayout _, ILabelViewModel viewModel)
 		{
 			viewModel.Release();
 		}

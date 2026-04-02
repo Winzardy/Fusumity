@@ -18,35 +18,20 @@ namespace Trading.Editor
 
 			switch (member.Name)
 			{
-				case nameof(TradeCostProgression.stages):
-					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
-					{
-						FilterTypesFunction = $"@{nameof(TradeCostProgressionAttributeProcessor)}.{nameof(Filter)}($type, $property)"
-					};
-
-					attributes.Add(typeSelectorSettingsAttribute);
-
+				case nameof(TradeCostProgression.schemeSource):
+					attributes.Add(new LabelTextAttribute("Progress Source"));
+					break;
+				case nameof(TradeCostProgression.scheme):
+					attributes.Add(new ShowIfAttribute(nameof(TradeCostProgression.ShowSchemeEditor)));
 					break;
 
-				case nameof(TradeCostProgression.condition):
-					attributes.Add(new PropertySpaceAttribute(1, 5));
-					attributes.Add(new LabelTextAttribute("Increment Condition"));
+				case nameof(TradeCostProgression.schemeReference):
+					attributes.Add(new HideIfAttribute(nameof(TradeCostProgression.ShowSchemeEditor)));
 					break;
 			}
 
 			if (!IsInsideCollection(parentProperty))
 				attributes.Add(new IndentAttribute(-1));
-		}
-
-		public static bool Filter(Type type, InspectorProperty property)
-		{
-			if (type == typeof(TradeCostOptions)) // Не обрабатываем кейс с вложенным выбором...
-				return false;
-
-			if (!TradeCostAttributeProcessor.Filter(type, property.Parent))
-				return false;
-
-			return type.HasAttribute<SerializableAttribute>();
 		}
 
 		private bool IsInsideCollection(InspectorProperty? property)
@@ -76,13 +61,48 @@ namespace Trading.Editor
 			{
 				case nameof(TradeCostProgressionStage.useOverrideCondition):
 					attributes.Add(new LabelTextAttribute("Use Override Increment Condition"));
+					attributes.Add(new ShowIfAttribute("@TradeCostProgressionStageAttributeProcessor.ShowIf($property)"));
 					break;
 
 				case nameof(TradeCostProgressionStage.overrideCondition):
-					attributes.Add(new ShowIfAttribute(nameof(TradeRewardProgressionStage.useOverrideCondition)));
+					attributes.Add(new ShowIfAttribute("@TradeCostProgressionStageAttributeProcessor.ShowIfCondition($property)"));
 					attributes.Add(new LabelTextAttribute("Increment Condition"));
 					break;
 			}
+		}
+
+		public static bool ShowIf(InspectorProperty property)
+		{
+			if (property
+					.ParentValueProperty? // Stage
+					.ParentValueProperty? // Array
+					.ParentValueProperty? // ContentEntry
+					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeCostProgression progression)
+			{
+				return progression.schemeSource == TradeProgressionSchemeSource.Local;
+			}
+
+			return true;
+		}
+
+		public static bool ShowIfCondition(InspectorProperty property)
+		{
+			if (property.ParentValueProperty?.ValueEntry.WeakSmartValue is not TradeCostProgressionStage stage)
+				return false;
+
+			if (!stage.useOverrideCondition)
+				return false;
+
+			if (property
+					.ParentValueProperty? // Stage
+					.ParentValueProperty? // Array
+					.ParentValueProperty? // ContentEntry
+					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeCostProgression progression)
+			{
+				return progression.schemeSource == TradeProgressionSchemeSource.Local;
+			}
+
+			return true;
 		}
 	}
 }

@@ -1,16 +1,23 @@
 ﻿using ZenoTween;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
 
 namespace UI
 {
 	public class UIToggleButtonLayout : UILabeledButtonLayout
 	{
+		public TMP_Text sublabel;
+
+		[ReadOnly]
+		[InfoBox("Используйте ActivitySwitcher", InfoMessageType.Warning)]
 		[FoldoutGroup("Toggle Animations")]
 		[HorizontalGroup("Toggle Animations/OnOff"), LabelText("On")]
 		[SerializeReference]
 		public SequenceParticipant onSequence;
 
+		[ReadOnly]
+		[InfoBox("Используйте ActivitySwitcher", InfoMessageType.Warning)]
 		[HorizontalGroup("Toggle Animations/OnOff"), LabelText("Off")]
 		[SerializeReference]
 		public SequenceParticipant offSequence;
@@ -18,7 +25,7 @@ namespace UI
 		[Space]
 		public StateSwitcher<bool> activitySwitcher;
 
-		private void OnValidate()
+		protected internal override void OnValidate()
 		{
 			if (Application.isPlaying)
 				return;

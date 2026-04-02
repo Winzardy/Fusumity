@@ -10,12 +10,8 @@ namespace Fusumity.MVVM.UI
 
 		public string Value
 		{
-			get { return _value; }
-			set
-			{
-				_value = value;
-				_onChange?.Invoke(value);
-			}
+			get => _value;
+			set => SetValue(value);
 		}
 
 		public LabelViewModel()
@@ -41,6 +37,14 @@ namespace Fusumity.MVVM.UI
 		public void Release()
 		{
 			_onChange = null;
+		}
+
+		public void SetValue(string value)
+		{
+			if(_value == value)
+				return;
+			_value = value;
+			_onChange?.Invoke(value);
 		}
 	}
 

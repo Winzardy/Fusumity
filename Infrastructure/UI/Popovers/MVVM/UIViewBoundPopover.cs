@@ -20,6 +20,7 @@ namespace UI.Popovers
 		protected Action _onClose;
 
 		public TViewModel ViewModel { get => _view != null ? _view.ViewModel : default; }
+		public TView View { get => _view; }
 
 		protected abstract TView CreateView(TLayout layout);
 

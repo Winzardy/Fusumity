@@ -51,6 +51,8 @@ namespace UI
 				_primaryPrice?.ClearViewModel();
 				_primaryPrice?.SetActive(false);
 			}
+
+			_button.UpdateBanner();
 		}
 	}
 

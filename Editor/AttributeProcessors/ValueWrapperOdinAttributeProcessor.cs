@@ -18,6 +18,8 @@ namespace Fusumity.Editor
 		protected abstract string ValueFieldName { get; }
 		protected virtual string SecondValueFieldName => string.Empty;
 
+		protected virtual string EmptyLabel { get => null; }
+
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
@@ -32,7 +34,12 @@ namespace Fusumity.Editor
 					if (!content.text.IsNullOrEmpty())
 						attributes.Add(new LabelTextAttribute(content.text));
 					else
-						attributes.Add(new HideLabelAttribute());
+					{
+						if (EmptyLabel.IsNullOrEmpty())
+							attributes.Add(new HideLabelAttribute());
+						else
+							attributes.Add(new LabelTextAttribute(EmptyLabel));
+					}
 
 					if (!content.tooltip.IsNullOrEmpty())
 						attributes.Add(new TooltipAttribute(content.tooltip));
@@ -48,7 +55,12 @@ namespace Fusumity.Editor
 					}
 				}
 				else
-					attributes.Add(new HideLabelAttribute());
+				{
+					if (EmptyLabel.IsNullOrEmpty())
+						attributes.Add(new HideLabelAttribute());
+					else
+						attributes.Add(new LabelTextAttribute(EmptyLabel));
+				}
 			}
 
 			if (member.Name == ValueFieldName)

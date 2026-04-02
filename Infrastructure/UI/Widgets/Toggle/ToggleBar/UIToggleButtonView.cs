@@ -1,7 +1,9 @@
 ﻿using AssetManagement;
 using Fusumity.MVVM.UI;
 using System;
+using Fusumity.Utility;
 using JetBrains.Annotations;
+using Sapientia.Extensions;
 using UnityEngine;
 
 namespace UI
@@ -33,18 +35,28 @@ namespace UI
 
 			_layout.styleSwitcher?.Switch(viewModel.Style);
 
+			if (_layout.sublabel != null)
+			{
+				if (viewModel.Sublabel != null)
+					viewModel.Sublabel.Bind(UpdateSublabel);
+				else
+					_layout.sublabel.SetActive(false);
+			}
+
 			viewModel.ToggleStateChanged += HandleToggleStateChanged;
-			viewModel.StyleChanged += HandleAvailableStateChanged;
-			viewModel.IconChanged += HandleIconChanged;
-			viewModel.LabelChanged += HandleLabelChanged;
+			viewModel.StyleChanged       += HandleAvailableStateChanged;
+			viewModel.IconChanged        += HandleIconChanged;
+			viewModel.LabelChanged       += HandleLabelChanged;
 		}
 
 		protected override void OnClear(IToggleButtonViewModel viewModel)
 		{
+			viewModel.Sublabel?.Release();
+
 			viewModel.ToggleStateChanged -= HandleToggleStateChanged;
-			viewModel.StyleChanged -= HandleAvailableStateChanged;
-			viewModel.IconChanged -= HandleIconChanged;
-			viewModel.LabelChanged -= HandleLabelChanged;
+			viewModel.StyleChanged       -= HandleAvailableStateChanged;
+			viewModel.IconChanged        -= HandleIconChanged;
+			viewModel.LabelChanged       -= HandleLabelChanged;
 		}
 
 		private void UpdateIcon(IAssetReferenceEntry<Sprite> icon)
@@ -71,6 +83,12 @@ namespace UI
 			{
 				_layout.label.text = label;
 			}
+		}
+
+		private void UpdateSublabel(string text)
+		{
+			_layout.sublabel.SetActive(!text.IsNullOrEmpty());
+			_layout.sublabel.text = text;
 		}
 
 		private void HandleAvailableStateChanged()
@@ -103,6 +121,7 @@ namespace UI
 	{
 		[CanBeNull] IAssetReferenceEntry<Sprite> Icon { get; }
 		[CanBeNull] string Label { get; }
+		[CanBeNull] ILabelViewModel Sublabel { get => null; }
 
 		bool IsToggled { get; }
 		[CanBeNull] string Style { get; }
