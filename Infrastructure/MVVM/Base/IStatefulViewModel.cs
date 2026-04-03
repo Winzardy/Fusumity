@@ -46,6 +46,11 @@ namespace Fusumity.MVVM
 			IsActive = isActive;
 			ActiveStateChanged?.Invoke(isActive);
 		}
+
+		public override string ToString()
+		{
+			return $"Id: [ {Id} ] Is Active: [ {IsActive} ]";
+		}
 	}
 
 	/// <summary>

@@ -53,6 +53,55 @@ namespace Fusumity.MVVM
 			_root.RemoveChild(branch);
 		}
 
+		public void RemoveBranch<T>(Func<T, bool> predicate = null) where T : NodeStatefulViewModel
+		{
+			if (_disposed)
+				return;
+
+			var child = GetBranch<T>(predicate);
+			if (child != null)
+			{
+				RemoveBranch(child);
+			}
+		}
+
+		public T GetBranch<T>(Func<T, bool> predicate = null) where T : NodeStatefulViewModel
+		{
+			var query = _root
+				.Children?
+				.OfType<T>();
+
+			return predicate != null ?
+				query?.FirstOrDefault(predicate) :
+				query?.FirstOrDefault();
+		}
+
+		public T GetBranch<T>(string Id) where T : NodeStatefulViewModel
+		{
+			return GetBranch<T>(x => x.Id == Id);
+		}
+
+		public T GetOrCreateBranch<T>(Func<T> factoryMethod, Func<T, bool> predicate = null) where T : NodeStatefulViewModel
+		{
+			if (_disposed)
+				return default;
+
+			var branch = GetBranch<T>();
+
+			if (branch == null)
+			{
+				branch = factoryMethod.Invoke();
+				AddBranch(branch);
+			}
+
+			return branch;
+		}
+
+		public T GetOrCreateBranch<T>(Func<T, bool> predicate = null) where T : NodeStatefulViewModel, new()
+		{
+			return GetOrCreateBranch<T>(static () => new T(), predicate);
+		}
+
 		public NodeStatefulViewModel GetOrCreateBranch(string id)
 		{
 			if (_disposed)

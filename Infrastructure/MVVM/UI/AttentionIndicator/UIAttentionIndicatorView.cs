@@ -66,12 +66,15 @@ namespace Fusumity.MVVM.UI
 		private void PlayFloatAnimation()
 		{
 			_tween.Kill();
-			_layout.rectTransform.anchoredPosition = _originalPos;
+			_tween = DOVirtual.Float(0f, 1f, 1f, _ =>
+			{
+				const float amplitude = 10f;
 
-			_tween = _layout.rectTransform
-				.DOAnchorPosY(_layout.rectTransform.anchoredPosition.y + 10, 1f)
-				.SetLoops(-1, LoopType.Yoyo)
-				.SetEase(Ease.InOutSine);
+				var pos = _originalPos;
+				pos.y += Mathf.Sin(Time.realtimeSinceStartup * Mathf.PI) * amplitude;
+				_layout.rectTransform.anchoredPosition = pos;
+			})
+			.SetLoops(-1);
 		}
 	}
 }

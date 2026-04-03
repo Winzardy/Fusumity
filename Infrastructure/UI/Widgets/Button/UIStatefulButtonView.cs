@@ -1,5 +1,6 @@
 ﻿using System;
 using ActionBusSystem;
+using Fusumity.MVVM;
 using Fusumity.MVVM.UI;
 using Fusumity.Utility;
 using Game.UI;
@@ -11,6 +12,7 @@ namespace UI
 	{
 		private UIAdBannerView _adBanner;
 		private UILabeledIconView _labeledIcon;
+		private UIAttentionIndicatorView _indicator;
 		private UISpriteAssigner _assigner;
 
 		private ActionBusElement _clickElement;
@@ -29,6 +31,11 @@ namespace UI
 				AddDisposable(_labeledIcon = new UILabeledIconView(layout.labeledIcon, true));
 			}
 
+			if (layout.indicator != null)
+			{
+				AddDisposable(_indicator = new UIAttentionIndicatorView(layout.indicator));
+			}
+
 			_clickElement = Subscribe(layout, HandleClick);
 		}
 
@@ -40,13 +47,15 @@ namespace UI
 				viewModel.Label.Bind(UpdateLabel);
 
 			UpdateBanner();
+
 			_labeledIcon?.Update(viewModel.LabeledIcon);
+			_indicator?.Update(viewModel.Indicator);
 
 			UpdateIcon();
 			UpdateStyle();
 			UpdateInteractable();
 
-			viewModel.StyleChanged        += UpdateStyle;
+			viewModel.StyleChanged += UpdateStyle;
 			viewModel.InteractableChanged += UpdateInteractable;
 		}
 
@@ -54,7 +63,7 @@ namespace UI
 		{
 			viewModel.Label?.Release();
 
-			viewModel.StyleChanged        -= UpdateStyle;
+			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
 		}
 
@@ -127,6 +136,7 @@ namespace UI
 		UISpriteInfo Icon { get => default; }
 		IAdBannerViewModel AdBanner { get => null; }
 		ILabeledIconViewModel LabeledIcon { get => null; }
+		IStatefulViewModel Indicator { get => null; }
 
 		event Action StyleChanged;
 		event Action InteractableChanged;
