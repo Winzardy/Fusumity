@@ -55,6 +55,8 @@ namespace Fusumity.Utility.UserLocator
 
 		public static string City => _cache.GetValueOrDefault(UserCountryMetrics.CITY, UNDEFINED);
 
+		private static string _header;
+
 		/// <returns>Country Code (RU,US... ISO 3166-1 alpha-2)</returns>
 		public static async UniTask<string> GetCountryAsync(CancellationToken cancellationToken = default) =>
 			await GetAsync(UserCountryMetrics.COUNTRY, cancellationToken);
@@ -88,9 +90,10 @@ namespace Fusumity.Utility.UserLocator
 				}
 
 				using var request = UnityWebRequest.Get(string.Format(SERVICE_URL_FORMAT, metric));
+				request.SetRequestHeader("User-Agent", _header ??= $"{Application.productName}/{Application.version} (Unity)");
 				var (isCanceled, _) = await request.SendWebRequest()
-				   .WithCancellation(cancellationToken)
-				   .SuppressCancellationThrow();
+					.WithCancellation(cancellationToken)
+					.SuppressCancellationThrow();
 
 				if (isCanceled)
 					cancellationToken.ThrowIfCancellationRequested();
