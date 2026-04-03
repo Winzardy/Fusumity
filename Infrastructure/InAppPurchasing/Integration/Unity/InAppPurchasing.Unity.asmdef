@@ -20,7 +20,11 @@
         "Fusumity.Utility.UnityServices",
         "UserLocator",
         "Targeting",
-        "ProjectInfo"
+        "ProjectInfo",
+        "Xsolla.Purchasing",
+        "Xsolla.SDK.UnityPurchasing",
+        "Xsolla.SDK.Store",
+        "Xsolla.SDK.Common"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -10,7 +10,7 @@ namespace InAppPurchasing.Unity
 		PurchasingUnavailable,
 		NoProductsAvailable,
 		AppNotKnown,
-		UnknownPlatform,
+		UnknownBilling,
 		UnknownCountry,
 
 		Exception

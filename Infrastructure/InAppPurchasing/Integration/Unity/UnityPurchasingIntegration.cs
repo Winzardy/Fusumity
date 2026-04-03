@@ -21,6 +21,13 @@ using Sapientia.Extensions;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Security;
+
+#if !XSOLLA_SDK_DISABLED
+using Xsolla.SDK.Common;
+using Xsolla.SDK.Store;
+using Xsolla.SDK.UnityPurchasing;
+#endif
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -101,11 +108,16 @@ namespace InAppPurchasing.Unity
 		[CanBeNull]
 		private IAppleExtensions _appleExtension;
 
+#if !XSOLLA_SDK_DISABLED
+		[CanBeNull]
+		private IXsollaPurchasingStoreExtension _xsollaExtension;
+#endif
+
 		/// <summary>
 		/// Валидатор чеков, работает только для Google Play и App Store
 		/// </summary>
 		[CanBeNull]
-		private CrossPlatformValidator _validator;
+		private CrossPlatformValidator _localValidator;
 
 		private UniTaskCompletionSource<UnityPurchasingInitializationFailureReason> _initializationCompletionSource;
 
@@ -166,39 +178,44 @@ namespace InAppPurchasing.Unity
 			try
 			{
 				var success = await UnityServices.UnityServiceInitializationAsync(cancellationToken);
+				cancellationToken.ThrowIfCancellationRequested();
 
 				if (!success)
 					return UnityPurchasingInitializationFailureReason.UnityServices;
 
-				var autoSetDefaultBilling = true;
+				var reason = await SetupTargetBillingAsync(cancellationToken);
 
-				if (_settings.storeToScheme.TryGetValue(_distributionPlatform, out var scheme))
-				{
-					var country = await UserLocator.GetCountryAsync(cancellationToken);
-
-					if (country == UserLocator.UNDEFINED)
-						return UnityPurchasingInitializationFailureReason.UnknownCountry;
-
-					if (scheme.countryToBilling.TryGetValue(country, out var billing))
-					{
-						_billing              = billing;
-						autoSetDefaultBilling = false;
-					}
-					else if (scheme.overrideBilling)
-					{
-						_billing = scheme.overrideBilling;
-					}
-				}
-
-				if (autoSetDefaultBilling)
-					_billing = GetDefaultBilling(_distributionPlatform);
+				if (reason != UnityPurchasingInitializationFailureReason.None)
+					return reason;
 
 #if !UNITY_EDITOR
 				if (_billing == IAPBillingType.UNDEFINED)
-					return UnityPurchasingInitializationFailureReason.UnknownPlatform;
+					return UnityPurchasingInitializationFailureReason.UnknownBilling;
 #endif
 
-				var module = StandardPurchasingModule.Instance();
+				AbstractPurchasingModule module = null;
+#if !XSOLLA_SDK_DISABLED
+				if (_billing == IAPBillingType.XSOLLA)
+				{
+					var settings = XsollaStoreClientSettingsAsset.Instance().settings;
+#if UNITY_IOS
+					settings = XsollaClientSettings.Builder.Update(settings)
+						.SetWebViewType(XsollaClientSettings.WebViewType.External) // or .Auto for EU
+						.Build();
+#endif
+					var configuration = XsollaStoreClientConfiguration.Builder.Create()
+						.SetSettings(settings)
+#if DEV
+						.SetSandbox(true)
+						.SetLogLevel(XsollaLogLevel.Debug)
+#endif
+						.Build();
+					module = XsollaPurchasingModule.Builder.Create()
+						.SetConfiguration(configuration)
+						.Build();
+				}
+#endif
+				module ??= StandardPurchasingModule.Instance();
 				var builder = ConfigurationBuilder.Instance(module);
 
 				_billingProductIdToEntry = new BidirectionalMap<string, IAPProductEntry>(4);
@@ -221,7 +238,7 @@ namespace InAppPurchasing.Unity
 					configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
 
 					// Данный метод может обрабатывать отозванный продукты (family share)
-					//configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
+					// configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
 				}
 
 				_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
@@ -231,13 +248,45 @@ namespace InAppPurchasing.Unity
 				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
 
 				UnityPurchasing.Initialize(this, builder);
-				return await _initializationCompletionSource.Task;
+				var failureReason = await _initializationCompletionSource.Task;
+				cancellationToken.ThrowIfCancellationRequested();
+				return failureReason;
 			}
 			catch (Exception ex)
 			{
 				IAPDebug.LogException(ex);
 				return UnityPurchasingInitializationFailureReason.Exception;
 			}
+		}
+
+		private async UniTask<UnityPurchasingInitializationFailureReason> SetupTargetBillingAsync(CancellationToken cancellationToken)
+		{
+			var autoSetDefaultBilling = true;
+
+			if (_settings.storeToScheme.TryGetValue(_distributionPlatform, out var scheme))
+			{
+				var country = await UserLocator.GetCountryAsync(cancellationToken);
+
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if (country == UserLocator.UNDEFINED)
+					return UnityPurchasingInitializationFailureReason.UnknownCountry;
+
+				if (scheme.countryToBilling.TryGetValue(country, out var billing))
+				{
+					_billing              = billing;
+					autoSetDefaultBilling = false;
+				}
+				else if (scheme.overrideBilling)
+				{
+					_billing = scheme.overrideBilling;
+				}
+			}
+
+			if (autoSetDefaultBilling)
+				_billing = GetDefaultBilling(_distributionPlatform);
+
+			return UnityPurchasingInitializationFailureReason.None;
 		}
 
 		void IStoreListener.OnInitialized(IStoreController controller, IExtensionProvider extensions)
@@ -272,9 +321,15 @@ namespace InAppPurchasing.Unity
 				case IAPBillingType.AMAZON:
 					_amazonExtension = _extensions.GetExtension<IAmazonExtensions>();
 					break;
+
+#if !XSOLLA_SDK_DISABLED
+				case IAPBillingType.XSOLLA:
+					_xsollaExtension = _extensions.GetExtension<IXsollaPurchasingStoreExtension>();
+					break;
+#endif
 			}
 
-			TryInitializeValidator();
+			TryInitializeLocalValidator();
 
 			//Аддитивно добавлять продукты после инициализации, если вдруг это будет нужно
 			//_controller.FetchAdditionalProducts();
@@ -517,8 +572,7 @@ namespace InAppPurchasing.Unity
 				return PurchaseProcessingResult.Complete;
 			}
 
-			// Можно сделать режимы валидации чека (клиент, сервер, гибрид), но пока клиент
-			if (!ValidateReceipt(product))
+			if (!LocalValidateReceipt(product))
 			{
 				OnPurchaseFailedInternal(entry, "Invalid receipt", args);
 				return PurchaseProcessingResult.Complete;
@@ -540,13 +594,42 @@ namespace InAppPurchasing.Unity
 
 				if (_processing.Remove(billingProductId))
 				{
-					Complete(receipt, true);
+					if (PendingValidateReceipt(product, CompleteProcessingAfterValidation))
+						return PurchaseProcessingResult.Pending;
+
+					CompleteProcessingAfterValidation(true, null);
 					return PurchaseProcessingResult.Complete;
+
+					void CompleteProcessingAfterValidation(bool success, string error)
+					{
+						if (error.IsNullOrEmpty() && success)
+						{
+							Complete(receipt, true);
+
+							return;
+						}
+
+						OnPurchaseFailedInternal(entry, error, args);
+					}
 				}
 
-				receipt.isRestored = true;
-				_grantCenter.Grant(in receipt, OnComplete);
+				if (PendingValidateReceipt(product, CompleteGrantAfterValidation))
+					return PurchaseProcessingResult.Pending;
+
+				CompleteGrantAfterValidation(true, null);
 				return PurchaseProcessingResult.Pending;
+
+				void CompleteGrantAfterValidation(bool success, string error)
+				{
+					if (error.IsNullOrEmpty() && success)
+					{
+						receipt.isRestored = true;
+						_grantCenter.Grant(in receipt, OnComplete);
+						return;
+					}
+
+					OnPurchaseFailedInternal(entry, error, args);
+				}
 			}
 			catch (Exception e)
 			{
@@ -576,19 +659,30 @@ namespace InAppPurchasing.Unity
 			return false;
 		}
 
-		private bool ValidateReceipt(UnityProduct product)
+		private bool PendingValidateReceipt(UnityProduct product, Action<bool, string> onComplete)
+		{
+#if !XSOLLA_SDK_DISABLED
+			var xsollaValidator = _xsollaExtension.GetValidator();
+			xsollaValidator.Validate(product.receipt, onComplete);
+			return true;
+#endif
+
+			return false;
+		}
+
+		private bool LocalValidateReceipt(UnityProduct product)
 		{
 			const string PREFIX = "[ Validation ]";
 			const int TOLERANCE_MINUTES = 5;
 
 #if UNITY_EDITOR
-			if (_validator == null)
+			if (_localValidator == null)
 				return true;
 #endif
 
 			try
 			{
-				var receipts = _validator.Validate(product.receipt);
+				var receipts = _localValidator.Validate(product.receipt);
 
 				if (receipts.IsNullOrEmpty())
 				{
@@ -747,7 +841,7 @@ namespace InAppPurchasing.Unity
 			}
 		}
 
-		private void TryInitializeValidator()
+		private void TryInitializeLocalValidator()
 		{
 			if (_settings.disableValidationRecipe)
 				return;
@@ -777,7 +871,7 @@ namespace InAppPurchasing.Unity
 			if (googlePlayData == null && appleData == null)
 				return;
 
-			_validator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
+			_localValidator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
 		}
 
 		private IAPBillingEntry GetDefaultBilling(in DistributionEntry platform)
