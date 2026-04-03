@@ -265,14 +265,19 @@ namespace InAppPurchasing.Unity
 
 			if (_settings.storeToScheme.TryGetValue(_distributionPlatform, out var scheme))
 			{
-				var country = await UserLocator.GetCountryAsync(cancellationToken);
+				var country = UserLocator.UNDEFINED;
+				try
+				{
+					country = await UserLocator.GetCountryAsync(cancellationToken);
+				}
+				catch (Exception e)
+				{
+					IAPDebug.LogException(e);
+				}
 
 				cancellationToken.ThrowIfCancellationRequested();
 
-				if (country == UserLocator.UNDEFINED)
-					return UnityPurchasingInitializationFailureReason.UnknownCountry;
-
-				if (scheme.countryToBilling.TryGetValue(country, out var billing))
+				if (country != UserLocator.UNDEFINED && scheme.countryToBilling.TryGetValue(country, out var billing))
 				{
 					_billing              = billing;
 					autoSetDefaultBilling = false;

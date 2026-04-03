@@ -70,7 +70,7 @@ namespace Fusumity.Utility.UserLocator
 			await _cacheLazy[metric].Task.AttachExternalCancellation(cancellationToken);
 			return _cache[metric];
 
-			UniTask<string> Create() => FetchAsync(metric);
+			UniTask<string> Create() => FetchAsync(metric, cancellationToken);
 		}
 
 		private static async UniTask<string> FetchAsync(string metric, CancellationToken cancellationToken = default)
@@ -106,7 +106,6 @@ namespace Fusumity.Utility.UserLocator
 				Debug.LogWarning($"{PREFIX} Failed to fetch {metric}. Error: {request.error}, Attempt: {attempt}");
 
 				await UniTask.Delay(DELAY_MS, DelayType.Realtime, cancellationToken: cancellationToken);
-
 				attempt++;
 			}
 
