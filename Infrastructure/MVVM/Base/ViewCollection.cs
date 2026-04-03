@@ -1,15 +1,21 @@
 ﻿using Fusumity.Utility;
+using Sapientia.Collections;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Sapientia.Collections;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Fusumity.MVVM
 {
 	public interface IViewCollection<TViewModel>
 	{
+		/// <summary>
+		/// Main hosting object.
+		/// Can reside above collection root.
+		/// </summary>
+		[MaybeNull] Transform Host { get; }
+
 		void Update(IEnumerable<TViewModel> viewModels);
 	}
 
@@ -25,7 +31,7 @@ namespace Fusumity.MVVM
 		{
 		}
 
-		public ViewCollection(TViewLayout prefab, Transform root = null) : base(prefab, root)
+		public ViewCollection(TViewLayout prefab, Transform collectionRoot = null, Transform hostingObject = null) : base(prefab, collectionRoot, hostingObject)
 		{
 		}
 
@@ -43,16 +49,20 @@ namespace Fusumity.MVVM
 		public int this[TView view] { get { return _utilizedViews.IndexOf(view); } }
 		public int UtilizedCount { get { return _utilizedViews.Count; } }
 
-		public BaseViewCollection(ViewCollectionLayout<TViewLayout> layout) : this(layout.prefab, layout.root)
+		public Transform Host { get; }
+
+		public BaseViewCollection(ViewCollectionLayout<TViewLayout> layout) : this(layout.prefab, layout.root, layout.transform)
 		{
 			layout.prefab.SetActive(false);
 		}
 
-		public BaseViewCollection(TViewLayout prefab, Transform root = null)
+		public BaseViewCollection(TViewLayout prefab, Transform collectionRoot = null, Transform hostingObject = null)
 		{
-			_pool = root != null
-				? new ViewPool<TViewModel, TView, TViewLayout>(prefab, root, CreateViewInstance, DisposeViewInstance)
-				: new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
+			Host = hostingObject ?? collectionRoot;
+
+			_pool = collectionRoot != null ?
+				new ViewPool<TViewModel, TView, TViewLayout>(prefab, collectionRoot, CreateViewInstance, DisposeViewInstance) :
+				new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
 
 			_utilizedViews = new List<TView>();
 		}
@@ -181,6 +191,18 @@ namespace Fusumity.MVVM
 			}
 
 			return !enumerator.MoveNext();
+		}
+	}
+
+	public static class ViewCollectionExtensions
+	{
+		public static void UpdateOrDeactivateHost<TViewModel>(this IViewCollection<TViewModel> collection, IEnumerable<TViewModel> viewModels)
+		{
+			if (collection.Host == null)
+				throw new InvalidOperationException("Collection Host is null.");
+
+			collection.Host.SetActive(!viewModels.IsNullOrEmpty());
+			collection.Update(viewModels);
 		}
 	}
 }

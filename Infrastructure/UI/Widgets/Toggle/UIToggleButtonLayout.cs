@@ -2,12 +2,14 @@
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
+using Fusumity.MVVM.UI;
 
 namespace UI
 {
 	public class UIToggleButtonLayout : UILabeledButtonLayout
 	{
 		public TMP_Text sublabel;
+		public UIAttentionIndicatorLayout indicator;
 
 		[ReadOnly]
 		[InfoBox("Используйте ActivitySwitcher", InfoMessageType.Warning)]
