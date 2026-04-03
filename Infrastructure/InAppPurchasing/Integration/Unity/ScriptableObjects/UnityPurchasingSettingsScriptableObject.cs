@@ -3,7 +3,6 @@ using Fusumity.Collections;
 using InAppPurchasing;
 using InAppPurchasing.Unity;
 using ProjectInformation;
-using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -27,6 +26,7 @@ namespace Content.ScriptableObjects.InAppPurchasing
 	[Serializable]
 	public struct SerializableBillingScheme
 	{
+		[HideLabel]
 		public BillingScheme billingScheme;
 
 		[LabelText("Country to Platform")]
