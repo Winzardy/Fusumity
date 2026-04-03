@@ -75,6 +75,7 @@ namespace InAppPurchasing.Unity
 		public Dictionary<DistributionEntry, BillingScheme> storeToScheme;
 	}
 
+	[Serializable]
 	public struct BillingScheme
 	{
 		public Toggle<IAPBillingEntry> overrideBilling;
@@ -183,10 +184,10 @@ namespace InAppPurchasing.Unity
 				if (!success)
 					return UnityPurchasingInitializationFailureReason.UnityServices;
 
-				var reason = await SetupTargetBillingAsync(cancellationToken);
+				var failureReason = await SetupTargetBillingAsync(cancellationToken);
 
-				if (reason != UnityPurchasingInitializationFailureReason.None)
-					return reason;
+				if (failureReason != UnityPurchasingInitializationFailureReason.None)
+					return failureReason;
 
 #if !UNITY_EDITOR
 				if (_billing == IAPBillingType.UNDEFINED)
@@ -248,7 +249,7 @@ namespace InAppPurchasing.Unity
 				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
 
 				UnityPurchasing.Initialize(this, builder);
-				var failureReason = await _initializationCompletionSource.Task;
+				failureReason = await _initializationCompletionSource.Task;
 				cancellationToken.ThrowIfCancellationRequested();
 				return failureReason;
 			}
