@@ -1,8 +1,8 @@
+using Fusumity.Utility;
+using JetBrains.Annotations;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Fusumity.Utility;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace WLog
@@ -24,7 +24,7 @@ namespace WLog
 	//
 	// Via custom created context:
 	//
-	// var logContext = LogContext.Create("MyContext"); // or LogContext.Create<MyClass>();
+	// var logContext = WLogContext.Create("MyContext"); // or LogContext.Create<MyClass>();
 	// logContext.Log("log");
 	// logContext.Log("log with another context", anotherGameObject);
 	// logContext.LogFormat("My format {0} and {1}, try add this as context", args: new object[] { "FIRST_ARG", 2 });
@@ -34,6 +34,14 @@ namespace WLog
 	// Change log level:
 	// this.SetLogType(WLogType.Debug | WLogType.Error);
 	//
+	//
+	// Output format:
+	// [ContextName] Message
+	//
+	// Via custom context with disabled mini stack trace:
+	//
+	// var logContext = WLogContext.Create("MyContext",  miniStackTracePosition: MiniStackTracePosition.None);
+	// logContext.Log("Message");
 
 	[Flags]
 	public enum WLogType
@@ -55,6 +63,8 @@ namespace WLog
 
 	public enum MiniStackTracePosition
 	{
+		None,
+
 		Start,
 		End
 	}
@@ -77,11 +87,21 @@ namespace WLog
 
 	public class WLogContext
 	{
+		public readonly string name;
+		public WLogType logType;
+		public MiniStackTracePosition miniStackTracePosition = MiniStackTracePosition.Start;
+
+		internal WLogContext(string name, WLogType logType = WLogType.All)
+		{
+			this.name = name;
+			this.logType = logType;
+		}
+
 		public static WLogContext Create<T>(WLogType logType = WLogType.All,
 			MiniStackTracePosition miniStackTracePosition = MiniStackTracePosition.Start)
 		{
 			var context = WLogContextHolder.GetOrCreate(typeof(T));
-			context.LogType = logType;
+			context.logType = logType;
 			context.miniStackTracePosition = miniStackTracePosition;
 			return context;
 		}
@@ -90,26 +110,16 @@ namespace WLog
 			MiniStackTracePosition miniStackTracePosition = MiniStackTracePosition.Start)
 		{
 			var context = WLogContextHolder.GetOrCreate(name);
-			context.LogType = logType;
+			context.logType = logType;
 			context.miniStackTracePosition = miniStackTracePosition;
 			return context;
 		}
 
-		public readonly string Name;
-
-		public WLogType LogType;
-
-		public MiniStackTracePosition miniStackTracePosition = MiniStackTracePosition.Start;
-
-		internal WLogContext(string name, WLogType logType = WLogType.All)
-		{
-			Name = name;
-			LogType = logType;
-		}
-
 		public bool IsLogTypeAllowed(WLogType logType)
 		{
-			return LogType.HasFlag(logType) && UnityDebug.unityLogger.IsLogTypeAllowed(logType.ToUnityLogType());
+			return
+				this.logType.HasFlag(logType) &&
+				UnityDebug.unityLogger.IsLogTypeAllowed(logType.ToUnityLogType());
 		}
 	}
 
@@ -124,7 +134,8 @@ namespace WLog
 			var logContext = WLogContextHolder.GetLogContext(self);
 			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
 				return;
-			UnityDebug.Log($"[{logContext.Name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
+
+			UnityDebug.Log($"[{logContext.name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
 		}
 
 		[HideInCallstack]
@@ -134,7 +145,8 @@ namespace WLog
 			var logContext = WLogContextHolder.GetLogContext(self);
 			if (!logContext.IsLogTypeAllowed(WLogType.Warning))
 				return;
-			UnityDebug.LogWarning($"[{logContext.Name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
+
+			UnityDebug.LogWarning($"[{logContext.name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
 		}
 
 		[HideInCallstack]
@@ -144,22 +156,18 @@ namespace WLog
 			var logContext = WLogContextHolder.GetLogContext(self);
 			if (!logContext.IsLogTypeAllowed(WLogType.Error))
 				return;
-			UnityDebug.LogError($"[{logContext.Name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
+
+			UnityDebug.LogError($"[{logContext.name}.{memberName}:{sourceLineNumber}]", self as UnityObject);
 		}
 
 		[HideInCallstack]
 		public static void Log<T>(this T self, object message,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
+			if (!TryExtractLogComponents(self, WLogType.Debug, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
 
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
-
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.Log($"{prefix}{message}{postfix}", self as UnityObject);
 		}
 
@@ -167,14 +175,10 @@ namespace WLog
 		public static void Log<T>(this T self, object message, UnityObject context,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
+			if (!TryExtractLogComponents(self, WLogType.Debug, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.Log($"{prefix}{message}{postfix}", context);
 		}
 
@@ -183,14 +187,10 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
+			if (!TryExtractLogComponents(self, WLogType.Debug, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogFormat(self as UnityObject, $"{prefix}{format}{postfix}", args);
 		}
 
@@ -199,14 +199,10 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
+			if (!TryExtractLogComponents(self, WLogType.Debug, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogFormat(context, $"{prefix}{format}{postfix}", args);
 		}
 
@@ -216,46 +212,32 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Debug))
+			if (!TryExtractLogComponents(self, WLogType.Debug, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
-			UnityDebug.LogFormat(logType, logOptions, context,
-				$"{prefix}{format}{postfix}", args);
+			UnityDebug.LogFormat(logType, logOptions, context, $"{prefix}{format}{postfix}", args);
 		}
 
 		[HideInCallstack]
 		public static void LogWarning<T>(this T self, object message,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Warning))
+			if (!TryExtractLogComponents(self, WLogType.Warning, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			UnityObject context = self as UnityObject;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
-			UnityDebug.LogWarning($"{prefix}{message}{postfix}", context);
+			UnityDebug.LogWarning($"{prefix}{message}{postfix}", self as UnityObject);
 		}
 
 		[HideInCallstack]
 		public static void LogWarning<T>(this T self, object message, UnityObject context,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Warning))
+			if (!TryExtractLogComponents(self, WLogType.Warning, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogWarning($"{prefix}{message}{postfix}", context);
 		}
 
@@ -264,16 +246,11 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Warning))
+			if (!TryExtractLogComponents(self, WLogType.Warning, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
-			UnityDebug.LogWarningFormat(self as UnityObject, $"{prefix}{format}{postfix}",
-				args);
+			UnityDebug.LogWarningFormat(self as UnityObject, $"{prefix}{format}{postfix}", args);
 		}
 
 		[HideInCallstack]
@@ -281,15 +258,10 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Warning))
+			if (!TryExtractLogComponents(self, WLogType.Warning, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
 
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
-
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogWarningFormat(context, $"{prefix}{format}{postfix}", args);
 		}
 
@@ -297,30 +269,20 @@ namespace WLog
 		public static void LogError<T>(this T self, object message,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Error))
+			if (!TryExtractLogComponents(self, WLogType.Error, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			UnityObject context = self as UnityObject;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
-			UnityDebug.LogError($"{prefix}{message}{postfix}", context);
+			UnityDebug.LogError($"{prefix}{message}{postfix}", self as UnityObject);
 		}
 
 		[HideInCallstack]
 		public static void LogError<T>(this T self, object message, UnityObject context,
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Error))
+			if (!TryExtractLogComponents(self, WLogType.Error, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
-
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogError($"{prefix}{message}{postfix}", context);
 		}
 
@@ -329,14 +291,10 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Error))
+			if (!TryExtractLogComponents(self, WLogType.Error, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogErrorFormat(self as UnityObject, $"{prefix}{format}{postfix}", args);
 		}
 
@@ -345,14 +303,10 @@ namespace WLog
 			[CallerMemberName] string memberName = "", [CallerLineNumber] int sourceLineNumber = 0,
 			params object[] args)
 		{
-			var logContext = WLogContextHolder.GetLogContext(self);
-			if (!logContext.IsLogTypeAllowed(WLogType.Error))
+			if (!TryExtractLogComponents(self, WLogType.Error, memberName, sourceLineNumber,
+				out var prefix, out var postfix))
 				return;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
 			UnityDebug.LogErrorFormat(context, $"{prefix}{format}{postfix}", args);
 		}
 
@@ -364,12 +318,9 @@ namespace WLog
 			var logContext = WLogContextHolder.GetLogContext(self);
 			if (!logContext.IsLogTypeAllowed(WLogType.Exception))
 				return;
-			UnityObject objectContext = context ?? self as UnityObject;
-			var miniStackTrace = $"{logContext.Name}.{memberName}:{sourceLineNumber}";
-			var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 
-			var prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-			var postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
+			UnityObject objectContext = context ?? self as UnityObject;
+			GetPrefixAndPostfix(logContext, memberName, sourceLineNumber, out var prefix, out var postfix);
 			if (message != null)
 				UnityDebug.Log($"{prefix}{message}{postfix}", objectContext);
 			UnityDebug.LogException(exception, objectContext);
@@ -403,7 +354,39 @@ namespace WLog
 		public static void SetLogType<T>(this T self, WLogType logType)
 		{
 			var logContext = WLogContextHolder.GetLogContext(self);
-			logContext.LogType = logType;
+			logContext.logType = logType;
+		}
+
+		private static bool TryExtractLogComponents<T>(T obj,
+			WLogType expectedLogType, string memberName, int sourceLineNumber,
+			out string prefix, out string postfix)
+		{
+			prefix = null;
+			postfix = null;
+
+			var logContext = WLogContextHolder.GetLogContext(obj);
+			if (!logContext.IsLogTypeAllowed(expectedLogType))
+				return false;
+
+			GetPrefixAndPostfix(logContext, memberName, sourceLineNumber, out prefix, out postfix);
+			return true;
+		}
+
+		private static void GetPrefixAndPostfix(WLogContext logContext, string memberName, int sourceLineNumber,
+			out string prefix, out string postfix)
+		{
+			if (logContext.miniStackTracePosition == MiniStackTracePosition.None)
+			{
+				prefix = $"[{logContext.name}] ";
+				postfix = null;
+			}
+			else
+			{
+				var miniStackTrace = $"{logContext.name}.{memberName}:{sourceLineNumber}";
+				var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
+				prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
+				postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
+			}
 		}
 	}
 }
