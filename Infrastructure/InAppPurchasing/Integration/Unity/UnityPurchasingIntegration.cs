@@ -79,9 +79,6 @@ namespace InAppPurchasing.Unity
 		/// </summary>
 		public bool xsollaDisableValidationRecipe;
 
-		public int xsollaProjectId;
-		public string xsollaLoginId;
-
 		#endregion
 
 		public Dictionary<DistributionEntry, BillingScheme> storeToScheme;
@@ -210,10 +207,8 @@ namespace InAppPurchasing.Unity
 #if !XSOLLA_SDK_DISABLED
 				if (_billing == IAPBillingType.XSOLLA)
 				{
-					var settings = XsollaStoreClientSettings.Builder.Create()
-						.SetProjectId(_settings.xsollaProjectId)
-						.SetLoginId(_settings.xsollaLoginId)
-						.Build();
+					var settings = XsollaClientSettingsAsset.Instance().settings;
+
 #if UNITY_IOS
 					settings = XsollaClientSettings.Builder.Update(settings)
 						.SetWebViewType(XsollaClientSettings.WebViewType.External) // or .Auto for EU

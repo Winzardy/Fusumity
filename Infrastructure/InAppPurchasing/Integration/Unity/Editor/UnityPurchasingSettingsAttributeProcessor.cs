@@ -61,15 +61,6 @@ namespace InAppPurchasing.Unity.Editor
 					attributes.Add(new LabelTextAttribute(nameof(UnityPurchasingSettings.disableValidationRecipe), true));
 
 					break;
-				case nameof(UnityPurchasingSettings.xsollaProjectId):
-					attributes.Add(new TitleGroupAttribute(xsollaGroup));
-					attributes.Add(new LabelTextAttribute("Project Id"));
-					break;
-				case nameof(UnityPurchasingSettings.xsollaLoginId):
-					attributes.Add(new TitleGroupAttribute(xsollaGroup));
-					attributes.Add(new LabelTextAttribute("Login Id"));
-					attributes.Add(new NotNullAttribute());
-					break;
 			}
 		}
 	}
