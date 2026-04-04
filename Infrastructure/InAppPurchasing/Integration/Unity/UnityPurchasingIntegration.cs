@@ -78,6 +78,7 @@ namespace InAppPurchasing.Unity
 		/// Включает или выключает проверку чеков Xsolla
 		/// </summary>
 		public bool xsollaDisableValidationRecipe;
+
 		public int xsollaProjectId;
 		public string xsollaLoginId;
 
@@ -684,7 +685,7 @@ namespace InAppPurchasing.Unity
 		private bool PendingValidateReceipt(UnityProduct product, Action<bool, string> onComplete)
 		{
 #if !XSOLLA_SDK_DISABLED
-			if (!_settings.xsollaDisableValidationRecipe)
+			if (_billing == IAPBillingType.XSOLLA && !_settings.xsollaDisableValidationRecipe)
 			{
 				var xsollaValidator = _xsollaExtension.GetValidator();
 				xsollaValidator.Validate(product.receipt, onComplete);
