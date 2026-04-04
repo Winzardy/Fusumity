@@ -72,6 +72,17 @@ namespace InAppPurchasing.Unity
 
 		#endregion
 
+		#region Xsolla
+
+		/// <summary>
+		/// Включает или выключает проверку чеков Xsolla
+		/// </summary>
+		public bool xsollaDisableValidationRecipe;
+		public int xsollaProjectId;
+		public string xsollaLoginId;
+
+		#endregion
+
 		public Dictionary<DistributionEntry, BillingScheme> storeToScheme;
 	}
 
@@ -198,14 +209,19 @@ namespace InAppPurchasing.Unity
 #if !XSOLLA_SDK_DISABLED
 				if (_billing == IAPBillingType.XSOLLA)
 				{
-					var settings = XsollaStoreClientSettingsAsset.Instance().settings;
+					var settings = XsollaStoreClientSettings.Builder.Create()
+						.SetProjectId(_settings.xsollaProjectId)
+						.SetLoginId(_settings.xsollaLoginId)
+						.Build();
 #if UNITY_IOS
 					settings = XsollaClientSettings.Builder.Update(settings)
 						.SetWebViewType(XsollaClientSettings.WebViewType.External) // or .Auto for EU
 						.Build();
 #endif
+
 					var configuration = XsollaStoreClientConfiguration.Builder.Create()
 						.SetSettings(settings)
+						.SetUserId(ProjectInfo.UserId.Value)
 #if DEV
 						.SetSandbox(true)
 						.SetLogLevel(XsollaLogLevel.Debug)
@@ -668,9 +684,12 @@ namespace InAppPurchasing.Unity
 		private bool PendingValidateReceipt(UnityProduct product, Action<bool, string> onComplete)
 		{
 #if !XSOLLA_SDK_DISABLED
-			var xsollaValidator = _xsollaExtension.GetValidator();
-			xsollaValidator.Validate(product.receipt, onComplete);
-			return true;
+			if (!_settings.xsollaDisableValidationRecipe)
+			{
+				var xsollaValidator = _xsollaExtension.GetValidator();
+				xsollaValidator.Validate(product.receipt, onComplete);
+				return true;
+			}
 #endif
 
 			return false;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Fusumity.Attributes.Odin;
 using Sapientia.Utility;
@@ -21,6 +22,7 @@ namespace InAppPurchasing.Unity.Editor
 
 			var appStoreGroup = IAPBillingUtility.GetLabel(IAPBillingType.APP_STORE);
 			var googlePlayGroup = IAPBillingUtility.GetLabel(IAPBillingType.GOOGLE_PLAY);
+			var xsollaGroup = IAPBillingUtility.GetLabel(IAPBillingType.XSOLLA);
 
 			switch (member.Name)
 			{
@@ -52,6 +54,21 @@ namespace InAppPurchasing.Unity.Editor
 
 					attributes.Add(new DisableIfAttribute(nameof(UnityPurchasingSettings.disableValidationRecipe)));
 					attributes.Add(new LabelTextAttribute(nameof(UnityPurchasingSettings.disableValidationRecipe), true));
+					break;
+
+				case nameof(UnityPurchasingSettings.xsollaDisableValidationRecipe):
+					attributes.Add(new TitleGroupAttribute(xsollaGroup));
+					attributes.Add(new LabelTextAttribute(nameof(UnityPurchasingSettings.disableValidationRecipe), true));
+
+					break;
+				case nameof(UnityPurchasingSettings.xsollaProjectId):
+					attributes.Add(new TitleGroupAttribute(xsollaGroup));
+					attributes.Add(new LabelTextAttribute("Project Id"));
+					break;
+				case nameof(UnityPurchasingSettings.xsollaLoginId):
+					attributes.Add(new TitleGroupAttribute(xsollaGroup));
+					attributes.Add(new LabelTextAttribute("Login Id"));
+					attributes.Add(new NotNullAttribute());
 					break;
 			}
 		}
