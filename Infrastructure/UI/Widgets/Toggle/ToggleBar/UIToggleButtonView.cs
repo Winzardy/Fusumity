@@ -1,9 +1,10 @@
 ﻿using AssetManagement;
+using Fusumity.MVVM;
 using Fusumity.MVVM.UI;
-using System;
 using Fusumity.Utility;
 using JetBrains.Annotations;
 using Sapientia.Extensions;
+using System;
 using UnityEngine;
 
 namespace UI
@@ -11,6 +12,7 @@ namespace UI
 	public class UIToggleButtonView : UIView<IToggleButtonViewModel, UIToggleButtonLayout>
 	{
 		private UISpriteAssigner _iconAssigner;
+		private UIAttentionIndicatorView _indicator;
 		private IUIAnimator<UIToggleButtonLayout> _animator;
 
 		public UIToggleButtonView(UIToggleButtonLayout layout, IUIAnimator<UIToggleButtonLayout> animator = null) : base(layout)
@@ -25,6 +27,11 @@ namespace UI
 
 				AddDisposable(animator);
 			}
+
+			if (layout.indicator != null)
+			{
+				AddDisposable(_indicator = new UIAttentionIndicatorView(layout.indicator));
+			}
 		}
 
 		protected override void OnUpdate(IToggleButtonViewModel viewModel)
@@ -34,6 +41,7 @@ namespace UI
 			UpdateToggleState(viewModel.IsToggled, true);
 
 			_layout.styleSwitcher?.Switch(viewModel.Style);
+			_indicator?.Update(viewModel.Indicator);
 
 			if (_layout.sublabel != null)
 			{
@@ -44,9 +52,9 @@ namespace UI
 			}
 
 			viewModel.ToggleStateChanged += HandleToggleStateChanged;
-			viewModel.StyleChanged       += HandleAvailableStateChanged;
-			viewModel.IconChanged        += HandleIconChanged;
-			viewModel.LabelChanged       += HandleLabelChanged;
+			viewModel.StyleChanged += HandleAvailableStateChanged;
+			viewModel.IconChanged += HandleIconChanged;
+			viewModel.LabelChanged += HandleLabelChanged;
 		}
 
 		protected override void OnClear(IToggleButtonViewModel viewModel)
@@ -54,9 +62,9 @@ namespace UI
 			viewModel.Sublabel?.Release();
 
 			viewModel.ToggleStateChanged -= HandleToggleStateChanged;
-			viewModel.StyleChanged       -= HandleAvailableStateChanged;
-			viewModel.IconChanged        -= HandleIconChanged;
-			viewModel.LabelChanged       -= HandleLabelChanged;
+			viewModel.StyleChanged -= HandleAvailableStateChanged;
+			viewModel.IconChanged -= HandleIconChanged;
+			viewModel.LabelChanged -= HandleLabelChanged;
 		}
 
 		private void UpdateIcon(IAssetReferenceEntry<Sprite> icon)
@@ -122,6 +130,7 @@ namespace UI
 		[CanBeNull] IAssetReferenceEntry<Sprite> Icon { get; }
 		[CanBeNull] string Label { get; }
 		[CanBeNull] ILabelViewModel Sublabel { get => null; }
+		[CanBeNull] IStatefulViewModel Indicator { get => null; }
 
 		bool IsToggled { get; }
 		[CanBeNull] string Style { get; }

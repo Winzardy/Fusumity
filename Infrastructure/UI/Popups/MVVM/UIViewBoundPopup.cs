@@ -90,25 +90,21 @@ namespace UI.Popups
 			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 
-			_view.OnShow();
 			OnViewShow();
 		}
 
 		protected override void OnHide(in TViewModel _)
 		{
-			_view.OnHide();
 			OnViewHide();
 		}
 
 		protected override void OnEndedOpening()
 		{
-			_view.OnShown();
 			OnViewShown();
 		}
 
 		protected override void OnEndedClosing()
 		{
-			_view.OnHidden();
 			OnViewHidden();
 		}
 

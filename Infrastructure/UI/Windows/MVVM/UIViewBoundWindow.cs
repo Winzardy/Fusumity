@@ -1,6 +1,6 @@
-﻿using System;
-using Fusumity.MVVM;
+﻿using Fusumity.MVVM;
 using Sapientia;
+using System;
 
 namespace UI.Windows
 {
@@ -73,7 +73,7 @@ namespace UI.Windows
 			if (!Active)
 				return;
 
-			if(Equals(ViewModel, viewModel))
+			if (Equals(ViewModel, viewModel))
 				return;
 
 			UpdateArgs(viewModel);
@@ -89,25 +89,21 @@ namespace UI.Windows
 			TryСlearViewAndAutoDisposeViewModel();
 			_view.Update(viewModel);
 
-			_view.OnShow();
 			OnViewShow();
 		}
 
 		protected override void OnHide(in TViewModel _)
 		{
-			_view.OnHide();
 			OnViewHide();
 		}
 
 		protected override void OnEndedOpening()
 		{
-			_view.OnShown();
 			OnViewShown();
 		}
 
 		protected override void OnEndedClosing()
 		{
-			_view.OnHidden();
 			OnViewHidden();
 		}
 

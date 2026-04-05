@@ -1,6 +1,7 @@
 ﻿using System;
 using ActionBusSystem;
 using Fusumity.Attributes.Odin;
+using Fusumity.MVVM.UI;
 using Game.UI;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -28,6 +29,7 @@ namespace UI
 
 		public UIAdBannerLayout adBanner;
 		public UILabeledIconLayout labeledIcon;
+		public UIAttentionIndicatorLayout indicator;
 
 		[Space]
 		[ConstDropdown(typeof(ActionBusElementType))]

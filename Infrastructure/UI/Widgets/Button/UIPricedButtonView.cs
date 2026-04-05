@@ -1,10 +1,9 @@
-﻿using Fusumity.MVVM.UI;
-using Fusumity.Utility;
+﻿using Fusumity.MVVM;
+using Fusumity.MVVM.UI;
 using Game.UI;
-using Sapientia.Collections;
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace UI
 {
@@ -17,7 +16,7 @@ namespace UI
 		public UIPricedButtonView(UIPricedButtonLayout layout) : base(layout)
 		{
 			AddDisposable(_button = new UIStatefulButtonView(layout));
-			AddDisposable(_price  = new UILabeledIconCollection(layout.prices));
+			AddDisposable(_price = new UILabeledIconCollection(layout.prices));
 			if (layout.primaryPrice)
 				AddDisposable(_primaryPrice = new UILabeledIconView(layout.primaryPrice));
 		}
@@ -41,7 +40,7 @@ namespace UI
 
 		private void UpdatePrices()
 		{
-			_price.UpdateOrDeactivate(ViewModel.Prices);
+			_price.UpdateOrDeactivateHost(ViewModel.Prices);
 
 			if (ViewModel.PrimaryPrice != null)
 			{

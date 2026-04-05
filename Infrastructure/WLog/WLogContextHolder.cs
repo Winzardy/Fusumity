@@ -47,7 +47,7 @@ namespace WLog
 
         private static (WLogContext context, bool created) GetOrCreateInternal(string name)
         {
-            var context = _allContexts.Find(x => x.Name == name);
+            var context = _allContexts.Find(x => x.name == name);
             if (context != null)
             {
                 return (context, false);

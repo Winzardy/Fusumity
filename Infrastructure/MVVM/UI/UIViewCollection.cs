@@ -1,58 +1,26 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Fusumity.Utility;
-using Sapientia.Collections;
+﻿using Fusumity.Utility;
 using UI;
 using UnityEngine;
 
 namespace Fusumity.MVVM.UI
 {
-	public interface IRootedViewCollection<TViewModel> : IViewCollection<TViewModel>
-	{
-		RectTransform Root { get; }
-		void UpdateOrDeactivate(IEnumerable<TViewModel> collection);
-
-		void Reset();
-	}
 	// only really needed for the UI constraints.
 
 	/// <summary>
 	/// Collection of UI views that expands dynamically using single template prefab,
 	/// and caches resulting instances in the underlying pool.
 	/// </summary>
-	public abstract class UIViewCollection<TViewModel, TView, TViewLayout> : ViewCollection<TViewModel, TView, TViewLayout>,
-		IRootedViewCollection<TViewModel>
+	public abstract class UIViewCollection<TViewModel, TView, TViewLayout> : ViewCollection<TViewModel, TView, TViewLayout>
 		where TView : UIView<TViewModel, TViewLayout>
 		where TViewLayout : UIBaseLayout
 	{
-		private RectTransform _root;
-
-		public RectTransform Root { get => _root; }
-
-		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root)
+		public UIViewCollection(UIViewCollectionLayout<TViewLayout> layout) : this(layout.template, layout.root, layout.transform)
 		{
 			layout.template.SetActive(false);
 		}
 
-		public UIViewCollection(TViewLayout prefab, RectTransform root = null) : base(prefab, root)
+		public UIViewCollection(TViewLayout prefab, Transform collectionRoot = null, Transform hostingObject = null) : base(prefab, collectionRoot, hostingObject)
 		{
-			_root = root;
-		}
-
-		public void UpdateOrDeactivate(IEnumerable<TViewModel> collection)
-		{
-			if (_root == null)
-				throw GUIDebug.Exception("Root can't be null!");
-
-			if (!collection.IsNullOrEmpty())
-			{
-				_root.SetActive(true);
-				Update(collection);
-			}
-			else
-			{
-				_root.SetActive(false);
-			}
 		}
 	}
 }
