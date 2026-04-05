@@ -696,10 +696,8 @@ namespace InAppPurchasing.Unity
 			const string PREFIX = "[ Validation ]";
 			const int TOLERANCE_MINUTES = 5;
 
-#if UNITY_EDITOR
 			if (_localValidator == null)
 				return true;
-#endif
 
 			try
 			{
@@ -871,7 +869,7 @@ namespace InAppPurchasing.Unity
 			byte[] appleData = null;
 
 #if APP_GOOGLE_PLAY
-			if (_billing == DistributionType.GOOGLE_PLAY)
+			if (_billing == IAPBillingType.GOOGLE_PLAY)
 			{
 				if (_settings.googlePlayDisableValidationRecipe)
 					return;
@@ -881,7 +879,7 @@ namespace InAppPurchasing.Unity
 #endif
 
 #if APP_STORE
-			if (_billing == DistributionType.APP_STORE)
+			if (_billing == IAPBillingType.APP_STORE)
 			{
 				if (_settings.appleDisableValidationRecipe)
 					return;
