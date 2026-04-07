@@ -1,5 +1,6 @@
 ﻿using System;
 using ActionBusSystem;
+using Content;
 using Fusumity.Attributes.Odin;
 using Fusumity.MVVM.UI;
 using Game.UI;
@@ -32,10 +33,10 @@ namespace UI
 		public UIAttentionIndicatorLayout indicator;
 
 		[Space]
-		[ConstDropdown(typeof(ActionBusElementType))]
+		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
 		public string uId;
 
-		[ConstDropdown(typeof(ActionBusGroupType))]
+		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
 		public string groupId;
 	}
 
