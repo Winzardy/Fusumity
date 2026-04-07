@@ -224,8 +224,8 @@ namespace AssetManagement.AddressableAssets.Editor
 			bool createGroupIfNonExistent = false)
 		{
 			return asset
-			   .MakeAddressable(groupName, addressName, labelName, createGroupIfNonExistent)
-			   .MakeReference();
+				.MakeAddressable(groupName, addressName, labelName, createGroupIfNonExistent)
+				.MakeReference();
 		}
 
 		public static bool TryGetAddressableEntry(this AssetReference reference, out AddressableAssetEntry entry)
@@ -314,22 +314,44 @@ namespace AssetManagement.AddressableAssets.Editor
 
 		/// <summary>
 		/// Checks for empty reference, existing asset
-		/// and that asset being an addressable.
-		/// <br></br>
-		/// Editor only.
+		/// and that asset being an addressable
 		/// </summary>
+		/// <remarks>⚠️Editor only</remarks>
 		public static bool IsPopulated(this AssetReference reference, string groupName = null, bool nameAsAddress = false)
 		{
-			if (reference.IsEmpty()) return false;
+			if (reference.IsEmpty())
+				return false;
 
 			var asset = reference.editorAsset;
 
 			if (asset != null)
 			{
-				return groupName.IsNullOrEmpty() ? asset.HasAddressableEntry() : asset.HasAddressableEntry(groupName, nameAsAddress);
+				var hasAddressableEntry = groupName.IsNullOrEmpty() ? asset.HasAddressableEntry() : asset.HasAddressableEntry(groupName, nameAsAddress);
+				return hasAddressableEntry && !reference.HasMissingSubAsset();
 			}
 
 			return false;
+		}
+
+		public static bool HasMissingSubAsset(this AssetReference assetReference)
+		{
+			if (assetReference == null
+				|| string.IsNullOrEmpty(assetReference.AssetGUID)
+				|| string.IsNullOrEmpty(assetReference.SubObjectName))
+				return false;
+
+			var assetPath = AssetDatabase.GUIDToAssetPath(assetReference.AssetGUID);
+			if (string.IsNullOrEmpty(assetPath))
+				return false;
+
+			var subAssets = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath);
+			foreach (var subAsset in subAssets)
+			{
+				if (subAsset != null && subAsset.name == assetReference.SubObjectName)
+					return false;
+			}
+
+			return true;
 		}
 
 		public static bool IsEmpty(this AssetReference assetReference)
