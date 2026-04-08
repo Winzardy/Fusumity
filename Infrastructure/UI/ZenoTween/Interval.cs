@@ -6,7 +6,7 @@ using System;
 namespace ZenoTween.Participant.Callbacks
 {
 	[Serializable]
-	[TypeRegistryItem(Icon = SdfIconType.Clock)]
+	[TypeRegistryItem(Icon = SdfIconType.Clock, CategoryPath = "/")]
 	public class Interval : SequenceParticipant
 	{
 		public enum Type
@@ -37,7 +37,7 @@ namespace ZenoTween.Participant.Callbacks
 				case Type.Prepend:
 					sequence.PrependInterval(duration);
 					break;
-			}			
+			}
 		}
 
 #if UNITY_EDITOR
