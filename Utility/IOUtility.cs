@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sapientia.Extensions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,6 +32,68 @@ namespace Fusumity.Utility
 			   .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
 			   .Where(s => exts.Contains(Path.GetExtension(s).TrimStart('.').ToLowerInvariant())).ToArray();
 		}
+
+		public static string[] GetDirectoriesSafe(string path)
+		{
+			return
+				Directory.Exists(path) ?
+				Directory.GetDirectories(path) :
+				null;
+		}
+
+		public static void CopyDirectory(string sourceDirectory, string destDirectory, bool copySubDirectories = false, bool overwriteFiles = false)
+		{
+			var dir = new DirectoryInfo(sourceDirectory);
+
+			if (!dir.Exists)
+			{
+				throw new DirectoryNotFoundException(
+					"Source directory does not exist or could not be found: "
+					+ sourceDirectory);
+			}
+
+			var dirs = dir.GetDirectories();
+
+			Directory.CreateDirectory(destDirectory);
+			foreach (var file in dir.GetFiles())
+			{
+				var tempPath = Path.Combine(destDirectory, file.Name);
+				file.CopyTo(tempPath, overwriteFiles);
+			}
+
+			if (copySubDirectories)
+			{
+				foreach (var subdir in dirs)
+				{
+					var tempPath = Path.Combine(destDirectory, subdir.Name);
+					CopyDirectory(subdir.FullName, tempPath, copySubDirectories, overwriteFiles);
+				}
+			}
+		}
+
+		public static string GetFilePathWithoutExtension(string filePath)
+		{
+			if(filePath.IsNullOrEmpty())
+				return null;
+
+			return Path.Combine(
+				Path.GetDirectoryName(filePath),
+				Path.GetFileNameWithoutExtension(filePath));
+		}
+
+		public static void EnsureDirectoryExists(string directoryPath)
+		{
+			if (!Directory.Exists(directoryPath))
+				Directory.CreateDirectory(directoryPath);
+		}
+
+		public static void EnsureDirectoryForFileExists(string filePath)
+		{
+			var directoryPath = Path.GetDirectoryName(filePath);
+
+			if (!directoryPath.IsNullOrEmpty())
+				EnsureDirectoryExists(directoryPath);
+		}
 	}
 
 	[Serializable]
@@ -38,6 +101,6 @@ namespace Fusumity.Utility
 	{
 		public string path;
 		public static implicit operator string(FolderPath folderPath) => folderPath.path;
-		public static implicit operator FolderPath(string path) => new() {path = path};
+		public static implicit operator FolderPath(string path) => new() { path = path };
 	}
 }
