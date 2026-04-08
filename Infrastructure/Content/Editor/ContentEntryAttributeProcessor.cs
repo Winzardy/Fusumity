@@ -121,6 +121,9 @@ namespace Content.Editor
 				property.Tree.UnitySerializedObject.targetObject);
 		}
 
+
+
+
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);

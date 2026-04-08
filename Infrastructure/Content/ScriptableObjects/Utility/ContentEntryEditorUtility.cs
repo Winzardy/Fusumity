@@ -244,13 +244,12 @@ namespace Content.Editor
 
 		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
 		{
+			var prevEntryGuid = entry.Guid;
 			entry.RegenerateGuid();
 			EditorUtility.SetDirty(source);
 
 			if (refreshAndSave)
 				ScheduleRefreshAndSave();
-
-			var prevEntryGuid = entry.Guid;
 
 			if (ContentDebug.Logging.Nested.regenerate)
 			{
