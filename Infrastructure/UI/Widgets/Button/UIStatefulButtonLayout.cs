@@ -47,11 +47,11 @@ namespace UI
 		public Button button;
 
 		[ShowIf(nameof(button), null)]
-		[ConstDropdown(typeof(ActionBusElementType))]
+		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
 		public string uId;
 
 		[ShowIf(nameof(button), null)]
-		[ConstDropdown(typeof(ActionBusGroupType))]
+		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
 		public string groupId;
 	}
 }

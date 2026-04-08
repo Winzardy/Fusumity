@@ -23,6 +23,12 @@ namespace Trading
 		{
 		}
 
+		/// <summary>
+		/// Скрывать прогрессию, например в магазине у офферов
+		/// </summary>
+		[ClientOnly]
+		public bool hide;
+
 		[ClientOnly]
 		public string visual;
 

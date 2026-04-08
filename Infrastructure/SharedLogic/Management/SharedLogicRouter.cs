@@ -17,6 +17,7 @@ namespace SharedLogic
 			_runner           = runner;
 		}
 
+		/// <inheritdoc/>
 		public bool ExecuteCommand<T>(ref T command) where T : struct, ICommand
 		{
 			var node = _root.GetNode<TimeSharedNode>();

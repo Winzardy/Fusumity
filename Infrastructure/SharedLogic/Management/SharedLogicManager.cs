@@ -1,8 +1,5 @@
-using System;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Sapientia;
-using UnityEngine;
 
 namespace SharedLogic
 {
@@ -18,6 +15,7 @@ namespace SharedLogic
 			get => _instance;
 		}
 
+		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
 		public static bool ExecuteCommand<T>(ref T command)
 			where T : struct, ICommand
 		{
@@ -26,10 +24,11 @@ namespace SharedLogic
 	}
 
 	/// <remarks>
-	/// Такое решение подразумевает что мы используем всего один инстанс SharedRoot, если вдруг понадобится использовать несколько экземпляров, то придется поменять подход
+	/// ⚠️Такое решение подразумевает что мы используем всего один инстанс SharedRoot, если вдруг понадобится использовать несколько экземпляров, то придется поменять подход
 	/// </remarks>
 	public static class SharedLogicRouterUtility
 	{
+		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
 		public static bool ExecuteCommand<T>(this ISharedRoot root)
 			where T : struct, ICommand
 		{
@@ -37,6 +36,7 @@ namespace SharedLogic
 			return ExecuteCommand(root, in command);
 		}
 
+		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
 		public static bool ExecuteCommand<T>(this ISharedRoot _, in T command)
 			where T : struct, ICommand
 		{

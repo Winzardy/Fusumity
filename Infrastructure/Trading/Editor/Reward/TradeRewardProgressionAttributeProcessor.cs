@@ -5,6 +5,7 @@ using System.Reflection;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Survivor.Interop;
 using UnityEngine;
 
 namespace Trading.Editor
@@ -19,15 +20,23 @@ namespace Trading.Editor
 				attributes.Add(new TooltipAttribute(summary));
 			switch (member.Name)
 			{
-				case nameof(TradeCostProgression.schemeSource):
+				case nameof(TradeRewardProgression.schemeSource):
 					attributes.Add(new LabelTextAttribute("Progress Source"));
 					break;
 				case nameof(TradeRewardProgression.scheme):
 					attributes.Add(new ShowIfAttribute(nameof(TradeRewardProgression.ShowSchemeEditor)));
 					break;
 
-				case nameof(TradeCostProgression.schemeReference):
+				case nameof(TradeRewardProgression.schemeReference):
 					attributes.Add(new HideIfAttribute(nameof(TradeCostProgression.ShowSchemeEditor)));
+					break;
+
+				case nameof(TradeRewardProgression.hide):
+					attributes.Add(new ClientVisualGroupAttribute());
+					break;
+				case nameof(TradeRewardProgression.visual):
+					attributes.Add(new ClientVisualGroupAttribute());
+					attributes.Add(new HideIfAttribute(nameof(TradeRewardProgression.hide)));
 					break;
 			}
 		}
@@ -83,7 +92,7 @@ namespace Trading.Editor
 					.ParentValueProperty? // Stage
 					.ParentValueProperty? // Array
 					.ParentValueProperty? // ContentEntry
-					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeCostProgression progression)
+					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeRewardProgression progression)
 			{
 				return progression.schemeSource == TradeProgressionSchemeSource.Local;
 			}

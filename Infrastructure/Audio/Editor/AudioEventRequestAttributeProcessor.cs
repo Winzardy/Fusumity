@@ -38,6 +38,7 @@ namespace Audio.Editor
 			{
 				case nameof(AudioEventRequest.id):
 					attributes.Add(new ContentReferenceAttribute(typeof(AudioEventConfig), inlineEditor: false));
+					attributes.Add(new AudioEventRequestPlayButtonAttribute());
 					break;
 
 				case nameof(AudioEventRequest.repeat):

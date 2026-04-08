@@ -39,6 +39,14 @@ namespace Content.ScriptableObjects
 			ForceUpdateTimeCreated();
 		}
 
+		public bool UseTechDescriptionEditor => _useTechDescription;
+		public bool ShouldShowTechDescriptionEditor => ShowTechDescriptionEditor;
+
+		public void SetUseTechDescriptionEditor(bool value)
+		{
+			_useTechDescription = value;
+		}
+
 		public void ForceUpdateTimeCreated()
 		{
 			timeCreated = DateTime.UtcNow.Ticks;

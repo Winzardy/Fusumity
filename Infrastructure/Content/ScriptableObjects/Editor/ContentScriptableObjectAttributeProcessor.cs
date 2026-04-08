@@ -9,7 +9,6 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 using Clipboard = Fusumity.Utility.Clipboard;
@@ -102,9 +101,8 @@ namespace Content.ScriptableObjects.Editor
 					break;
 
 				case nameof(ContentScriptableObject.techDescription):
+					attributes.Add(new ContentTechDescriptionEditModeAttribute());
 					attributes.Add(new TextAreaAttribute(1, 3));
-					attributes.Add(new EnableIfAttribute("_useTechDescription"));
-					attributes.Add(new ShowIfAttribute("ShowTechDescriptionEditor"));
 					break;
 			}
 		}

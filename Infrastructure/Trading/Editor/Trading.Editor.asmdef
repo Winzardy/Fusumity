@@ -9,7 +9,8 @@
         "AssetManagement",
         "Localization",
         "Fusumity",
-        "Game.UI"
+        "Game.UI",
+        "Survivor.Interop.Content"
     ],
     "includePlatforms": [
         "Editor"

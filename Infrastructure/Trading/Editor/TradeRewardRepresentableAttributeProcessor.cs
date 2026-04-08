@@ -6,6 +6,7 @@ using Fusumity.Attributes;
 using Game.Trading.UI;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Survivor.Interop;
 using UnityEngine;
 
 namespace Trading.Editor
@@ -23,7 +24,7 @@ namespace Trading.Editor
 					attributes.Add(new TooltipAttribute("Добавляет собственную визуализацию награды.\n" +
 						"Если не задано, визуализация наград продолжается с обходом вложенных наград"));
 					attributes.Add(new PropertyOrderAttribute(1000));
-					attributes.Add(new DarkCardBoxAttribute
+					attributes.Add(new ClientVisualGroupAttribute(label:string.Empty)
 					{
 						Space = 5
 					});

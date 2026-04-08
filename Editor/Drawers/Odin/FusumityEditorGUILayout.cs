@@ -212,7 +212,7 @@ namespace Fusumity.Editor
 				}
 			}
 
-			var rawModeToolbar = new GUIContent(string.Empty, null, "Raw Mode");
+			var rawModeToolbar = new GUIContent(string.Empty, null, rawMode ? "Default Mode" : "Raw Mode");
 			var rawModeButtonRect = clipboardButtonRect.AlignRight(drawButton ? 36 : 18);
 			rawModeButtonRect.height -= 2;
 			rawModeButtonRect.y      += 0.5f;
