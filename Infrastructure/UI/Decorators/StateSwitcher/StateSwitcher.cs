@@ -17,6 +17,8 @@ namespace UI
 	// Похоже что это можно вообще вынести вне UI... ладно пока пусть будет тут
 	public abstract class StateSwitcher<TState> : MonoBehaviour, IStateSwitcher
 	{
+		protected bool _immediate;
+
 		[HideInInspector]
 		[SerializeField]
 		protected TState current;
@@ -30,13 +32,11 @@ namespace UI
 
 		protected virtual bool UseEquals => false;
 
-		protected bool Forced { get; private set; }
-
-		public void Switch(TState value, bool force = false)
+		public void Switch(TState value, bool immediate = false)
 		{
-			Forced = force;
+			_immediate = immediate;
 
-			if (UseEquals && !force &&
+			if (UseEquals && !immediate &&
 				EqualityComparer<TState>.Default.Equals(current, value))
 				return;
 
@@ -45,5 +45,7 @@ namespace UI
 		}
 
 		public virtual IEnumerable<object> GetVariants() => null;
+
+		public virtual bool IsTransitioning() => false;
 	}
 }

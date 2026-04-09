@@ -24,7 +24,7 @@ namespace UI
 		[SerializeField]
 		private SerializableDictionary<TState, AnimationSequence> _dictionary;
 
-		protected override bool UseEquals => true;
+		protected override bool UseEquals { get => true; }
 
 		private void Awake() => Clear();
 
@@ -49,7 +49,7 @@ namespace UI
 					.SetAutoKill(false);
 			}
 
-			if (Forced)
+			if (_immediate)
 			{
 				AnimationTweenCallback.immediate = true;
 				tween.GotoWithCallbacks(1);
@@ -93,6 +93,17 @@ namespace UI
 				tween?.KillSafe();
 
 			_cached.Clear();
+		}
+
+		public override bool IsTransitioning()
+		{
+			foreach (var tween in _cached.Values)
+			{
+				if (tween.IsPlayingSafe())
+					return true;
+			}
+
+			return false;
 		}
 	}
 }

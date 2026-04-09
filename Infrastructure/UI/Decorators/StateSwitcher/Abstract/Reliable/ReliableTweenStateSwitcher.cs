@@ -82,7 +82,7 @@ namespace UI
 			}
 
 			var tween = _useCache ? PlayTweenCached(state) : PlayTween(state);
-			if (Forced)
+			if (_immediate)
 			{
 				AnimationTweenCallback.immediate = true;
 				tween.GotoWithCallbacks(1);
@@ -164,6 +164,25 @@ namespace UI
 			{
 				_tween?.KillSafe();
 			}
+		}
+
+		public override bool IsTransitioning()
+		{
+			if (_useCache)
+			{
+				foreach (var tween in _cached.Values)
+				{
+					if (tween.IsPlayingSafe())
+						return true;
+				}
+			}
+			else
+			{
+				if (_tween.IsPlayingSafe())
+					return true;
+			}
+
+			return false;
 		}
 
 		[Serializable]

@@ -11,5 +11,13 @@ namespace ZenoTween.Utility
 
 			tween.Kill(complete);
 		}
+
+		public static bool IsPlayingSafe(this Tween tween)
+		{
+			if (!tween.IsActive())
+				return false;
+
+			return tween.IsPlaying();
+		}
 	}
 }

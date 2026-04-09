@@ -110,5 +110,14 @@ namespace UI
 		}
 
 		#endregion
+
+		public override bool IsTransitioning()
+		{
+			foreach (var state in _group)
+				if (state.IsTransitioning())
+					return true;
+
+			return false;
+		}
 	}
 }
