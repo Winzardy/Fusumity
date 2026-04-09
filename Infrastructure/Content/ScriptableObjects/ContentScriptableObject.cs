@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using Sapientia.Extensions;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
@@ -36,23 +35,5 @@ namespace Content.ScriptableObjects
 		}
 
 		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
-
-#if UNITY_EDITOR
-		private bool _useTechDescription;
-
-		[ContextMenu("Tech Description/Enable")]
-		public void EnableTechDescription() => _useTechDescription = true;
-
-		[ContextMenu("Tech Description/Disable")]
-		public void DisableTechDescription() => _useTechDescription = false;
-
-		[ContextMenu("Tech Description/Enable", true)]
-		public bool EnableTechDescriptionValidate() => !_useTechDescription;
-
-		[ContextMenu("Tech Description/Disable", true)]
-		public bool DisableTechDescriptionValidate() => _useTechDescription;
-
-		private bool ShowTechDescriptionEditor => !techDescription.IsNullOrEmpty() || _useTechDescription;
-#endif
 	}
 }

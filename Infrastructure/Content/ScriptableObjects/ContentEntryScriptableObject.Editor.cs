@@ -4,7 +4,7 @@ using Content.Editor;
 using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Extensions;
-using UnityEditor;
+using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
@@ -96,6 +96,15 @@ namespace Content.ScriptableObjects
 		/// <see cref="ContentEntryScriptableObject{T}._guid"/>
 		/// </summary>
 		public const string GUID_FIELD_NAME = "_guid";
+
+		[ContextMenu("Content Entry/Regenerate All Guids (Recursive)", false, priority: 1100)]
+		public void RecursiveRegenerateGuidAndRefresh()
+		{
+			this.RecursiveRegenerateAndRefresh();
+		}
+
+		[ContextMenu("Content Entry/Regenerate All Guids (Recursive)", true)]
+		public bool RecursiveRegenerateGuidAndRefreshValidate() => ContentEntryDebugModeMenu.IsEnable;
 	}
 
 	public partial interface IContentScriptableObject

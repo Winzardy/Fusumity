@@ -32,7 +32,7 @@ namespace Content.Editor
 		public static void RestoreGuid(this InspectorProperty property, IUniqueContentEntry entry, in SerializableGuid guid) =>
 			RestoreGuid(entry, in guid, property.UnityPropertyPath, property.Tree.UnitySerializedObject.targetObject);
 
-		private static void RecursiveRegenerateGuidForChildren(this InspectorProperty property, ContentScriptableObject asset)
+		public static void RecursiveRegenerateGuidForChildren(this InspectorProperty property, ContentScriptableObject asset)
 		{
 			property.Children.Update();
 			foreach (var child in property.Children.Recurse())
