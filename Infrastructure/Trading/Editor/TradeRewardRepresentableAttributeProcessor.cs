@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Content;
-using Fusumity.Attributes;
-using Game.Trading.UI;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Survivor.Interop;
+using Survivor.Interop.Trading;
 using UnityEngine;
 
 namespace Trading.Editor
@@ -20,7 +19,7 @@ namespace Trading.Editor
 			switch (member.Name)
 			{
 				case "visual":
-					attributes.Add(new ContentReferenceAttribute(typeof(UIRewardVisualConfig)));
+					attributes.Add(new ContentReferenceAttribute(typeof(RewardVisualConfig)));
 					attributes.Add(new TooltipAttribute("Добавляет собственную визуализацию награды.\n" +
 						"Если не задано, визуализация наград продолжается с обходом вложенных наград"));
 					attributes.Add(new PropertyOrderAttribute(1000));

@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace UI
 {
 	/// <summary>
-	/// Отвечает за подгрузку спрайта и установку его в image placeholder (<see cref="Image"/>)
+	/// Отвечает за подгрузку спрайта и установку его в image (<see cref="Image"/>)
 	/// </summary>
 	public class UISpriteAssigner : IDisposable
 	{
@@ -56,13 +56,13 @@ namespace UI
 			SetSprite(image, iconRef, callback, disableDuringLoad);
 		}
 
-		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry<Sprite> entry)
+		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry<Sprite> iconRef)
 		{
-			foreach (var placeholder in images)
-				SetSprite(placeholder, entry);
+			foreach (var image in images)
+				SetSprite(image, iconRef);
 		}
 
-		public void SetSprite(Image image, IAssetReferenceEntry<Sprite> entry, Action callback = null, bool disableDuringLoad = true)
+		public void SetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
 		{
 			if (disableDuringLoad)
 			{
@@ -72,12 +72,12 @@ namespace UI
 
 			if (_single.image != null)
 			{
-				if (TryUpdateSingle(image, entry, callback))
+				if (TryUpdateSingle(image, iconRef, callback))
 					return;
 			}
 			else
 			{
-				_single = (image, handle: new SpriteAssignerHandle(entry));
+				_single = (image, handle: new SpriteAssignerHandle(iconRef));
 				LoadAndPlaceAsync(image, _single.handle, callback)
 					.Forget();
 				return;
@@ -88,7 +88,7 @@ namespace UI
 			if (_imageToHandle.TryGetValue(image, out var pair))
 			{
 				//Какой смысл если там и так такой ассет
-				if (pair.spriteRef.Equals(entry))
+				if (pair.spriteRef.Equals(iconRef))
 				{
 					callback?.Invoke();
 					return;
@@ -97,23 +97,23 @@ namespace UI
 				pair.Release();
 			}
 
-			_imageToHandle[image] = new SpriteAssignerHandle(entry);
+			_imageToHandle[image] = new SpriteAssignerHandle(iconRef);
 			LoadAndPlaceAsync(image, _imageToHandle[image], callback).Forget();
 		}
 
-		private bool TryUpdateSingle(Image image, IAssetReferenceEntry<Sprite> entry, Action callback = null)
+		private bool TryUpdateSingle(Image image, IAssetReferenceEntry<Sprite> spriteRef, Action callback = null)
 		{
 			if (_single.image == image)
 			{
 				//Какой смысл если там и так такой ассет
-				if (_single.handle.spriteRef.Equals(entry))
+				if (_single.handle.spriteRef.Equals(spriteRef))
 				{
 					callback?.Invoke();
 					return true;
 				}
 
 				_single.handle.Release();
-				_single.handle = new SpriteAssignerHandle(entry);
+				_single.handle = new SpriteAssignerHandle(spriteRef);
 				LoadAndPlaceAsync(image, _single.handle, callback)
 					.Forget();
 				return true;
@@ -153,7 +153,7 @@ namespace UI
 
 			var sprite = await handle.spriteRef.LoadAsync(handle.cts.Token);
 
-			if (handle.cts.IsCancellationRequested || _disposed || !image)
+			if (handle.cts.IsCancellationRequested || _disposed || image == null)
 			{
 				OnEndLoading();
 				return;
@@ -164,17 +164,8 @@ namespace UI
 			callback?.Invoke();
 			OnEndLoading();
 
-			void OnStartLoading()
-			{
-				_spinner?.Show(handle.cts);
-				//	image.enabled = false;
-			}
-
-			void OnEndLoading()
-			{
-				_spinner?.Hide(handle.cts);
-				//	image.enabled = true;
-			}
+			void OnStartLoading() => _spinner?.Show(handle.cts);
+			void OnEndLoading() => _spinner?.Hide(handle.cts);
 		}
 	}
 

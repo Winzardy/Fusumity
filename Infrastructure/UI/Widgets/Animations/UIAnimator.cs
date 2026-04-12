@@ -164,6 +164,9 @@ namespace UI
 
 				layer.args = null;
 
+				// if (layerKey == AnimationLayer.VISIBILITY_NAME)
+				// 	layer.tween.GotoWithCallbacks(1);
+
 				layer.tween.KillSafe();
 				layer.tween = null;
 			}
