@@ -8,7 +8,8 @@
         "AssetManagement.Addressables.Editor",
         "Unity.Addressables",
         "Fusumity.Editor",
-        "Fusumity"
+        "Fusumity",
+        "Sapientia"
     ],
     "includePlatforms": [
         "Editor"

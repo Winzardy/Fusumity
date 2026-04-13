@@ -1,15 +1,18 @@
 using System;
-using DG.Tweening;
 using Sapientia.Extensions;
 
 namespace UI
 {
+	public delegate void AnimationCallback(string key);
+
 	public struct WidgetAnimationArgs
 	{
 		public string key;
 
-		public TweenCallback startCallback;
-		public TweenCallback endCallback;
+		public AnimationCallback startCallback;
+		public AnimationCallback endCallback;
+
+		public bool completeOnKill;
 
 		public bool IsEmpty => key.IsNullOrWhiteSpace();
 		public static implicit operator WidgetAnimationArgs(string key) => new() {key = key};
@@ -20,20 +23,20 @@ namespace UI
 	/// </summary>
 	public interface IZenoAnimator : IDisposable
 	{
-		public string LastKey { get; }
+		string LastKey { get; }
 
-		public void Play(in WidgetAnimationArgs args, bool immediate = false);
+		void Play(in WidgetAnimationArgs args, bool immediate = false);
 
-		public void Stop(string key, bool complete = false);
+		void Stop(string key, bool complete = false);
 
-		public void Pause(string key);
+		void Pause(string key);
 
-		public void Resume(string key);
+		void Resume(string key);
 	}
 
 	public interface IUIAnimator<in TLayout> : IZenoAnimator
 		where TLayout : UIBaseLayout
 	{
-		public bool SetupLayout(TLayout layout);
+		bool SetupLayout(TLayout layout);
 	}
 }

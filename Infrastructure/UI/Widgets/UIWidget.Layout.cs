@@ -231,20 +231,20 @@ namespace UI
 
 		protected virtual WidgetAnimationArgs GetVisibleAnimationArgs(bool visible, bool useCallback = true)
 		{
-			TweenCallback startCallback = null;
-			TweenCallback endCallback = null;
+			AnimationCallback startCallback = null;
+			AnimationCallback endCallback = null;
 
 			if (useCallback)
 			{
 				if (visible)
 				{
-					startCallback = OnBeganOpeningInternal;
-					endCallback   = OnEndedOpeningInternal;
+					startCallback = OnBeganOpeningAnimation;
+					endCallback   = OnEndedOpeningAnimation;
 				}
 				else
 				{
-					startCallback = OnBeganClosingInternal;
-					endCallback   = OnEndedClosingInternal;
+					startCallback = OnBeganClosingAnimation;
+					endCallback   = OnEndedClosingAnimation;
 				}
 			}
 
@@ -254,6 +254,11 @@ namespace UI
 				startCallback = startCallback,
 				endCallback   = endCallback
 			};
+
+			void OnBeganOpeningAnimation(string _) => OnBeganOpeningInternal();
+			void OnEndedOpeningAnimation(string _) => OnEndedOpeningInternal();
+			void OnBeganClosingAnimation(string _) => OnBeganClosingInternal();
+			void OnEndedClosingAnimation(string _) => OnEndedClosingInternal();
 		}
 
 		/// <summary>

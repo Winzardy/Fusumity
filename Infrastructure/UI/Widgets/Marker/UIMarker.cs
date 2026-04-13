@@ -232,7 +232,7 @@ namespace UI
 
 			return true;
 
-			void OnStartEnabling() => _layout.SetActive(true);
+			void OnStartEnabling(string _) => _layout.SetActive(true);
 		}
 
 		private void TryDisable(bool animation, bool force = false)
@@ -248,7 +248,7 @@ namespace UI
 				endCallback = OnEndDisabling
 			}, !animation || force);
 
-			void OnEndDisabling()
+			void OnEndDisabling(string _)
 			{
 				_calculateOnAnimation = false;
 				_layout.SetActive(false);

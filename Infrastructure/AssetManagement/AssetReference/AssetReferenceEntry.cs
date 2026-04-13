@@ -6,6 +6,26 @@ namespace AssetManagement
 {
 	using UnityObject = UnityEngine.Object;
 
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+	public sealed class AssetReferenceRequiredComponentAttribute : Attribute
+	{
+		public Type ComponentType { get; }
+		public string ComponentTypeName { get; }
+		public bool IncludeChildren { get; }
+
+		public AssetReferenceRequiredComponentAttribute(string componentTypeName, bool includeChildren = true)
+		{
+			ComponentTypeName = componentTypeName;
+			IncludeChildren = includeChildren;
+		}
+
+		public AssetReferenceRequiredComponentAttribute(Type componentType, bool includeChildren = true)
+		{
+			ComponentType   = componentType;
+			IncludeChildren = includeChildren;
+		}
+	}
+
 	[Serializable]
 	public class AssetReferenceEntry<T> : IAssetReferenceEntry<T>
 		where T : UnityObject

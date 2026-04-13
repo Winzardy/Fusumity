@@ -48,7 +48,7 @@ namespace UI
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _parentToHandle);
 		}
 
-		public void TrySetPrefab(RectTransform parent, IAssetReferenceEntry<GameObject> prefabRef, Action callback = null,
+		public void TrySetPrefab(RectTransform parent, IAssetReferenceEntry<GameObject> prefabRef, Action<GameObject> callback = null,
 			bool disableDuringLoad = true)
 		{
 			if (parent == null || prefabRef.IsEmptyOrInvalid())
@@ -63,13 +63,13 @@ namespace UI
 				SetPrefab(parent, prefabRef);
 		}
 
-		public void SetPrefab(RectTransform parent, IAssetReferenceEntry<GameObject> prefabRef, Action callback = null,
+		public void SetPrefab(RectTransform parent, IAssetReferenceEntry<GameObject> prefabRef, Action<GameObject> callback = null,
 			bool disableDuringLoad = true)
 		{
 			if (disableDuringLoad)
 			{
 				parent.SetActive(false);
-				callback += () => parent.SetActive(true);
+				callback += _ => parent.SetActive(true);
 			}
 
 			if (_single.parent != null)
@@ -92,7 +92,7 @@ namespace UI
 				//Какой смысл если там и так такой ассет
 				if (pair.prefabRef.Equals(prefabRef))
 				{
-					callback?.Invoke();
+					callback?.Invoke(pair.Instance);
 					return;
 				}
 
@@ -103,19 +103,19 @@ namespace UI
 			LoadAndPlaceAsync(parent, callback).Forget();
 		}
 
-		private bool TryUpdateSingle(RectTransform parent, IAssetReferenceEntry<GameObject> entry, Action callback = null)
+		private bool TryUpdateSingle(RectTransform parent, IAssetReferenceEntry<GameObject> prefabEntry, Action<GameObject> callback = null)
 		{
 			if (_single.parent == parent)
 			{
 				//Какой смысл если там и так такой ассет
-				if (_single.handle.prefabRef.Equals(entry))
+				if (_single.handle.prefabRef.Equals(prefabEntry))
 				{
-					callback?.Invoke();
+					callback?.Invoke(_single.handle.Instance);
 					return true;
 				}
 
 				_single.handle.Release();
-				_single.handle = new PrefabAssignerHandle(entry);
+				_single.handle = new PrefabAssignerHandle(prefabEntry);
 				LoadAndPlaceAsync(parent, callback)
 					.Forget();
 				return true;
@@ -148,7 +148,7 @@ namespace UI
 			_parentToHandle.Remove(parent);
 		}
 
-		private async UniTaskVoid LoadAndPlaceAsync(RectTransform parent, Action callback = null)
+		private async UniTaskVoid LoadAndPlaceAsync(RectTransform parent, Action<GameObject> callback = null)
 		{
 			GetHandle(parent).cts = new CancellationTokenSource();
 			OnStartLoading();
@@ -161,10 +161,10 @@ namespace UI
 				return;
 			}
 
-			GetHandle(parent)
+			var instance = GetHandle(parent)
 				.Instantiate(prefab, parent);
 
-			callback?.Invoke();
+			callback?.Invoke(instance);
 			OnEndLoading();
 
 			void OnStartLoading() => _spinner?.Show(GetHandle(parent).cts);
@@ -187,6 +187,8 @@ namespace UI
 
 		private GameObject _instance;
 
+		internal GameObject Instance { get => _instance; }
+
 		public PrefabAssignerHandle(IAssetReferenceEntry<GameObject> prefabRef)
 		{
 			this.prefabRef = prefabRef;
@@ -204,9 +206,10 @@ namespace UI
 			AsyncUtility.TriggerAndSetNull(ref cts);
 		}
 
-		public void Instantiate(GameObject prefab, RectTransform parent)
+		public GameObject Instantiate(GameObject prefab, RectTransform parent)
 		{
 			_instance = UnityObjectsFactory.Create(prefab, parent);
+			return _instance;
 		}
 	}
 }

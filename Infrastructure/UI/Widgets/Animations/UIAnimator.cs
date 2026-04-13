@@ -160,7 +160,10 @@ namespace UI
 			else if (layer.tween != null)
 			{
 				if (layer.tween.IsActive())
-					layer.args.endCallback?.Invoke();
+					layer.args.endCallback?.Invoke(layer.args.key);
+
+				if (layer.args.completeOnKill)
+					layer.tween.GotoWithCallbacks(1);
 
 				layer.args = null;
 
@@ -186,12 +189,12 @@ namespace UI
 
 			if (sequence == null)
 			{
-				args.startCallback?.Invoke();
+				args.startCallback?.Invoke(args.key);
 
 				if (layerKey == AnimationLayer.VISIBILITY_NAME)
 					SetVisible(args.key == AnimationType.OPENING);
 
-				args.endCallback?.Invoke();
+				args.endCallback?.Invoke(args.key);
 
 				return;
 			}
@@ -209,7 +212,7 @@ namespace UI
 				layer.args     = null;
 				layer.clipName = null;
 
-				args.startCallback?.Invoke();
+				args.startCallback?.Invoke(args.key);
 
 				//Есть важный момент что этот метод отрабатывает при выключении виджета.
 				//Идея в том что у верстки "могут быть" элементы участвующие в анимации за пределами корня,
@@ -221,7 +224,7 @@ namespace UI
 				AnimationTweenCallback.immediate = false;
 				sequence.KillSafe();
 
-				args.endCallback?.Invoke();
+				args.endCallback?.Invoke(args.key);
 
 				if (!debug && layerKey == AnimationLayer.VISIBILITY_NAME)
 					SetVisible(args.key == AnimationType.OPENING);
@@ -234,7 +237,7 @@ namespace UI
 				if (layer.args.key == AnimationType.OPENING)
 					SetVisible(true);
 
-				layer.args.startCallback?.Invoke();
+				layer.args.startCallback?.Invoke(layer.args.key);
 			}
 
 			void OnAppend()
@@ -242,7 +245,7 @@ namespace UI
 				if (layer.args.key == AnimationType.CLOSING)
 					SetVisible(false);
 
-				layer.args.endCallback?.Invoke();
+				layer.args.endCallback?.Invoke(layer.args.key);
 			}
 		}
 
