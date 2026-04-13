@@ -47,7 +47,8 @@ namespace Content.ScriptableObjects.Editor
 			   .Where(f => !typeof(Object).IsAssignableFrom(f.FieldType))
 			   .Where(f => !f.Name.Contains("k__BackingField"))
 			   .Where(f => !f.IsDefined(typeof(NonSerializedAttribute), true))
-			   .Where(f => !_filtering.skipTypesWithClientOnlyAttribute || !f.IsDefined(typeof(ClientOnlyAttribute), true));
+			   .Where(f => !_filtering.skipTypesWithClientOnlyAttribute || !f.IsDefined(typeof(ClientOnlyAttribute), true))
+			   .Where(f => IsAllowedType(f.FieldType, _filtering));
 
 			foreach (var field in fields)
 			{
