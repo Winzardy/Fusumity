@@ -219,10 +219,17 @@ namespace UI
 				//и без форс выставлении позиции в последовательности может зашакалить визуал.
 				//Попробую удешевить этот кейс.
 				//TODO: Словил баг при котором этот метод не отработал, но после перезагрузки клиента заработал...
+				var cacheImmediate = AnimationTweenCallback.immediate;
 				AnimationTweenCallback.immediate = true;
-				sequence.GotoWithCallbacks(1);
-				AnimationTweenCallback.immediate = false;
-				sequence.KillSafe();
+				try
+				{
+					sequence.SetAutoKill(true);
+					sequence.GotoWithCallbacks(1);
+				}
+				finally
+				{
+					AnimationTweenCallback.immediate = cacheImmediate;
+				}
 
 				args.endCallback?.Invoke(args.key);
 
