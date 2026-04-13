@@ -129,6 +129,9 @@ namespace UI
 
 		public void TryCancelOrClear(Image image)
 		{
+			if(image == null)
+				return;
+
 			if (_single.image == image)
 			{
 				_single.handle.Release();
