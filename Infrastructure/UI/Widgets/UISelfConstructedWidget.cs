@@ -199,7 +199,7 @@ namespace UI
 
 			SetupLayout(layout);
 
-			EnableSuppress(SuppressFlag.Events);
+			EnableSuppress(SuppressFlag.All);
 			{
 				SetVisibleInternal(false, false);
 				SetActiveInternal(false, true);
