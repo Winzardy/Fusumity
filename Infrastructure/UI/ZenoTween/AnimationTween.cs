@@ -31,6 +31,9 @@ namespace ZenoTween
 		[Tooltip("Задержка перед проигрыванием твина")]
 		public float delay = 0;
 
+		[Tooltip("Множитель скорости проигрывания твина. 1 = обычная скорость")]
+		public float speed = 1f;
+
 		[Tooltip(
 			"Количество повторений. Можно установить '-1' что равно <u>бесконечно</u> (опасно, так как требует самому завершить анимацию)")]
 		public int repeat = 0;
@@ -96,10 +99,16 @@ namespace ZenoTween
 			}
 		}
 
-		protected void ApplyTweenSettings(in Tween tween)
+		protected void ApplyTweenSettings(in Tween tween, bool useDelay = true)
 		{
-			if (delay > 0)
+			// not calling Participate here, to ensure valid order and
+			// correct loop behaviour (loops on nested tweens are not allowed in DoTween).
+			if (delay > 0 && useDelay)
 				tween.SetDelay(delay);
+
+			var speedScale = Mathf.Max(0f, speed);
+			if (!Mathf.Approximately(speedScale, 1f))
+				tween.timeScale = speedScale;
 
 			if (repeat != 0)
 			{
@@ -138,11 +147,15 @@ namespace ZenoTween
 			if (_editorTween == null)
 				return;
 
-			_loop = loop;
+			_loop        = loop;
 			_editorReset = reset;
 
 			if (delay > 0)
 				_editorTween.SetDelay(delay);
+
+			var speedScale = Mathf.Max(0f, speed);
+			if (!Mathf.Approximately(speedScale, 1f))
+				_editorTween.timeScale = speedScale;
 
 			DOTweenEditorPreview.PrepareTweenForPreview(_editorTween);
 			DOTweenEditorPreview.Start(_TweenUpdateEditor);

@@ -94,8 +94,6 @@ namespace UI
 
 			if (!Application.isPlaying)
 			{
-				if (DG.DOTweenEditor.DOTweenEditorPreview.isPreviewing)
-					DG.DOTweenEditor.DOTweenEditorPreview.Stop();
 				DG.DOTweenEditor.DOTweenEditorPreview.PrepareTweenForPreview(tween);
 				DG.DOTweenEditor.DOTweenEditorPreview.Start(EditorPreviewUpdate);
 			}
@@ -104,8 +102,8 @@ namespace UI
 			{
 				if (tween.IsPlaying() && !Application.isPlaying)
 					UnityEditor.EditorUtility.SetDirty(this);
-				else
-					DG.DOTweenEditor.DOTweenEditorPreview.Stop();
+				else if (DOTween.TotalPlayingTweens() == 0)
+					DG.DOTweenEditor.DOTweenEditorPreview.Stop(false, false);
 			}
 #endif
 		}

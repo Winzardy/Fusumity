@@ -51,9 +51,15 @@ namespace ZenoTween.Editor
 
 					break;
 
-				case nameof(AnimationTween.repeat):
+				case nameof(AnimationTween.speed):
 					attributes.Add(new PropertyOrderAttribute(ORDER + 2));
-					attributes.Add(new MinimumAttribute(-1));
+					attributes.Add(new MinValueAttribute(0.01f));
+					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+					break;
+
+				case nameof(AnimationTween.repeat):
+					attributes.Add(new PropertyOrderAttribute(ORDER + 3));
+					attributes.Add(new MinValueAttribute(-1));
 					var showIf = $"@{nameof(AnimationTweenAttributeProcessor)}." +
 						$"{nameof(IsLoop)}($property)";
 					attributes.Add(new InfoBoxAttribute(
@@ -64,7 +70,7 @@ namespace ZenoTween.Editor
 
 				case nameof(AnimationTween.repeatType):
 					attributes.Add(new HideIfAttribute(nameof(AnimationTween.repeat), 0));
-					attributes.Add(new PropertyOrderAttribute(ORDER + 3));
+					attributes.Add(new PropertyOrderAttribute(ORDER + 4));
 					attributes.Add(new IndentAttribute());
 					attributes.Add(new LabelTextAttribute("Type"));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
@@ -72,7 +78,7 @@ namespace ZenoTween.Editor
 
 				case nameof(AnimationTween.lifetimeByParent):
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
-					attributes.Add(new PropertyOrderAttribute(ORDER + 4));
+					attributes.Add(new PropertyOrderAttribute(ORDER + 5));
 					attributes.Add(new ShowIfAttribute(nameof(AnimationTween.IsLoop)));
 					break;
 
@@ -108,12 +114,12 @@ namespace ZenoTween.Editor
 
 				case "duration":
 					attributes.Add(new UnitAttribute(Units.Second));
-					attributes.Add(new MinimumAttribute(0));
+					attributes.Add(new MinValueAttribute(0));
 					break;
 
 				case nameof(AnimationSequence.timeScale):
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
-					attributes.Add(new PropertyOrderAttribute(ORDER + 4));
+					attributes.Add(new PropertyOrderAttribute(ORDER + 5));
 					break;
 
 				case nameof(AnimationSequence.delayOnce):

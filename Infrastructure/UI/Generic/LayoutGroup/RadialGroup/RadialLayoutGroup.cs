@@ -3,7 +3,6 @@ using Fusumity.Utility;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.Serialization;
@@ -52,12 +51,11 @@ namespace UI
 		{
 			base.OnEnable();
 
-
 #if UNITY_EDITOR
 			if (Application.isPlaying)
 				CalculateLayoutInput();
 			else
-				EditorApplication.delayCall += CalculateLayoutInput;
+				UnityEditor.EditorApplication.delayCall += CalculateLayoutInput;
 #else
 			CalculateLayoutInput();
 #endif
@@ -132,14 +130,16 @@ namespace UI
 					};
 					localPosition += normalizedPosition * radialPadding;
 
-					children[index].localPosition = localPosition;
+					var currentChild = children[index];
+					currentChild.localPosition = localPosition;
 
 					child.anchorMin = child.anchorMax = child.pivot = Vector2MathUtility.center;
 
-					m_Tracker.Add(this, child,
-						DrivenTransformProperties.Anchors |
+					var drivenTransformProperties = DrivenTransformProperties.Anchors |
 						DrivenTransformProperties.AnchoredPosition |
-						DrivenTransformProperties.Pivot);
+						DrivenTransformProperties.Pivot;
+
+					m_Tracker.Add(this, child, drivenTransformProperties);
 				}
 			}
 		}
@@ -182,7 +182,7 @@ namespace UI
 		protected override void OnValidate()
 		{
 #if UNITY_EDITOR
-			EditorApplication.delayCall += CalculateLayoutInput;
+			UnityEditor.EditorApplication.delayCall += CalculateLayoutInput;
 #endif
 			childAlignment = TextAnchor.LowerCenter;
 		}

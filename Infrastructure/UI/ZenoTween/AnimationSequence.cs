@@ -30,7 +30,7 @@ namespace ZenoTween
 		public Toggle<TimeScaleMode> timeScale = new()
 		{
 			enable = false,
-			value = DOTween.defaultTimeScaleIndependent ? TimeScaleMode.Unscaled : TimeScaleMode.Scaled
+			value  = DOTween.defaultTimeScaleIndependent ? TimeScaleMode.Unscaled : TimeScaleMode.Scaled
 		};
 
 		protected override Tween Create() => participants.ToSequence(null); //root is ignored here, otherwise there will be a dead loop.
@@ -45,23 +45,16 @@ namespace ZenoTween
 		}
 
 		public Tween ToTween(object target = null) => ToSequence(target);
+
 		public Sequence ToSequence(object target = null)
 		{
 			if (IsEmpty())
 				return null;
 
 			var sequence = DOTween.Sequence();
+			participants.Participate(ref sequence, target);
 
-			// not calling Participate here, to ensure valid order and
-			// correct loop behaviour (loops on nested tweens are not allowed in DoTween).
-			if (delay > 0 && !delayOnce)
-				sequence.SetDelay(delay);
-
-			if (repeat != 0)
-			{
-				sequence.SetAutoKill(repeat > 0);
-				sequence.SetLoops(repeat, repeatType);
-			}
+			ApplyTweenSettings(sequence, !delayOnce);
 
 			if (delay > 0 && delayOnce)
 			{
@@ -76,7 +69,6 @@ namespace ZenoTween
 				});
 			}
 
-			participants.Participate(ref sequence, target);
 			return sequence;
 		}
 
