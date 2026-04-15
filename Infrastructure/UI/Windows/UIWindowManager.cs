@@ -267,9 +267,16 @@ namespace UI.Windows
 
 		public void TryHideAll(bool immediate = false)
 		{
+			foreach (var (window, _) in _queue)
+				Hidden?.Invoke(window, true);
 			_queue.Clear();
 
-			_current.window?.Hide(true, immediate);
+			if (_current.window != null)
+			{
+				_current.window.Hide(true, immediate);
+				Hidden?.Invoke(_current.window, false);
+			}
+
 			SetCurrent(null, null);
 		}
 

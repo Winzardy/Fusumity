@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
+using JetBrains.Annotations;
 
 namespace InAppPurchasing
 {
@@ -44,7 +45,7 @@ namespace InAppPurchasing
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
 
-		public IAPManagement(IInAppPurchasingIntegration integration)
+		public IAPManagement(IInAppPurchasingIntegration integration = null)
 		{
 			_relay = new InAppPurchasingRelay();
 
@@ -80,6 +81,8 @@ namespace InAppPurchasing
 		internal ref readonly ProductInfo GetProductInfo<T>(string product, bool forceUpdateCache = false)
 			where T : IAPProductEntry
 		{
+			if (_integration == null)
+				return ref _emptyProductInfo;
 			if (!ContentManager.Contains<T>(product))
 				return ref _emptyProductInfo;
 
@@ -88,8 +91,13 @@ namespace InAppPurchasing
 		}
 
 		internal ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
-			where T : IAPProductEntry =>
-			ref _integration.GetProductInfo(entry, forceUpdateCache);
+			where T : IAPProductEntry
+		{
+			if (_integration == null)
+				return ref _emptyProductInfo;
+
+			return ref _integration.GetProductInfo(entry, forceUpdateCache);
+		}
 
 		internal IAPProductEntry GetEntry(IAPProductType type, string product)
 			=> type switch
@@ -136,6 +144,12 @@ namespace InAppPurchasing
 
 		internal bool CanPurchase(IAPProductEntry entry, out IAPPurchaseError? error)
 		{
+			if (_integration == null)
+			{
+				error = IAPPurchaseErrorCode.NotInitialized;
+				return false;
+			}
+
 			switch (entry.Type)
 			{
 				case IAPProductType.Consumable:
@@ -178,6 +192,9 @@ namespace InAppPurchasing
 
 		internal bool RequestPurchase(IAPProductEntry entry)
 		{
+			if (_integration == null)
+				return false;
+
 			return entry.Type switch
 			{
 				IAPProductType.Consumable => _integration.RequestPurchaseConsumable(entry),
@@ -215,25 +232,28 @@ namespace InAppPurchasing
 
 		internal async Task<PurchaseResult> PurchaseAsync(IAPProductEntry entry, CancellationToken cancellationToken)
 		{
+			if (_integration == null)
+				return PurchaseResult.Failed;
+
 			var tcs = new TaskCompletionSource<PurchaseResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 			// ReSharper disable once UseAwaitUsing
 			using (cancellationToken.Register(Cancel))
 			{
 				// Это на случай если сервис поменяют, так как такой функционал есть
-				var service = _integration;
+				var integration = _integration;
 
 				try
 				{
-					service.PurchaseCompleted += OnCompleted;
-					service.PurchaseFailed += OnFailed;
-					service.PurchaseCanceled += OnCanceled;
+					integration.PurchaseCompleted += OnCompleted;
+					integration.PurchaseFailed    += OnFailed;
+					integration.PurchaseCanceled  += OnCanceled;
 
 					var success = entry.Type switch
 					{
-						IAPProductType.Consumable => service.RequestPurchaseConsumable(entry),
-						IAPProductType.NonConsumable => service.RequestPurchaseNonConsumable(entry),
-						IAPProductType.Subscription => service.RequestPurchaseSubscription(entry),
+						IAPProductType.Consumable => integration.RequestPurchaseConsumable(entry),
+						IAPProductType.NonConsumable => integration.RequestPurchaseNonConsumable(entry),
+						IAPProductType.Subscription => integration.RequestPurchaseSubscription(entry),
 						_ => false
 					};
 
@@ -249,9 +269,9 @@ namespace InAppPurchasing
 				}
 				finally
 				{
-					service.PurchaseCompleted -= OnCompleted;
-					service.PurchaseFailed -= OnFailed;
-					service.PurchaseCanceled -= OnCanceled;
+					integration.PurchaseCompleted -= OnCompleted;
+					integration.PurchaseFailed    -= OnFailed;
+					integration.PurchaseCanceled  -= OnCanceled;
 				}
 
 				void OnCompleted(in PurchaseReceipt receipt, bool processing, object rawData)
@@ -315,6 +335,9 @@ namespace InAppPurchasing
 
 		internal ProductStatus GetStatus(IAPProductEntry product)
 		{
+			if (_integration == null)
+				return ProductStatus.NotInitialized;
+
 			if (_integration.TryGetStatus(product, out var status))
 				return status;
 
@@ -325,8 +348,8 @@ namespace InAppPurchasing
 
 		#region Restore
 
-		internal bool IsRestoreTransactionsSupported() => _integration.IsRestoreTransactionsSupported;
-		internal void RestoreTransactions() => _integration.RestoreTransactions();
+		internal bool IsRestoreTransactionsSupported() => _integration?.IsRestoreTransactionsSupported ?? false;
+		internal void RestoreTransactions() => _integration?.RestoreTransactions();
 
 		#endregion
 
@@ -343,6 +366,9 @@ namespace InAppPurchasing
 
 		internal ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry entry, bool forceUpdateCache = false)
 		{
+			if (_integration == null)
+				return ref _emptySubscriptionInfo;
+
 			return ref _integration.GetSubscriptionInfo(entry, forceUpdateCache);
 		}
 
@@ -353,13 +379,14 @@ namespace InAppPurchasing
 			return _service.GetReceipt(transactionId);
 		}
 
-		internal IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration)
+		internal IInAppPurchasingIntegration SetIntegration([CanBeNull] IInAppPurchasingIntegration integration)
 		{
 			var prev = _integration;
+
 #if IAP_DEBUG
-			if (_integration?.GetType() == integration.GetType())
+			if (_integration?.GetType() == integration?.GetType())
 			{
-				IAPDebug.LogWarning($"Same integration: {_integration.Name}");
+				IAPDebug.LogWarning($"Same integration: {_integration?.Name}");
 				return prev;
 			}
 #endif
@@ -367,8 +394,7 @@ namespace InAppPurchasing
 
 			_relay.Bind(_integration);
 
-			IAPDebug.Log($"Target integration: {_integration.Name}");
-
+			IAPDebug.Log($"Target integration: {_integration?.Name ?? "None"}");
 			return prev;
 		}
 	}

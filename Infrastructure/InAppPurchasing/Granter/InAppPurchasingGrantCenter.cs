@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 
@@ -9,17 +10,16 @@ namespace InAppPurchasing
 
 		private Queue<Pair> _queue;
 
-		private bool _initialized;
+		private bool _active;
 
-		public void Initialize()
+		public void SetActive(bool active)
 		{
-			_initialized = true;
+			_active = active;
 
-			if (_queue.IsNullOrEmpty())
+			if (!_active)
 				return;
 
-			while (_queue.TryDequeue(out var pair))
-				Grant(in pair.receipt, pair.callback);
+			TryDequeueCache();
 		}
 
 		bool IInAppPurchasingGrantCenter.Register<T>(T granter)
@@ -36,25 +36,41 @@ namespace InAppPurchasing
 
 		public void Grant(in PurchaseReceipt receipt, IntegrationCallback callback = null)
 		{
-			if (!_initialized)
+			if (!_active)
 			{
 				_queue ??= new();
 				_queue.Enqueue(new Pair(receipt, callback));
 				return;
 			}
 
-			foreach (var granter in _registeredGranters)
+			try
 			{
-				if (!granter.Grant(in receipt))
-					continue;
+				foreach (var granter in _registeredGranters)
+				{
+					if (!granter.Grant(in receipt))
+						continue;
 
-				callback?.Invoke(in receipt);
-				return;
+					callback?.Invoke(in receipt);
+					return;
+				}
+
+				// Можно наверно сохранить куда-то что для данного рецепта не выдали награду
+				IAPDebug.LogError($"No granter handled receipt: transaction {receipt.transactionId} " +
+					$"for product {receipt.productId} (type: {receipt.productType})");
 			}
+			catch (Exception e)
+			{
+				IAPDebug.LogException(e);
+			}
+		}
 
-			// Можно наверно сохранить куда-то что для данного рецепта не выдали награду
-			IAPDebug.LogError($"No granter handled receipt: transaction {receipt.transactionId} " +
-				$"for product {receipt.productId} (type: {receipt.productType})");
+		private void TryDequeueCache()
+		{
+			if (_queue.IsNullOrEmpty())
+				return;
+
+			while (_queue.TryDequeue(out var pair))
+				Grant(in pair.receipt, pair.callback);
 		}
 
 		private class Pair
@@ -65,7 +81,7 @@ namespace InAppPurchasing
 			public Pair(in PurchaseReceipt receipt, IntegrationCallback callback)
 			{
 				this.callback = callback;
-				this.receipt = receipt;
+				this.receipt  = receipt;
 			}
 		}
 	}
