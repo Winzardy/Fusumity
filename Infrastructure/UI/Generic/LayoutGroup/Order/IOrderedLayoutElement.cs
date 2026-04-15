@@ -2,6 +2,6 @@ namespace UI
 {
 	public interface IOrderedLayoutElement
 	{
-		void SetOrder(int index);
+		void SetOrder(int order, int total);
 	}
 }

@@ -2,6 +2,7 @@ using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace UI
@@ -78,24 +79,28 @@ namespace UI
 			if (_layoutGroup == null)
 				return;
 
-			var childCount = transform.childCount;
-			var layoutIndex = 0;
-			for (var i = 0; i < childCount; i++)
+			using (ListPool<IOrderedLayoutElement>.Get(out var elements))
 			{
-				var index = IsReverse() ? childCount - 1 - i : i;
-				var child = transform.GetChild(index);
+				var childCount = transform.childCount;
+				for (var i = 0; i < childCount; i++)
+				{
+					var index = IsReverse() ? childCount - 1 - i : i;
+					var child = transform.GetChild(index);
 
-				if (!_includeInactive && !child.gameObject.activeSelf)
-					continue;
+					if (!_includeInactive && !child.gameObject.activeSelf)
+						continue;
 
-				if (!_includeIgnoredLayout && child.TryGetComponent(out LayoutElement layoutElement) && layoutElement.ignoreLayout)
-					continue;
+					if (!_includeIgnoredLayout && child.TryGetComponent(out LayoutElement layoutElement) && layoutElement.ignoreLayout)
+						continue;
 
-				if (!child.TryGetComponent(out IOrderedLayoutElement orderElement) && _searchInChildren)
-					orderElement = child.GetComponentInChildren<IOrderedLayoutElement>(includeInactive: true);
+					if (!child.TryGetComponent(out IOrderedLayoutElement orderElement) && _searchInChildren)
+						orderElement = child.GetComponentInChildren<IOrderedLayoutElement>(includeInactive: true);
 
-				orderElement?.SetOrder(layoutIndex);
-				layoutIndex++;
+					elements.Add(orderElement);
+				}
+
+				for (int i = 0; i < elements.Count; i++)
+					elements[i]?.SetOrder(i, elements.Count);
 			}
 		}
 

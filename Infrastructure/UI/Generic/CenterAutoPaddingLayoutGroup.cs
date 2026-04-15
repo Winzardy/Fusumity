@@ -12,7 +12,6 @@ namespace UI
 	{
 		private bool? _isHorizontal;
 
-		[InfoBox("Написал на скорую руку, могут быть проблемы :)")]
 		[ReadOnly]
 		[SerializeField]
 		private HorizontalOrVerticalLayoutGroup layoutGroup;

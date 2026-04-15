@@ -12,17 +12,19 @@ namespace UI
 	public class OrderedLayoutElement : MonoBehaviour, IOrderedLayoutElement
 	{
 		private int _currentOrder;
+		private int _total;
 
 		[Tooltip("Компоненты-реакторы, которые будут вызваны при SetOrder(index)")]
 		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor))]
 		[SerializeField]
 		private OrderedLayoutElementReactor[] _reactors;
 
-		[ShowInInspector] public int CurrentOrder { get => _currentOrder; set => SetOrder(value); }
+		[ShowInInspector] public int CurrentOrder { get => _currentOrder; set => SetOrder(value, _total); }
 
-		public void SetOrder(int index)
+		public void SetOrder(int index, int total)
 		{
 			_currentOrder = index;
+			_total        = total;
 
 			if (_reactors == null)
 				return;
@@ -122,7 +124,7 @@ namespace UI
 		{
 			if (_reactors == null || _reactors.Length == 0)
 			{
-				_reactors = new[] { reactor };
+				_reactors = new[] {reactor};
 				return;
 			}
 
@@ -130,7 +132,7 @@ namespace UI
 			for (int i = 0; i < _reactors.Length; i++)
 				temp[i] = _reactors[i];
 			temp[temp.Length - 1] = reactor;
-			_reactors = temp;
+			_reactors             = temp;
 		}
 	}
 }
