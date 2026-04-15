@@ -4,8 +4,9 @@ namespace InAppPurchasing.Unity
 	{
 		None,
 
+		Canceled,
+
 		UnityServices,
-		Disposed,
 
 		PurchasingUnavailable,
 		NoProductsAvailable,
@@ -13,6 +14,6 @@ namespace InAppPurchasing.Unity
 		UnknownBilling,
 		UnknownCountry,
 
-		Exception
+		Exception,
 	}
 }

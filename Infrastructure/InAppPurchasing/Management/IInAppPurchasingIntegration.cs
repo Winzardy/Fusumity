@@ -4,36 +4,36 @@ namespace InAppPurchasing
 {
 	public interface IInAppPurchasingIntegration : IInAppPurchasingEvents
 	{
-		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status);
+		bool TryGetStatus(IAPProductEntry product, out ProductStatus status);
 
-		public bool IsRestoreTransactionsSupported { get; }
+		bool IsRestoreTransactionsSupported { get; }
 
 		/// <summary>
 		/// Only Apple App Store
 		/// </summary>
-		public void RestoreTransactions();
+		void RestoreTransactions();
 
-		public ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false);
+		ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false);
 
 		#region Consumable
 
-		public bool CanPurchaseConsumable(IAPProductEntry product, out IAPPurchaseError? error);
-		public bool RequestPurchaseConsumable(IAPProductEntry entry);
+		bool CanPurchaseConsumable(IAPProductEntry product, out IAPPurchaseError? error);
+		bool RequestPurchaseConsumable(IAPProductEntry entry);
 
 		#endregion
 
 		#region NonConsumable
 
-		public bool CanPurchaseNonConsumable(IAPProductEntry entry, out IAPPurchaseError? error);
-		public bool RequestPurchaseNonConsumable(IAPProductEntry entry);
+		bool CanPurchaseNonConsumable(IAPProductEntry entry, out IAPPurchaseError? error);
+		bool RequestPurchaseNonConsumable(IAPProductEntry entry);
 
 		#endregion
 
 		#region Subscription
 
-		public bool CanPurchaseSubscription(IAPProductEntry entry, out IAPPurchaseError? error);
-		public bool RequestPurchaseSubscription(IAPProductEntry entry);
-		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false);
+		bool CanPurchaseSubscription(IAPProductEntry entry, out IAPPurchaseError? error);
+		bool RequestPurchaseSubscription(IAPProductEntry entry);
+		ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false);
 
 		#endregion
 

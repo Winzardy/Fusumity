@@ -164,6 +164,10 @@ namespace InAppPurchasing.Unity
 		public event PurchaseDeferred PurchaseDeferred;
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 
+		public UnityPurchasingIntegration()
+		{
+		}
+
 		public UnityPurchasingIntegration(
 			IInAppPurchasingGrantCenter grantCenter,
 			in UnityPurchasingSettings settings,
@@ -217,7 +221,7 @@ namespace InAppPurchasing.Unity
 
 					var configuration = XsollaStoreClientConfiguration.Builder.Create()
 						.SetSettings(settings)
-						.SetUserId(ProjectInfo.UserId.Value)
+						.SetUserId(ProjectInfo.UserId)
 #if DEV
 						.SetSandbox(true)
 						.SetLogLevel(XsollaLogLevel.Debug)
@@ -264,6 +268,10 @@ namespace InAppPurchasing.Unity
 				failureReason = await _initializationCompletionSource.Task;
 				cancellationToken.ThrowIfCancellationRequested();
 				return failureReason;
+			}
+			catch (OperationCanceledException _)
+			{
+				return UnityPurchasingInitializationFailureReason.Canceled;
 			}
 			catch (Exception ex)
 			{

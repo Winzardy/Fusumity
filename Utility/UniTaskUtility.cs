@@ -6,6 +6,9 @@ namespace Fusumity.Utility
 	{
 		public static void TrySetResultAndSetNull(ref UniTaskCompletionSource cts)
 		{
+			if(cts == null)
+				return;
+
 			cts.TrySetResult();
 			cts = null;
 		}

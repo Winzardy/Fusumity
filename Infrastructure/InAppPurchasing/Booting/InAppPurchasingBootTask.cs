@@ -27,34 +27,13 @@ namespace Booting.InAppPurchasing
 		public bool useOfflineService;
 
 		private IInAppPurchasingGrantCenter _grantCenter;
-
 		private IInAppPurchasingService _offlineService;
-		private UnityPurchasingIntegration _integration;
-
-		private UniTaskCompletionSource _storePromotionalCompletionSource;
 
 		public override UniTask RunAsync(Blackboard _, CancellationToken cancellationToken = default)
 		{
-			_storePromotionalCompletionSource = new UniTaskCompletionSource();
-
-			var settings = ContentManager.Get<UnityPurchasingSettings>();
-
 			_grantCenter = new InAppPurchasingGrantCenter();
-			_integration = new UnityPurchasingIntegration
-			(
-				_grantCenter,
-				settings,
-				in ProjectInfo.Distribution,
-				ProjectInfo.Identifier,
-				_storePromotionalCompletionSource
-			);
 
-			_integration
-				.InitializeAsync(cancellationToken)
-				.ContinueWith(OnInitialized)
-				.Forget();
-
-			var management = new IAPManagement(_integration);
+			var management = new IAPManagement();
 			management.SetGrantCenter(_grantCenter);
 			IAPManager.Set(management);
 
@@ -65,49 +44,21 @@ namespace Booting.InAppPurchasing
 			}
 
 			return UniTask.CompletedTask;
-
-			void OnInitialized(UnityPurchasingInitializationFailureReason failureReason)
-			{
-				if (failureReason != UnityPurchasingInitializationFailureReason.None)
-				{
-					IAPDebug.LogError($"Failed to initialize in-app purchasing integration with reason [ {failureReason} ]");
-					return;
-				}
-
-				if (IAPManager.IsRestoreSupported())
-					IAPManager.RestoreTransactions();
-			}
 		}
 
 		protected override void OnDispose()
 		{
 			// ReSharper disable once SuspiciousTypeConversion.Global
-			if (_integration is IDisposable integration)
-				integration.Dispose();
-
-			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (_offlineService is IDisposable service)
 				service.Dispose();
-
-			_storePromotionalCompletionSource?.TrySetCanceled();
 
 			IAPManager.Clear();
 		}
 
 		public override void OnBootCompleted()
 		{
-			UniTaskUtility.TrySetResultAndSetNull(ref _storePromotionalCompletionSource);
-
 			if (_offlineService is IInitializable service)
 				service.Initialize();
-
-			InitializeGrantCenterAsync().Forget();
-		}
-
-		private async UniTaskVoid InitializeGrantCenterAsync()
-		{
-			await UniTask.DelayFrame(2); // На всякий случай ждем 1-2 кадра
-			_grantCenter.Initialize();
 		}
 	}
 }

@@ -128,13 +128,10 @@ namespace InAppPurchasing
 
 		#endregion
 
+		public static IInAppPurchasingIntegration Integration { get => management.Integration; }
 
-#if IAP_DEBUG
-		public static IInAppPurchasingIntegration Integration => management.Integration;
-
-		/// <returns>Предыдущий сервис</returns>
-		public static IInAppPurchasingIntegration SetService(IInAppPurchasingIntegration integration) =>
+		/// <returns>Предыдущая интеграция</returns>
+		public static IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration) =>
 			management.SetIntegration(integration);
-#endif
 	}
 }
