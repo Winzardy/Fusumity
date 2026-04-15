@@ -366,7 +366,7 @@ namespace InAppPurchasing
 
 		internal ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry entry, bool forceUpdateCache = false)
 		{
-			if(_integration == null)
+			if (_integration == null)
 				return ref _emptySubscriptionInfo;
 
 			return ref _integration.GetSubscriptionInfo(entry, forceUpdateCache);
@@ -394,8 +394,7 @@ namespace InAppPurchasing
 
 			_relay.Bind(_integration);
 
-			IAPDebug.Log($"Target integration: {_integration.Name}");
-
+			IAPDebug.Log($"Target integration: {_integration?.Name ?? "None"}");
 			return prev;
 		}
 	}

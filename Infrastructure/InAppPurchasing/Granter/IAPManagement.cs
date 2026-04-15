@@ -1,7 +1,3 @@
-#if DebugLog
-#define IAP_DEBUG
-#endif
-
 using System.Runtime.CompilerServices;
 
 namespace InAppPurchasing
@@ -14,9 +10,7 @@ namespace InAppPurchasing
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool UnregisterGranter<T>(T granter) where T : IIAPPurchaseGranter => management.UnregisterGranter(granter);
 
-#if IAP_DEBUG
 		public static IInAppPurchasingGrantCenter GrantCenter => management.GrantCenter;
-#endif
 	}
 
 	public partial class IAPManagement
