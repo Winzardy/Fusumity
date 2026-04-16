@@ -10,7 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using UI;
 using UnityEditor;
 using UnityEngine;
@@ -23,6 +25,8 @@ namespace Content.ScriptableObjects.Editor
 		private const string ROOT_NODE = "ROOT";
 		private const string CONSTANTS_NAME = "Constants";
 		private const string NEW_LINE_TAG = "{NEW_LINE}";
+		private const string REGION_START_TAG = "__REGION_START__";
+		private const string REGION_END_TAG = "__REGION_END__";
 		private const string GUID_CLASS_NAME = "Guid";
 
 		internal static void Generate(Type valueType, IEnumerable<IUniqueContentEntryScriptableObject> collection,
@@ -59,7 +63,7 @@ namespace Content.ScriptableObjects.Editor
 				}
 			}
 
-			if (attribute is { ReplaceForClassName: not null })
+			if (attribute is {ReplaceForClassName: not null})
 			{
 				var from = attribute.ReplaceForClassName.Value.from;
 				var to = attribute.ReplaceForClassName.Value.to;
@@ -86,7 +90,7 @@ namespace Content.ScriptableObjects.Editor
 					if (bestMatch != null && t.Length <= bestMatch.Length)
 						continue;
 					bestMatch = t;
-					output = tOutput;
+					output    = tOutput;
 				}
 
 				namespaceByOutput = bestMatch;
@@ -94,16 +98,16 @@ namespace Content.ScriptableObjects.Editor
 
 			output ??= new ConstantsOutput
 			{
-				asmdef = projectSettings.output.asmdef,
-				folderPath = projectSettings.output.folderPath,
+				asmdef           = projectSettings.output.asmdef,
+				folderPath       = projectSettings.output.folderPath,
 				trimGeneratePath = projectSettings.output.trimGeneratePath,
 			};
 
 			if (attribute.HasCustomizedOutputPath)
 			{
 				output.trimGeneratePath = true;
-				output.asmdef = null;
-				namespaceByOutput = @namespace;
+				output.asmdef           = null;
+				namespaceByOutput       = @namespace;
 			}
 
 			if (!attribute.OutputPath.IsNullOrEmpty())
@@ -189,7 +193,7 @@ namespace Content.ScriptableObjects.Editor
 
 			var existingData = File.Exists(path) ? File.ReadAllText(path) : null;
 
-			var root = new GeneratorConstantsNode { name = ROOT_NODE };
+			var root = new GeneratorConstantsNode {name = ROOT_NODE};
 
 			foreach (var source in collection)
 			{
@@ -206,11 +210,16 @@ namespace Content.ScriptableObjects.Editor
 				foreach (var part in parts)
 				{
 					if (!current.children.ContainsKey(part))
-						current.children[part] = new GeneratorConstantsNode { name = part };
+						current.children[part] = new GeneratorConstantsNode {name = part};
 					current = current.children[part];
 				}
 
 				current.id = id;
+				if (source is ContentScriptableObject scriptableObject
+					&& !scriptableObject.techDescription.IsNullOrWhiteSpace())
+				{
+					current.summary = scriptableObject.techDescription;
+				}
 
 				if (!attribute.UseGuid)
 					continue;
@@ -220,6 +229,10 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			var compilationUnit = SyntaxFactory.CompilationUnit();
+			var groupHeaderStyle = projectSettings.groupHeaderStyle;
+			var useRegionHeaders = groupHeaderStyle == GroupHeaderStyle.Region;
+			var useCommentHeaders = groupHeaderStyle == GroupHeaderStyle.Comment;
+			var addSummaryFromTechDescription = projectSettings.useSummary;
 
 			@namespace = !@namespace.IsNullOrEmpty()
 				? @namespace
@@ -254,12 +267,20 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			namespaceDeclaration = namespaceDeclaration.AddMembers(baseClassDeclaration);
-			compilationUnit = compilationUnit.AddMembers(namespaceDeclaration);
+			compilationUnit      = compilationUnit.AddMembers(namespaceDeclaration);
 
 			var code = compilationUnit
 				.NormalizeWhitespace(indentation: "	", eol: "\n")
 				.ToFullString();
 			code = code.Replace(NEW_LINE_TAG, string.Empty);
+			if (useRegionHeaders)
+			{
+				code = Regex.Replace(code, @"^(\s*)//\s*__REGION_START__\s*(.+)$", "$1#region $2", RegexOptions.Multiline);
+				code = Regex.Replace(code, @"//\s*__REGION_END__\s*", "#endregion", RegexOptions.Multiline);
+				code = Regex.Replace(code, @";\s*#endregion", ";\n#endregion", RegexOptions.Multiline);
+				code = EnsureRegionEndings(code);
+				code = EnsureRegionSpacing(code);
+			}
 
 			var separator = "Assets/";
 			var unityPath = separator + path.Split(separator)[^1];
@@ -288,7 +309,6 @@ namespace Content.ScriptableObjects.Editor
 				if (attribute != null && !attribute.CustomConstants.IsNullOrEmpty())
 				{
 					var commented = false;
-					var comment = "Custom";
 
 					foreach (var constant in attribute.CustomConstants)
 					{
@@ -312,14 +332,12 @@ namespace Content.ScriptableObjects.Editor
 
 						using (ListPool<SyntaxTrivia>.Get(out var trivia))
 						{
-							if (!commented && !string.IsNullOrEmpty(comment))
+							if (!commented)
 							{
 								if (space)
 									trivia.Add(SyntaxFactory.Comment(NEW_LINE_TAG));
 
-								trivia.Add(SyntaxFactory.Comment($"// {comment}"));
-
-								space = false;
+								space     = false;
 								commented = true;
 							}
 
@@ -340,17 +358,19 @@ namespace Content.ScriptableObjects.Editor
 				ref bool space, bool idOrGuid = true)
 			{
 				var hasAnyLeaves = node.children.Values.Any(HasLeaf);
+				var leafChildren = node.children.Values
+					.Where(c => !c.id.IsNullOrEmpty())
+					.OrderBy(c => c.name)
+					.ToList();
 
-				var currentPath = new List<string>(pathSegments) { node.name };
-				var comment = string.Join(" -> ", currentPath.Skip(1));
+				var currentPath = new List<string>(pathSegments) {node.name};
+				var regionName = string.Join(" -> ", currentPath.Skip(1));
+				var hasRegion = !regionName.IsNullOrEmpty();
 
 				var handled = false;
 
-				foreach (var child in node.children.Values.OrderBy(c => c.name))
+				foreach (var (child, index) in leafChildren.WithIndex())
 				{
-					if (child.id.IsNullOrEmpty())
-						continue;
-
 					var constName = GetName(child.id);
 
 					var fieldDeclaration = SyntaxFactory.FieldDeclaration(
@@ -372,18 +392,55 @@ namespace Content.ScriptableObjects.Editor
 							if (space)
 								trivia.Add(SyntaxFactory.Comment(NEW_LINE_TAG));
 
-							if (!comment.IsNullOrEmpty())
-								trivia.Add(SyntaxFactory.Comment($"// {comment}"));
+							if (hasRegion)
+							{
+								if (useRegionHeaders)
+									trivia.Add(SyntaxFactory.Comment($"{NEW_LINE_TAG}// {REGION_START_TAG} {regionName}{NEW_LINE_TAG}"));
+								else if (useCommentHeaders)
+									trivia.Add(SyntaxFactory.Comment($"// {regionName}"));
+							}
 
-							space = false;
+							space   = false;
 							handled = true;
+						}
+
+						if (addSummaryFromTechDescription && idOrGuid && !child.summary.IsNullOrWhiteSpace())
+						{
+							var description = child.summary
+								.Replace("\r\n", "\n")
+								.Replace('\r', '\n');
+							using (StringBuilderPool.Get(out var builder))
+							{
+								builder.Append("/// <summary>");
+								builder.Append("\n");
+								foreach (var rawLine in description.Split('\n'))
+								{
+									var line = rawLine.Trim();
+									if (line.IsNullOrEmpty())
+										continue;
+
+									builder.Append("		/// ");
+									builder.Append(SecurityElement.Escape(line));
+									builder.Append("\n");
+								}
+
+								builder.Append("		/// </summary>");
+								trivia.Add(SyntaxFactory.Comment(builder.ToString()));
+							}
 						}
 
 						fieldDeclaration = fieldDeclaration.WithLeadingTrivia(trivia);
 					}
 
+					if (useRegionHeaders && hasRegion && index == leafChildren.Count - 1)
+					{
+						fieldDeclaration = fieldDeclaration.WithTrailingTrivia(
+							fieldDeclaration.GetTrailingTrivia().AddRange(
+								SyntaxFactory.ParseTrailingTrivia($"\n// {REGION_END_TAG}")));
+					}
+
 					classDeclaration = classDeclaration.AddMembers(fieldDeclaration);
-					space = child.children.Count == 0;
+					space            = child.children.Count == 0;
 				}
 
 				foreach (var child in node.children.Values.OrderBy(c => c.name))
@@ -422,7 +479,7 @@ namespace Content.ScriptableObjects.Editor
 				for (int i = 0; i < input.Length; i++)
 				{
 					char current = input[i];
-					char? next = i + 1 < input.Length ? input[i + 1] : (char?)null;
+					char? next = i + 1 < input.Length ? input[i + 1] : (char?) null;
 
 					if (char.IsUpper(current))
 					{
@@ -437,6 +494,95 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				return sb.ToString().Replace("/", string.Empty);
+			}
+
+			string EnsureRegionEndings(string inputCode)
+			{
+				var lines = inputCode.Split('\n');
+				using (StringBuilderPool.Get(out var builder))
+				{
+					var regionIsOpen = false;
+					var regionIndent = string.Empty;
+
+					for (var i = 0; i < lines.Length; i++)
+					{
+						var line = lines[i];
+						var regionStartMatch = Regex.Match(line, @"^(\s*)#region\b");
+						var isRegionEnd = Regex.IsMatch(line, @"^\s*#endregion\b");
+						var isBraceClose = Regex.IsMatch(line, @"^\s*}\s*$");
+
+						if (regionStartMatch.Success)
+						{
+							if (regionIsOpen)
+								builder.Append(regionIndent).Append("#endregion\n");
+
+							regionIsOpen = true;
+							regionIndent = regionStartMatch.Groups[1].Value;
+							builder.Append(line);
+						}
+						else
+						{
+							if (regionIsOpen && isBraceClose)
+							{
+								builder.Append(regionIndent).Append("#endregion\n");
+								regionIsOpen = false;
+								regionIndent = string.Empty;
+							}
+							else if (isRegionEnd)
+							{
+								regionIsOpen = false;
+								regionIndent = string.Empty;
+							}
+
+							builder.Append(line);
+						}
+
+						if (i < lines.Length - 1)
+							builder.Append('\n');
+					}
+
+					if (regionIsOpen)
+						builder.Append('\n').Append(regionIndent).Append("#endregion");
+
+					return builder.ToString();
+				}
+			}
+
+			string EnsureRegionSpacing(string inputCode)
+			{
+				var lines = inputCode.Split('\n');
+				using (StringBuilderPool.Get(out var builder))
+				{
+					for (var i = 0; i < lines.Length; i++)
+					{
+						var line = lines[i];
+						builder.Append(line);
+						if (i < lines.Length - 1)
+							builder.Append('\n');
+
+						var isRegionStart = Regex.IsMatch(line, @"^\s*#region\b");
+						var isRegionEnd = Regex.IsMatch(line, @"^\s*#endregion\b");
+						if (i >= lines.Length - 1)
+							continue;
+
+						var nextLine = lines[i + 1];
+						var lineIsBlank = string.IsNullOrWhiteSpace(line);
+						var nextIsBlank = string.IsNullOrWhiteSpace(nextLine);
+						var nextIsBraceClose = Regex.IsMatch(nextLine, @"^\s*}\s*$");
+						var nextIsRegionEnd = Regex.IsMatch(nextLine, @"^\s*#endregion\b");
+
+						if (isRegionStart && !nextIsBlank)
+							builder.Append('\n');
+
+						if (!lineIsBlank && nextIsRegionEnd)
+							builder.Append('\n');
+
+						if (isRegionEnd && !nextIsBlank && !nextIsBraceClose)
+							builder.Append('\n');
+					}
+
+					return builder.ToString();
+				}
 			}
 		}
 
@@ -511,5 +657,6 @@ namespace Content.ScriptableObjects.Editor
 		public Dictionary<string, GeneratorConstantsNode> children = new();
 		public string id;
 		public string guid;
+		public string summary;
 	}
 }

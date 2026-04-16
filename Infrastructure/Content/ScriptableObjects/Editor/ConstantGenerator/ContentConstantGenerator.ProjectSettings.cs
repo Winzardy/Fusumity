@@ -9,6 +9,13 @@ namespace Content.ScriptableObjects.Editor
 {
 	public partial class ContentConstantGenerator
 	{
+		public enum GroupHeaderStyle
+		{
+			None = 0,
+			Region = 1,
+			Comment = 2,
+		}
+
 		[Serializable]
 		public class ProjectSettings
 		{
@@ -18,6 +25,7 @@ namespace Content.ScriptableObjects.Editor
 			[DarkCardBox]
 			public ConstantsOutput output;
 
+			[PropertySpace(5)]
 			[DictionaryDrawerSettings(KeyLabel = "Namespace", ValueLabel = "Output")]
 			public SerializableDictionary<string, ConstantsOutput> namespaceToOutput = new();
 
@@ -37,7 +45,16 @@ namespace Content.ScriptableObjects.Editor
 			public string classNameEnding = "Type";
 
 			[Tooltip("Чтобы убрать лишние окончания, например: WindowEntry -> Window -> Window{ending}")]
+			[PropertySpace(0, 5)]
 			public string[] removeEndings = {"Entry"};
+
+			[DarkCardBox("item")]
+			[Tooltip("Добавлять XML summary из поля techDescription")]
+			public bool useSummary = true;
+
+			[DarkCardBox("item")]
+			[Tooltip("Region - #region/#endregion, Comment - старый // Path -> To -> Group, None - без заголовков групп")]
+			public GroupHeaderStyle groupHeaderStyle = GroupHeaderStyle.Region;
 		}
 
 		internal static ProjectSettings projectSettings => ContentConstantGeneratorSettings.Asset.settings;
