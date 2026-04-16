@@ -12,24 +12,28 @@ namespace Localization
 
 		internal static string GetEditor(string key, string localeCode = null)
 		{
+			var locale = localeCode != null
+				? LocalizationEditorSettings.GetLocale(localeCode)
+				: LocalizationEditorSettings.GetLocale(DEFAULT_LOCALE_CODE);
+
+			if (!locale)
+				locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetSelectedLocale();
+
+			if (!locale)
+				locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
+
+			if (!locale)
+				return null;
+
 			foreach (var collection in LocalizationEditorSettings.GetStringTableCollections())
 			{
-				var locale = localeCode != null
-					? LocalizationEditorSettings.GetLocale(localeCode)
-					: LocalizationEditorSettings.GetLocale(DEFAULT_LOCALE_CODE);
-
-				if (!locale)
-					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetSelectedLocale();
-
-				if (!locale)
-					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
-
-				if (!locale)
-					return null;
-
 				var table = collection.GetTable(locale.Identifier) as StringTable;
+				if (!table)
+					continue;
 
-				return table ? table.GetEntry(key)?.Value : null;
+				var entry = table.GetEntry(key);
+				if (entry != null)
+					return entry.Value;
 			}
 
 			return null;
@@ -55,7 +59,7 @@ namespace Localization
 
 		internal static IEnumerable<string> GetAllKeysEditor()
 			=> from collection in LocalizationEditorSettings.GetStringTableCollections()
-			from entry in collection.SharedData.Entries select entry.Key;
+				from entry in collection.SharedData.Entries select entry.Key;
 	}
 }
 #endif
