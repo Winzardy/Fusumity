@@ -25,11 +25,15 @@ namespace Localization
 					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
 
 				if (!locale)
-					return null;
+					continue;
 
 				var table = collection.GetTable(locale.Identifier) as StringTable;
-
-				return table ? table.GetEntry(key)?.Value : null;
+				if (table == null)
+					continue;
+				var entry = table.GetEntry(key);
+				if (entry == null)
+					continue;
+				return entry.Value;
 			}
 
 			return null;
@@ -55,7 +59,8 @@ namespace Localization
 
 		internal static IEnumerable<string> GetAllKeysEditor()
 			=> from collection in LocalizationEditorSettings.GetStringTableCollections()
-			from entry in collection.SharedData.Entries select entry.Key;
+				from entry in collection.SharedData.Entries
+				select entry.Key;
 	}
 }
 #endif

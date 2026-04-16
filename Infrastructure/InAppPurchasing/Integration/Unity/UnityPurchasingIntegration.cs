@@ -106,6 +106,7 @@ namespace InAppPurchasing.Unity
 
 		[CanBeNull]
 		private IGooglePlayStoreExtensions _googlePlayExtension;
+
 		[CanBeNull]
 		private IGooglePlayConfiguration _googlePlayConfiguration;
 
@@ -157,7 +158,7 @@ namespace InAppPurchasing.Unity
 
 		private readonly IInAppPurchasingGrantCenter _grantCenter;
 
-		public bool IsInitialized { get => _storeController != null && _processing != null; }
+		public ref readonly IAPBillingEntry Billing { get => ref _billing; }
 
 		public event PurchaseCompleted PurchaseCompleted;
 		public event PurchaseFailed PurchaseFailed;
@@ -331,8 +332,8 @@ namespace InAppPurchasing.Unity
 			_storeController = controller;
 			_extensions      = extensions;
 
-				switch (_billing)
-				{
+			switch (_billing)
+			{
 				case IAPBillingType.GOOGLE_PLAY:
 					_googlePlayExtension = extensions.GetExtension<IGooglePlayStoreExtensions>();
 					break;
@@ -355,7 +356,7 @@ namespace InAppPurchasing.Unity
 					_xsollaExtension = _extensions.GetExtension<IXsollaPurchasingStoreExtension>();
 					break;
 #endif
-				}
+			}
 
 			TryInitializeLocalValidator();
 
@@ -363,11 +364,13 @@ namespace InAppPurchasing.Unity
 			//_controller.FetchAdditionalProducts();
 		}
 
+		public bool IsInitialized() => _storeController != null && _processing != null;
+
 		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status)
 		{
 			status = ProductStatus.Undefined;
 
-			if (!IsInitialized)
+			if (!IsInitialized())
 			{
 				status = ProductStatus.NotInitialized;
 				return true;
@@ -512,7 +515,7 @@ namespace InAppPurchasing.Unity
 		{
 			error = null;
 
-			if (!IsInitialized)
+			if (!IsInitialized())
 			{
 				error = IAPPurchaseErrorCode.NotInitialized;
 				return false;
@@ -903,8 +906,8 @@ namespace InAppPurchasing.Unity
 			_localValidator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
 		}
 
-			private IAPBillingEntry GetDefaultBilling(in DistributionEntry platform)
-			{
+		private IAPBillingEntry GetDefaultBilling(in DistributionEntry platform)
+		{
 			switch (platform)
 			{
 				case DistributionType.APP_STORE:
@@ -912,9 +915,9 @@ namespace InAppPurchasing.Unity
 				case DistributionType.GOOGLE_PLAY:
 					return IAPBillingType.GOOGLE_PLAY;
 				default:
-						return IAPBillingType.UNDEFINED;
-				}
+					return IAPBillingType.UNDEFINED;
 			}
+		}
 
 #if UNITY_EDITOR
 		[MenuItem("Services/In-App Purchasing/Create IAP Button", true)]
