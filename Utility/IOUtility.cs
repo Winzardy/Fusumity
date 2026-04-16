@@ -94,6 +94,15 @@ namespace Fusumity.Utility
 			if (!directoryPath.IsNullOrEmpty())
 				EnsureDirectoryExists(directoryPath);
 		}
+
+		public static bool IsPathWithinDirectory(string path, string directory)
+		{
+			var fullPath = Path.GetFullPath(path);
+			var fullDir = Path.GetFullPath(directory)
+				.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+			return fullPath.StartsWith(fullDir, StringComparison.OrdinalIgnoreCase);
+		}
 	}
 
 	[Serializable]
