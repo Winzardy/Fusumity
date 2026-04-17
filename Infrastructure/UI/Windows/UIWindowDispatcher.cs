@@ -31,6 +31,7 @@ namespace UI.Windows
 		public event Action<IWindow> Hidden;
 
 		public ref readonly WindowQueueContext Current { get => ref _manager.Current; }
+		public bool HasActiveWindows { get => Current.window != null; }
 
 		public IEnumerable<KeyValuePair<IWindow, WindowQueueContext>> Queue { get => _manager.Queue; }
 
