@@ -1,6 +1,7 @@
 ﻿using System;
 using ActionBusSystem;
 using Content;
+using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Fusumity.MVVM.UI;
 using Game.UI;
@@ -40,7 +41,7 @@ namespace UI
 		public string groupId;
 	}
 
-	[HideLabel]
+	[FoldoutContainer]
 	[Serializable]
 	public struct ActionBusButtonScheme
 	{

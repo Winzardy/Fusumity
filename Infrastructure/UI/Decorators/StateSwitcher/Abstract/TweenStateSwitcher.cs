@@ -32,17 +32,23 @@ namespace UI
 
 		protected override void OnStateSwitched(TState state)
 		{
-			// Твин ломается если его создавать при неактивном объекте
+			Tween tween;
+
+			// На неактивном GameObject твин может не запуститься или работать некорректно.
+			// Точное поведение не исследовалось, поэтому сразу применяем конечное состояние
 			if (!gameObject.IsActive())
 			{
-				_dictionary.GetValueOrDefaultSafe(state, _default)
-					.ToTween(this)
-					.Kill(true);
+				Debug.LogWarning(
+					"Cannot play DOTween because GameObject is inactive. " +
+					"Applying final tween state immediately");
+
+				tween = _dictionary.GetValueOrDefaultSafe(state, _default).ToTween(this);
+				tween.KillWithCallbacks();
 
 				return;
 			}
 
-			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
+			if (!_cached.TryGetValue(state, out tween) || !tween.active)
 			{
 				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
 					.ToTween(this)

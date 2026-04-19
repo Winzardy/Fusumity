@@ -8,23 +8,47 @@ namespace Fusumity.Editor.Drawers
 {
 	public class FoldoutContainerPropertyDrawer : OdinAttributeDrawer<FoldoutContainerAttribute>
 	{
-		private bool _foldout;
+		private bool _isExpanded;
+		private bool _initialized;
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			Action body = Property.Children.Count > 1 ? Body : null;
-			FusumityEditorGUILayout.FoldoutContainer(Header, body, ref _foldout, this);
+			if (!_initialized)
+			{
+				_isExpanded  = Attribute.ExpandedByDefault;
+				_initialized = true;
+			}
+
+			var visibleChildren = Property.Children.Where(x => x.State.Visible).ToList();
+			if (visibleChildren.Count == 0)
+				return;
+
+
+			if (visibleChildren.Count == 1)
+			{
+				Header();
+				return;
+			}
+
+			if (Attribute.UseBox)
+				FusumityEditorGUILayout.BeginCardBox(Attribute.BoxColor);
+			{
+				FusumityEditorGUILayout.FoldoutContainer(Header, Body, ref _isExpanded, this);
+			}
+			if (Attribute.UseBox)
+				FusumityEditorGUILayout.EndCardBox();
+
 
 			Rect Header()
 			{
-				var mainProperty = Property.Children[0];
+				var mainProperty = visibleChildren[0];
 				mainProperty.Draw(label);
 				return mainProperty.LastDrawnValueRect;
 			}
 
 			void Body()
 			{
-				foreach (var child in Property.Children.Skip(1))
+				foreach (var child in visibleChildren.Skip(1))
 					child.Draw();
 			}
 		}

@@ -1,22 +1,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sirenix.OdinInspector;
+using UnityEngine;
 #if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 #endif
-using UnityEngine;
 
 namespace UI
 {
-	public abstract class GroupStateSwitcher<TState> : StateSwitcher<TState>
+	public interface IGroupStateSwitcher : IStateSwitcher
 	{
-		[SerializeField]
+		IEnumerable<IStateSwitcher> Children { get; }
+	}
+
+	public abstract class GroupStateSwitcher<TState> : StateSwitcher<TState>, IGroupStateSwitcher, ISerializationCallbackReceiver
+	{
 		[NotNull]
-		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor))]
+		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor), CustomRemoveElementFunction = nameof(OnRemoveGroupElement))]
+		[OnValueChanged(nameof(RefreshParentLinks))]
+		[SerializeField]
 		protected List<StateSwitcher<TState>> _group;
+
+		public IEnumerable<IStateSwitcher> Children => _group;
+
+		protected virtual void Awake() => RefreshParentLinks();
 
 		protected override void OnStateSwitched(TState state)
 		{
@@ -25,18 +36,55 @@ namespace UI
 #if DebugLog
 				if (item == this)
 				{
-					GUIDebug.LogError("Used same layout in group");
+					Debug.LogError("Used same layout in group");
 					continue;
 				}
 
 				if (item == null)
 				{
-					GUIDebug.LogError("Used null in group", this);
+					Debug.LogError("Used null in group", this);
 					continue;
 				}
 #endif
 				item.Switch(state);
 			}
+		}
+
+		private void RefreshParentLinks()
+		{
+			if (_group.IsNullOrEmpty())
+				return;
+
+			using (HashSetPool<StateSwitcher<TState>>.Get(out var hashSet))
+			using (ListPool<int>.Get(out var removingIndexes))
+			{
+				foreach (var (child, index) in _group.WithIndex())
+				{
+					if (child == null)
+						continue;
+
+					if (!hashSet.Add(child))
+					{
+						removingIndexes.Add(index);
+						Debug.LogWarning("Duplicate child StateSwitcher detected in group. Duplicate item removed", this);
+						continue;
+					}
+
+					child.SetParent(this);
+				}
+
+				for (var i = removingIndexes.Count - 1; i >= 0; i--)
+					_group.RemoveAt(removingIndexes[i]);
+			}
+		}
+
+		public override bool IsTransitioning()
+		{
+			foreach (var state in _group)
+				if (state.IsTransitioning())
+					return true;
+
+			return false;
 		}
 
 		#region Editor
@@ -69,7 +117,6 @@ namespace UI
 #endif
 		}
 
-		[ContextMenu("Add Children")]
 		private void AddChildren()
 		{
 			var anchor = _useParent ? gameObject.transform.parent : gameObject.transform;
@@ -85,6 +132,8 @@ namespace UI
 					_group.Add(switcher);
 				}
 			}
+
+			RefreshParentLinks();
 
 #if UNITY_EDITOR
 			EditorUtility.SetDirty(this);
@@ -104,20 +153,50 @@ namespace UI
 				_group = list.ToList();
 			}
 
+			RefreshParentLinks();
+
 #if UNITY_EDITOR
 			EditorUtility.SetDirty(this);
 #endif
 		}
 
+		private void OnRemoveGroupElement(StateSwitcher<TState> child)
+		{
+			if (child != null)
+				child.ClearParent(this);
+
+			_group.Remove(child);
+			RefreshParentLinks();
+		}
+#if UNITY_EDITOR
+		private bool _requestedValidate;
+
+		protected virtual void OnValidate()
+		{
+			if (Application.isPlaying)
+				return;
+
+			if (_requestedValidate)
+				return;
+
+			_requestedValidate = true;
+			EditorApplication.delayCall += () =>
+			{
+				_requestedValidate = false;
+				if (this == null)
+					return;
+
+				RefreshParentLinks();
+			};
+		}
+#endif
+
 		#endregion
 
-		public override bool IsTransitioning()
+		void ISerializationCallbackReceiver.OnBeforeSerialize()
 		{
-			foreach (var state in _group)
-				if (state.IsTransitioning())
-					return true;
-
-			return false;
 		}
+
+		void ISerializationCallbackReceiver.OnAfterDeserialize() => RefreshParentLinks();
 	}
 }

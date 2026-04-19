@@ -86,7 +86,7 @@ namespace UI.Editor
 				_showedSelectorBeforeClick = null;
 			}
 
-			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Arrow);
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
 
 			var originalColor = GUI.color;
 
@@ -100,6 +100,9 @@ namespace UI.Editor
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretDownFill);
 			else
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretUpFill);
+
+
+			EditorGUIUtility.AddCursorRect(trianglePosition, MouseCursor.Link);
 		}
 
 		private void TryCreateSelector(IStateSwitcher stateSwitcher)

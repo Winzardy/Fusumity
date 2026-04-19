@@ -71,12 +71,14 @@ namespace UI
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
+				Debug.LogWarning(
+					"Cannot play DOTween because GameObject is inactive. " +
+					"Applying final tween state immediately");
 				var instantTween = mappedSequences
 					.GetValueOrDefaultSafe(state, _default)
 					.ToTween(this);
 
-				instantTween.Complete(true);
-				instantTween.Kill();
+				instantTween.KillWithCallbacks();
 
 				return;
 			}

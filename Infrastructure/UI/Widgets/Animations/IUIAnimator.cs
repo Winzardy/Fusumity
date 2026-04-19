@@ -13,6 +13,7 @@ namespace UI
 		public AnimationCallback endCallback;
 
 		public bool completeOnKill;
+		public bool disablePrevEndCallbackOnKill;
 
 		public bool IsEmpty => key.IsNullOrWhiteSpace();
 		public static implicit operator WidgetAnimationArgs(string key) => new() {key = key};

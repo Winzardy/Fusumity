@@ -42,6 +42,7 @@ namespace UI
 		private void OnValueChanged(Vector2 _) => UpdateShadows();
 
 		protected override void OnRectTransformDimensionsChange() => UpdateShadows();
+		protected override void OnTransformParentChanged() => UpdateShadows();
 
 		private void UpdateShadows()
 		{
@@ -65,27 +66,27 @@ namespace UI
 			switch (shadow.edge)
 			{
 				case Edge.Top:
-					size = rect.height;
-					targetPoint = _topPoint;
+					size                       = rect.height;
+					targetPoint                = _topPoint;
 					contentSmallerThanViewport = _contentSmallerThanViewportY;
 
 					break;
 				case Edge.Bottom:
-					size = rect.height;
-					targetPoint = _bottomPoint;
+					size                       = rect.height;
+					targetPoint                = _bottomPoint;
 					contentSmallerThanViewport = _contentSmallerThanViewportY;
 
 					break;
 				case Edge.Left:
-					size = rect.width;
-					targetPoint = _leftPoint;
+					size                       = rect.width;
+					targetPoint                = _leftPoint;
 					contentSmallerThanViewport = _contentSmallerThanViewportX;
 
 					break;
 
 				case Edge.Right:
-					size = rect.width;
-					targetPoint = _rightPoint;
+					size                       = rect.width;
+					targetPoint                = _rightPoint;
 					contentSmallerThanViewport = _contentSmallerThanViewportX;
 
 					break;
@@ -104,7 +105,7 @@ namespace UI
 				alpha = targetPoint / size;
 			}
 
-			alpha = Mathf.Clamp(alpha, 0f, 1f);
+			alpha =  Mathf.Clamp(alpha, 0f, 1f);
 			alpha *= shadow.multiplier;
 
 			var clampedAlpha = Mathf.Clamp(shadow.reverseAlpha ? 1 - alpha : alpha, 0, 1);

@@ -4,6 +4,14 @@ namespace ZenoTween.Utility
 {
 	public static class TweenUtility
 	{
+		public static void KillWithCallbacks(this Tween tween)
+		{
+			if (!tween.IsActive())
+				return;
+			tween.Complete(true);
+			tween.Kill();
+		}
+
 		public static void KillSafe(this Tween tween, bool complete = false)
 		{
 			if (!tween.IsActive())

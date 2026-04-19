@@ -14,7 +14,8 @@ namespace Fusumity.MVVM
 		/// Main hosting object.
 		/// Can reside above collection root.
 		/// </summary>
-		[MaybeNull] Transform Host { get; }
+		[MaybeNull]
+		Transform Host { get; }
 
 		void Update(IEnumerable<TViewModel> viewModels);
 	}
@@ -60,9 +61,9 @@ namespace Fusumity.MVVM
 		{
 			Host = hostingObject ?? collectionRoot;
 
-			_pool = collectionRoot != null ?
-				new ViewPool<TViewModel, TView, TViewLayout>(prefab, collectionRoot, CreateViewInstance, DisposeViewInstance) :
-				new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
+			_pool = collectionRoot != null
+				? new ViewPool<TViewModel, TView, TViewLayout>(prefab, collectionRoot, CreateViewInstance, DisposeViewInstance)
+				: new ViewPool<TViewModel, TView, TViewLayout>(prefab, CreateViewInstance, DisposeViewInstance);
 
 			_utilizedViews = new List<TView>();
 		}

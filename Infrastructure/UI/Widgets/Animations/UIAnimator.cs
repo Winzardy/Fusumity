@@ -159,7 +159,7 @@ namespace UI
 			}
 			else if (layer.tween != null)
 			{
-				if (layer.tween.IsActive())
+				if (layer.tween.IsActive() && !layer.args.disablePrevEndCallbackOnKill)
 					layer.args.endCallback?.Invoke(layer.args.key);
 
 				if (layer.args.completeOnKill)

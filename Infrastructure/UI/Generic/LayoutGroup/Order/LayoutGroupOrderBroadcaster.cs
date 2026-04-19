@@ -139,13 +139,7 @@ namespace UI
 			if (overrideReverse.IsEnable(out var value))
 				return value;
 
-			if (_layoutGroup is HorizontalOrVerticalLayoutGroup horizontalOrVerticalLayoutGroup)
-				return horizontalOrVerticalLayoutGroup.reverseArrangement;
-
-			if (_layoutGroup is RadialLayoutGroup radialLayoutGroup)
-				return radialLayoutGroup.clockwise;
-
-			return false;
+			return _layoutGroup.IsReverse();
 		}
 
 #if UNITY_EDITOR

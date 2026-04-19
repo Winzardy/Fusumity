@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Sapientia.Collections;
+using Sapientia.Pooling;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -42,35 +43,37 @@ namespace UI
 			if (_group.IsNullOrEmpty())
 				return;
 
-			var states = new HashSet<string>();
-			foreach (var switcher in _group)
+			using (HashSetPool<string>.Get(out var states))
 			{
-				if (switcher == null)
-					continue;
-
-				if (!switcher.TryFindFieldRecursively("_dictionary", out var dictField, BindingFlags.Instance | BindingFlags.NonPublic))
-					continue;
-
-				var dictionary = dictField.GetValue(switcher) as IDictionary;
-
-				if (dictionary == null)
-					continue;
-
-				foreach (var key in dictionary.Keys)
+				foreach (var switcher in _group)
 				{
-					if (key is string s)
+					if (switcher == null)
+						continue;
+
+					if (!switcher.TryFindFieldRecursively("_dictionary", out var dictField, BindingFlags.Instance | BindingFlags.NonPublic))
+						continue;
+
+					var dictionary = dictField.GetValue(switcher) as IDictionary;
+
+					if (dictionary == null)
+						continue;
+
+					foreach (var key in dictionary.Keys)
 					{
-						states.Add(s);
+						if (key is string s)
+						{
+							states.Add(s);
+						}
 					}
 				}
-			}
 
-			_allCollectedStates = states.ToArray();
+				_allCollectedStates = states.ToArray();
+			}
 		}
 
+#endif
 		[SerializeField]
 		[Tooltip("Варианты для dropdown (только редактор)")]
 		private string[] _variants;
-#endif
 	}
 }

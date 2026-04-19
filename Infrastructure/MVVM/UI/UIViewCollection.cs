@@ -1,6 +1,10 @@
-﻿using Fusumity.Utility;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Fusumity.Utility;
 using UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Fusumity.MVVM.UI
 {
@@ -21,6 +25,28 @@ namespace Fusumity.MVVM.UI
 
 		public UIViewCollection(TViewLayout prefab, Transform collectionRoot = null, Transform hostingObject = null) : base(prefab, collectionRoot, hostingObject)
 		{
+		}
+	}
+
+	public static class UIViewCollectionExtensions
+	{
+		public static void UpdateByRespectingLayout<TViewModel, TView, TViewLayout>(this UIViewCollection<TViewModel, TView, TViewLayout> collection, IEnumerable<TViewModel> models)
+			where TView : UIView<TViewModel, TViewLayout>
+			where TViewLayout : UIBaseLayout
+		{
+			if (collection.Host == null)
+				throw new InvalidOperationException("Collection Host is null.");
+
+			var root = collection.Host.gameObject;
+			if (collection.Host.TryGetComponent(out UIViewCollectionLayout<TViewLayout> layout))
+				root = layout.root.gameObject;
+			if (root.TryGetComponent(out LayoutGroup layoutGroup) && layoutGroup.IsReverse())
+			{
+				collection.Update(Enumerable.Reverse(models));
+				return;
+			}
+
+			collection.Update(models);
 		}
 	}
 }

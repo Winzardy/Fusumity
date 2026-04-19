@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fusumity.Attributes;
+using Fusumity.Editor.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using TMPro;
@@ -12,7 +14,8 @@ namespace UI.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			if (property.ValueEntry.WeakSmartValue != null &&
-			    !property.ValueEntry.TypeOfValue.IsSubclassOf(typeof(TMP_Text)))
+				(property.Parent == null || !property.Parent.AnyParentHasAttribute<FoldoutContainerAttribute>()) &&
+				!property.ValueEntry.TypeOfValue.IsSubclassOf(typeof(TMP_Text)))
 				attributes.Add(new InlineEditorAttribute(InlineEditorObjectFieldModes.Foldout));
 
 			base.ProcessSelfAttributes(property, attributes);
