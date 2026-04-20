@@ -37,7 +37,7 @@ namespace ZenoTween.Participant.Tweens.UI
 				color = color.WithAlpha(graphic.color.a);
 
 			var tween = graphic
-			   .DOColor(color, duration)
+			   .DOColor(color, GetDuration(duration))
 			   .SetEase(ease);
 
 			if (useStartColor)

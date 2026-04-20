@@ -44,7 +44,7 @@ namespace ZenoTween.Participant.Tweens
 		private TweenerCore<Vector3, Vector3, VectorOptions> ScaleTween()
 		{
 			//По дефолтну Local) можно сделать мировой скейл...
-			return root.DOScale(endValue, duration);
+			return root.DOScale(endValue, GetDuration(duration));
 		}
 
 		protected override void OnValidate(GameObject owner)

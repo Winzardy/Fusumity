@@ -1,5 +1,7 @@
+using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.UI;
 
 #if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
@@ -14,12 +16,29 @@ namespace UI
 		private int _currentOrder;
 		private int _total;
 
+		[SerializeField, HideInInspector]
+		private bool _ignoreLayout;
+
 		[Tooltip("Компоненты-реакторы, которые будут вызваны при SetOrder(index)")]
 		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawListButtonsEditor))]
 		[SerializeField]
 		private OrderedLayoutElementReactor[] _reactors;
 
 		[ShowInInspector] public int CurrentOrder { get => _currentOrder; set => SetOrder(value, _total); }
+
+		[ShowInInspector]
+		public bool ignoreLayout
+		{
+			get => _ignoreLayout;
+			set
+			{
+				_ignoreLayout = value;
+				OnIgnoreLayoutChanged();
+			}
+		}
+
+		bool IOrderedLayoutElement.ignoreLayout { get => ignoreLayout; }
+		GameObject IOrderedLayoutElement.gameObject { get => gameObject; }
 
 		public void SetOrder(int index, int total)
 		{
@@ -104,6 +123,13 @@ namespace UI
 			if (SirenixEditorGUI.ToolbarButton(EditorIcons.Refresh))
 				RefreshReactors();
 #endif
+		}
+
+		private void OnIgnoreLayoutChanged()
+		{
+			if (!gameObject.IsActive())
+				return;
+			LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
 		}
 
 		private bool Contains(OrderedLayoutElementReactor reactor)

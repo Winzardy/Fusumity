@@ -54,7 +54,7 @@ namespace ZenoTween.Participant.Tweens.UI
 					() => scroll.normalizedPosition,
 					value => scroll.normalizedPosition = value,
 					toNormPos,
-					duration
+					GetDuration(duration)
 				)
 				.SetEase(ease);
 

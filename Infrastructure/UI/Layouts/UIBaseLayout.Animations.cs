@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ZenoTween;
 using UnityEngine;
 #if UNITY_EDITOR
+using Sapientia.Collections;
 #endif
 
 namespace UI

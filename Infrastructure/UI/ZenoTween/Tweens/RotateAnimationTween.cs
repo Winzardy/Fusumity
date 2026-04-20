@@ -46,7 +46,7 @@ namespace ZenoTween.Participant.Tweens
 
 		private TweenerCore<Quaternion, Vector3, QuaternionOptions> RotateTween()
 		{
-			return useLocal ? root.DOLocalRotate(endValue, duration, mode) : root.DORotate(endValue, duration, mode);
+			return useLocal ? root.DOLocalRotate(endValue, GetDuration(duration), mode) : root.DORotate(endValue, GetDuration(duration), mode);
 		}
 
 		protected override void OnValidate(GameObject owner)

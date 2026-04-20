@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -34,7 +35,7 @@ namespace UI
 		[SerializeField]
 		private bool _searchInChildren = true;
 
-		private int _hash = int.MinValue;
+		private List<IOrderedLayoutElement> _elementsCache = new();
 
 		protected override void OnEnable()
 		{
@@ -49,28 +50,45 @@ namespace UI
 			ForceRebuildOrder();
 		}
 
+		private void ForceRebuildOrder() => BroadcastOrder();
+
+		private int _activeChildCountCache = -1;
+		private int _transformChildCountCache = -1;
 		private void LateUpdate()
 		{
 			if (!isActiveAndEnabled)
 				return;
 
-			RebuildOrderIfChanged();
-		}
+			var activeChildCount = CalculateActiveChildCount();
+			var transformChildCount = transform.childCount;
 
-		public void ForceRebuildOrder()
-		{
-			_hash = int.MinValue;
-			RebuildOrderIfChanged();
-		}
-
-		private void RebuildOrderIfChanged()
-		{
-			var hash = GetStateHash();
-			if (_hash == hash)
+			if (_activeChildCountCache == activeChildCount
+				&& _transformChildCountCache == transformChildCount)
 				return;
 
-			_hash = hash;
-			BroadcastOrder();
+			ForceRebuildOrder();
+			_activeChildCountCache    = activeChildCount;
+			_transformChildCountCache = transformChildCount;
+
+			int CalculateActiveChildCount()
+			{
+				var count = 0;
+				for (int i = 0; i < _elementsCache.Count; i++)
+				{
+					var orderElement = _elementsCache[i];
+
+					if(orderElement.IsNull())
+						continue;
+					if (!_includeInactive && !orderElement.gameObject.activeSelf)
+						continue;
+					if (!_includeIgnoredLayout && orderElement.gameObject.TryGetComponent(out LayoutElement layoutElement) && layoutElement.ignoreLayout)
+						continue;
+					if (!orderElement.ignoreLayout)
+						count++;
+				}
+
+				return count;
+			}
 		}
 
 		private void BroadcastOrder()
@@ -99,32 +117,24 @@ namespace UI
 					elements.Add(orderElement);
 				}
 
-				for (int i = 0; i < elements.Count; i++)
-					elements[i]?.SetOrder(i, elements.Count);
-			}
-		}
+				_elementsCache.Clear();
+				_elementsCache.AddRange(elements);
 
-		private int GetStateHash()
-		{
-			unchecked
-			{
-				var hash = transform.childCount;
-				hash = hash * 397 ^ (IsReverse() ? 1 : 0);
-				hash = hash * 397 ^ (_includeInactive ? 1 : 0);
-				hash = hash * 397 ^ (_includeIgnoredLayout ? 1 : 0);
-
-				for (var i = 0; i < transform.childCount; i++)
+				using (ListPool<IOrderedLayoutElement>.Get(out var activeElements))
 				{
-					var child = transform.GetChild(i);
-					hash = hash * 397 ^ child.GetInstanceID();
-					hash = hash * 397 ^ child.GetSiblingIndex();
-					hash = hash * 397 ^ (child.gameObject.activeSelf ? 1 : 0);
+					for (int i = 0; i < elements.Count; i++)
+					{
+						var orderElement = elements[i];
+						if (!orderElement.ignoreLayout)
+							activeElements.Add(orderElement);
+					}
 
-					if (child.TryGetComponent(out LayoutElement layoutElement))
-						hash = hash * 397 ^ (layoutElement.ignoreLayout ? 1 : 0);
+					for (int i = 0; i < activeElements.Count; i++)
+					{
+						var activeElement = activeElements[i];
+						activeElement.SetOrder(i, activeElements.Count);
+					}
 				}
-
-				return hash;
 			}
 		}
 

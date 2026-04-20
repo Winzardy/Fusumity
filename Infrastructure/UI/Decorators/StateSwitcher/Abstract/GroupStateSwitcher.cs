@@ -106,18 +106,18 @@ namespace UI
 
 			if (SirenixEditorGUI.ToolbarButton(SdfIconType.Diagram2Fill))
 			{
-				AddChildren();
+				RefreshChildren();
 			}
 
 			if (SirenixEditorGUI.ToolbarButton(EditorIcons.Refresh))
 			{
 				TryClear();
-				AddChildren();
+				RefreshChildren();
 			}
 #endif
 		}
 
-		private void AddChildren()
+		private void RefreshChildren()
 		{
 			var anchor = _useParent ? gameObject.transform.parent : gameObject.transform;
 			var children = anchor.GetComponentsInChildren<StateSwitcher<TState>>(true);
@@ -126,6 +126,14 @@ namespace UI
 			{
 				if (switcher == this)
 					continue;
+
+				if (IsNestedInsideAnotherGroup(anchor, switcher))
+				{
+					if (_group.Remove(switcher))
+						switcher.ClearParent(this);
+
+					continue;
+				}
 
 				if (!_group.Contains(switcher))
 				{
@@ -138,6 +146,20 @@ namespace UI
 #if UNITY_EDITOR
 			EditorUtility.SetDirty(this);
 #endif
+		}
+
+		private bool IsNestedInsideAnotherGroup(Transform anchor, StateSwitcher<TState> switcher)
+		{
+			for (var current = switcher.transform.parent; current != null && current != anchor; current = current.parent)
+			{
+				if (!current.TryGetComponent<StateSwitcher<TState>>(out var parentSwitcher))
+					continue;
+
+				if (parentSwitcher is IGroupStateSwitcher && parentSwitcher != this)
+					return true;
+			}
+
+			return false;
 		}
 
 		private void TryClear()

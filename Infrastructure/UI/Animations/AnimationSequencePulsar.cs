@@ -17,7 +17,7 @@ namespace ZenoTween
 
 		private void Start()
 		{
-			_tween = sequence.ToTween(this);
+			_tween    = sequence.ToTween(this);
 			_duration = _tween.Duration();
 		}
 

@@ -6,7 +6,15 @@ namespace UI
 	{
 		public Vector3 rotation;
 
-		protected override void OnUpdate(float normalizedValue) =>
-			transform.rotation = Quaternion.Euler(rotation * normalizedValue);
+		public bool useLocal;
+
+		protected override void OnUpdate(float normalizedValue)
+		{
+			var q = Quaternion.Euler(rotation * normalizedValue);
+			if (useLocal)
+				transform.localRotation = q;
+			else
+				transform.rotation = q;
+		}
 	}
 }

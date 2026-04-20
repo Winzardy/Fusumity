@@ -36,9 +36,9 @@ namespace ZenoTween.Participant.Tweens
 		protected override Tween Create()
 			=> punchType switch
 			{
-				PunchType.Position => root.DOPunchPosition(punch, duration, vibrato, elasticity),
-				PunchType.Rotation => root.DOPunchRotation(punch, duration, vibrato, elasticity),
-				PunchType.Scale => root.DOPunchScale(punch, duration, vibrato, elasticity),
+				PunchType.Position => root.DOPunchPosition(punch, GetDuration(duration), vibrato, elasticity),
+				PunchType.Rotation => root.DOPunchRotation(punch, GetDuration(duration), vibrato, elasticity),
+				PunchType.Scale => root.DOPunchScale(punch, GetDuration(duration), vibrato, elasticity),
 				_ => throw new Exception("Oh ooh")
 			};
 

@@ -39,14 +39,18 @@ namespace UI
 		private bool _useRGB = true;
 
 		[Button]
-		public override void OnOrderChanged(int index)
+		public override void OnOrderChanged(int order)
 		{
 			if (_target == null)
 				return;
 
-			var t = 1f - Mathf.Exp(-_multiplier * index);
+			var t = 1f - Mathf.Exp(-_multiplier * order);
 			var color = Color.Lerp(_startColor, _endColor, t);
+			CrossFadeColor(color);
+		}
 
+		private void CrossFadeColor(Color color)
+		{
 			_target.CrossFadeColor(color, _instant ? 0f : _duration, _instant || _ignoreTimeScale, _useAlpha, _useRGB);
 #if UNITY_EDITOR
 			if (!Application.isPlaying)

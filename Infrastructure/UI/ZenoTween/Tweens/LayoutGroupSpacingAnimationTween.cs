@@ -42,7 +42,7 @@ namespace ZenoTween.Participant.Tweens
 				GetGroupSpacing,
 				SetGroupSpacing,
 				to,
-				duration
+				GetDuration(duration)
 			);
 			return tween.SetTarget(group);
 

@@ -11,12 +11,12 @@ namespace UI
 		[SerializeField]
 		private Vector3 _stepEuler = new Vector3(0f, 0f, -3.5f);
 
-		public override void OnOrderChanged(int index)
+		public override void OnOrderChanged(int order)
 		{
 			if (_target == null)
 				_target = transform;
 
-			_target.localRotation = Quaternion.Euler(_stepEuler * index);
+			_target.localRotation = Quaternion.Euler(_stepEuler * order);
 		}
 
 #if UNITY_EDITOR

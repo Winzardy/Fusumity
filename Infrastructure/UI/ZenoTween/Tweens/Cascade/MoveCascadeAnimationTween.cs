@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -11,23 +12,23 @@ namespace ZenoTween.Participant.Tweens
 	{
 		public bool useLocal;
 		public bool from;
+
+		[InlineToggle(nameof(from), "from")]
 		public Vector3 position;
+
+		[ShowIf(nameof(from))]
+		public Vector3 fromValue;
 
 		protected override Tween CreateByChild(Transform childTransform, float duration)
 		{
-			var endValue = from
-				? useLocal
-					? childTransform.localPosition
-					: childTransform.position
-				: position;
-			var doLocalJump = useLocal
-				? childTransform.DOLocalMove(endValue, duration)
-				: childTransform.DOMove(endValue, duration);
+			var tween = useLocal
+				? childTransform.DOLocalMove(position, duration)
+				: childTransform.DOMove(position, duration);
 
 			if (from)
-				doLocalJump.From(position);
+				tween.From(fromValue);
 
-			return doLocalJump;
+			return tween;
 		}
 	}
 }

@@ -30,8 +30,8 @@ namespace ZenoTween.Participant.Tweens
 		protected override Tween Create()
 		{
 			return useLocal
-				? root.DOLocalJump(endValue, power, numJumps, duration, snapping)
-				: root.DOJump(endValue, power, numJumps, duration, snapping);
+				? root.DOLocalJump(endValue, power, numJumps, GetDuration(duration), snapping)
+				: root.DOJump(endValue, power, numJumps, GetDuration(duration), snapping);
 		}
 
 		protected override void OnValidate(GameObject owner)

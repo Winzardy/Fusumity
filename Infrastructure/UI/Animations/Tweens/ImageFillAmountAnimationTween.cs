@@ -32,7 +32,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		protected override Tween Create()
 		{
 			var tween = image
-			   .DOFillAmount(to, duration)
+			   .DOFillAmount(to, GetDuration(duration))
 			   .SetEase(ease);
 
 			if (from.enable)

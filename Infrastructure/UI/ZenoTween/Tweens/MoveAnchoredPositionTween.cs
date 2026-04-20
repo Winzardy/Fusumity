@@ -31,7 +31,7 @@ namespace ZenoTween.Participant.Tweens
 		protected override Tween Create()
 		{
 			var tween = rectTransform
-				.DOAnchorPos(endValue, duration)
+				.DOAnchorPos(endValue, GetDuration(duration))
 				.SetEase(ease);
 
 			if (useStartValue)

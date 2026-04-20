@@ -29,7 +29,7 @@ namespace ZenoTween.Participant.Tweens
 
 		protected override Tween Create()
 		{
-			var tween = root.DOPivot(target.pivot, duration).SetEase(ease);
+			var tween = root.DOPivot(target.pivot, GetDuration(duration)).SetEase(ease);
 
 			if (useStartTarget)
 				tween.From(startTarget.pivot);

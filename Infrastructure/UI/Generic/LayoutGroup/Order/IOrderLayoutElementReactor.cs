@@ -4,11 +4,11 @@ namespace UI
 {
 	public interface IOrderedLayoutElementReactor
 	{
-		void OnOrderChanged(int index);
+		void OnOrderChanged(int order);
 	}
 
 	public abstract class OrderedLayoutElementReactor : MonoBehaviour, IOrderedLayoutElementReactor
 	{
-		public abstract void OnOrderChanged(int index);
+		public abstract void OnOrderChanged(int order);
 	}
 }

@@ -19,7 +19,15 @@ namespace ZenoTween
 		{
 			Join = 0,
 			Append = 1,
-			Prepend = 2
+			Prepend = 2,
+			Immediate = 3,
+		}
+
+		public enum ImmediateType
+		{
+			Join = 0,
+			Append = 1,
+			Prepend = 2,
 		}
 
 		[Tooltip("<b>" + nameof(Type.Join) +
@@ -51,8 +59,11 @@ namespace ZenoTween
 		//TODO: а лишь запускается/останавливается вместе с родительским Sequence
 		public bool lifetimeByParent;
 
-		public bool IsLoop => repeat == -1;
-		public bool UseType => !(IsLoop && lifetimeByParent);
+		public ImmediateType immediateType;
+
+		public bool IsLoop { get => repeat == -1; }
+		public bool UseType { get => !(IsLoop && lifetimeByParent); }
+		public bool UseRepeat { get => type != Type.Immediate && repeat > 0; }
 
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
@@ -68,25 +79,50 @@ namespace ZenoTween
 					sequence.SetTarget(target);
 			}
 
-			ApplyTweenSettings(tween);
-
-			if (IsLoop && lifetimeByParent)
+			if (type != Type.Immediate)
 			{
-				sequence.JoinCallback(() =>
+				ApplyTweenSettings(tween);
+				if (IsLoop && lifetimeByParent)
 				{
+					sequence.JoinCallback(() =>
+					{
 #if UNITY_EDITOR
-					DOTweenEditorPreview.PrepareTweenForPreview(tween);
+						DOTweenEditorPreview.PrepareTweenForPreview(tween);
 #endif
-					tween.Play();
-				});
-				sequence.OnComplete(() => tween.KillSafe());
-				sequence.OnKill(() => tween.KillSafe());
+						tween.Play();
+					});
+					sequence.OnComplete(() => tween.KillSafe());
+					sequence.OnKill(() => tween.KillSafe());
 
-				return;
+					return;
+				}
 			}
 
 			switch (type)
 			{
+				case Type.Immediate:
+					switch (immediateType)
+					{
+						case ImmediateType.Join:
+							sequence.JoinCallback(Immediate);
+							break;
+						case ImmediateType.Append:
+							sequence.AppendCallback(Immediate);
+							break;
+						case ImmediateType.Prepend:
+							sequence.PrependCallback(Immediate);
+							break;
+					}
+
+					void Immediate()
+					{
+#if UNITY_EDITOR
+						DOTweenEditorPreview.PrepareTweenForPreview(tween);
+#endif
+						tween.Complete(true);
+					}
+
+					break;
 				case Type.Join:
 					sequence.Join(tween);
 					break;
@@ -106,9 +142,9 @@ namespace ZenoTween
 			if (delay > 0 && useDelay)
 				tween.SetDelay(delay);
 
-			var speedScale = Mathf.Max(0f, speed);
-			if (!Mathf.Approximately(speedScale, 1f))
-				tween.timeScale = speedScale;
+			// Работает только на Sequence
+			if (!Mathf.Approximately(speed, 1f))
+				tween.timeScale *= speed;
 
 			if (repeat != 0)
 			{
@@ -117,12 +153,27 @@ namespace ZenoTween
 			}
 		}
 
+		protected float GetDuration(float duration)
+		{
+			if (speed <= 0f)
+			{
+				speed = 1f;
+				Debug.LogError("Speed must be greater than 0!"
+#if UNITY_EDITOR
+					, _ownerEditor
+#endif
+				);
+			}
+
+			return duration / speed;
+		}
+
 		protected abstract Tween Create();
 
 		#region Debug Preview
 
 #if UNITY_EDITOR
-		public bool EditorTweenActive => _editorTween != null && _editorTween.IsActive();
+		public bool EditorTweenActive { get => _editorTween != null && _editorTween.IsActive(); }
 
 		private Tween _editorTween;
 

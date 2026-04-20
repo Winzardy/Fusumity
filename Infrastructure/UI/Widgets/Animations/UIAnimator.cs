@@ -12,6 +12,8 @@ namespace UI
 	public class AnimationLayer
 	{
 		public const string SEPARATOR = "/";
+		public const string FALLBACK_SEPARATOR = "|";
+		public const string MERGE_SEPARATOR = "&"; // TODO: доделать
 		public const string VISIBILITY_NAME = "visibility";
 
 		public string name;
@@ -35,7 +37,7 @@ namespace UI
 		private Dictionary<string, AnimationLayer> _layers;
 		private Dictionary<string, Func<Sequence>> _keyToSequenceCreator;
 
-		public string LastKey => _lastKey;
+		public string LastKey { get => _lastKey; }
 
 		public UIAnimator(TLayout layout) : this()
 		{
@@ -181,7 +183,7 @@ namespace UI
 
 			if (_layout)
 			{
-				if (_keyToSequenceCreator.TryGetValue(args.key, out var sequenceCreator))
+				if (TryResolveSequenceCreator(args.key, out var sequenceCreator))
 					sequence = sequenceCreator.Invoke();
 				else if (GUIDebug.Logging.Widget.Animator.notFoundSequence)
 					GUIDebug.LogWarning($"Not found sequence by key [ {args.key} ]!", _layout);
@@ -254,6 +256,23 @@ namespace UI
 
 				layer.args.endCallback?.Invoke(layer.args.key);
 			}
+		}
+
+		private bool TryResolveSequenceCreator(string key, out Func<Sequence> sequenceCreator)
+		{
+			if (!_keyToSequenceCreator.TryGetValue(key, out sequenceCreator))
+			{
+				var fallbackKeys = key.Split(AnimationLayer.FALLBACK_SEPARATOR);
+
+				for (int i = 0; i < fallbackKeys.Length; i++)
+				{
+					var fallbackKey = fallbackKeys[i];
+					if (_keyToSequenceCreator.TryGetValue(fallbackKey, out sequenceCreator))
+						break;
+				}
+			}
+
+			return true;
 		}
 
 		public bool IsPlaying()

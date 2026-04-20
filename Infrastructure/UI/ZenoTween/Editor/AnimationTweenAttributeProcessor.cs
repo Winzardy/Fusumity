@@ -5,7 +5,9 @@ using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ZenoTween.Editor
 {
@@ -14,6 +16,8 @@ namespace ZenoTween.Editor
 		private const float SPACE = 0;
 		private const float ORDER = 99;
 		private const string GROUP = "AnimationTweenGroup";
+		private const string DURATION_NAME = "duration";
+		private const string EASE_NAME = "ease";
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -22,6 +26,13 @@ namespace ZenoTween.Editor
 
 			switch (member.Name)
 			{
+				case nameof(AnimationSequence.participants):
+					attributes.Add(new ListDrawerSettingsAttribute
+					{
+						OnTitleBarGUI = $"@{nameof(AnimationTweenAttributeProcessor)}.{nameof(DrawTimelineButton)}($property)"
+					});
+					break;
+
 				case nameof(AnimationTween.type):
 
 					attributes.Add(new PropertyOrderAttribute(ORDER));
@@ -39,12 +50,13 @@ namespace ZenoTween.Editor
 					attributes.Add(new UnitAttribute(Units.Second));
 					attributes.Add(new MinimumAttribute(0));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+					attributes.Add(new HideIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
 
 					if (parentProperty.ValueEntry.TypeOfValue == typeof(AnimationSequence))
 					{
 						attributes.Add(new InlineToggleAttribute(nameof(AnimationSequence.delayOnce), "Once")
 						{
-							showIf = nameof(AnimationSequence.IsLoop),
+							showIf  = nameof(AnimationSequence.IsLoop),
 							margins = 5
 						});
 					}
@@ -55,6 +67,8 @@ namespace ZenoTween.Editor
 					attributes.Add(new PropertyOrderAttribute(ORDER + 2));
 					attributes.Add(new MinValueAttribute(0.01f));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+					attributes.Add(new HideIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
+
 					break;
 
 				case nameof(AnimationTween.repeat):
@@ -66,14 +80,18 @@ namespace ZenoTween.Editor
 						"Данный твин зациклен! Остановка твина будет при уничтожении верстки или через код!", InfoMessageType.Info,
 						showIf));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+					attributes.Add(new HideIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
+
 					break;
 
 				case nameof(AnimationTween.repeatType):
-					attributes.Add(new HideIfAttribute(nameof(AnimationTween.repeat), 0));
+					attributes.Add(new ShowIfAttribute(nameof(AnimationTween.UseRepeat)));
+
 					attributes.Add(new PropertyOrderAttribute(ORDER + 4));
 					attributes.Add(new IndentAttribute());
 					attributes.Add(new LabelTextAttribute("Type"));
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+
 					break;
 
 				case nameof(AnimationTween.lifetimeByParent):
@@ -92,8 +110,8 @@ namespace ZenoTween.Editor
 					attributes.Add(new ButtonAttribute("Play", ButtonStyle.FoldoutButton)
 					{
 						DisplayParameters = true,
-						Icon = SdfIconType.PlayFill,
-						IconAlignment = IconAlignment.LeftEdge
+						Icon              = SdfIconType.PlayFill,
+						IconAlignment     = IconAlignment.LeftEdge
 					});
 					break;
 
@@ -107,16 +125,30 @@ namespace ZenoTween.Editor
 					attributes.Add(new ButtonAttribute("Stop", ButtonStyle.FoldoutButton)
 					{
 						DisplayParameters = true,
-						Icon = SdfIconType.StopFill,
-						IconAlignment = IconAlignment.LeftEdge
+						Icon              = SdfIconType.StopFill,
+						IconAlignment     = IconAlignment.LeftEdge
 					});
 					break;
 
-				case "duration":
+				case DURATION_NAME:
 					attributes.Add(new UnitAttribute(Units.Second));
 					attributes.Add(new MinValueAttribute(0));
+					attributes.Add(new HideIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
+
 					break;
 
+				case EASE_NAME:
+					attributes.Add(new HideIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
+
+					break;
+
+				case nameof(AnimationTween.immediateType):
+					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
+					attributes.Add(new PropertyOrderAttribute(ORDER + 10));
+					attributes.Add(new LabelTextAttribute("Callback"));
+					attributes.Add(new ShowIfAttribute(nameof(AnimationTween.type), AnimationTween.Type.Immediate));
+
+					break;
 				case nameof(AnimationSequence.timeScale):
 					attributes.Add(new VerticalGroupAttribute($"{GROUP}/Vertical"));
 					attributes.Add(new PropertyOrderAttribute(ORDER + 5));
@@ -134,6 +166,21 @@ namespace ZenoTween.Editor
 				return tween.IsLoop && !tween.lifetimeByParent;
 
 			return false;
+		}
+
+		private static void DrawTimelineButton(InspectorProperty property)
+		{
+			//TODO:
+			return;
+
+			if (property.Parent?.ValueEntry?.WeakSmartValue is not AnimationSequence sequence)
+				return;
+
+			if (!SirenixEditorGUI.ToolbarButton(SdfIconType.BarChartSteps))
+				return;
+
+			var root = property.SerializationRoot?.ValueEntry?.WeakSmartValue as Object;
+			AnimationSequenceTimelineWindow.Open(sequence, root);
 		}
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)

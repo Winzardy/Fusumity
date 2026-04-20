@@ -6,19 +6,19 @@ namespace ZenoTween.Utility
 {
 	public class AnimationSequencePlayer : IDisposable
 	{
-		private AnimationSequence _sequenceConfig;
+		private AnimationSequence _sequence;
 		private bool _cached;
 
 		private Tween _tween;
 
 		public bool IsPlaying { get => _tween.IsActive() && _tween.active && _tween.IsPlaying() && !_tween.IsComplete(); }
 
-		public AnimationSequencePlayer(AnimationSequence sequenceConfig, bool cached = false)
+		public AnimationSequencePlayer(AnimationSequence sequence, bool cached = false)
 		{
-			Assert.IsNotNull(sequenceConfig, "Sequence cannot be null.");
+			Assert.IsNotNull(sequence, "Sequence cannot be null.");
 
-			_sequenceConfig = sequenceConfig;
-			_cached = cached;
+			_sequence = sequence;
+			_cached   = cached;
 		}
 
 		public void Dispose()
@@ -29,9 +29,7 @@ namespace ZenoTween.Utility
 
 		public void Play(TweenCallback onComplete = null)
 		{
-			var args = onComplete != null ?
-				new AnimationSequencePlayerArgs { onComplete = onComplete } :
-				default;
+			var args = onComplete != null ? new AnimationSequencePlayerArgs {onComplete = onComplete} : default;
 
 			Play(args);
 		}
@@ -40,8 +38,8 @@ namespace ZenoTween.Utility
 		{
 			if (_cached)
 			{
-				_tween ??= _sequenceConfig
-					.ToTween(this)
+				_tween ??= _sequence
+					.ToTween(null)
 					.SetAutoKill(false);
 
 				if (_tween.playedOnce)
@@ -56,9 +54,9 @@ namespace ZenoTween.Utility
 			else
 			{
 				_tween.KillSafe();
-				var sequence = _sequenceConfig.ToSequence(this);
+				var sequence = _sequence.ToSequence(null);
 
-				if(args.onStart != null)
+				if (args.onStart != null)
 				{
 					sequence.PrependCallback(args.onStart);
 				}

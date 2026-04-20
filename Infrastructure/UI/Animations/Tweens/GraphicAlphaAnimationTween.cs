@@ -35,7 +35,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		protected override Tween Create()
 		{
 			var tween = graphic
-			   .DOFade(alpha, duration)
+			   .DOFade(alpha, GetDuration(duration))
 			   .SetEase(ease);
 
 			if (useStartAlpha)

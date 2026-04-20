@@ -44,7 +44,10 @@ namespace ZenoTween
 				sequence.SetUpdate(timeScale == TimeScaleMode.Unscaled);
 		}
 
-		public Tween ToTween(object target = null) => ToSequence(target);
+		public Tween ToTween(object target = null)
+		{
+			return ToSequence(target);
+		}
 
 		public Sequence ToSequence(object target = null)
 		{
@@ -73,5 +76,33 @@ namespace ZenoTween
 		}
 
 		protected internal override bool IsEmpty() => participants.IsNullOrEmpty();
+
+#if UNITY_EDITOR
+		public Sequence ToEditorPreviewSequence(object target)
+		{
+			if (IsEmpty())
+				return null;
+
+			var innerSequence = DOTween.Sequence();
+			participants.Participate(ref innerSequence, target);
+
+			ApplyTweenSettings(innerSequence, !delayOnce);
+
+			if (timeScale)
+				innerSequence.SetUpdate(timeScale == TimeScaleMode.Unscaled);
+
+			if (!delayOnce || delay <= 0f)
+				return innerSequence;
+
+			var bakedSequence = DOTween.Sequence();
+			bakedSequence.AppendInterval(delay);
+			bakedSequence.Append(innerSequence);
+
+			if (timeScale)
+				bakedSequence.SetUpdate(timeScale == TimeScaleMode.Unscaled);
+
+			return bakedSequence;
+		}
+#endif
 	}
 }

@@ -38,7 +38,7 @@ namespace ZenoTween.Participant.Tweens.UI
 					image.pixelsPerUnitMultiplier = x;
 				},
 				endValue,
-				duration)
+				GetDuration(duration))
 
 				.SetEase(ease);
 

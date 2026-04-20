@@ -92,7 +92,7 @@ namespace ZenoTween.Participant.Tweens
 					}
 				},
 				toSize,
-				duration
+				GetDuration(duration)
 			);
 		}
 

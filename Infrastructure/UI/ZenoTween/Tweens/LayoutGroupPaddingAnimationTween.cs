@@ -37,7 +37,7 @@ namespace ZenoTween.Participant.Tweens
 				GetPadding,
 				SetPadding,
 				to,
-				duration
+				GetDuration(duration)
 			);
 
 			RectOffset GetPadding() => group.padding;

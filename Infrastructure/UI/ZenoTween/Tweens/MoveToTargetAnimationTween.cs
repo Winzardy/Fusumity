@@ -58,10 +58,11 @@ namespace ZenoTween.Participant.Tweens
 
 		private TweenerCore<Vector3, Vector3, VectorOptions> MoveTween()
 		{
+			var totalDuration = GetDuration(duration);
 			if (!to && target)
-				return useLocal ? root.DOLocalMove(target.localPosition, duration) : root.DOMove(target.position, duration);
+				return useLocal ? root.DOLocalMove(target.localPosition, totalDuration) : root.DOMove(target.position, totalDuration);
 
-			return useLocal ? root.DOLocalMove(to.localPosition, duration) : root.DOMove(to.position, duration);
+			return useLocal ? root.DOLocalMove(to.localPosition, totalDuration) : root.DOMove(to.position, totalDuration);
 		}
 
 		protected override void OnValidate(GameObject owner)

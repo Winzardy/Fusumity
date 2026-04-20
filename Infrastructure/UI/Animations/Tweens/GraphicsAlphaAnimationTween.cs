@@ -46,7 +46,7 @@ namespace ZenoTween.Participant.Tweens.UI
 				foreach (var graphic in graphics)
 				{
 					var tween = graphic
-					   .DOFade(alpha, duration).SetEase(ease);
+					   .DOFade(alpha, GetDuration(duration)).SetEase(ease);
 
 					if (useStartAlpha)
 						tween.From(startAlpha);
