@@ -12,6 +12,9 @@ namespace ZenoTween.Participant.Tweens
 		[NotNull]
 		public AnimationSequenceSource source;
 
-		protected override Tween Create() => source.sequence.ToTween(source);
+		protected override Tween Create()
+		{
+			return source.sequence.ToTween(source, _inheritedSpeed * speed);
+		}
 	}
 }

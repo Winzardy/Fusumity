@@ -72,7 +72,6 @@ namespace UI
 		}
 
 		public bool Show(object requester) => Show(requester, false);
-
 		public bool Hide(object requester) => Hide(requester, false);
 
 		/// <inheritdoc cref="RemoveRequester"/>

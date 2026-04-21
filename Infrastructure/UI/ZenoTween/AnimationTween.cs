@@ -67,7 +67,8 @@ namespace ZenoTween
 
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
-			var tween = Create();
+			var tweenSpeed = sequence?.timeScale ?? speed;
+			var tween = Create(tweenSpeed);
 
 			if (tween == null)
 				return;
@@ -155,17 +156,27 @@ namespace ZenoTween
 
 		protected float GetDuration(float duration)
 		{
-			if (speed <= 0f)
+			var totalSpeed = speed;
+			totalSpeed *= _inheritedSpeed;
+			if (totalSpeed <= 0f)
 			{
-				speed = 1f;
-				Debug.LogError("Speed must be greater than 0!"
+				totalSpeed = 1f;
+				Debug.LogWarning("Speed must be greater than 0!"
 #if UNITY_EDITOR
 					, _ownerEditor
 #endif
 				);
 			}
 
-			return duration / speed;
+			return duration / totalSpeed;
+		}
+
+		protected float _inheritedSpeed = 1f;
+
+		protected Tween Create(float inheritedSpeed)
+		{
+			_inheritedSpeed = inheritedSpeed;
+			return Create();
 		}
 
 		protected abstract Tween Create();
@@ -173,6 +184,7 @@ namespace ZenoTween
 		#region Debug Preview
 
 #if UNITY_EDITOR
+		public override bool EditorPreviewActive => _editorTween != null && _editorTween.IsActive();
 		public bool EditorTweenActive { get => _editorTween != null && _editorTween.IsActive(); }
 
 		private Tween _editorTween;
@@ -187,6 +199,8 @@ namespace ZenoTween
 			//Останавливает залупленные твины)
 			StopTweenEditor(false);
 		}
+
+		public override void PlayEditor(bool reset = false, bool loop = false) => PlayTweenEditor(reset, loop);
 
 		public void PlayTweenEditor(bool reset = false, bool loop = false)
 		{
@@ -244,6 +258,8 @@ namespace ZenoTween
 
 			GUIHelper.RequestRepaint();
 		}
+
+		public override void StopEditor(bool? reset = null) => StopTweenEditor(reset);
 #endif
 
 		#endregion Debug Preview

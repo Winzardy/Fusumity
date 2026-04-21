@@ -13,6 +13,7 @@ namespace UI
 		private Graphic _graphic;
 
 		[SerializeField]
+		[InlineButton(nameof(SetDefault), "current")]
 		private Color _default;
 
 		[SerializeField]

@@ -13,7 +13,7 @@ namespace Fusumity.Attributes
 		public bool UseBox { get; }
 		public Color BoxColor { get; }
 
-		public FoldoutContainerAttribute(bool expandedByDefault = true, bool useBox = false)
+		public FoldoutContainerAttribute(bool expandedByDefault = false, bool useBox = false)
 		{
 			ExpandedByDefault = expandedByDefault;
 			UseBox            = useBox;

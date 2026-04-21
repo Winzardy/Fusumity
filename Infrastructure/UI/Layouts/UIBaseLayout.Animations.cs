@@ -55,7 +55,41 @@ namespace UI
 		[NonSerialized]
 		public string debugCurrentKey;
 
-		public void PlayAnimation() => DebugRequestedAnimation?.Invoke(debugCurrentKey);
+		[NonSerialized]
+		public bool debugPreviewReset;
+
+		[NonSerialized]
+		public bool debugPreviewLoop;
+
+		public void PlayAnimation() => PlayAnimation(debugCurrentKey, debugPreviewReset, debugPreviewLoop);
+
+		public void PlayAnimation(string key, bool reset = false, bool loop = false)
+		{
+			if (string.IsNullOrEmpty(key))
+				return;
+
+			if (Application.isPlaying && DebugRequestedAnimation != null)
+			{
+				DebugRequestedAnimation.Invoke(key);
+				return;
+			}
+
+			if (!UseLayoutAnimations || customSequences.IsNullOrEmpty())
+				return;
+
+			foreach (var (_, sequence) in customSequences)
+				sequence?.Validate(gameObject);
+
+			customSequences.TryPlayEditor(key, reset, loop);
+		}
+
+		public void StopAnimation(string key, bool? reset = null)
+		{
+			if (string.IsNullOrEmpty(key) || !UseLayoutAnimations || customSequences.IsNullOrEmpty())
+				return;
+
+			customSequences.TryStopEditor(key, reset);
+		}
 #endif
 
 		#endregion

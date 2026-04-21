@@ -42,12 +42,13 @@ namespace ZenoTween
 			return participant.IsEmpty();
 		}
 
-		public static Sequence ToSequence(this ICollection<SequenceParticipant> participants, object target)
+		public static Sequence ToSequence(this ICollection<SequenceParticipant> participants, object target = null, float speed = 1f)
 		{
 			if (participants.IsNullOrEmpty())
 				return null;
 
 			var sequence = DOTween.Sequence();
+			sequence.timeScale = speed;
 			participants.Participate(ref sequence, target);
 			return sequence;
 		}

@@ -19,6 +19,7 @@ namespace ZenoTween
 			Scaled
 		}
 
+		[Searchable]
 		[SerializeReference]
 		public SequenceParticipant[] participants = new SequenceParticipant[0];
 
@@ -33,7 +34,17 @@ namespace ZenoTween
 			value  = DOTween.defaultTimeScaleIndependent ? TimeScaleMode.Unscaled : TimeScaleMode.Scaled
 		};
 
-		protected override Tween Create() => participants.ToSequence(null); //root is ignored here, otherwise there will be a dead loop.
+		protected override Tween Create()
+		{
+			var sequence = participants.ToSequence(
+#if UNITY_EDITOR
+				_ownerEditor,
+#endif
+				speed: _inheritedSpeed * speed
+			);
+			return sequence;
+			//root is ignored here, otherwise there will be a dead loop.
+		}
 
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
@@ -44,20 +55,20 @@ namespace ZenoTween
 				sequence.SetUpdate(timeScale == TimeScaleMode.Unscaled);
 		}
 
-		public Tween ToTween(object target = null)
+		public Tween ToTween(object target = null, float inheritedSpeed = 1f)
 		{
-			return ToSequence(target);
+			return ToSequence(target, inheritedSpeed);
 		}
 
-		public Sequence ToSequence(object target = null)
+		public Sequence ToSequence(object target = null, float inheritedSpeed = 1f)
 		{
 			if (IsEmpty())
 				return null;
 
 			var sequence = DOTween.Sequence();
-			participants.Participate(ref sequence, target);
-
+			sequence.timeScale = inheritedSpeed;
 			ApplyTweenSettings(sequence, !delayOnce);
+			participants.Participate(ref sequence, target);
 
 			if (delay > 0 && delayOnce)
 			{

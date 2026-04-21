@@ -35,7 +35,6 @@ namespace UI
 		protected override void OnDisable()
 		{
 			base.OnDisable();
-
 			scrollRect.onValueChanged.RemoveListener(OnValueChanged);
 		}
 
