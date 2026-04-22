@@ -6,20 +6,13 @@ namespace SharedLogic
 	/// <remarks>
 	/// Такое решение подразумевает что мы используем всего один инстанс SharedRoot, если вдруг понадобится использовать несколько экземпляров, то придется поменять подход
 	/// </remarks>
-	public class SharedLogicManager : StaticWrapper<ISharedLogicRouter>
+	public class SharedLogicManager : StaticWrapper<ICommandRunner>
 	{
 		// ReSharper disable once InconsistentNaming
-		internal static ISharedLogicRouter router
+		internal static ICommandRunner runner
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
-		}
-
-		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
-		public static bool ExecuteCommand<T>(ref T command)
-			where T : struct, ICommand
-		{
-			return router.ExecuteCommand(ref command);
 		}
 	}
 
@@ -28,20 +21,16 @@ namespace SharedLogic
 	/// </remarks>
 	public static class SharedLogicRouterUtility
 	{
-		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
-		public static bool ExecuteCommand<T>(this ISharedRoot root)
-			where T : struct, ICommand
+		/// <inheritdoc cref="ICommandRunner.Execute"/>
+		public static bool ExecuteCommand<T>(this ISharedRoot root) where T : struct, ICommand
 		{
-			var command = new T();
-			return ExecuteCommand(root, in command);
+			return ExecuteCommand(root, new T());
 		}
 
-		/// <inheritdoc cref="ISharedLogicRouter.ExecuteCommand"/>
-		public static bool ExecuteCommand<T>(this ISharedRoot _, in T command)
-			where T : struct, ICommand
+		/// <inheritdoc cref="ICommandRunner.Execute"/>
+		public static bool ExecuteCommand<T>(this ISharedRoot _, in T command) where T : struct, ICommand
 		{
-			ref var hack = ref Unsafe.AsRef(in command);
-			return SharedLogicManager.ExecuteCommand(ref hack);
+			return SharedLogicManager.runner.Execute(in command);
 		}
 	}
 }
