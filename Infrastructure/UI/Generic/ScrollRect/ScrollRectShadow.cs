@@ -8,7 +8,7 @@ namespace UI
 {
 	//TODO: Loop как обрабатывать...
 	[RequireComponent(typeof(ScrollRect))]
-	public class ScrollRectShadow : UIBehaviour
+	public class ScrollRectShadow : UIBehaviour, ICanvasElement
 	{
 		[ReadOnly]
 		public ScrollRect scrollRect;
@@ -37,6 +37,15 @@ namespace UI
 			base.OnDisable();
 			scrollRect.onValueChanged.RemoveListener(OnValueChanged);
 		}
+
+		public void Rebuild(CanvasUpdate executing)
+		{
+			if (executing == CanvasUpdate.PostLayout)
+				UpdateShadows();
+		}
+
+		public void LayoutComplete() {}
+		public void GraphicUpdateComplete() {}
 
 		private void OnValueChanged(Vector2 _) => UpdateShadows();
 
