@@ -7,6 +7,7 @@ using Fusumity.Utility;
 using Notifications;
 using Sapientia;
 
+
 #if UNITY_ANDROID
 using Notifications.Android;
 #elif UNITY_IOS
@@ -26,14 +27,16 @@ namespace Booting.Notifications
 
 		private INotificationPlatform _platform;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			_platform = new EditorNotificationPlatform();
 #elif UNITY_ANDROID
 			_platform = new AndroidNotificationPlatform();
 #elif UNITY_IOS
-			_platform = new iOSNotificationPlatform();
+			var platform = new iOSNotificationPlatform();
+			await platform.AuthorizeAsync(token);
+			_platform = platform;
 #endif
 			if (_platform != null)
 			{
@@ -42,7 +45,7 @@ namespace Booting.Notifications
 				NotificationsCenter.Set(management);
 			}
 
-			return UniTask.CompletedTask;
+			await UniTask.CompletedTask;
 		}
 
 		protected override void OnDispose()

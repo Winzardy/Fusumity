@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 using Unity.Notifications.iOS;
 using UnityEngine.Scripting;
 
@@ -12,11 +14,26 @@ namespace Notifications.iOS
 	[Preserve]
 	public class iOSNotificationPlatform : INotificationPlatform
 	{
+		private bool _accessGranted;
+		private string _deviceToken;
+
 		public event Action<string, string> NotificationReceived;
 
 		public iOSNotificationPlatform()
 		{
 			iOSNotificationCenter.OnNotificationReceived += OnNotificationReceived;
+		}
+
+		public async UniTask AuthorizeAsync(CancellationToken ct)
+		{
+			var authorizationOption = AuthorizationOption.Alert | AuthorizationOption.Badge;
+			using (var req = new AuthorizationRequest(authorizationOption, false))
+			{
+				await UniTask.WaitUntil(() => req.IsFinished, cancellationToken: ct);
+
+				_accessGranted = req.Granted;
+				_deviceToken = req.DeviceToken;
+			}
 		}
 
 		public void Dispose()
@@ -31,6 +48,9 @@ namespace Notifications.iOS
 
 		public bool Schedule(in NotificationRequest request)
 		{
+			if (!_accessGranted)
+				return false;
+
 			var notification = new iOSNotification(request.id)
 			{
 				Title = request.title,
