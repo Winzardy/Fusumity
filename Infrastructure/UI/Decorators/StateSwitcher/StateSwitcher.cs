@@ -17,6 +17,17 @@ namespace UI
 		IEnumerable<object> GetVariants();
 	}
 
+	public static class StateSwitcherTypePolicy
+	{
+		public static IEnumerable<Type> GetAllowableTypes()
+		{
+			yield return typeof(int);
+			yield return typeof(bool);
+			yield return typeof(string);
+			yield return typeof(Color);
+		}
+	}
+
 	/// <typeparam name="TState">
 	/// Настоятельно рекомендуется использовать:<br/>
 	/// <c>bool</c>, <c>int</c>, <c>string</c>
