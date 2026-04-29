@@ -2,12 +2,13 @@
     "name": "Notifications.iOS",
     "rootNamespace": "",
     "references": [
-        "Notifications",
-        "Unity.Notifications.iOS",
-        "Generic",
-        "Sapientia",
+        "GUID:be4fe767a3ab9dc4c8fdb94c14c8d798",
+        "GUID:1e8e55397bd004beaba78a667566665f",
+        "GUID:654382813eaecb745b280d09244d1037",
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
         "GUID:dc8e8e524b04497ab575e558b7649abb",
-        "Localization"
+        "GUID:79b63a521b7d3544fb1c7ae22811a7fa",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [
         "Editor",

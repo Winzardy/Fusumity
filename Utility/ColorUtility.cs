@@ -1,6 +1,7 @@
 ﻿using Sapientia.Collections;
 using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +17,15 @@ namespace Fusumity.Utility
 			return color;
 		}
 
+		public static Color WithChannelMask(this Color origin, Color newColor, ColorChannelMask channelMask)
+		{
+			origin.r = channelMask.r ? newColor.r : origin.r;
+			origin.g = channelMask.g ? newColor.g : origin.g;
+			origin.b = channelMask.b ? newColor.b : origin.b;
+			origin.a = channelMask.a ? newColor.a : origin.a;
+			return origin;
+		}
+
 		public static void SetColor(this IList<Image> images, Color color)
 		{
 			if (images.IsNullOrEmpty())
@@ -28,4 +38,21 @@ namespace Fusumity.Utility
 			}
 		}
 	}
+
+	[Serializable]
+	[InlineProperty(LabelWidth = 13)]
+	public struct ColorChannelMask
+	{
+		public static ColorChannelMask Default = new ColorChannelMask {r = true, g = true, b = true, a = true};
+
+		[HorizontalGroup]
+		public bool r;
+		[HorizontalGroup]
+		public bool g;
+		[HorizontalGroup]
+		public bool b;
+		[HorizontalGroup]
+		public bool a;
+	}
+
 }

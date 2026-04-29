@@ -7,7 +7,8 @@
         "Content",
         "Fusumity",
         "Messaging",
-        "WLog"
+        "WLog",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
