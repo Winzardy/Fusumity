@@ -7,6 +7,8 @@ namespace UI.Coffee
 	{
 		public UIEffect effect;
 
+		public override Color Current { get => effect.color; set => OnStateSwitched(value); }
+
 		protected override void OnStateSwitched(Color color)
 		{
 			effect.color = color;

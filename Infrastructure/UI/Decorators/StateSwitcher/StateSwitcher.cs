@@ -25,6 +25,7 @@ namespace UI
 			yield return typeof(bool);
 			yield return typeof(string);
 			yield return typeof(Color);
+			yield return typeof(Gradient);
 		}
 	}
 
@@ -45,7 +46,7 @@ namespace UI
 		protected TState current;
 
 		[ShowInInspector, PropertyOrder(-1), DelayedProperty]
-		public TState Current { get => current; set => Switch(value); }
+		public virtual TState Current { get => current; set => Switch(value); }
 
 		public string Name { get => gameObject.name; }
 		public Type StateType { get => typeof(TState); }
