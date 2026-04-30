@@ -1,9 +1,9 @@
 ﻿using System;
 using DG.Tweening;
-using UnityEditor;
 using UnityEngine;
 using ZenoTween.Utility;
 #if UNITY_EDITOR
+using UnityEditor;
 using DG.DOTweenEditor;
 using Sirenix.Utilities.Editor;
 #endif
@@ -184,13 +184,18 @@ namespace ZenoTween
 		#region Debug Preview
 
 #if UNITY_EDITOR
-		public override bool EditorPreviewActive => _editorTween != null && _editorTween.IsActive();
-		public bool EditorTweenActive { get => _editorTween != null && _editorTween.IsActive(); }
 
 		private Tween _editorTween;
 
 		private bool _editorReset = true;
 		private bool _loop = false;
+		private float _duration = 1;
+
+		public bool EditorReset { get => _editorReset; }
+		public override bool EditorPreviewActive => _editorTween != null && _editorTween.IsActive();
+		public bool EditorTweenActive { get => _editorTween != null && _editorTween.IsActive(); }
+		public float EditorTweenPosition { get => _editorTween?.position ?? 0; }
+		public float EditorTweenFullPosition { get => _editorTween != null ? _duration : 1; }
 
 		public override void PlayEditor()
 		{
@@ -221,6 +226,8 @@ namespace ZenoTween
 			var speedScale = Mathf.Max(0f, speed);
 			if (!Mathf.Approximately(speedScale, 1f))
 				_editorTween.timeScale = speedScale;
+
+			_duration = _editorTween.Duration();
 
 			DOTweenEditorPreview.PrepareTweenForPreview(_editorTween);
 			DOTweenEditorPreview.Start(_TweenUpdateEditor);

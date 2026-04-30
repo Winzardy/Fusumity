@@ -7,11 +7,11 @@ namespace ZenoTween
 	[Serializable]
 	public struct SequenceParticipantByKey
 	{
-		[TableColumnWidth(30)]
+		[TableColumnWidth(60)]
 		public string key;
 
 		[SerializeReference]
-		[TableColumnWidth(600)]
+		[TableColumnWidth(400)]
 		public SequenceParticipant sequence;
 
 		public void Deconstruct(out string key, out SequenceParticipant sequence)

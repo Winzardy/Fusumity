@@ -6,6 +6,11 @@ using UnityEngine;
 
 namespace ZenoTween
 {
+	public class EditorAnimationTweenPlayAttribute : Attribute
+	{
+	}
+
+
 	public abstract partial class SequenceParticipant
 	{
 		public const int BUTTON_SIZE_WIDTH_EDITOR = 90;

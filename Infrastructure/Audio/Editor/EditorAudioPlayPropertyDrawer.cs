@@ -12,8 +12,6 @@ namespace Audio.Editor
 {
 	public class EditorAudioPlayPropertyDrawer : OdinAttributeDrawer<EditorAudioPlayAttribute>
 	{
-		private static readonly Color LOOP_ENABLE_COLOR = new(252 / 256f, 191 / 256f, 7 / 256f, 1);
-
 		private Rect _playPosition;
 		private Rect _loopPosition;
 
