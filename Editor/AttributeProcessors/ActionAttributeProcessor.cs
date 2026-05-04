@@ -21,7 +21,7 @@ namespace Fusumity.Editor
 			var color = Color.Lerp(c, Color.white, 0.83f);
 			attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
 
-			if (typeof(IProxyEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+			if (typeof(IBridgeEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
 				return;
 
 			color = Color.Lerp(c, Color.black, 0.83f);

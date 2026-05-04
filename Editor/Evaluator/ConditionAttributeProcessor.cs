@@ -64,7 +64,7 @@ namespace Fusumity.Editor
 				attributes.Add(new GUIColorAttribute(color.r, color.g, color.b));
 			}
 
-			if (!typeof(IProxyEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+			if (!typeof(IBridgeEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
 			{
 				color = Color.Lerp(Color.blue, Color.black, 0.83f);
 				if (attributes.FirstOrDefault(a => a is ColorCardBoxAttribute) is ColorCardBoxAttribute box)

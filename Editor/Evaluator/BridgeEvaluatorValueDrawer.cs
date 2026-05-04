@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Fusumity.Editor
 {
-	public class ProxyEvaluatorValueDrawer : OdinValueDrawer<IProxyEvaluator>
+	public class BridgeEvaluatorValueDrawer : OdinValueDrawer<IBridgeEvaluator>
 	{
 		private Rect? _iconRect;
 

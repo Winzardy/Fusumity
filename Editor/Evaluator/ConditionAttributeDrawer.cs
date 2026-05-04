@@ -50,7 +50,7 @@ namespace Fusumity.Editor
 			{
 				var lastRect = GUILayoutUtility.GetLastRect();
 
-				if (typeof(IProxyEvaluator).IsAssignableFrom(Property.ParentType) &&
+				if (typeof(IBridgeEvaluator).IsAssignableFrom(Property.ParentType) &&
 				    Property.Parent.ParentType.IsArray)
 					lastRect.x += GUIHelper.CurrentIndentAmount;
 

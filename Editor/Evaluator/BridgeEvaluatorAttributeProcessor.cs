@@ -8,7 +8,7 @@ using Sirenix.Utilities.Editor;
 
 namespace Fusumity.Editor
 {
-	public class ProxyEvaluatorAttributeProcessor : ValueWrapperOdinAttributeProcessor<IProxyEvaluator>
+	public class BridgeEvaluatorAttributeProcessor : ValueWrapperOdinAttributeProcessor<IBridgeEvaluator>
 	{
 		protected override string ValueFieldName => "value";
 
@@ -19,11 +19,11 @@ namespace Fusumity.Editor
 			if (member.Name == ValueFieldName)
 			{
 				attributes.Add(new CustomContextMenuAttribute("Proxy/Clear",
-					$"@{nameof(ProxyEvaluatorAttributeProcessor)}.{nameof(OnContextMenuClearClicked)}($property)"));
+					$"@{nameof(BridgeEvaluatorAttributeProcessor)}.{nameof(OnContextMenuClearClicked)}($property)"));
 				attributes.Add(new CustomContextMenuAttribute("Proxy/Copy",
-					$"@{nameof(ProxyEvaluatorAttributeProcessor)}.{nameof(OnContextMenuCopyClicked)}($property)"));
+					$"@{nameof(BridgeEvaluatorAttributeProcessor)}.{nameof(OnContextMenuCopyClicked)}($property)"));
 				attributes.Add(new CustomContextMenuAttribute("Proxy/Paste",
-					$"@{nameof(ProxyEvaluatorAttributeProcessor)}.{nameof(OnContextMenuPasteClicked)}($property)"));
+					$"@{nameof(BridgeEvaluatorAttributeProcessor)}.{nameof(OnContextMenuPasteClicked)}($property)"));
 			}
 		}
 
