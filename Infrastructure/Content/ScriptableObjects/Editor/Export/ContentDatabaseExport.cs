@@ -103,6 +103,6 @@ namespace Content.ScriptableObjects.Editor
 		}
 
 		internal static bool UseExportOnBuild => Settings.exportOnBuild;
-		internal static void DefaultExport(string buildOutputPath = null) => Asset.Export(buildOutputPath);
+		public static void DefaultExport(string buildOutputPath = null) => Asset.Export(buildOutputPath);
 	}
 }

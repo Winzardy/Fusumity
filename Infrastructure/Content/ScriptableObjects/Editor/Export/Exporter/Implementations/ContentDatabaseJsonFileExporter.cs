@@ -36,7 +36,7 @@ namespace Content.ScriptableObjects.Editor
 			[PropertySpace(2, 10)]
 			[NonSerialized]
 			[ShowInInspector]
-			public bool revealInFinder = true;
+			public bool revealInFinder;
 
 			[ToggleGroup(nameof(useDeserializeTesting), "Deserialize Testing")]
 			public bool useDeserializeTesting;

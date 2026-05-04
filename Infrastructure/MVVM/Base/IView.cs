@@ -194,7 +194,7 @@ namespace Fusumity.MVVM
 	{
 		protected TLayout _layout;
 
-		public override GameObject GameObject { get { return _layout.gameObject; } }
+		public override GameObject GameObject { get { return _layout != null ? _layout.gameObject : null; } }
 
 		protected View(TLayout layout)
 		{
