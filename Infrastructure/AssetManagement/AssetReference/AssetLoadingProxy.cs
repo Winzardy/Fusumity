@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -50,6 +51,8 @@ namespace AssetManagement
 		private CancellationTokenSource _cts;
 
 		private bool _disposed;
+
+		public bool IsLoaded { get => _loadedAsset != null; }
 
 		public AssetLoadingProxy(IAssetReferenceEntry entry)
 		{
@@ -147,7 +150,7 @@ namespace AssetManagement
 		}
 	}
 
-	public class AssetLoadingProxiesMediator<T> : IDisposable where T : Object
+	public class AssetLoadingProxiesMediator<T> : IDisposable, IEnumerable<(IAssetReferenceEntry<T>, AssetLoadingProxy<T>)> where T : Object
 	{
 		private Dictionary<IAssetReferenceEntry<T>, AssetLoadingProxy<T>> _loadingProxies = new Dictionary<IAssetReferenceEntry<T>, AssetLoadingProxy<T>>();
 
@@ -157,6 +160,11 @@ namespace AssetManagement
 		{
 			Clear();
 		}
+
+		public bool HasEntry(IAssetReferenceEntry<T> entry) => _loadingProxies.ContainsKey(entry);
+		public bool EntryLoaded(IAssetReferenceEntry<T> entry)
+			=> _loadingProxies.TryGetValue(entry, out var proxy) &&
+			proxy.IsLoaded;
 
 		public UniTask<T> LoadAsync(IAssetReferenceEntry<T> entry, CancellationToken token)
 		{
@@ -187,5 +195,15 @@ namespace AssetManagement
 
 			_loadingProxies.Clear();
 		}
+
+		public IEnumerator<(IAssetReferenceEntry<T>, AssetLoadingProxy<T>)> GetEnumerator()
+		{
+			foreach (var kvp in _loadingProxies)
+			{
+				yield return (kvp.Key, kvp.Value);
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }
