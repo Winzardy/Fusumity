@@ -153,6 +153,7 @@ namespace AssetManagement
 	public class AssetLoadingProxiesMediator<T> : IDisposable, IEnumerable<(IAssetReferenceEntry<T>, AssetLoadingProxy<T>)> where T : Object
 	{
 		private Dictionary<IAssetReferenceEntry<T>, AssetLoadingProxy<T>> _loadingProxies = new Dictionary<IAssetReferenceEntry<T>, AssetLoadingProxy<T>>();
+		private Dictionary<IAssetReferenceEntry, AssetLoadingProxy<IAssetReferenceEntry, T>> _untypedLoadingProxies;
 
 		//TODO: add simultaneous assets limit (FIFO clearing after N)
 
@@ -177,6 +178,19 @@ namespace AssetManagement
 			return proxy.LoadAsync(token);
 		}
 
+		public UniTask<T> LoadAsync(IAssetReferenceEntry entry, CancellationToken token)
+		{
+			_untypedLoadingProxies ??= new Dictionary<IAssetReferenceEntry, AssetLoadingProxy<IAssetReferenceEntry, T>>();
+
+			if (!_untypedLoadingProxies.TryGetValue(entry, out var proxy))
+			{
+				proxy = new AssetLoadingProxy<IAssetReferenceEntry, T>(entry);
+				_untypedLoadingProxies.Add(entry, proxy);
+			}
+
+			return proxy.LoadAsync(token);
+		}
+
 		public void Clear(IAssetReferenceEntry<T> entry)
 		{
 			if (_loadingProxies.TryGetValue(entry, out var proxy))
@@ -194,6 +208,16 @@ namespace AssetManagement
 			}
 
 			_loadingProxies.Clear();
+
+			if (_untypedLoadingProxies == null)
+				return;
+
+			foreach (var proxy in _untypedLoadingProxies.Values)
+			{
+				proxy.Dispose();
+			}
+
+			_untypedLoadingProxies.Clear();
 		}
 
 		public IEnumerator<(IAssetReferenceEntry<T>, AssetLoadingProxy<T>)> GetEnumerator()
