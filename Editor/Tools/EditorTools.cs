@@ -32,7 +32,7 @@ namespace Fusumity.Editor
 
 		public static string GetActiveFolderPath()
 		{
-			return (string)typeof(ProjectWindowUtil).GetMethod("GetActiveFolderPath", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+			return (string) typeof(ProjectWindowUtil).GetMethod("GetActiveFolderPath", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
 		}
 
 		public static void PingObject(string filePath)

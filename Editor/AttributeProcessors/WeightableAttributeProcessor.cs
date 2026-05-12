@@ -65,7 +65,7 @@ namespace Fusumity.Editor
 		}
 	}
 
-	public class WeightableWithEvaluatorAttributeProcessor : BaseWeightableAttributeProcessor<IWeightableWithEvaluator>
+	public class WeightableWithEvaluatorAttributeProcessor : BaseWeightableAttributeProcessor<IWeightableWithContext>
 	{
 	}
 }
