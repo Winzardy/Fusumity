@@ -53,6 +53,9 @@ namespace Fusumity.Editor.Utility
 			if (typeof(IList).IsAssignableFrom(type) && type.IsGenericType)
 				type = type.GetGenericArguments()[0];
 
+			var scriptType = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+			var scriptTypeName = scriptType.GetScriptTypeName();
+
 			_pathToScript ??= AssetDatabaseUtility.GetAssets<MonoScript>()
 			   .ToDictionary(AssetDatabase.GetAssetPath, x => x);
 
@@ -60,18 +63,18 @@ namespace Fusumity.Editor.Utility
 			if (_typeToScript.TryGetValue(type, out var cachedScript))
 				return cachedScript;
 
+			if (scriptType != type && _typeToScript.TryGetValue(scriptType, out cachedScript))
+			{
+				CacheScript(type, scriptType, cachedScript);
+				return cachedScript;
+			}
+
 			foreach (var script in _pathToScript.Values)
 			{
-				if (script.GetClass() == type)
+				var scriptClass = script.GetClass();
+				if (scriptClass == type || scriptClass == scriptType)
 				{
-					_typeToScript[type] = script;
-
-					var scriptPath = script.GetAssetPath();
-
-					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
-
-					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
-					_scriptToTypes[scriptPath].Add(type);
+					CacheScript(type, scriptType, script);
 					return script;
 				}
 			}
@@ -80,39 +83,93 @@ namespace Fusumity.Editor.Utility
 			{
 				var c = script.GetClass();
 
-				if (c == null)
+				if (c != null && c.Assembly != scriptType.Assembly)
 					continue;
 
-				if (c.Assembly != type.Assembly)
+				if (c != null && c.Namespace != scriptType.Namespace)
 					continue;
 
-				if (c.Namespace != type.Namespace)
+				if (c == null && script.name != scriptTypeName)
 					continue;
 
-				string str = null;
-				if (type.IsInterface)
+				if (script.text.ContainsTypeDeclaration(scriptType, scriptTypeName))
 				{
-					str = $"interface {type.Name}";
-				}
-				else
-				{
-					str = type.IsClass ? $"class {type.Name}" : $"struct {type.Name}";
-				}
-
-				if (script.text.Contains(str))
-				{
-					_typeToScript[type] = script;
-					var scriptPath = script.GetAssetPath();
-					_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
-					_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
-					_scriptToTypes[scriptPath].Add(type);
-
+					CacheScript(type, scriptType, script);
 					return script;
 				}
 			}
 
-			_typeToScript = null;
+			CacheScript(type, scriptType, null);
 			return null;
+		}
+
+		private static void CacheScript(Type type, Type scriptType, MonoScript script)
+		{
+			_typeToScript[type] = script;
+
+			if (scriptType != type)
+				_typeToScript[scriptType] = script;
+
+			if (!script)
+				return;
+
+			var scriptPath = script.GetAssetPath();
+			_scriptToTypes ??= new Dictionary<string, HashSet<Type>>(16);
+			_scriptToTypes.TryAdd(scriptPath, new HashSet<Type>(16));
+			_scriptToTypes[scriptPath].Add(type);
+
+			if (scriptType != type)
+				_scriptToTypes[scriptPath].Add(scriptType);
+		}
+
+		private static string GetScriptTypeName(this Type type)
+		{
+			var name = type.Name;
+			var genericMarkerIndex = name.IndexOf('`');
+			return genericMarkerIndex >= 0 ? name[..genericMarkerIndex] : name;
+		}
+
+		private static bool ContainsTypeDeclaration(this string text, Type type, string typeName)
+		{
+			var declaration = $"{type.GetTypeDeclarationKeyword()} {typeName}";
+			var index = -1;
+
+			while ((index = text.IndexOf(declaration, index + 1, StringComparison.Ordinal)) >= 0)
+			{
+				var nextCharIndex = index + declaration.Length;
+
+				if (type.IsGenericTypeDefinition)
+				{
+					while (nextCharIndex < text.Length && char.IsWhiteSpace(text[nextCharIndex]))
+						nextCharIndex++;
+
+					if (nextCharIndex < text.Length && text[nextCharIndex] == '<')
+						return true;
+
+					continue;
+				}
+
+				if (nextCharIndex >= text.Length || !IsIdentifierChar(text[nextCharIndex]))
+					return true;
+			}
+
+			return false;
+		}
+
+		private static string GetTypeDeclarationKeyword(this Type type)
+		{
+			if (type.IsInterface)
+				return "interface";
+
+			if (type.IsEnum)
+				return "enum";
+
+			return type.IsClass ? "class" : "struct";
+		}
+
+		private static bool IsIdentifierChar(char c)
+		{
+			return char.IsLetterOrDigit(c) || c == '_';
 		}
 
 		public static MonoScript GetMonoScript(string path)
@@ -132,11 +189,15 @@ namespace Fusumity.Editor.Utility
 
 		public static void ClearCache()
 		{
-			_pathToScript.Clear();
+			_pathToScript?.Clear();
+			_typeToScript?.Clear();
+			_typeNameToScript?.Clear();
+
+			if (_scriptToTypes == null)
+				return;
 
 			foreach (var hashSet in _scriptToTypes.Values)
 				hashSet.Clear();
-
 			_scriptToTypes.Clear();
 		}
 	}

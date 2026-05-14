@@ -7,10 +7,8 @@ using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Conditions;
 using Sapientia.Evaluators;
-using Sirenix.Config;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using UnityEditor;
 using UnityEngine;
 
 namespace Fusumity.Editor
@@ -91,61 +89,38 @@ namespace Fusumity.Editor
 			// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
 			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
 			var genericTypeDefinition = valueEntryTypeOfValue.GetGenericTypeDefinition();
-			var typeConfig = TypeRegistryUserConfig.Instance;
-			var settings = typeConfig.TryGetSettings(valueEntryTypeOfValue);
 
 			if (genericTypeDefinition == typeof(IfElseCondition<>))
 			{
-				if (settings == null)
-				{
-					settings = new TypeSettings();
-					typeConfig.SetSettings(valueEntryTypeOfValue, settings);
-					EditorUtility.SetDirty(typeConfig);
-				}
-
-				settings.Name           = "\u2009If / else";
-				settings.Category       = "/";
-				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon           = SdfIconType.Alt;
-
-				typeConfig.SetPriority(valueEntryTypeOfValue, 1, null);
+				EvaluatorTypeRegistryUtility.Register(
+					valueEntryTypeOfValue,
+					"\u2009If / else",
+					"/",
+					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
+					SdfIconType.Alt,
+					1);
 			}
 
 			if (genericTypeDefinition == typeof(NoneCondition<>))
 			{
-				if (settings == null)
-				{
-					settings = new TypeSettings();
-					typeConfig.SetSettings(valueEntryTypeOfValue, settings);
-					EditorUtility.SetDirty(typeConfig);
-				}
-
-				settings.Name           = NONE_CONDITION_LABEL;
-				settings.Category       = "/";
-				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon           = NONE_CONDITION_SDF_ICON;
-
-				typeConfig.SetPriority(valueEntryTypeOfValue, 10001, null);
+				EvaluatorTypeRegistryUtility.Register(
+					valueEntryTypeOfValue,
+					NONE_CONDITION_LABEL,
+					"/",
+					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
+					NONE_CONDITION_SDF_ICON,
+					10001);
 			}
 
 			if (genericTypeDefinition == typeof(RejectCondition<>))
 			{
-				if (settings == null)
-				{
-					settings = new TypeSettings();
-					typeConfig.SetSettings(valueEntryTypeOfValue, settings);
-					EditorUtility.SetDirty(typeConfig);
-				}
-
-				settings.Name           = REJECT_CONDITION_LABEL;
-				settings.Category       = "/";
-				settings.DarkIconColor  = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.LightIconColor = new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A);
-				settings.Icon           = REJECT_CONDITION_SDF_ICON;
-
-				typeConfig.SetPriority(valueEntryTypeOfValue, 10000, null);
+				EvaluatorTypeRegistryUtility.Register(
+					valueEntryTypeOfValue,
+					REJECT_CONDITION_LABEL,
+					"/",
+					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
+					REJECT_CONDITION_SDF_ICON,
+					10000);
 			}
 		}
 	}

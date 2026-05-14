@@ -15,6 +15,11 @@ namespace Fusumity.Editor
 {
 	public class EvaluatorAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<IEvaluator>
 	{
+		private static readonly Dictionary<Type, Type> _typeToFinalCollectionElementType = new();
+		private static readonly Dictionary<Type, bool> _typeToFilterResult = new();
+		private static readonly Dictionary<Type, bool> _typeToConditionRootFilterResult = new();
+		private static readonly Dictionary<Type, bool> _typeToUnitySerializableResult = new();
+
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
@@ -28,7 +33,7 @@ namespace Fusumity.Editor
 				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 				{
 					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(FilterByConditionRoot)}($type, $property)",
-					ShowNoneItem = false
+					ShowNoneItem        = false
 				};
 			}
 			else
@@ -36,7 +41,7 @@ namespace Fusumity.Editor
 				typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 				{
 					FilterTypesFunction = $"@{nameof(EvaluatorAttributeProcessor)}.{nameof(Filter)}($type, $property)",
-					ShowNoneItem = false
+					ShowNoneItem        = false
 				};
 			}
 
@@ -64,16 +69,34 @@ namespace Fusumity.Editor
 		// Тут фильтр для случая когда корнем древа был Condition
 		internal static bool FilterByConditionRoot(Type type, InspectorProperty property)
 		{
-			var finalType = type.GetFinalCollectionElementType();
-			if (typeof(IRandomEvaluator).IsAssignableFrom(finalType))
+			if (type == null)
 				return false;
 
-			return Filter(finalType, property);
+			if (_typeToConditionRootFilterResult.TryGetValue(type, out var cachedResult))
+				return cachedResult;
+
+			var finalType = GetFinalCollectionElementType(type);
+			if (typeof(IRandomEvaluator).IsAssignableFrom(finalType))
+			{
+				_typeToConditionRootFilterResult[type] = false;
+				return false;
+			}
+
+			var result = Filter(finalType, property);
+			_typeToConditionRootFilterResult[type] = result;
+			return result;
 		}
 
 		internal static bool Filter(Type type, InspectorProperty property)
 		{
-			var finalType = type.GetFinalCollectionElementType();
+			if (type == null)
+				return false;
+
+			if (_typeToFilterResult.TryGetValue(type, out var cachedResult))
+				return cachedResult;
+
+			var result = true;
+			var finalType = GetFinalCollectionElementType(type);
 
 			if (typeof(IConstantEvaluator).IsAssignableFrom(finalType))
 			{
@@ -84,13 +107,36 @@ namespace Fusumity.Editor
 
 					if (valueType != null)
 					{
-						if (!valueType.IsUnitySerializableType())
-							return false;
+						if (!IsUnitySerializable(valueType))
+							result = false;
 					}
 				}
 			}
 
-			return true;
+			_typeToFilterResult[type] = result;
+			return result;
+		}
+
+		private static Type GetFinalCollectionElementType(Type type)
+		{
+			if (!_typeToFinalCollectionElementType.TryGetValue(type, out var result))
+			{
+				result                                  = type.GetFinalCollectionElementType();
+				_typeToFinalCollectionElementType[type] = result;
+			}
+
+			return result;
+		}
+
+		private static bool IsUnitySerializable(Type type)
+		{
+			if (!_typeToUnitySerializableResult.TryGetValue(type, out var result))
+			{
+				result                               = type.IsUnitySerializableType();
+				_typeToUnitySerializableResult[type] = result;
+			}
+
+			return result;
 		}
 
 		internal static bool TopSemanticAncestorIsCondition(InspectorProperty property)

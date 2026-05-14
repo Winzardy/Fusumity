@@ -18,10 +18,10 @@ namespace Fusumity.Editor.Utility
 
 		internal static void DrawMonoScript(ref MonoScript cache, InspectorProperty property)
 		{
-			cache ??= property.ValueEntry.TypeOfValue.FindMonoScript();
-
 			if (SirenixEditorGUI.BeginFadeGroup(property, _enable))
 			{
+				cache ??= property.ValueEntry.TypeOfValue.FindMonoScript();
+
 				var originEnabled = GUI.enabled;
 				{
 					GUI.enabled = false;

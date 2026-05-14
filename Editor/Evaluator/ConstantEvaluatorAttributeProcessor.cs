@@ -4,16 +4,17 @@ using System.Reflection;
 using Sapientia;
 using Sapientia.Evaluators;
 using Sapientia.Utility;
-using Sirenix.Config;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using UnityEditor;
 using UnityEngine;
 
 namespace Fusumity.Editor
 {
 	public class ConstantEvaluatorAttributeProcessor : ValueWrapperOdinAttributeProcessor<IConstantEvaluator>
 	{
+		private static readonly Dictionary<Type, Type> _constantTypeToValueType = new();
+		private static readonly Dictionary<Type, bool> _typeToUnitySerializableResult = new();
+
 		protected override string ValueFieldName => "value";
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
@@ -28,30 +29,62 @@ namespace Fusumity.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-			if (property.ValueEntry.WeakSmartValue is IConstantEvaluator evaluator)
-				if (evaluator.ValueType.IsUnitySerializableType())
-					attributes.Add(new HideReferenceObjectPickerAttribute());
+			var constantType = property.ValueEntry.TypeOfValue;
+			var valueType = GetValueType(constantType);
+			if (valueType != null && IsUnitySerializable(valueType))
+				attributes.Add(new HideReferenceObjectPickerAttribute());
 
 			// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
 			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
-			var typeConfig = TypeRegistryUserConfig.Instance;
-			var constantType = property.ValueEntry.TypeOfValue;
-			var settings = typeConfig.TryGetSettings(constantType);
-			if (settings == null)
-			{
-				settings = new TypeSettings();
-				typeConfig.SetSettings(constantType, settings);
+			EvaluatorTypeRegistryUtility.Register(
+				constantType,
+				"\u2009Constant",
+				"/",
+				new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
+				SdfIconType.DiamondFill,
+				10000);
+		}
 
-				EditorUtility.SetDirty(typeConfig);
+		private static Type GetValueType(Type constantType)
+		{
+			if (_constantTypeToValueType.TryGetValue(constantType, out var valueType))
+				return valueType;
+
+			valueType = null;
+
+			if (constantType.IsGenericType)
+			{
+				var genericArguments = constantType.GetGenericArguments();
+				if (genericArguments.Length > 1)
+					valueType = genericArguments[1];
 			}
 
-			settings.Name = "\u2009Constant";
-			settings.Category = "/";
-			settings.DarkIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
-			settings.LightIconColor = new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A);
-			settings.Icon = SdfIconType.DiamondFill;
+			if (valueType == null)
+			{
+				foreach (var interfaceType in constantType.GetInterfaces())
+				{
+					if (!interfaceType.IsGenericType ||
+					    interfaceType.GetGenericTypeDefinition() != typeof(IConstantEvaluator<>))
+						continue;
 
-			typeConfig.SetPriority(constantType, 10000, null);
+					valueType = interfaceType.GetGenericArguments()[0];
+					break;
+				}
+			}
+
+			_constantTypeToValueType[constantType] = valueType;
+			return valueType;
+		}
+
+		private static bool IsUnitySerializable(Type type)
+		{
+			if (!_typeToUnitySerializableResult.TryGetValue(type, out var result))
+			{
+				result = type.IsUnitySerializableType();
+				_typeToUnitySerializableResult[type] = result;
+			}
+
+			return result;
 		}
 	}
 
