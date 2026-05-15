@@ -49,7 +49,7 @@ namespace UI
 
 	public interface IObjectInspectorViewModel<T>
 	{
-		public IAssetReferenceEntry Reference { get; }
+		public IAssetRef Reference { get; }
 		public T Prefab { get; }
 
 		//Для кастомных спинеров
@@ -72,7 +72,7 @@ namespace UI
 
 		private ISpinner spinner => _args.Spinner ?? _defaultSpinner;
 
-		private IAssetReferenceEntry _targetReference;
+		private IAssetRef _targetReference;
 		private T _targetPrefab;
 
 		protected GameObject _gameObject;
@@ -296,7 +296,7 @@ namespace UI
 			_restoreRotationTween?.KillSafe();
 		}
 
-		protected abstract UniTask<T> LoadAsync(IAssetReferenceEntry reference,
+		protected abstract UniTask<T> LoadAsync(IAssetRef reference,
 			CancellationToken cancellationToken);
 	}
 }

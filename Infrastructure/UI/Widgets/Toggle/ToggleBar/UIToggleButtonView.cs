@@ -67,7 +67,7 @@ namespace UI
 			viewModel.LabelChanged -= HandleLabelChanged;
 		}
 
-		private void UpdateIcon(IAssetReferenceEntry<Sprite> icon)
+		private void UpdateIcon(IAssetRef<Sprite> icon)
 		{
 			_iconAssigner.TrySetSprite(_layout.icon, icon);
 		}
@@ -127,7 +127,7 @@ namespace UI
 
 	public interface IToggleButtonViewModel
 	{
-		[CanBeNull] IAssetReferenceEntry<Sprite> Icon { get; }
+		[CanBeNull] IAssetRef<Sprite> Icon { get; }
 		[CanBeNull] string Label { get; }
 		[CanBeNull] ILabelViewModel Sublabel { get => null; }
 		[CanBeNull] IStatefulViewModel Indicator { get => null; }

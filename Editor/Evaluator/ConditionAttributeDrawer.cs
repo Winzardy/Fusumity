@@ -62,7 +62,7 @@ namespace Fusumity.Editor
 				{
 					var backRect = lastRect;
 					backRect.x      += labelWidth + 2;
-					backRect.width  =  GUI.skin.label.CalcWidth(ConditionAttributeProcessor.NONE_CONDITION_LABEL) + 14;
+					backRect.width  =  GUI.skin.label.CalcWidth(EvaluatorTypeRegistryConstants.NONE_CONDITION_LABEL) + 14;
 					backRect.x      += 2;
 					backRect.y      += 2;
 					backRect.height -= 4;
@@ -71,11 +71,11 @@ namespace Fusumity.Editor
 					var labelRect = lastRect;
 					labelRect.x     += labelWidth + 6;
 					labelRect.width =  11;
-					SdfIcons.DrawIcon(labelRect, ConditionAttributeProcessor.NONE_CONDITION_SDF_ICON, _iconColor);
+					SdfIcons.DrawIcon(labelRect, EvaluatorTypeRegistryConstants.NONE_CONDITION_SDF_ICON, _iconColor);
 
 					labelRect.x     += 11.5f;
 					labelRect.width =  100;
-					GUI.Label(labelRect, ConditionAttributeProcessor.NONE_CONDITION_LABEL);
+					GUI.Label(labelRect, EvaluatorTypeRegistryConstants.NONE_CONDITION_LABEL);
 				}
 			}
 		}

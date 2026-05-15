@@ -2,12 +2,13 @@ using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
-using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
+	using UnityObject = UnityEngine.Object;
+
 	[Serializable]
-	public class ComponentReferenceEntry<T> : ComponentReferenceEntry, IAssetReferenceEntry<T>
+	public class ComponentRef<T> : ComponentRef, IAssetRef<T>
 		where T : Component
 	{
 		[SerializeField]
@@ -15,7 +16,7 @@ namespace AssetManagement
 		private ComponentReference<T> assetReference;
 
 		public override AssetReference AssetReference => assetReference;
-		public static implicit operator bool(ComponentReferenceEntry<T> entry) => !entry.IsEmptyOrInvalid();
+		public static implicit operator bool(ComponentRef<T> entry) => !entry.IsEmptyOrInvalid();
 
 		public GameObject editorAsset
 		{
@@ -33,28 +34,28 @@ namespace AssetManagement
 	}
 
 	[Serializable]
-	public abstract class ComponentReferenceEntry : IAssetReferenceEntry
+	public abstract class ComponentRef : IAssetRef
 	{
 		[SerializeField]
 		private int _releaseDelayMs;
 
 		public abstract AssetReference AssetReference { get; }
 
-		int IAssetReferenceEntry.ReleaseDelayMs => _releaseDelayMs;
+		int IAssetRef.ReleaseDelayMs => _releaseDelayMs;
 
 		public virtual Type AssetType => null;
-		public Object EditorAsset =>
+		public UnityObject EditorAsset =>
 #if UNITY_EDITOR
 			AssetReference.editorAsset;
 #else
 			null;
 #endif
 
-		public static implicit operator bool(ComponentReferenceEntry entry) => !entry.IsEmptyOrInvalid();
+		public static implicit operator bool(ComponentRef entry) => !entry.IsEmptyOrInvalid();
 
-		public static bool operator ==(ComponentReferenceEntry a, ComponentReferenceEntry b) => a.SameAsset(b);
-		public static bool operator !=(ComponentReferenceEntry a, ComponentReferenceEntry b) => !(a == b);
-		public override bool Equals(object obj) => this == obj as ComponentReferenceEntry;
+		public static bool operator ==(ComponentRef a, ComponentRef b) => a.SameAsset(b);
+		public static bool operator !=(ComponentRef a, ComponentRef b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as ComponentRef;
 		public override int GetHashCode() => AssetReference.GetHashCode();
 		public override string ToString() => AssetReference.ToString();
 	}

@@ -29,14 +29,14 @@ namespace UI
 	{
 		[NotNull]
 		[SerializeField]
-		private ComponentReferenceEntry<TLayout> _layoutReference;
+		private ComponentRef<TLayout> _layoutReference;
 
-		public override ComponentReferenceEntry LayoutReference => _layoutReference;
+		public override ComponentRef LayoutReference => _layoutReference;
 	}
 
 	public abstract class UILayoutEntry
 	{
-		public abstract ComponentReferenceEntry LayoutReference { get; }
+		public abstract ComponentRef LayoutReference { get; }
 
 		[Tooltip("Список автоматизаций для работы с версткой.\n" +
 			"<b>" + nameof(LayoutAutomationMode.AutoDestroy) + "</b> - авто-удаление верстки (+Release) через заданную задержку (delay)\n" +
@@ -51,7 +51,7 @@ namespace UI
 		/// </summary>
 		[Space]
 		[Tooltip("Список ассетов для предзагрузки при использовании этой верстки.")]
-		public List<AssetReferenceEntry> preloadAssets;
+		public List<AssetRef> preloadAssets;
 
 		public bool HasFlag(LayoutAutomationMode mode) => automationMode.HasFlags(mode);
 	}

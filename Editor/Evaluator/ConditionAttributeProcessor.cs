@@ -19,11 +19,6 @@ namespace Fusumity.Editor
 
 	public class ConditionAttributeProcessor : ShowMonoScriptForReferenceAttributeProcessor<ICondition>
 	{
-		public const string NONE_CONDITION_LABEL = "\u2009None (true)";
-		public const SdfIconType NONE_CONDITION_SDF_ICON = SdfIconType.Check;
-
-		public const string REJECT_CONDITION_LABEL = "\u2009Reject (false)";
-		public const SdfIconType REJECT_CONDITION_SDF_ICON = SdfIconType.X;
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -47,6 +42,14 @@ namespace Fusumity.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
+
+			if (EvaluatorNodeGraphWindow.IsInlineNodeRendering &&
+				!attributes.Exists(x => x is HideReferenceObjectPickerAttribute))
+			{
+				attributes.Add(new ReadOnlyAttribute());
+			}
+
+			EvaluatorNodeGraphWindow.AddOpenAttributes(attributes);
 
 			// Такое хак делается для отрисовки полиморфных полей, так как у OdinValueDrawer не работает отрисовка если объект null!
 			attributes.Add(new ConditionCustomDrawerAttribute());
@@ -80,47 +83,6 @@ namespace Fusumity.Editor
 						color.b,
 						0.2f));
 				}
-			}
-
-			var valueEntryTypeOfValue = property.ValueEntry.TypeOfValue;
-			if (!valueEntryTypeOfValue.IsGenericType)
-				return;
-
-			// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
-			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
-			var genericTypeDefinition = valueEntryTypeOfValue.GetGenericTypeDefinition();
-
-			if (genericTypeDefinition == typeof(IfElseCondition<>))
-			{
-				EvaluatorTypeRegistryUtility.Register(
-					valueEntryTypeOfValue,
-					"\u2009If / else",
-					"/",
-					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
-					SdfIconType.Alt,
-					1);
-			}
-
-			if (genericTypeDefinition == typeof(NoneCondition<>))
-			{
-				EvaluatorTypeRegistryUtility.Register(
-					valueEntryTypeOfValue,
-					NONE_CONDITION_LABEL,
-					"/",
-					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
-					NONE_CONDITION_SDF_ICON,
-					10001);
-			}
-
-			if (genericTypeDefinition == typeof(RejectCondition<>))
-			{
-				EvaluatorTypeRegistryUtility.Register(
-					valueEntryTypeOfValue,
-					REJECT_CONDITION_LABEL,
-					"/",
-					new Color(ICondition.R, ICondition.G, ICondition.B, ICondition.A),
-					REJECT_CONDITION_SDF_ICON,
-					10000);
 			}
 		}
 	}

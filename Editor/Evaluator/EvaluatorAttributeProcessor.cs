@@ -24,6 +24,15 @@ namespace Fusumity.Editor
 		{
 			base.ProcessSelfAttributes(property, attributes);
 
+			if (EvaluatorNodeGraphWindow.IsInlineNodeRendering &&
+				!attributes.Exists(x => x is HideReferenceObjectPickerAttribute))
+			{
+				attributes.Add(new ReadOnlyAttribute());
+			}
+
+			if (!typeof(ICondition).IsAssignableFrom(property.ValueEntry.TypeOfValue))
+				EvaluatorNodeGraphWindow.AddOpenAttributes(attributes);
+
 			if (typeof(IConstantEvaluator).IsAssignableFrom(property.ValueEntry.TypeOfValue))
 				return;
 

@@ -16,7 +16,7 @@ namespace UI
 	{
 		public struct Args : IObseleteButtonViewModel
 		{
-			public AssetReferenceEntry<Sprite> IconReference { get; set; }
+			public AssetRef<Sprite> IconReference { get; set; }
 
 			public Sprite Icon { get; set; }
 
@@ -40,7 +40,7 @@ namespace UI
 
 	public interface IObseleteButtonViewModel
 	{
-		public AssetReferenceEntry<Sprite> IconReference { get; }
+		public AssetRef<Sprite> IconReference { get; }
 
 		//Лучше использовать ассет референс
 		public Sprite Icon { get; }

@@ -10,7 +10,7 @@ namespace UI.Screens
 
 		private void InitializeAssetsPreloader()
 		{
-			using (ListPool<IAssetReferenceEntry>.Get(out var list))
+			using (ListPool<IAssetRef>.Get(out var list))
 			{
 				foreach (var entry in ContentManager.GetAllEntries<UIScreenConfig>())
 				{

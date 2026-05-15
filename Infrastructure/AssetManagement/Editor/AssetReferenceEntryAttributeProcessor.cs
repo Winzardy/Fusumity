@@ -13,15 +13,15 @@ using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
-	public class AssetReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<IAssetReferenceEntry>
+	public class AssetReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<IAssetRef>
 	{
-		protected override string FieldName => nameof(AssetReferenceEntry.assetReference);
+		protected override string FieldName => nameof(AssetRef.assetReference);
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			if (member.Name != IAssetReferenceEntry.CUSTOM_EDITOR_NAME)
+			if (member.Name != IAssetRef.CUSTOM_EDITOR_NAME)
 				return;
 
 			if (!IsGameObjectEntry(parentProperty))
@@ -89,7 +89,7 @@ namespace AssetManagement.Editor
 
 			var interfaceType = type
 				.GetInterfaces()
-				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetReferenceEntry<>));
+				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetRef<>));
 
 			return interfaceType?.GetGenericArguments()[0] == typeof(GameObject);
 		}

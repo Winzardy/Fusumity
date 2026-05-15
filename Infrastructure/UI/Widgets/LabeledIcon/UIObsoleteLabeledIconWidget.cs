@@ -10,7 +10,7 @@ namespace UI
 	{
 		public struct Args
 		{
-			public AssetReferenceEntry<Sprite> iconRef;
+			public AssetRef<Sprite> iconRef;
 			public Sprite icon;
 
 			public LocText locLabel;

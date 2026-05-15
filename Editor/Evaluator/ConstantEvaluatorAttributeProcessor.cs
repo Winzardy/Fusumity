@@ -20,6 +20,9 @@ namespace Fusumity.Editor
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
+			if (EvaluatorNodeGraphWindow.IsInlineNodeRendering)
+				return;
+
 			if (member.Name == ValueFieldName)
 			{
 				attributes.Add(new CustomReferenceEvaluatorPickerAttribute());
@@ -28,7 +31,14 @@ namespace Fusumity.Editor
 
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
+			if (EvaluatorNodeGraphWindow.IsInlineNodeRendering &&
+				!attributes.Exists(x => x is HideLabelAttribute))
+			{
+				attributes.Add(new HideLabelAttribute());
+			}
+
 			base.ProcessSelfAttributes(property, attributes);
+
 			var constantType = property.ValueEntry.TypeOfValue;
 			var valueType = GetValueType(constantType);
 			if (valueType != null && IsUnitySerializable(valueType))
@@ -64,7 +74,7 @@ namespace Fusumity.Editor
 				foreach (var interfaceType in constantType.GetInterfaces())
 				{
 					if (!interfaceType.IsGenericType ||
-					    interfaceType.GetGenericTypeDefinition() != typeof(IConstantEvaluator<>))
+						interfaceType.GetGenericTypeDefinition() != typeof(IConstantEvaluator<>))
 						continue;
 
 					valueType = interfaceType.GetGenericArguments()[0];
@@ -80,7 +90,7 @@ namespace Fusumity.Editor
 		{
 			if (!_typeToUnitySerializableResult.TryGetValue(type, out var result))
 			{
-				result = type.IsUnitySerializableType();
+				result                               = type.IsUnitySerializableType();
 				_typeToUnitySerializableResult[type] = result;
 			}
 

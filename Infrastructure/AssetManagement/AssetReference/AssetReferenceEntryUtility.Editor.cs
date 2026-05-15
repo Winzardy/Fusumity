@@ -7,7 +7,7 @@ namespace AssetManagement
 {
 	public static partial class AssetReferenceEntryUtility
 	{
-		public static void SetEditorAsset<T>(this IAssetReferenceEntry entry, T value, string address = null, string group = null,
+		public static void SetEditorAsset<T>(this IAssetRef entry, T value, string address = null, string group = null,
 			string label = null, bool createGroupIfNonExistent = true) where T : Object
 		{
 			if (value && !value.IsAddressable())
@@ -17,7 +17,7 @@ namespace AssetManagement
 			entry.AssetReference.SetEditorSubObject(value);
 		}
 
-		public static void SetEditorAsset<T>(this ComponentReferenceEntry<T> entry, GameObject value, string address = null,
+		public static void SetEditorAsset<T>(this ComponentRef<T> entry, GameObject value, string address = null,
 			string group = null,
 			string label = null, bool createGroupIfNonExistent = true) where T : Component
 		{
@@ -34,10 +34,10 @@ namespace AssetManagement
 			//entry.AssetReference.SetEditorSubObject(value);
 		}
 
-		public static AssetReferenceEntry<T> CreateAssetReferenceEntry<T>(this T asset, string address = null, string group = null,
+		public static AssetRef<T> CreateAssetReferenceEntry<T>(this T asset, string address = null, string group = null,
 			string label = null) where T : Object
 		{
-			var entry = new AssetReferenceEntry<T>();
+			var entry = new AssetRef<T>();
 			entry.assetReference = new UnityEngine.AddressableAssets.AssetReferenceT<T>(null);
 
 			entry.SetEditorAsset(asset, address, group, label);

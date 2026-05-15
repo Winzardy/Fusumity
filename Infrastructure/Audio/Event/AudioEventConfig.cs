@@ -127,7 +127,7 @@ namespace Audio
 		public const float MIN_PITCH = -3;
 		public const float MAX_PITCH = 3;
 
-		public AssetReferenceEntry<AudioClip> clipReference;
+		public AssetRef<AudioClip> clipReference;
 
 		[Tooltip("Собственная громкость воспроизведения, так же громкость будет зависить от <b>Mixer</b>'a к которому звук привязан")]
 		public float volume = DEFAULT_VOLUME;

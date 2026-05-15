@@ -10,7 +10,7 @@ using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
-	public class ComponentReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<ComponentReferenceEntry>
+	public class ComponentReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<ComponentRef>
 	{
 		protected override string FieldName => "_assetReference";
 
@@ -18,10 +18,10 @@ namespace AssetManagement.Editor
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			if (member.Name != IAssetReferenceEntry.CUSTOM_EDITOR_NAME)
+			if (member.Name != IAssetRef.CUSTOM_EDITOR_NAME)
 				return;
 
-			if (parentProperty.ValueEntry?.WeakSmartValue is not ComponentReferenceEntry entry)
+			if (parentProperty.ValueEntry?.WeakSmartValue is not ComponentRef entry)
 				return;
 
 			if (entry.AssetType == null)
@@ -35,7 +35,7 @@ namespace AssetManagement.Editor
 
 		public static IEnumerable<ValueDropdownItem<GameObject>> Filter(InspectorProperty property)
 		{
-			if (property.Parent.ValueEntry.WeakSmartValue is not ComponentReferenceEntry entry)
+			if (property.Parent.ValueEntry.WeakSmartValue is not ComponentRef entry)
 				return null;
 
 			using (ListPool<GameObject>.Get(out var list))

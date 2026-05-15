@@ -26,10 +26,10 @@ namespace UI
 
 		protected abstract RectTransform LayerRectTransform { get; }
 
-		protected abstract ComponentReferenceEntry LayoutReference { get; }
+		protected abstract ComponentRef LayoutReference { get; }
 		protected virtual bool LayoutAutoDestroy => false;
 		protected virtual int LayoutAutoDestroyDelayMs => 5000;
-		protected virtual List<AssetReferenceEntry> PreloadAssets => null;
+		protected virtual List<AssetRef> PreloadAssets => null;
 
 		protected virtual string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Fusumity.MVVM.UI
 {
-	public class StaticImageView : View<IAssetReferenceEntry<Sprite>, Image>
+	public class StaticImageView : View<IAssetRef<Sprite>, Image>
 	{
 		private UISpriteAssigner _assigner;
 		private Tween _tween;
@@ -27,7 +27,7 @@ namespace Fusumity.MVVM.UI
 			_tween?.Kill();
 		}
 
-		protected override void OnUpdate(IAssetReferenceEntry<Sprite> entry)
+		protected override void OnUpdate(IAssetRef<Sprite> entry)
 		{
 			_layout.SetActive(true);
 			_assigner.TrySetSprite(_layout, entry, PlayAppearTween, true);

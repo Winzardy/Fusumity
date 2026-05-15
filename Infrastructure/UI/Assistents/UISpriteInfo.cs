@@ -7,13 +7,13 @@ namespace UI
 	[Serializable]
 	public struct UISpriteInfo : IEquatable<UISpriteInfo>
 	{
-		public IAssetReferenceEntry<Sprite> reference;
+		public IAssetRef<Sprite> reference;
 		public Sprite sprite;
 
 		public bool IsEmptyOrInvalid() => sprite == null && reference.IsEmptyOrInvalid();
 
 		public static implicit operator UISpriteInfo(Sprite sprite) => new() {sprite                            = sprite};
-		public static implicit operator UISpriteInfo(AssetReferenceEntry<Sprite> reference) => new() {reference = reference};
+		public static implicit operator UISpriteInfo(AssetRef<Sprite> reference) => new() {reference = reference};
 
 		public override string ToString()
 		{

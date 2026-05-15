@@ -48,7 +48,7 @@ namespace UI
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
 		}
 
-		public void TrySetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
+		public void TrySetSprite(Image image, IAssetRef<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
 		{
 			if (image == null || iconRef.IsEmptyOrInvalid())
 				return;
@@ -56,13 +56,13 @@ namespace UI
 			SetSprite(image, iconRef, callback, disableDuringLoad);
 		}
 
-		public void SetSprite(IEnumerable<Image> images, IAssetReferenceEntry<Sprite> iconRef)
+		public void SetSprite(IEnumerable<Image> images, IAssetRef<Sprite> iconRef)
 		{
 			foreach (var image in images)
 				SetSprite(image, iconRef);
 		}
 
-		public void SetSprite(Image image, IAssetReferenceEntry<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
+		public void SetSprite(Image image, IAssetRef<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
 		{
 			if (disableDuringLoad)
 			{
@@ -101,7 +101,7 @@ namespace UI
 			LoadAndPlaceAsync(image, _imageToHandle[image], callback).Forget();
 		}
 
-		private bool TryUpdateSingle(Image image, IAssetReferenceEntry<Sprite> spriteRef, Action callback = null)
+		private bool TryUpdateSingle(Image image, IAssetRef<Sprite> spriteRef, Action callback = null)
 		{
 			if (_single.image == image)
 			{
@@ -174,10 +174,10 @@ namespace UI
 
 	public struct SpriteAssignerHandle
 	{
-		public IAssetReferenceEntry<Sprite> spriteRef;
+		public IAssetRef<Sprite> spriteRef;
 		public CancellationTokenSource cts;
 
-		public SpriteAssignerHandle(IAssetReferenceEntry<Sprite> spriteRef)
+		public SpriteAssignerHandle(IAssetRef<Sprite> spriteRef)
 		{
 			this.spriteRef = spriteRef;
 			cts = null;

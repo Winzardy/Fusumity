@@ -25,7 +25,7 @@ namespace AssetManagement.Editor
 			var isAssetReferenceT = NeedHandleAssetReferenceT(parentProperty);
 			if (isAssetReferenceT)
 			{
-				if (member.Name == IAssetReferenceEntry.CUSTOM_EDITOR_NAME)
+				if (member.Name == IAssetRef.CUSTOM_EDITOR_NAME)
 				{
 					attributes.Add(new PropertyOrderAttribute(-2));
 					if (!typeof(IList).IsAssignableFrom(parentProperty.ValueEntry.ParentType))
@@ -58,7 +58,7 @@ namespace AssetManagement.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AssetReferenceEntry.releaseDelayMs):
+				case nameof(AssetRef.releaseDelayMs):
 					attributes.Add(new TooltipAttribute("Задержка перед Release"));
 					attributes.Add(new LabelTextAttribute("Release Delay"));
 					attributes.Add(new UnitAttribute(Units.Millisecond));
@@ -89,7 +89,7 @@ namespace AssetManagement.Editor
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			if (Property.ParentValueProperty.ValueEntry.WeakSmartValue is not IAssetReferenceEntry assetReferenceEntry)
+			if (Property.ParentValueProperty.ValueEntry.WeakSmartValue is not IAssetRef assetReferenceEntry)
 			{
 				CallNextDrawer(label);
 				return;

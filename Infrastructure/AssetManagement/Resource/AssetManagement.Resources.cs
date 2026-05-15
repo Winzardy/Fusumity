@@ -21,7 +21,7 @@ namespace AssetManagement
 
 		/// <summary>
 		/// Загрузить ресурс (текстура, геймобж, текст и т.д). <br/>
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReferenceEntry)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
@@ -33,7 +33,7 @@ namespace AssetManagement
 
 		/// <summary>
 		/// Загрузить ресурс по пути(текстура, геймобж, текст и т.д). <br/>
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReferenceEntry)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]

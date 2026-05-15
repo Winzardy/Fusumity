@@ -26,30 +26,30 @@ namespace AssetManagement
 
 		/// <summary>
 		/// Загрузить ассет в память (текстура, геймобж, текст и т.д). <br/>
-		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReferenceEntry)"/>
+		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		public static async UniTask<T> LoadAssetAsync<T>(IAssetReferenceEntry entry,
+		public static async UniTask<T> LoadAssetAsync<T>(IAssetRef entry,
 			CancellationToken cancellationToken = default)
 			=> await provider.LoadAssetAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
-		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetReferenceEntry,System.Threading.CancellationToken)"/> <br/>
-		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReferenceEntry)"/>
+		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetRef,System.Threading.CancellationToken)"/> <br/>
+		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public static async UniTask<T> LoadComponentAsync<T>(ComponentReferenceEntry entry,
+		public static async UniTask<T> LoadComponentAsync<T>(ComponentRef entry,
 			CancellationToken cancellationToken = default)
 			where T : Component => await provider.LoadComponentAsync<T>(entry, cancellationToken);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
-		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetReferenceEntry,System.Threading.CancellationToken)"/> <br/>
-		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReferenceEntry)"/>
+		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetRef,System.Threading.CancellationToken)"/> <br/>
+		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public static async UniTask<T> LoadComponentAsync<T>(IAssetReferenceEntry entry,
+		public static async UniTask<T> LoadComponentAsync<T>(IAssetRef entry,
 			CancellationToken cancellationToken = default)
 			where T : Component => await provider.LoadComponentAsync<T>(entry, cancellationToken);
 
@@ -104,7 +104,7 @@ namespace AssetManagement
 		/// больше не нужен чтобы выгрузить, поэтому нужно сообщить системе чтобы она отпустила
 		/// </summary>
 		// TODO: добавить Release Mode (delay, trigger (например смена локации))
-		public static void Release(IAssetReferenceEntry entry, int? delayMs = 0) => provider.Release(entry, delayMs);
+		public static void Release(IAssetRef entry, int? delayMs = 0) => provider.Release(entry, delayMs);
 
 		/// <summary>
 		/// Отпустить ассет из памяти по пути

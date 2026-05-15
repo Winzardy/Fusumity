@@ -27,7 +27,7 @@ namespace AssetManagement
 	}
 
 	[Serializable]
-	public class AssetReferenceEntry<T> : IAssetReferenceEntry<T>
+	public class AssetRef<T> : IAssetRef<T>
 		where T : UnityObject
 	{
 		[FormerlySerializedAs("_assetReference")]
@@ -36,8 +36,8 @@ namespace AssetManagement
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		AssetReference IAssetReferenceEntry.AssetReference => assetReference;
-		int IAssetReferenceEntry.ReleaseDelayMs => releaseDelayMs;
+		AssetReference IAssetRef.AssetReference => assetReference;
+		int IAssetRef.ReleaseDelayMs => releaseDelayMs;
 
 		public T editorAsset
 		{
@@ -51,17 +51,17 @@ namespace AssetManagement
 
 		public string AssetGuid { get => assetReference.AssetGUID; }
 
-		public static implicit operator bool(AssetReferenceEntry<T> entry) => !entry.IsEmptyOrInvalid();
+		public static implicit operator bool(AssetRef<T> entry) => !entry.IsEmptyOrInvalid();
 
-		public static bool operator ==(AssetReferenceEntry<T> a, AssetReferenceEntry<T> b) => a.SameAsset(b);
-		public static bool operator !=(AssetReferenceEntry<T> a, AssetReferenceEntry<T> b) => !(a == b);
-		public override bool Equals(object obj) => this == obj as AssetReferenceEntry<T>;
+		public static bool operator ==(AssetRef<T> a, AssetRef<T> b) => a.SameAsset(b);
+		public static bool operator !=(AssetRef<T> a, AssetRef<T> b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as AssetRef<T>;
 		public override int GetHashCode() => assetReference.GetHashCode();
 		public override string ToString() => assetReference.ToString();
 	}
 
 	[Serializable]
-	public class AssetReferenceEntry : IAssetReferenceEntry
+	public class AssetRef : IAssetRef
 	{
 		[FormerlySerializedAs("_assetReference")]
 		public AssetReference assetReference;
@@ -69,8 +69,8 @@ namespace AssetManagement
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		AssetReference IAssetReferenceEntry.AssetReference => assetReference;
-		int IAssetReferenceEntry.ReleaseDelayMs => releaseDelayMs;
+		AssetReference IAssetRef.AssetReference => assetReference;
+		int IAssetRef.ReleaseDelayMs => releaseDelayMs;
 
 		public UnityObject editorAsset
 		{
@@ -82,20 +82,20 @@ namespace AssetManagement
 #endif
 		}
 
-		public static implicit operator bool(AssetReferenceEntry entry) => !entry.IsEmptyOrInvalid();
+		public static implicit operator bool(AssetRef entry) => !entry.IsEmptyOrInvalid();
 
-		public static bool operator ==(AssetReferenceEntry a, AssetReferenceEntry b) => a.SameAsset(b);
-		public static bool operator !=(AssetReferenceEntry a, AssetReferenceEntry b) => !(a == b);
-		public override bool Equals(object obj) => this == obj as AssetReferenceEntry;
+		public static bool operator ==(AssetRef a, AssetRef b) => a.SameAsset(b);
+		public static bool operator !=(AssetRef a, AssetRef b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as AssetRef;
 		public override int GetHashCode() => assetReference.GetHashCode();
 		public override string ToString() => assetReference.ToString();
 	}
 
-	public interface IAssetReferenceEntry
+	public interface IAssetRef
 	{
 #if UNITY_EDITOR
 		/// <summary>
-		/// <see cref="AssetReferenceEntry{T}.editorAsset"/>
+		/// <see cref="AssetRef{T}.editorAsset"/>
 		/// </summary>
 		public const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif
@@ -112,13 +112,13 @@ namespace AssetManagement
 #endif
 	}
 
-	public interface IAssetReferenceEntry<T> : IAssetReferenceEntry where T : UnityObject
+	public interface IAssetRef<T> : IAssetRef where T : UnityObject
 	{
 	}
 
 	public static class AssetReferenceExtensions
 	{
-		public static bool SameAsset(this IAssetReferenceEntry a, IAssetReferenceEntry b)
+		public static bool SameAsset(this IAssetRef a, IAssetRef b)
 		{
 			if (ReferenceEquals(a, b))
 				return true;
