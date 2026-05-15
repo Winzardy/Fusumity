@@ -322,8 +322,13 @@ namespace Fusumity.Editor
 
 			var graph = _builder.Build(_root, _rootTargetType);
 			_graphView.Draw(graph);
-			_dirty = false;
-			UpdateSourceInfo(MakeSourceText());
+
+			if (_dirty)
+			{
+				_dirty = false;
+				UpdateSourceInfo(MakeSourceText());
+				titleContent.text = titleContent.text[..^1];
+			}
 		}
 
 		private bool CloseIfNoSelectedEvaluator()
@@ -742,6 +747,16 @@ namespace Fusumity.Editor
 
 		private static string FormatCollectionPortLabel(int index)
 			=> $"{index}";
+
+		private static string FormatFieldPortLabel(string label)
+		{
+			if (string.IsNullOrEmpty(label))
+				return label;
+
+			return label.Length == 1
+				? label
+				: ObjectNames.NicifyVariableName(label);
+		}
 
 		private readonly struct TypePresentation
 		{
@@ -2351,7 +2366,7 @@ namespace Fusumity.Editor
 				{
 					var subtitle = MakeLabel(model.Subtitle, true);
 					subtitle.style.marginBottom = 4;
-					subtitle.style.marginTop    = 2;
+					subtitle.style.marginTop    = 4;
 					mainContainer.Add(subtitle);
 				}
 
@@ -2429,6 +2444,7 @@ namespace Fusumity.Editor
 				{
 					var rect = GUILayoutUtility.GetRect(12f, 12f, GUILayout.Width(12f), GUILayout.Height(12f));
 					rect.y -= 1;
+					rect.x -= 2;
 					SdfIcons.DrawIcon(rect, icon, color);
 				});
 				container.style.width       = 12;
@@ -2474,7 +2490,7 @@ namespace Fusumity.Editor
 							if (!ConstantValuesEqual(model.ConstantValue, constantValue))
 							{
 								model.ConstantValue = constantValue;
-								changed = true;
+								changed             = true;
 							}
 						}
 						else if (changed)
@@ -2564,6 +2580,7 @@ namespace Fusumity.Editor
 					GUILayout.Space(2);
 					EditorGUILayout.BeginHorizontal();
 					GUILayout.Space(2);
+					EditorGUILayout.BeginVertical();
 				}
 
 				for (var i = 0; i < rootProperty.Children.Count; i++)
@@ -2580,9 +2597,9 @@ namespace Fusumity.Editor
 
 				if (useSpace)
 				{
+					EditorGUILayout.EndVertical();
 					GUILayout.Space(2);
 					EditorGUILayout.EndHorizontal();
-					GUILayout.Space(2);
 				}
 			}
 
@@ -3104,6 +3121,12 @@ namespace Fusumity.Editor
 				int collectionIndex = -1,
 				bool isCollectionAppend = false)
 			{
+				if (field != null &&
+					kind is EvaluatorGraphPortKind.EvaluatorField or EvaluatorGraphPortKind.EvaluatedValueField)
+				{
+					label = FormatFieldPortLabel(label);
+				}
+
 				var port = new EvaluatorGraphPortModel(this, label, field, targetType, kind, collectionIndex, isCollectionAppend);
 				Ports.Add(port);
 				return port;
