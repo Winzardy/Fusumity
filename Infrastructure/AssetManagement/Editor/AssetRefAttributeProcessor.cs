@@ -13,7 +13,7 @@ using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
-	public class AssetReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<IAssetRef>
+	public class AssetRefAttributeProcessor : BaseAssetRefAttributeProcessor<IAssetRef>
 	{
 		protected override string FieldName => nameof(AssetRef.assetReference);
 
@@ -30,7 +30,7 @@ namespace AssetManagement.Editor
 			if (!parentProperty.Attributes.HasAttribute<AssetReferenceRequiredComponentAttribute>())
 				return;
 
-			var className = nameof(AssetReferenceEntryAttributeProcessor);
+			var className = nameof(AssetRefAttributeProcessor);
 			var dropdown = new ValueDropdownAttribute($"@{className}.{nameof(FilterByRequiredComponent)}($property)")
 			{
 				AppendNextDrawer = true
@@ -152,7 +152,7 @@ namespace AssetManagement.Editor
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var isValid = AssetReferenceEntryAttributeProcessor.ValidateRequiredComponent(Property, out var message);
+			var isValid = AssetRefAttributeProcessor.ValidateRequiredComponent(Property, out var message);
 			var originColor = GUI.backgroundColor;
 
 			if (!isValid)

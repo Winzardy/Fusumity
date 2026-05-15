@@ -15,7 +15,7 @@ namespace AssetManagement
 	[Serializable]
 	[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary... " +
 		"Look away AssetReferenceEntry")]
-	public class ResourceReferenceEntry<T> : IResourceReferenceEntry
+	public class ResourceRef<T> : IResourceRef
 		where T : Object
 	{
 		[SerializeField]
@@ -29,13 +29,13 @@ namespace AssetManagement
 #else
 			null;
 #endif
-		public static implicit operator ResourceReferenceEntry<T>(string path) => new ResourceReferenceEntry<T>()
+		public static implicit operator ResourceRef<T>(string path) => new ResourceRef<T>()
 		{
 			_path = path
 		};
 	}
 
-	public interface IResourceReferenceEntry
+	public interface IResourceRef
 	{
 		public string Path { get; }
 

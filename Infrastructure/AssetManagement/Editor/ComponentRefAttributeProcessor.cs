@@ -10,7 +10,7 @@ using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
-	public class ComponentReferenceEntryAttributeProcessor : BaseAssetReferenceEntryAttributeProcessor<ComponentRef>
+	public class ComponentRefAttributeProcessor : BaseAssetRefAttributeProcessor<ComponentRef>
 	{
 		protected override string FieldName => "_assetReference";
 
@@ -27,7 +27,7 @@ namespace AssetManagement.Editor
 			if (entry.AssetType == null)
 				return;
 
-			var className = nameof(ComponentReferenceEntryAttributeProcessor);
+			var className = nameof(ComponentRefAttributeProcessor);
 			var dropdown = new ValueDropdownAttribute($"@{className}.{nameof(Filter)}($property)");
 			dropdown.AppendNextDrawer = true;
 			attributes.Add(dropdown);

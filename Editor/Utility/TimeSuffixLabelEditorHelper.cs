@@ -25,7 +25,7 @@ namespace Fusumity.Editor
 			if (property.ValueEntry.WeakSmartValue is int sec)
 			{
 				var abs = sec.Abs();
-				return abs.ToLabel(false, false);
+				return abs.ToLabel(true, false);
 			}
 
 			return string.Empty;

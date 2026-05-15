@@ -75,7 +75,7 @@ namespace AssetManagement
 		/// Ассеты обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="ReleaseAssets"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
-		public static async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReferenceEntry entry,
+		public static async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelRef entry,
 			CancellationToken cancellationToken = default) =>
 			await provider.LoadAssetsAsync<T>(entry, cancellationToken);
 
@@ -114,7 +114,7 @@ namespace AssetManagement
 		/// <summary>
 		/// Отпустить ассет из памяти
 		/// </summary>
-		public static void ReleaseAssets(AssetLabelReferenceEntry entry) => provider.ReleaseAssets(entry);
+		public static void ReleaseAssets(AssetLabelRef entry) => provider.ReleaseAssets(entry);
 
 		/// <summary>
 		/// Отпустить ассет из памяти по тегу

@@ -26,7 +26,7 @@ namespace Audio
 		/// <summary>
 		/// Используется ресурсы юнити, потому что Mixer через подгрузку Addressables не работает
 		/// </summary>
-		public ResourceReferenceEntry<AudioMixer> reference;
+		public ResourceRef<AudioMixer> reference;
 
 		[FormerlySerializedAs("entry")]
 		[HideLabel]

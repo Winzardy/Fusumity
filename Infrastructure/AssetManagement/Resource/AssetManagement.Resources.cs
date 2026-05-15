@@ -25,7 +25,7 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
-		public async UniTask<T> LoadResourceAsync<T>(IResourceReferenceEntry entry, CancellationToken cancellationToken = default)
+		public async UniTask<T> LoadResourceAsync<T>(IResourceRef entry, CancellationToken cancellationToken = default)
 			where T : UnityObject
 		{
 			return await LoadResourceAsync<T>(entry.Path, cancellationToken);
@@ -78,7 +78,7 @@ namespace AssetManagement
 		/// <summary>
 		/// Отпустить ресурс
 		/// </summary>
-		public void Release(IResourceReferenceEntry entry)
+		public void Release(IResourceRef entry)
 		{
 			ReleaseResource(entry.Path);
 		}

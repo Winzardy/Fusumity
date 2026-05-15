@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 namespace AssetManagement
 {
 	[Serializable]
-	public class AssetLabelReferenceEntry
+	public class AssetLabelRef
 	{
 		[SerializeField]
 		private AssetLabelReference _assetLabelReference;

@@ -12,7 +12,7 @@ using UnityEngine.AddressableAssets;
 
 namespace AssetManagement.Editor
 {
-	public abstract class BaseAssetReferenceEntryAttributeProcessor<T> : OdinAttributeProcessor<T>
+	public abstract class BaseAssetRefAttributeProcessor<T> : OdinAttributeProcessor<T>
 	{
 		protected abstract string FieldName { get; }
 		protected virtual bool NeedHandleAssetReferenceT(InspectorProperty property) => property.ValueEntry.TypeOfValue.IsGenericType;
@@ -28,8 +28,7 @@ namespace AssetManagement.Editor
 				if (member.Name == IAssetRef.CUSTOM_EDITOR_NAME)
 				{
 					attributes.Add(new PropertyOrderAttribute(-2));
-					if (!typeof(IList).IsAssignableFrom(parentProperty.ValueEntry.ParentType))
-						attributes.Add(new LabelTextAttribute(parentProperty.NiceName));
+					AddParentLabelAttribute(parentProperty, attributes);
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new InvalidAssetReferenceAttribute());
 				}
@@ -48,8 +47,7 @@ namespace AssetManagement.Editor
 				else
 				{
 					attributes.Add(new PropertyOrderAttribute(-2));
-					if (!typeof(IList).IsAssignableFrom(parentProperty.ValueEntry.ParentType))
-						attributes.Add(new LabelTextAttribute(parentProperty.NiceName));
+					AddParentLabelAttribute(parentProperty, attributes);
 					OnProcessFieldAttributes(parentProperty, member, attributes);
 				}
 
@@ -78,6 +76,40 @@ namespace AssetManagement.Editor
 		protected virtual void OnProcessFieldAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
 		{
+		}
+
+		private static void AddParentLabelAttribute(InspectorProperty parentProperty, List<Attribute> attributes)
+		{
+			if (IsCollectionElement(parentProperty))
+				return;
+
+			if (parentProperty.Attributes.HasAttribute<HideLabelAttribute>() ||
+				parentProperty.GetAttribute<HideLabelAttribute>() != null)
+			{
+				attributes.Add(new HideLabelAttribute());
+				return;
+			}
+
+			var label = GetParentLabel(parentProperty);
+			if (!string.IsNullOrEmpty(label))
+				attributes.Add(new LabelTextAttribute(label));
+		}
+
+		private static bool IsCollectionElement(InspectorProperty property)
+		{
+			var parentType = property?.ValueEntry?.ParentType;
+			return parentType != null && typeof(IList).IsAssignableFrom(parentType);
+		}
+
+		private static string GetParentLabel(InspectorProperty parentProperty)
+		{
+			var labelAttribute = parentProperty.Attributes.GetAttribute<LabelTextAttribute>() ??
+				parentProperty.GetAttribute<LabelTextAttribute>();
+			if (labelAttribute != null)
+				return labelAttribute.Text;
+
+			var label = parentProperty.Label?.text;
+			return !string.IsNullOrEmpty(label) ? label : parentProperty.NiceName;
 		}
 	}
 

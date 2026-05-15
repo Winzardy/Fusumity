@@ -107,12 +107,12 @@ namespace AssetManagement
 			AssetLoader.Release(asset, delayMs);
 		}
 
-		public static void Preload<T>(this AssetLabelReferenceEntry label)
+		public static void Preload<T>(this AssetLabelRef label)
 		{
 			AssetLoader.LoadAssetsAsync<T>(label).Forget();
 		}
 
-		public static void Release(this AssetLabelReferenceEntry label)
+		public static void Release(this AssetLabelRef label)
 		{
 			AssetLoader.ReleaseAssets(label);
 		}
