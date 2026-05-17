@@ -14,7 +14,7 @@ namespace AssetManagement.Editor
 
 			switch (member.Name)
 			{
-				case "_assetLabelReference":
+				case "_reference":
 					attributes.Add(new HideLabelAttribute());
 					break;
 			}
