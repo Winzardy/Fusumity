@@ -7,9 +7,9 @@ namespace Content.ScriptableObjects
 {
 	public class ClientContentImporter : BaseClientContentImporter
 	{
-		private AssetLabelRef _label;
+		private AssetLabelReference _label;
 
-		public ClientContentImporter(AssetLabelRef label)
+		public ClientContentImporter(AssetLabelReference label)
 		{
 			_label = label;
 		}

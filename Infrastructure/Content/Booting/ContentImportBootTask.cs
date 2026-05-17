@@ -18,7 +18,7 @@ namespace Booting.Content
 	{
 		public override int Priority => HIGH_PRIORITY - 110;
 
-		public AssetLabelRef label;
+		public AssetLabelReference label;
 
 		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{

@@ -10,7 +10,7 @@ namespace UI.Popovers
 
 		private void InitializeAssetsPreloader()
 		{
-			using (ListPool<IAssetRef>.Get(out var list))
+			using (ListPool<IAssetReference>.Get(out var list))
 			{
 				foreach (var entry in ContentManager.GetAllEntries<UIPopoverConfig>())
 				{

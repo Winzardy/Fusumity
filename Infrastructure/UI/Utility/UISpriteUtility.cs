@@ -7,11 +7,11 @@ namespace UI
 {
 	public static class UISpriteUtility
 	{
-		public static void SetSpriteSafe(this Image placeholder, UISpriteAssigner assigner, AssetRef<Sprite> reference,
+		public static void SetSpriteSafe(this Image placeholder, UISpriteAssigner assigner, AssetReference<Sprite> reference,
 			Sprite icon = null, Sprite defaultIconSprite = null, Action callback = null) =>
 			assigner.SetSprite(placeholder, reference, icon, defaultIconSprite, callback);
 
-		public static void SetSprite(this UISpriteAssigner assigner, Image image, AssetRef<Sprite> reference,
+		public static void SetSprite(this UISpriteAssigner assigner, Image image, AssetReference<Sprite> reference,
 			Sprite icon = null, Sprite defaultIconSprite = null, Action callback = null)
 		{
 			if (!image)

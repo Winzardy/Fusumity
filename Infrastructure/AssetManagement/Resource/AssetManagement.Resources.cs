@@ -21,11 +21,11 @@ namespace AssetManagement
 
 		/// <summary>
 		/// Загрузить ресурс (текстура, геймобж, текст и т.д). <br/>
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
-		public async UniTask<T> LoadResourceAsync<T>(IResourceRef entry, CancellationToken cancellationToken = default)
+		public async UniTask<T> LoadResourceAsync<T>(IResourceReference entry, CancellationToken cancellationToken = default)
 			where T : UnityObject
 		{
 			return await LoadResourceAsync<T>(entry.Path, cancellationToken);
@@ -33,7 +33,7 @@ namespace AssetManagement
 
 		/// <summary>
 		/// Загрузить ресурс по пути(текстура, геймобж, текст и т.д). <br/>
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetRef)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
@@ -78,9 +78,9 @@ namespace AssetManagement
 		/// <summary>
 		/// Отпустить ресурс
 		/// </summary>
-		public void Release(IResourceRef entry)
+		public void Release(IResourceReference reference)
 		{
-			ReleaseResource(entry.Path);
+			ReleaseResource(reference.Path);
 		}
 
 		public void ReleaseResource(string path)

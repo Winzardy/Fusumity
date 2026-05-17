@@ -9,7 +9,7 @@ namespace UI
 {
 	public class DefaultButtonViewModel : IButtonViewModel
 	{
-		public AssetRef<Sprite> IconReference { get; private set; }
+		public AssetReference<Sprite> IconReference { get; private set; }
 		public Sprite Icon { get; set; }
 		public event Action IconChanged;
 
@@ -41,7 +41,7 @@ namespace UI
 	// TODO: переделать, оставить Label и Interactable, label => LabelViewModel
 	public interface IButtonViewModel
 	{
-		public AssetRef<Sprite> IconReference { get; }
+		public AssetReference<Sprite> IconReference { get; }
 		public Sprite Icon { get; }
 		public event Action IconChanged;
 

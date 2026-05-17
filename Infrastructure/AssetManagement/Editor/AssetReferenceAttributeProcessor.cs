@@ -13,15 +13,15 @@ using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
-	public class AssetRefAttributeProcessor : BaseAssetRefAttributeProcessor<IAssetRef>
+	public class AssetReferenceAttributeProcessor : BaseAssetReferenceAttributeProcessor<IAssetReference>
 	{
-		protected override string FieldName => nameof(AssetRef.assetReference);
+		protected override string FieldName => nameof(AssetReference.assetReference);
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
-			if (member.Name != IAssetRef.CUSTOM_EDITOR_NAME)
+			if (member.Name != IAssetReference.CUSTOM_EDITOR_NAME)
 				return;
 
 			if (!IsGameObjectEntry(parentProperty))
@@ -30,7 +30,7 @@ namespace AssetManagement.Editor
 			if (!parentProperty.Attributes.HasAttribute<AssetReferenceRequiredComponentAttribute>())
 				return;
 
-			var className = nameof(AssetRefAttributeProcessor);
+			var className = nameof(AssetReferenceAttributeProcessor);
 			var dropdown = new ValueDropdownAttribute($"@{className}.{nameof(FilterByRequiredComponent)}($property)")
 			{
 				AppendNextDrawer = true
@@ -89,7 +89,7 @@ namespace AssetManagement.Editor
 
 			var interfaceType = type
 				.GetInterfaces()
-				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetRef<>));
+				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetReference<>));
 
 			return interfaceType?.GetGenericArguments()[0] == typeof(GameObject);
 		}
@@ -152,7 +152,7 @@ namespace AssetManagement.Editor
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var isValid = AssetRefAttributeProcessor.ValidateRequiredComponent(Property, out var message);
+			var isValid = AssetReferenceAttributeProcessor.ValidateRequiredComponent(Property, out var message);
 			var originColor = GUI.backgroundColor;
 
 			if (!isValid)

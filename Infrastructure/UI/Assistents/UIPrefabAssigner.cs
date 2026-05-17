@@ -48,7 +48,7 @@ namespace UI
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _parentToHandle);
 		}
 
-		public void TrySetPrefab(RectTransform parent, IAssetRef<GameObject> prefabRef, Action<GameObject> callback = null,
+		public void TrySetPrefab(RectTransform parent, IAssetReference<GameObject> prefabRef, Action<GameObject> callback = null,
 			bool disableDuringLoad = true)
 		{
 			if (parent == null || prefabRef.IsEmptyOrInvalid())
@@ -57,13 +57,13 @@ namespace UI
 			SetPrefab(parent, prefabRef, callback, disableDuringLoad);
 		}
 
-		public void SetPrefab(IEnumerable<RectTransform> parents, IAssetRef<GameObject> prefabRef)
+		public void SetPrefab(IEnumerable<RectTransform> parents, IAssetReference<GameObject> prefabRef)
 		{
 			foreach (var parent in parents)
 				SetPrefab(parent, prefabRef);
 		}
 
-		public void SetPrefab(RectTransform parent, IAssetRef<GameObject> prefabRef, Action<GameObject> callback = null,
+		public void SetPrefab(RectTransform parent, IAssetReference<GameObject> prefabRef, Action<GameObject> callback = null,
 			bool disableDuringLoad = true)
 		{
 			if (disableDuringLoad)
@@ -103,7 +103,7 @@ namespace UI
 			LoadAndPlaceAsync(parent, callback).Forget();
 		}
 
-		private bool TryUpdateSingle(RectTransform parent, IAssetRef<GameObject> prefabEntry, Action<GameObject> callback = null)
+		private bool TryUpdateSingle(RectTransform parent, IAssetReference<GameObject> prefabEntry, Action<GameObject> callback = null)
 		{
 			if (_single.parent == parent)
 			{
@@ -182,14 +182,14 @@ namespace UI
 
 	public struct PrefabAssignerHandle
 	{
-		public IAssetRef<GameObject> prefabRef;
+		public IAssetReference<GameObject> prefabRef;
 		public CancellationTokenSource cts;
 
 		private GameObject _instance;
 
 		internal GameObject Instance { get => _instance; }
 
-		public PrefabAssignerHandle(IAssetRef<GameObject> prefabRef)
+		public PrefabAssignerHandle(IAssetReference<GameObject> prefabRef)
 		{
 			this.prefabRef = prefabRef;
 			cts            = null;

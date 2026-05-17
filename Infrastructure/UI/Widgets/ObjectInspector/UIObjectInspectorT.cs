@@ -9,7 +9,7 @@ namespace UI
 	public class DefaultObjectInspectorViewModel<T> : IObjectInspectorViewModel<T>
 		where T : Component
 	{
-		public IAssetRef Reference { get; set; }
+		public IAssetReference Reference { get; set; }
 		public T Prefab { get; set; }
 		public ISpinner Spinner { get; set; }
 		public UITextureRendererArgs? Render { get; set; }
@@ -59,7 +59,7 @@ namespace UI
 			_gameObject = null;
 		}
 
-		protected override async UniTask<T> LoadAsync(IAssetRef reference,
+		protected override async UniTask<T> LoadAsync(IAssetReference reference,
 			CancellationToken cancellationToken)
 			=> await reference.LoadComponentAsync<T>(cancellationToken);
 	}

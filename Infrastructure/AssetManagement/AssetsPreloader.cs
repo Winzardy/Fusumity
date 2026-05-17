@@ -12,7 +12,7 @@ namespace AssetManagement
 		private bool _preloaded;
 
 		private CancellationTokenSource _cts;
-		private HashSet<IAssetRef> _assets;
+		private HashSet<IAssetReference> _references;
 
 		public void Dispose()
 		{
@@ -26,36 +26,36 @@ namespace AssetManagement
 			if (!_preloaded)
 				return;
 
-			_assets?.Release();
-			_assets = null;
+			_references?.Release();
+			_references = null;
 
 			_preloaded = false;
 		}
 
-		public void Preload(params IAssetRef[] assets)
+		public void Preload(params IAssetReference[] references)
 		{
 			TryRelease();
 
-			if (assets.IsNullOrEmpty())
+			if (references.IsNullOrEmpty())
 				return;
 
-			_assets = new(assets);
+			_references = new(references);
 
-			if (_assets.IsNullOrEmpty())
+			if (_references.IsNullOrEmpty())
 				return;
 
 			PreloadAsync().Forget();
 		}
 
-		public bool TryRelease(IAssetRef entry)
+		public bool TryRelease(IAssetReference reference)
 		{
-			if (_assets.IsNullOrEmpty())
+			if (_references.IsNullOrEmpty())
 				return false;
 
-			if (!_assets.Remove(entry))
+			if (!_references.Remove(reference))
 				return false;
 
-			entry.Release();
+			reference.Release();
 			return true;
 		}
 
@@ -65,7 +65,7 @@ namespace AssetManagement
 
 			try
 			{
-				await _assets.PreloadAsync(_cts.Token);
+				await _references.PreloadAsync(_cts.Token);
 				_preloaded = true;
 			}
 			finally

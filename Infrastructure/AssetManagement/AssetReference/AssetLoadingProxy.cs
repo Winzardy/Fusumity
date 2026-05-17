@@ -8,9 +8,9 @@ using Object = UnityEngine.Object;
 
 namespace AssetManagement
 {
-	public class GameObjectLoadingProxy : AssetLoadingProxy<IAssetRef, GameObject>
+	public class GameObjectLoadingProxy : AssetLoadingProxy<IAssetReference, GameObject>
 	{
-		public GameObjectLoadingProxy(IAssetRef entry) : base(entry)
+		public GameObjectLoadingProxy(IAssetReference entry) : base(entry)
 		{
 		}
 
@@ -28,10 +28,10 @@ namespace AssetManagement
 		}
 	}
 
-	public class AssetLoadingProxy<TAsset> : AssetLoadingProxy<IAssetRef<TAsset>, TAsset>
+	public class AssetLoadingProxy<TAsset> : AssetLoadingProxy<IAssetReference<TAsset>, TAsset>
 		where TAsset : Object
 	{
-		public AssetLoadingProxy(IAssetRef<TAsset> entry) : base(entry)
+		public AssetLoadingProxy(IAssetReference<TAsset> entry) : base(entry)
 		{
 		}
 	}
@@ -41,10 +41,10 @@ namespace AssetManagement
 	/// to prevent refcount bloating.
 	/// </summary>
 	public class AssetLoadingProxy<TEntry, TAsset> : IDisposable
-		where TEntry : IAssetRef
+		where TEntry : IAssetReference
 		where TAsset : Object
 	{
-		private IAssetRef _entry;
+		private IAssetReference _entry;
 
 		private TAsset _loadedAsset;
 		private UniTaskCompletionSource<TAsset> _loadingTcs;
@@ -54,7 +54,7 @@ namespace AssetManagement
 
 		public bool IsLoaded { get => _loadedAsset != null; }
 
-		public AssetLoadingProxy(IAssetRef entry)
+		public AssetLoadingProxy(IAssetReference entry)
 		{
 			_entry = entry;
 		}
@@ -141,7 +141,7 @@ namespace AssetManagement
 
 	public class GameObjectLoadingMediator : AssetLoadingProxiesMediator<GameObject>
 	{
-		public async UniTask<T> LoadComponentAsync<T>(IAssetRef<GameObject> entry, CancellationToken token) where T : Component
+		public async UniTask<T> LoadComponentAsync<T>(IAssetReference<GameObject> entry, CancellationToken token) where T : Component
 		{
 			var go = await LoadAsync(entry, token);
 			token.ThrowIfCancellationRequested();
@@ -150,10 +150,10 @@ namespace AssetManagement
 		}
 	}
 
-	public class AssetLoadingProxiesMediator<T> : IDisposable, IEnumerable<(IAssetRef<T>, AssetLoadingProxy<T>)> where T : Object
+	public class AssetLoadingProxiesMediator<T> : IDisposable, IEnumerable<(IAssetReference<T>, AssetLoadingProxy<T>)> where T : Object
 	{
-		private Dictionary<IAssetRef<T>, AssetLoadingProxy<T>> _loadingProxies = new Dictionary<IAssetRef<T>, AssetLoadingProxy<T>>();
-		private Dictionary<IAssetRef, AssetLoadingProxy<IAssetRef, T>> _untypedLoadingProxies;
+		private Dictionary<IAssetReference<T>, AssetLoadingProxy<T>> _loadingProxies = new Dictionary<IAssetReference<T>, AssetLoadingProxy<T>>();
+		private Dictionary<IAssetReference, AssetLoadingProxy<IAssetReference, T>> _untypedLoadingProxies;
 
 		//TODO: add simultaneous assets limit (FIFO clearing after N)
 
@@ -162,12 +162,12 @@ namespace AssetManagement
 			Clear();
 		}
 
-		public bool HasEntry(IAssetRef<T> entry) => _loadingProxies.ContainsKey(entry);
-		public bool EntryLoaded(IAssetRef<T> entry)
+		public bool HasEntry(IAssetReference<T> entry) => _loadingProxies.ContainsKey(entry);
+		public bool EntryLoaded(IAssetReference<T> entry)
 			=> _loadingProxies.TryGetValue(entry, out var proxy) &&
 			proxy.IsLoaded;
 
-		public UniTask<T> LoadAsync(IAssetRef<T> entry, CancellationToken token)
+		public UniTask<T> LoadAsync(IAssetReference<T> entry, CancellationToken token)
 		{
 			if (!_loadingProxies.TryGetValue(entry, out var proxy))
 			{
@@ -178,20 +178,20 @@ namespace AssetManagement
 			return proxy.LoadAsync(token);
 		}
 
-		public UniTask<T> LoadAsync(IAssetRef entry, CancellationToken token)
+		public UniTask<T> LoadAsync(IAssetReference entry, CancellationToken token)
 		{
-			_untypedLoadingProxies ??= new Dictionary<IAssetRef, AssetLoadingProxy<IAssetRef, T>>();
+			_untypedLoadingProxies ??= new Dictionary<IAssetReference, AssetLoadingProxy<IAssetReference, T>>();
 
 			if (!_untypedLoadingProxies.TryGetValue(entry, out var proxy))
 			{
-				proxy = new AssetLoadingProxy<IAssetRef, T>(entry);
+				proxy = new AssetLoadingProxy<IAssetReference, T>(entry);
 				_untypedLoadingProxies.Add(entry, proxy);
 			}
 
 			return proxy.LoadAsync(token);
 		}
 
-		public void Clear(IAssetRef<T> entry)
+		public void Clear(IAssetReference<T> entry)
 		{
 			if (_loadingProxies.TryGetValue(entry, out var proxy))
 			{
@@ -220,7 +220,7 @@ namespace AssetManagement
 			_untypedLoadingProxies.Clear();
 		}
 
-		public IEnumerator<(IAssetRef<T>, AssetLoadingProxy<T>)> GetEnumerator()
+		public IEnumerator<(IAssetReference<T>, AssetLoadingProxy<T>)> GetEnumerator()
 		{
 			foreach (var kvp in _loadingProxies)
 			{

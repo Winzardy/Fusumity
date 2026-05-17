@@ -9,17 +9,17 @@ namespace AssetManagement
 	{
 		/// <summary>
 		/// Загрузить ресурс в память (текстура, геймобж, текст и т.д).
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IResourceRef)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IResourceReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
-		public static async UniTask<T> LoadResourceAsync<T>(IResourceRef entry, CancellationToken cancellationToken = default)
+		public static async UniTask<T> LoadResourceAsync<T>(IResourceReference reference, CancellationToken cancellationToken = default)
 			where T : Object =>
-			await _instance.LoadResourceAsync<T>(entry, cancellationToken);
+			await _instance.LoadResourceAsync<T>(reference, cancellationToken);
 
 		/// <summary>
 		/// Загрузить ресурс в память по пути (текстура, геймобж, текст и т.д).
-		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IResourceRef)"/>
+		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IResourceReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
@@ -30,7 +30,7 @@ namespace AssetManagement
 		/// <summary>
 		/// Отпустить ресурс
 		/// </summary>
-		public static void Release(IResourceRef entry) => _instance.Release(entry);
+		public static void Release(IResourceReference reference) => _instance.Release(reference);
 
 		/// <summary>
 		/// Отпустить ресурс

@@ -7,7 +7,7 @@ namespace UI
 	public class UIDefaultToggleButtonViewModel : IToggleButtonViewModel
 	{
 		public int Index { get; private set; }
-		public IAssetRef<Sprite> Icon { get; private set; }
+		public IAssetReference<Sprite> Icon { get; private set; }
 		public string Label { get; private set; }
 
 		public bool IsToggled { get; private set; }
@@ -34,7 +34,7 @@ namespace UI
 			Index = index;
 		}
 
-		public UIDefaultToggleButtonViewModel(int index, bool isToggled, IAssetRef<Sprite> icon, string label) : this(index,
+		public UIDefaultToggleButtonViewModel(int index, bool isToggled, IAssetReference<Sprite> icon, string label) : this(index,
 			isToggled)
 		{
 			Icon = icon;
@@ -43,7 +43,7 @@ namespace UI
 
 		public void Click() => Clicked?.Invoke(this);
 
-		public void SetIcon(IAssetRef<Sprite> icon)
+		public void SetIcon(IAssetReference<Sprite> icon)
 		{
 			Icon = icon;
 			IconChanged?.Invoke();

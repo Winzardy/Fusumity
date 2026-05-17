@@ -1,88 +1,62 @@
-﻿using System;
+using System;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+using UnityEngine.Serialization;
 
 namespace AssetManagement
 {
 	using UnityObject = UnityEngine.Object;
+	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
 
-	/// <summary>
-	/// Creates an AssetReference that is restricted to having a specific Component.
-	/// - This is the class that inherits from AssetReference.  It is generic and does not specify which Components it might care about.  A concrete child of this class is required for serialization to work.* At edit-time it validates that the asset set on it is a GameObject with the required Component.
-	/// - At edit-time it validates that the asset set on it is a GameObject with the required Component.
-	/// - At runtime it can load/instantiate the GameObject, then return the desired component.  API matches base class (LoadAssetAsync and InstantiateAsync).
-	/// </summary>
-	/// <typeparam name="T">The component type.</typeparam>
 	[Serializable]
-	internal class ComponentReference<T> : AssetReference
+	public class ComponentReference<T> : ComponentReference, IAssetReference<T>
 		where T : Component
 	{
-		public ComponentReference(string guid) : base(guid)
-		{
-		}
+		[SerializeField]
+		[FormerlySerializedAs("_assetReference")]
+		private ComponentReferenceT<T> assetReference;
 
-		public new AsyncOperationHandle<T> InstantiateAsync(Vector3 position, Quaternion rotation, Transform parent = null)
-		{
-			return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(
-				base.InstantiateAsync(position, Quaternion.identity, parent), GameObjectReady);
-		}
+		public override UnityAssetReference AssetReference => assetReference;
+		public static implicit operator bool(ComponentReference<T> value) => !value.IsEmptyOrInvalid();
 
-		public new AsyncOperationHandle<T> InstantiateAsync(Transform parent = null, bool instantiateInWorldSpace = false)
-		{
-			return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(base.InstantiateAsync(parent, instantiateInWorldSpace),
-				GameObjectReady);
-		}
-
-		public AsyncOperationHandle<T> LoadAssetAsync()
-		{
-			return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(base.LoadAssetAsync<GameObject>(), GameObjectReady);
-		}
-
-		AsyncOperationHandle<T> GameObjectReady(AsyncOperationHandle<GameObject> arg)
-		{
-			var comp = arg.Result.GetComponent<T>();
-			return Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
-		}
-
-		public override bool ValidateAsset(UnityObject obj)
-		{
-			var go = obj as GameObject;
-			return go != null && go.GetComponent<T>() != null;
-		}
-
-		public override bool ValidateAsset(string path)
+		public GameObject editorAsset
 		{
 #if UNITY_EDITOR
-			//this load can be expensive...
-			var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-			return go != null && go.GetComponent<T>() != null;
+			get => assetReference.editorAsset;
+			set { this.SetEditorAsset(value); }
 #else
-            return false;
+			get => null;
 #endif
 		}
 
-		public void ReleaseInstance(AsyncOperationHandle<T> op)
-		{
-			// Release the instance
-			var component = op.Result as Component;
-			if (component != null)
-			{
-				Addressables.ReleaseInstance(component.gameObject);
-			}
+		public override Type AssetType => typeof(T);
 
-			// Release the handle
-			Addressables.Release(op);
-		}
+		public override string ToString() => assetReference.ToString();
+	}
 
+	[Serializable]
+	public abstract class ComponentReference : IAssetReference
+	{
+		[SerializeField]
+		private int _releaseDelayMs;
 
+		public abstract UnityAssetReference AssetReference { get; }
 
+		int IAssetReference.ReleaseDelayMs => _releaseDelayMs;
+
+		public virtual Type AssetType => null;
+		public UnityObject EditorAsset =>
 #if UNITY_EDITOR
-		public new GameObject editorAsset => base.editorAsset as GameObject;
+			AssetReference.editorAsset;
+#else
+			null;
 #endif
+
+		public static implicit operator bool(ComponentReference value) => !value.IsEmptyOrInvalid();
+
+		public static bool operator ==(ComponentReference a, ComponentReference b) => a.SameAsset(b);
+		public static bool operator !=(ComponentReference a, ComponentReference b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as ComponentReference;
+		public override int GetHashCode() => AssetReference.GetHashCode();
+		public override string ToString() => AssetReference.ToString();
 	}
 }

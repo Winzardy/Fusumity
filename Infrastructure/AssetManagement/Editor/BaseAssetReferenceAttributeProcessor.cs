@@ -12,7 +12,7 @@ using UnityEngine.AddressableAssets;
 
 namespace AssetManagement.Editor
 {
-	public abstract class BaseAssetRefAttributeProcessor<T> : OdinAttributeProcessor<T>
+	public abstract class BaseAssetReferenceAttributeProcessor<T> : OdinAttributeProcessor<T>
 	{
 		protected abstract string FieldName { get; }
 		protected virtual bool NeedHandleAssetReferenceT(InspectorProperty property) => property.ValueEntry.TypeOfValue.IsGenericType;
@@ -25,7 +25,7 @@ namespace AssetManagement.Editor
 			var isAssetReferenceT = NeedHandleAssetReferenceT(parentProperty);
 			if (isAssetReferenceT)
 			{
-				if (member.Name == IAssetRef.CUSTOM_EDITOR_NAME)
+				if (member.Name == IAssetReference.CUSTOM_EDITOR_NAME)
 				{
 					attributes.Add(new PropertyOrderAttribute(-2));
 					AddParentLabelAttribute(parentProperty, attributes);
@@ -56,7 +56,7 @@ namespace AssetManagement.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AssetRef.releaseDelayMs):
+				case nameof(AssetReference.releaseDelayMs):
 					attributes.Add(new TooltipAttribute("Задержка перед Release"));
 					attributes.Add(new LabelTextAttribute("Release Delay"));
 					attributes.Add(new UnitAttribute(Units.Millisecond));
@@ -121,7 +121,7 @@ namespace AssetManagement.Editor
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			if (Property.ParentValueProperty.ValueEntry.WeakSmartValue is not IAssetRef assetReferenceEntry)
+			if (Property.ParentValueProperty.ValueEntry.WeakSmartValue is not IAssetReference assetReferenceEntry)
 			{
 				CallNextDrawer(label);
 				return;

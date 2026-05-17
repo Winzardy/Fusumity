@@ -15,7 +15,7 @@ namespace AssetManagement
 	[Serializable]
 	[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary... " +
 		"Look away AssetReferenceEntry")]
-	public class ResourceRef<T> : IResourceRef
+	public class ResourceReference<T> : IResourceReference
 		where T : Object
 	{
 		[SerializeField]
@@ -29,17 +29,17 @@ namespace AssetManagement
 #else
 			null;
 #endif
-		public static implicit operator ResourceRef<T>(string path) => new ResourceRef<T>()
+		public static implicit operator ResourceReference<T>(string path) => new ResourceReference<T>()
 		{
 			_path = path
 		};
 	}
 
-	public interface IResourceRef
+	public interface IResourceReference
 	{
-		public string Path { get; }
+		string Path { get; }
 
-		public Object editorAsset =>
+		Object editorAsset =>
 #if UNITY_EDITOR
 			!Path.IsNullOrEmpty() ? Resources.Load(Path) : null;
 #else

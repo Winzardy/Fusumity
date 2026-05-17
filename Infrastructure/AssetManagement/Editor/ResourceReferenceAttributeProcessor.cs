@@ -5,7 +5,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace AssetManagement.Editor
 {
-	public class ResourceRefAttributeProcessor : BaseAssetRefAttributeProcessor<IResourceRef>
+	public class ResourceReferenceAttributeProcessor : BaseAssetReferenceAttributeProcessor<IResourceReference>
 	{
 		protected override string FieldName => "_path";
 		protected override bool NeedHandleAssetReferenceT(InspectorProperty property) => false;

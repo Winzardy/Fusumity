@@ -188,7 +188,7 @@ namespace Advertising.Fake
 		public int rewardedDelayMs;
 		public int interstitalDelayMs;
 
-		public ResourceRef<FakeOverlay> overlayReference;
+		public ResourceReference<FakeOverlay> overlayReference;
 
 		public static FakeAdSettings Default => new()
 		{

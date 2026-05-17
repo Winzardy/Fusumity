@@ -20,11 +20,11 @@ namespace UI.MVVM
 		protected Action _onClose;
 
 		private string _layer;
-		private ComponentRef<TLayout> _assetRef;
-		protected override ComponentRef LayoutReference { get => _assetRef; }
+		private ComponentReference<TLayout> _assetRef;
+		protected override ComponentReference LayoutReference { get => _assetRef; }
 		protected override string Layer { get => _layer; }
 
-		public UIViewBoundWidget(string layer, ComponentRef<TLayout> assetRef)
+		public UIViewBoundWidget(string layer, ComponentReference<TLayout> assetRef)
 		{
 			_layer = layer;
 			_assetRef = assetRef;

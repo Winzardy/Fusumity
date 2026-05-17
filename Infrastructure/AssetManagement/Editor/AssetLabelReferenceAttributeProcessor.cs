@@ -6,7 +6,7 @@ using Sirenix.OdinInspector.Editor;
 
 namespace AssetManagement.Editor
 {
-	public class AssetLabelRefAttributeProcessor : OdinAttributeProcessor<AssetLabelRef>
+	public class AssetLabelReferenceAttributeProcessor : OdinAttributeProcessor<AssetLabelReference>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

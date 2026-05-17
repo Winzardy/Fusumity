@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Fusumity.MVVM.UI
 {
-	public class StaticImageCollection : ViewCollection<IAssetRef<Sprite>, StaticImageView, Image>
+	public class StaticImageCollection : ViewCollection<IAssetReference<Sprite>, StaticImageView, Image>
 	{
 		public StaticImageCollection(ViewCollectionLayout<Image> layout) : base(layout)
 		{

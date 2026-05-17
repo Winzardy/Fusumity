@@ -15,7 +15,7 @@ namespace UI
 		{
 			public bool IsOn { get; set; }
 
-			public AssetRef<Sprite> IconReference { get; set; }
+			public AssetReference<Sprite> IconReference { get; set; }
 
 			public Sprite Icon { get; set; }
 

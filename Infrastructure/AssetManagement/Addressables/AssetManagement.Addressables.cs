@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AssetManagement.AddressableAssets;
@@ -11,7 +10,8 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace AssetManagement
 {
 	using UnityObject = UnityEngine.Object;
-
+	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
+	using UnityAssetLabelReference = UnityEngine.AddressableAssets.AssetLabelReference;
 	/// <summary>
 	/// Заметка! <br/>
 	/// При работае с Addressables было выявлено, что
@@ -36,7 +36,7 @@ namespace AssetManagement
 		{
 			ReleaseAllAddressable();
 
-			_keyToAssetContainer = null;
+			_keyToAssetContainer           = null;
 			_keyToAssetCollectionContainer = null;
 		}
 
@@ -57,7 +57,7 @@ namespace AssetManagement
 			_keyToAssetCollectionContainer.Clear();
 		}
 
-		private async UniTask<T> LoadAssetAsync<T>(AssetReference assetReference, CancellationToken cancellationToken)
+		private async UniTask<T> LoadAssetAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken)
 		{
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
@@ -71,7 +71,7 @@ namespace AssetManagement
 			return await LoadAssetAsyncByKey<T>(key, cancellationToken, context);
 		}
 
-		private async UniTask<T> LoadComponentAsync<T>(AssetReference assetReference, CancellationToken cancellationToken)
+		private async UniTask<T> LoadComponentAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken)
 		{
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
@@ -156,7 +156,7 @@ namespace AssetManagement
 			return asset;
 		}
 
-		private async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReference labelReference, CancellationToken cancellationToken)
+		private async UniTask<IList<T>> LoadAssetsAsync<T>(UnityAssetLabelReference labelReference, CancellationToken cancellationToken)
 		{
 			if (!labelReference.RuntimeKeyIsValid())
 			{
@@ -222,7 +222,7 @@ namespace AssetManagement
 			return null;
 		}
 
-		private void Release(AssetReference assetReference)
+		private void Release(UnityAssetReference assetReference)
 		{
 			ReleaseAssetByKey(assetReference.RuntimeKey);
 		}
@@ -242,7 +242,7 @@ namespace AssetManagement
 			_keyToAssetContainer.Remove(key);
 		}
 
-		private void ReleaseAssets(AssetLabelReference labelReference)
+		private void ReleaseAssets(UnityAssetLabelReference labelReference)
 		{
 			ReleaseAssetsByKey(labelReference.RuntimeKey);
 		}

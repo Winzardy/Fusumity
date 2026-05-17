@@ -5,6 +5,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace AssetManagement.AddressableAssets
 {
 	using UnityObject = Object;
+	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
 
 	public static class AssetManagementUtility
 	{
@@ -23,7 +24,7 @@ namespace AssetManagement.AddressableAssets
 		/// <summary>
 		/// Метод в основном для дебага, вернет нулл если вызывается не в редакторе
 		/// </summary>
-		public static UnityObject GetEditorAssetSafe(this AssetReference assetReference)
+		public static UnityObject GetEditorAssetSafe(this UnityAssetReference assetReference)
 		{
 #if UNITY_EDITOR
 			return assetReference.editorAsset;
@@ -31,7 +32,7 @@ namespace AssetManagement.AddressableAssets
 			return null;
 		}
 
-		public static bool IsRuntimeValid(this AssetReference assetReference)
+		public static bool IsRuntimeValid(this UnityAssetReference assetReference)
 		{
 			if (!assetReference.RuntimeKeyIsValid())
 				return false;

@@ -15,7 +15,7 @@ namespace Audio
 		[Tooltip("Используется ли в настройках, чтобы дать игроку управлять громкостью группы звуков через панель настрок")]
 		public bool configurable;
 
-		public AssetRef<Sprite> icon;
+		public AssetReference<Sprite> icon;
 
 		[Tooltip("Нужен для сортировки микшеров в окне настроек! Чем выше приоритет тем выше он в списке")]
 		public int priority;

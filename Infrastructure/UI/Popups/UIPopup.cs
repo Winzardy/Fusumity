@@ -149,10 +149,10 @@ namespace UI.Popups
 
 		public override WidgetFlags Flags { get => _config.flags; }
 
-		protected override ComponentRef LayoutReference => _config.layout.LayoutReference;
+		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
-		protected override List<AssetRef> PreloadAssets => _config.layout.preloadAssets;
+		protected override List<AssetReference> PreloadAssets => _config.layout.preloadAssets;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
