@@ -6,7 +6,6 @@ using Sapientia.Evaluators;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using UnityEngine;
 
 namespace Fusumity.Editor
 {
@@ -46,13 +45,8 @@ namespace Fusumity.Editor
 
 			// Хак для того чтобы в селекторе был <> Constant, проблема в том что над Generic
 			// TypeRegisterItemAttribute не работает, точнее работает, просто его важен конченый тип, а Generic не определенный тип!
-			EvaluatorTypeRegistryUtility.Register(
-				constantType,
-				"\u2009Constant",
-				"/",
-				new Color(IEvaluator.R, IEvaluator.G, IEvaluator.B, IEvaluator.A),
-				SdfIconType.DiamondFill,
-				10000);
+			if (EvaluatorTypeRegistryUtility.TryGetKnownGenericPresentation(constantType, out var presentation))
+				EvaluatorTypeRegistryUtility.Register(constantType, presentation);
 		}
 
 		private static Type GetValueType(Type constantType)

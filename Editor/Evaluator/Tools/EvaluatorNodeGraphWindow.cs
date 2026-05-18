@@ -14,6 +14,7 @@ using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -26,10 +27,15 @@ namespace Fusumity.Editor
 	{
 		private const string TITLE = "Evaluator Node Graph";
 		private const string OPEN_MENU_PATH = "Edit in Node Graph";
+		private const string NOTHING_SELECTED_TEXT = "Nothing selected";
 
 		private const float NODE_WIDTH = 270f;
+		private const float TREE_NODE_WIDTH = 420f;
 		private const float ROOT_NODE_WIDTH = 120f;
-		private const float LEVEL_WIDTH = 360f;
+		private const float LEVEL_WIDTH = TREE_NODE_WIDTH + 120f;
+		private const float ROOT_LEVEL_WIDTH = ROOT_NODE_WIDTH + 180f;
+		private const float ROOT_POSITION_OFFSET_X = 100f;
+		private const float ROOT_POSITION_OFFSET_Y = -17f;
 		private const float ROW_HEIGHT = 22f;
 		private const float NODE_VERTICAL_SPACE = 26f;
 		private const double AUTO_BAKE_INTERVAL = 1d;
@@ -40,6 +46,8 @@ namespace Fusumity.Editor
 		private static readonly Dictionary<Type, TypePresentation> _typePresentationCache = new();
 		private static int _inlineNodeRenderDepth;
 
+		private static Texture _windowIcon;
+
 		private readonly EvaluatorGraphBuilder _builder = new();
 
 		private EvaluatorGraphView _graphView;
@@ -49,12 +57,21 @@ namespace Fusumity.Editor
 		private UnityObject _owner;
 		private string _sourceLabel;
 		private Label _sourceInfoLabel;
+		private ObjectField _ownerObjectField;
 		private Toggle _autoSaveToggle;
 		private bool _hasRootSelection;
 		private bool _dirty;
 		private double _lastAutoBakeTime;
 		private double _selectionCloseSuppressedUntil;
 		private Button _saveButton;
+
+		[MenuItem("Window/Evaluator Node Graph")]
+		public static void Open()
+		{
+			var window = GetWindow<EvaluatorNodeGraphWindow>();
+			window.Show();
+			window.Focus();
+		}
 
 		public static void AddOpenAttributes(List<Attribute> attributes)
 		{
@@ -193,10 +210,21 @@ namespace Fusumity.Editor
 				_inlineNodeRenderDepth--;
 		}
 
+		private void OnTabDetached() => Rebuild();
+
+		private void OnAddedAsTab() => Rebuild();
+
+		protected override void OnEnable()
+		{
+			base.OnEnable();
+
+			_windowIcon            ??= SdfIcons.CreateTransparentIconTexture(SdfIconType.Diagram2Fill, Color.white, 16, 16, 0);
+			_windowIcon.filterMode =   FilterMode.Point;
+			titleContent           =   new GUIContent(TITLE, _windowIcon);
+		}
+
 		private void CreateGUI()
 		{
-			titleContent = new GUIContent(TITLE);
-
 			var header = new VisualElement
 			{
 				style =
@@ -223,6 +251,30 @@ namespace Fusumity.Editor
 				tooltip = "Показать все ноды"
 			});
 
+			_ownerObjectField = new ObjectField
+			{
+				objectType        = typeof(UnityObject),
+				allowSceneObjects = true,
+				tooltip           = "Ping selected object",
+				style =
+				{
+					width       = 180,
+					marginLeft  = 8,
+					marginRight = 4
+				}
+			};
+			_ownerObjectField.RegisterValueChangedCallback(_ => UpdateOwnerObjectField());
+			_ownerObjectField.RegisterCallback<MouseDownEvent>(evt =>
+			{
+				if (evt.clickCount != 2 || !_owner)
+					return;
+
+				EditorGUIUtility.PingObject(_owner);
+				evt.StopPropagation();
+			});
+			header.Add(_ownerObjectField);
+			UpdateOwnerObjectField();
+			_ownerObjectField.SetEnabled(false);
 			_sourceInfoLabel = new Label
 			{
 				style =
@@ -234,6 +286,7 @@ namespace Fusumity.Editor
 				}
 			};
 			header.Add(_sourceInfoLabel);
+			UpdateSourceInfo(MakeSourceText());
 
 			_autoSaveToggle = new Toggle("Auto Save")
 			{
@@ -280,7 +333,7 @@ namespace Fusumity.Editor
 		{
 			_saveButton.SetEnabled(!_autoSaveToggle.value && _dirty);
 
-			if (CloseIfNoSelectedEvaluator())
+			if (ClearIfNoSelectedEvaluator())
 				return;
 
 			if (!_dirty)
@@ -307,6 +360,7 @@ namespace Fusumity.Editor
 			_dirty                         = false;
 			_selectionCloseSuppressedUntil = EditorApplication.timeSinceStartup + SELECTION_CLOSE_GRACE_INTERVAL;
 
+			UpdateSourceInfo(MakeSourceText());
 			Rebuild();
 		}
 
@@ -315,10 +369,15 @@ namespace Fusumity.Editor
 			if (_graphView == null)
 				return;
 
-			if (CloseIfNoSelectedEvaluator())
+			if (ClearIfNoSelectedEvaluator())
 				return;
 
 			_graphView.ClearGraph();
+			if (_root == null)
+			{
+				UpdateSourceInfo(MakeSourceText());
+				return;
+			}
 
 			var graph = _builder.Build(_root, _rootTargetType);
 			_graphView.Draw(graph);
@@ -331,7 +390,7 @@ namespace Fusumity.Editor
 			}
 		}
 
-		private bool CloseIfNoSelectedEvaluator()
+		private bool ClearIfNoSelectedEvaluator()
 		{
 			if (_dirty)
 				return false;
@@ -345,8 +404,23 @@ namespace Fusumity.Editor
 			if (HasSelectedEvaluator())
 				return false;
 
-			Close();
+			ClearSelectedEvaluator();
 			return true;
+		}
+
+		private void ClearSelectedEvaluator()
+		{
+			_root             = null;
+			_owner            = null;
+			_sourceLabel      = null;
+			_targetProperty   = null;
+			_rootTargetType   = null;
+			_hasRootSelection = false;
+			_dirty            = false;
+
+			_graphView?.ClearGraph();
+			UpdateSourceInfo(MakeSourceText());
+			titleContent.text = TITLE;
 		}
 
 		private bool HasSelectedEvaluator()
@@ -465,18 +539,61 @@ namespace Fusumity.Editor
 		}
 
 		private string MakeSourceText()
+
 		{
+			if (!_hasRootSelection || _root == null)
+				return NOTHING_SELECTED_TEXT;
 			var ownerName = _owner ? _owner.name : "runtime object";
 			if (string.IsNullOrEmpty(_sourceLabel))
 				return ownerName;
+			var path = _sourceLabel;
+			if (path.StartsWith("_entry.value."))
+				path = path["_entry.value.".Length..];
+			else if (path == "_entry.value")
+				path = string.Empty;
+			path = CollapseDuplicateSegments(path);
+			return string.IsNullOrEmpty(path)
+				? ownerName
+				: $"path: {path}";
+		}
 
-			return $"Selected: {ownerName} / {_sourceLabel}";
+		private static string CollapseDuplicateSegments(string path)
+
+		{
+			if (string.IsNullOrEmpty(path))
+				return path;
+			var split = path.Split('.');
+			if (split.Length <= 1)
+				return path;
+			var result = new List<string>(split.Length);
+			string prev = null;
+			for (var i = 0; i < split.Length; i++)
+			{
+				var current = split[i];
+				if (current == prev)
+					continue;
+				result.Add(current);
+				prev = current;
+			}
+
+			return string.Join(".", result);
 		}
 
 		private void UpdateSourceInfo(string text)
 		{
 			if (_sourceInfoLabel != null)
 				_sourceInfoLabel.text = text;
+
+			UpdateOwnerObjectField();
+		}
+
+		private void UpdateOwnerObjectField()
+		{
+			if (_ownerObjectField == null)
+				return;
+
+			_ownerObjectField.SetValueWithoutNotify(_owner);
+			_ownerObjectField.style.display = _owner ? DisplayStyle.Flex : DisplayStyle.None;
 		}
 
 		private static IEvaluator CreateDefaultEvaluator(Type targetType)
@@ -626,40 +743,12 @@ namespace Fusumity.Editor
 			ref SdfIconType icon,
 			ref Color iconColor)
 		{
-			if (!type.IsGenericType)
+			if (!EvaluatorTypeRegistryUtility.TryGetKnownGenericPresentation(type, out var presentation))
 				return;
 
-			var genericDefinition = type.GetGenericTypeDefinition();
-			if (genericDefinition == typeof(IfElseEvaluator<,>))
-			{
-				name      = "If / else";
-				icon      = SdfIconType.Alt;
-				iconColor = EvaluatorTypeRegistryConstants.EVALUATOR_COLOR;
-			}
-			else if (genericDefinition == typeof(ConstantEvaluator<,>))
-			{
-				name      = "Constant";
-				icon      = SdfIconType.DiamondFill;
-				iconColor = EvaluatorTypeRegistryConstants.EVALUATOR_COLOR;
-			}
-			else if (genericDefinition == typeof(IfElseCondition<>))
-			{
-				name      = "If / else";
-				icon      = SdfIconType.Alt;
-				iconColor = EvaluatorTypeRegistryConstants.CONDITION_COLOR;
-			}
-			else if (genericDefinition == typeof(NoneCondition<>))
-			{
-				name      = EvaluatorTypeRegistryConstants.NONE_CONDITION_LABEL;
-				icon      = EvaluatorTypeRegistryConstants.NONE_CONDITION_SDF_ICON;
-				iconColor = EvaluatorTypeRegistryConstants.CONDITION_COLOR;
-			}
-			else if (genericDefinition == typeof(RejectCondition<>))
-			{
-				name      = EvaluatorTypeRegistryConstants.REJECT_CONDITION_LABEL;
-				icon      = EvaluatorTypeRegistryConstants.REJECT_CONDITION_SDF_ICON;
-				iconColor = EvaluatorTypeRegistryConstants.CONDITION_COLOR;
-			}
+			name      = presentation.Name;
+			icon      = presentation.Icon;
+			iconColor = presentation.Color;
 		}
 
 		private static IEnumerable<Type> GetTypeRegistryCandidates(Type type)
@@ -758,6 +847,32 @@ namespace Fusumity.Editor
 				: ObjectNames.NicifyVariableName(label);
 		}
 
+		private static Vector2 GetChildNodeOffset(float y = 0f)
+			=> new Vector2(LEVEL_WIDTH, y);
+
+		private static Vector2 GetChildNodeOffset(EvaluatorGraphNodeModel parent, float y = 0f)
+			=> new Vector2(GetChildLevelWidth(parent), y);
+
+		private static float GetChildLevelWidth(EvaluatorGraphNodeModel parent)
+			=> parent?.Kind == EvaluatorGraphNodeKind.Root ? ROOT_LEVEL_WIDTH : LEVEL_WIDTH;
+
+		private static float GetLayoutX(int depth)
+		{
+			if (depth <= 0)
+				return 20f;
+
+			return ROOT_LEVEL_WIDTH + (depth - 1) * LEVEL_WIDTH + 20f;
+		}
+
+		private static Vector2 GetLayoutPosition(EvaluatorGraphNodeModel model, int depth, float y)
+		{
+			var position = new Vector2(GetLayoutX(depth), y);
+			if (model?.Kind == EvaluatorGraphNodeKind.Root)
+				position += new Vector2(ROOT_POSITION_OFFSET_X, ROOT_POSITION_OFFSET_Y);
+
+			return position;
+		}
+
 		private readonly struct TypePresentation
 		{
 			public readonly string Name;
@@ -853,7 +968,7 @@ namespace Fusumity.Editor
 						continue;
 
 					var output = startPort.direction == UnityDirection.Output ? startPort : port;
-					var input = startPort.direction == UnityDirection.Input ? startPort : port;
+					var input = startPort.direction == UnityDirection.Output ? port : startPort;
 
 					if (output.userData is not EvaluatorGraphPortModel outputModel ||
 						input.userData is not EvaluatorGraphNodeModel inputModel)
@@ -934,6 +1049,8 @@ namespace Fusumity.Editor
 				if (_graph?.Root == null)
 					return null;
 
+				FlushInlineEditors();
+
 				var connections = CollectConnections();
 				var rootPort = _graph.RootPort;
 				if (rootPort == null)
@@ -941,6 +1058,12 @@ namespace Fusumity.Editor
 
 				connections.TryGetValue(rootPort, out var rootModel);
 				return BakeChildEvaluator(rootModel, _graph.RootTargetType, connections, new HashSet<EvaluatorGraphNodeModel>());
+			}
+
+			private void FlushInlineEditors()
+			{
+				foreach (var view in _modelToView.Values)
+					view.FlushInlineEditorChanges();
 			}
 
 			public bool TryGetEmptyGraphWarning(out string warning)
@@ -968,17 +1091,11 @@ namespace Fusumity.Editor
 					}
 				}
 
-				var disconnectedNodes = _graph.Nodes
-					.Where(x => x != _graph.Root && !reachableNodes.Contains(x))
-					.Select(FormatNodeName)
-					.ToList();
-
-				if (missingConnections.Count == 0 && disconnectedNodes.Count == 0)
+				if (missingConnections.Count == 0)
 					return false;
 
-				var lines = new List<string> {"Graph has empty or disconnected nodes:"};
+				var lines = new List<string> {"Graph has empty slots:"};
 				AppendLimitedLines(lines, "Empty slots", missingConnections);
-				AppendLimitedLines(lines, "Disconnected nodes", disconnectedNodes);
 				warning = string.Join("\n", lines);
 				return true;
 			}
@@ -1056,12 +1173,15 @@ namespace Fusumity.Editor
 					return;
 				}
 
-				var rootTargetType = _graph?.RootTargetType ?? typeof(IEvaluator);
-				evt.menu.AppendAction("Create Node...", _ =>
+				var rootTargetType = _graph?.RootTargetType;
+				if (rootTargetType != null)
 				{
-					var position = _mousePosition;
-					OpenTypePicker(rootTargetType, evaluator => CreateStandaloneNode(evaluator, position));
-				});
+					evt.menu.AppendAction("Create Node...", _ =>
+					{
+						var position = _mousePosition;
+						OpenTypePicker(rootTargetType, evaluator => CreateStandaloneNode(evaluator, position));
+					});
+				}
 
 				if (_clipboard != null)
 					evt.menu.AppendAction("Paste Node", _ => PasteNode(_mousePosition));
@@ -1307,8 +1427,8 @@ namespace Fusumity.Editor
 				if (_modelToView.ContainsKey(model))
 					return;
 
-				var view = new EvaluatorNodeView(model, model == _graph?.Root, _edgeConnectorListener, PopulatePortMenu, _onChanged);
-				var width = GetNodeWidth(model);
+				var view = new EvaluatorNodeView(model, ReferenceEquals(model, _graph?.Root), _edgeConnectorListener, PopulatePortMenu, _onChanged);
+				var width = GetNodeWidth(model, view.HasInlineEditor);
 				view.SetPosition(new Rect(position, new Vector2(width, model.Height)));
 				view.style.width    = width;
 				view.style.minWidth = width;
@@ -1325,8 +1445,13 @@ namespace Fusumity.Editor
 				view.RefreshNodeState();
 			}
 
-			private static float GetNodeWidth(EvaluatorGraphNodeModel model)
-				=> model?.Kind == EvaluatorGraphNodeKind.Root ? ROOT_NODE_WIDTH : NODE_WIDTH;
+			private static float GetNodeWidth(EvaluatorGraphNodeModel model, bool hasInlineEditor)
+			{
+				if (model?.Kind == EvaluatorGraphNodeKind.Root)
+					return ROOT_NODE_WIDTH;
+
+				return hasInlineEditor ? TREE_NODE_WIDTH : NODE_WIDTH;
+			}
 
 			private void PopulatePortMenu(Port output, EvaluatorGraphPortModel portModel, DropdownMenu menu)
 			{
@@ -1395,7 +1520,7 @@ namespace Fusumity.Editor
 				overlay.Add(new IMGUIContainer(() =>
 				{
 					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("Select Evaluator", EditorStyles.boldLabel);
+					EditorGUILayout.LabelField("Select Node", EditorStyles.boldLabel);
 					GUILayout.FlexibleSpace();
 					if (DrawCloseIconButton())
 						HideTypePickerOverlay();
@@ -1439,7 +1564,7 @@ namespace Fusumity.Editor
 				EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 
 				var clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
-				var iconRect = new Rect(rect.x + 3f, rect.y + 3f, rect.width - 6f, rect.height - 6f);
+				var iconRect = new Rect(rect.x + 8f, rect.y + 3f, rect.width - 6f, rect.height - 6f);
 				var color = hovered ? Color.white : new Color(0.68f, 0.68f, 0.68f);
 				SdfIcons.DrawIcon(iconRect, SdfIconType.X, color);
 				return clicked;
@@ -1464,11 +1589,16 @@ namespace Fusumity.Editor
 			{
 				var sourceNode = output.GetFirstAncestorOfType<Node>();
 				var sourcePosition = sourceNode?.GetPosition().position ?? Vector2.zero;
-				var model = CreateEvaluatorNodeModel(evaluator, GetConnectionLabel(portModel), sourcePosition + new Vector2(LEVEL_WIDTH, 0f));
+				var model = CreateEvaluatorNodeModel(evaluator, GetConnectionLabel(portModel), sourcePosition + GetChildNodeOffset(portModel.Owner));
 				if (model == null)
 					return;
 
-				Connect(output, model, true);
+				if (!Connect(output, model, true))
+				{
+					DeleteNode(model);
+					return;
+				}
+
 				_onChanged?.Invoke();
 			}
 
@@ -1479,11 +1609,16 @@ namespace Fusumity.Editor
 
 				var sourceNode = output.GetFirstAncestorOfType<Node>();
 				var sourcePosition = sourceNode?.GetPosition().position ?? Vector2.zero;
-				var model = CreateNodeFromClipboard(_clipboard, GetConnectionLabel(portModel), sourcePosition + new Vector2(LEVEL_WIDTH, 0f));
+				var model = CreateNodeFromClipboard(_clipboard, GetConnectionLabel(portModel), sourcePosition + GetChildNodeOffset(portModel.Owner));
 				if (model == null)
 					return;
 
-				Connect(output, model, true);
+				if (!Connect(output, model, true))
+				{
+					DeleteNode(model);
+					return;
+				}
+
 				_onChanged?.Invoke();
 			}
 
@@ -1637,7 +1772,7 @@ namespace Fusumity.Editor
 
 				var createdModels = _graph?.Nodes.Skip(oldNodeCount).ToArray() ?? new[] {model};
 				for (var i = 0; i < createdModels.Length; i++)
-					CreateNodeView(createdModels[i], position + new Vector2(i == 0 ? 0f : LEVEL_WIDTH, i * 110f));
+					CreateNodeView(createdModels[i], position + (i == 0 ? Vector2.zero : GetChildNodeOffset(i * 110f)));
 
 				foreach (var createdModel in createdModels)
 					foreach (var edgeModel in createdModel.Edges)
@@ -1646,21 +1781,21 @@ namespace Fusumity.Editor
 				return model;
 			}
 
-			private void Connect(EvaluatorGraphPortModel portModel, EvaluatorGraphNodeModel childModel, bool exclusive)
+			private bool Connect(EvaluatorGraphPortModel portModel, EvaluatorGraphNodeModel childModel, bool exclusive)
 			{
 				if (!_portToView.TryGetValue(portModel, out var output))
-					return;
+					return false;
 
-				Connect(output, childModel, exclusive);
+				return Connect(output, childModel, exclusive);
 			}
 
-			private void Connect(Port output, EvaluatorGraphNodeModel childModel, bool exclusive)
+			private bool Connect(Port output, EvaluatorGraphNodeModel childModel, bool exclusive)
 			{
 				if (!_modelToView.TryGetValue(childModel, out var childView))
-					return;
+					return false;
 
 				if (childView.Input == null)
-					return;
+					return false;
 
 				if (exclusive)
 					RemoveOutputEdges(output);
@@ -1670,6 +1805,8 @@ namespace Fusumity.Editor
 
 				if (output.userData is EvaluatorGraphPortModel portModel)
 					PromoteCollectionAppendPort(portModel);
+
+				return true;
 			}
 
 			private void ConnectDroppedEdge(Edge edge)
@@ -1727,6 +1864,7 @@ namespace Fusumity.Editor
 					return;
 
 				var output = edge.output;
+				DiscardTransientEdge(edge);
 				var graphPosition = this.ChangeCoordinatesTo(contentViewContainer, worldPosition);
 				ShowTypePickerOverlay(
 					portModel.TargetType,
@@ -1740,8 +1878,23 @@ namespace Fusumity.Editor
 				if (model == null)
 					return;
 
-				Connect(output, model, true);
+				if (!Connect(output, model, true))
+				{
+					DeleteNode(model);
+					return;
+				}
+
 				_onChanged?.Invoke();
+			}
+
+			private void DiscardTransientEdge(Edge edge)
+			{
+				if (edge == null)
+					return;
+
+				DisconnectPort(edge.output, edge);
+				DisconnectPort(edge.input, edge);
+				edge.RemoveFromHierarchy();
 			}
 
 			private void PromoteCollectionAppendPort(EvaluatorGraphPortModel portModel)
@@ -2277,9 +2430,10 @@ namespace Fusumity.Editor
 			{
 				if (!activePath.Add(model))
 				{
-					model.Position =  new Vector2(depth * LEVEL_WIDTH + 20f, y);
+					var centerY = y + model.Height * 0.5f;
+					model.Position =  GetLayoutPosition(model, depth, y);
 					y              += model.Height + NODE_VERTICAL_SPACE;
-					return model.Position.y;
+					return centerY;
 				}
 
 				var treeChildren = model.Edges
@@ -2290,25 +2444,27 @@ namespace Fusumity.Editor
 
 				if (treeChildren.Length == 0)
 				{
-					model.Position =  new Vector2(depth * LEVEL_WIDTH + 20f, y);
+					var centerY = y + model.Height * 0.5f;
+					model.Position =  GetLayoutPosition(model, depth, y);
 					y              += model.Height + NODE_VERTICAL_SPACE;
 					activePath.Remove(model);
-					return model.Position.y;
+					return centerY;
 				}
 
-				var firstChildY = 0f;
-				var lastChildY = 0f;
+				var firstChildCenterY = 0f;
+				var lastChildCenterY = 0f;
 				for (var i = 0; i < treeChildren.Length; i++)
 				{
-					var childY = LayoutNode(treeChildren[i], depth + 1, ref y, activePath);
+					var childCenterY = LayoutNode(treeChildren[i], depth + 1, ref y, activePath);
 					if (i == 0)
-						firstChildY = childY;
-					lastChildY = childY;
+						firstChildCenterY = childCenterY;
+					lastChildCenterY = childCenterY;
 				}
 
-				model.Position = new Vector2(depth * LEVEL_WIDTH + 20f, (firstChildY + lastChildY) * 0.5f);
+				var center = (firstChildCenterY + lastChildCenterY) * 0.5f;
+				model.Position = GetLayoutPosition(model, depth, center - model.Height * 0.5f);
 				activePath.Remove(model);
-				return model.Position.y;
+				return center;
 			}
 		}
 
@@ -2323,11 +2479,19 @@ namespace Fusumity.Editor
 			private readonly IEdgeConnectorListener _edgeConnectorListener;
 			private readonly Action<Port, EvaluatorGraphPortModel, DropdownMenu> _populatePortMenu;
 			private readonly Action _onChanged;
+			private readonly EvaluatorGraphNodeModel _model;
+			private readonly bool _isRoot;
 			private PropertyTree _tree;
-			private object _treeTarget;
+			private object _treeContainer;
 			private FieldInfo _constantValueField;
+			private IMGUIContainer _titleIconContainer;
+			private IMGUIContainer _inlineFoldoutButton;
+			private IMGUIContainer _inlineEditorContainer;
+			private bool _hasInlineEditor;
+			private bool _inlineEditorExpanded;
 
 			public Port Input { get; }
+			public bool HasInlineEditor => _hasInlineEditor;
 
 			public EvaluatorNodeView(
 				EvaluatorGraphNodeModel model,
@@ -2339,6 +2503,8 @@ namespace Fusumity.Editor
 				_edgeConnectorListener = edgeConnectorListener;
 				_populatePortMenu      = populatePortMenu;
 				_onChanged             = onChanged;
+				_model                 = model;
+				_isRoot                = isRoot;
 				_icon                  = model.Icon;
 				_iconColor             = model.IconColor;
 				title                  = model.Title;
@@ -2349,6 +2515,7 @@ namespace Fusumity.Editor
 
 				titleContainer.style.borderBottomWidth = 2;
 				titleContainer.style.borderBottomColor = model.TitleColor;
+				titleContainer.style.flexDirection     = FlexDirection.Row;
 
 				titleContainer.style.backgroundColor = isRoot ? GetRootTitleColor(model.TitleColor) : NODE_COLOR;
 				mainContainer.style.backgroundColor  = isRoot ? ROOT_NODE_COLOR : NODE_COLOR;
@@ -2383,11 +2550,28 @@ namespace Fusumity.Editor
 
 			public void RefreshNodeState()
 			{
-				expanded     =  true;
 				capabilities &= ~Capabilities.Collapsible;
-				RefreshExpandedState();
+				SetInlineEditorExpanded(_inlineEditorExpanded, _inlineEditorExpanded);
 				RefreshPorts();
 				RefreshTitleIcon();
+			}
+
+			public void FlushInlineEditorChanges()
+			{
+				if (_tree == null)
+					return;
+
+				BeginInlineNodeRendering();
+				try
+				{
+					_tree.UpdateTree();
+					_tree.ApplyChanges();
+					SyncInlineEditorModel(_model);
+				}
+				finally
+				{
+					EndInlineNodeRendering();
+				}
 			}
 
 			private static Color GetRootTitleColor(Color typeColor)
@@ -2427,48 +2611,136 @@ namespace Fusumity.Editor
 
 			private void RefreshTitleIcon()
 			{
+				RefreshLeftTitleIcon();
+				RefreshTitleLabel();
+
+				var showRootIcon = _isRoot && _icon != SdfIconType.None;
 				titleButtonContainer.Clear();
-				titleButtonContainer.style.display        = _icon == SdfIconType.None ? DisplayStyle.None : DisplayStyle.Flex;
+				titleButtonContainer.style.display        = _hasInlineEditor || showRootIcon ? DisplayStyle.Flex : DisplayStyle.None;
 				titleButtonContainer.style.alignSelf      = Align.Stretch;
 				titleButtonContainer.style.alignItems     = Align.Center;
 				titleButtonContainer.style.justifyContent = Justify.Center;
 				titleButtonContainer.style.minWidth       = 24;
 
-				if (_icon != SdfIconType.None)
-					titleButtonContainer.Add(MakeIcon(_icon, _iconColor));
+				if (showRootIcon)
+				{
+					var rootIcon = MakeIcon(_icon, _iconColor, _isRoot ? -3 : 0);
+					rootIcon.pickingMode = PickingMode.Ignore;
+					titleButtonContainer.Add(rootIcon);
+				}
+
+				if (_hasInlineEditor)
+				{
+					_inlineFoldoutButton ??= MakeInlineFoldoutButton();
+					titleButtonContainer.Add(_inlineFoldoutButton);
+				}
 			}
 
-			private static IMGUIContainer MakeIcon(SdfIconType icon, Color color)
+			private void RefreshLeftTitleIcon()
+			{
+				_titleIconContainer?.RemoveFromHierarchy();
+				_titleIconContainer = null;
+
+				if (_icon == SdfIconType.None)
+					return;
+
+				if (_isRoot)
+					return;
+
+				_titleIconContainer             = MakeIcon(_icon, _iconColor);
+				_titleIconContainer.pickingMode = PickingMode.Ignore;
+				titleContainer.Insert(0, _titleIconContainer);
+			}
+
+			private void RefreshTitleLabel()
+			{
+				var titleLabel = this.Q<Label>("title-label") ?? titleContainer.Q<Label>();
+				if (titleLabel == null)
+					return;
+
+				titleLabel.style.display                 = DisplayStyle.Flex;
+				titleLabel.style.position                = Position.Relative;
+				titleLabel.style.flexGrow                = 1;
+				titleLabel.style.flexShrink              = 1;
+				titleLabel.style.marginLeft              = _icon == SdfIconType.None || _isRoot ? 8 : 4;
+				titleLabel.style.marginRight             = 4;
+				titleLabel.style.whiteSpace              = WhiteSpace.NoWrap;
+				titleLabel.style.unityTextAlign          = TextAnchor.MiddleLeft;
+				titleLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
+			}
+
+			private IMGUIContainer MakeInlineFoldoutButton()
+			{
+				var container = new IMGUIContainer(() =>
+				{
+					var rect = GUILayoutUtility.GetRect(9f, 9f, GUILayout.Width(12f), GUILayout.Height(12f));
+					var hovered = rect.Contains(Event.current.mousePosition);
+					EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+
+					if (GUI.Button(rect, GUIContent.none, GUIStyle.none))
+						SetInlineEditorExpanded(!_inlineEditorExpanded, true);
+
+					const float iconSize = 8f;
+					var iconRect = new Rect(
+						rect.x + (rect.width - iconSize) * 0.5f,
+						rect.y + (rect.height - iconSize) * 0.5f,
+						iconSize,
+						iconSize);
+					iconRect.x += 2;
+					var color = hovered ? Color.white : new Color(0.68f, 0.68f, 0.68f);
+					var icon = _inlineEditorExpanded ? SdfIconType.CaretDownFill : SdfIconType.CaretRightFill;
+					SdfIcons.DrawIcon(iconRect, icon, color);
+				});
+				container.tooltip         = "Show/Hide";
+				container.style.width     = 14;
+				container.style.height    = 14;
+				container.style.alignSelf = Align.Center;
+				return container;
+			}
+
+			private static IMGUIContainer MakeIcon(SdfIconType icon, Color color, int offset = 0)
 			{
 				var container = new IMGUIContainer(() =>
 				{
 					var rect = GUILayoutUtility.GetRect(12f, 12f, GUILayout.Width(12f), GUILayout.Height(12f));
-					rect.y -= 1;
-					rect.x -= 2;
+					rect.x += 1;
+					rect.x += offset;
 					SdfIcons.DrawIcon(rect, icon, color);
 				});
 				container.style.width       = 12;
 				container.style.height      = 12;
 				container.style.alignSelf   = Align.Center;
-				container.style.marginLeft  = 4;
+				container.style.marginLeft  = 8;
 				container.style.marginRight = 4;
 				return container;
 			}
 
 			private void SetupInlineEditor(EvaluatorGraphNodeModel model)
 			{
-				_treeTarget = GetInlineEditorTarget(model);
-				if (_treeTarget == null)
+				var obj = GetInlineEditorObj(model);
+				if (obj == null)
 					return;
+
+				var containerType = typeof(TreeContainer<>).MakeGenericType(obj.GetType());
+				_treeContainer = Activator.CreateInstance(containerType, obj);
 
 				BeginInlineNodeRendering();
 				try
 				{
-					_tree = PropertyTree.Create(_treeTarget);
+					_tree = PropertyTree.Create(_treeContainer);
+					_tree.UpdateTree();
 				}
 				finally
 				{
 					EndInlineNodeRendering();
+				}
+
+				if (!HasInlineEditorContent(_tree, model))
+				{
+					_tree.Dispose();
+					_tree          = null;
+					_treeContainer = null;
+					return;
 				}
 
 				IMGUIContainer container = null;
@@ -2480,22 +2752,26 @@ namespace Fusumity.Editor
 						_tree.UpdateTree();
 						EditorGUI.BeginChangeCheck();
 
-						DrawInlineProperties(_tree.RootProperty, model.Kind == EvaluatorGraphNodeKind.ConstantValue);
+						GUILayout.Space(2);
+						EditorGUILayout.BeginHorizontal();
+						GUILayout.Space(2);
+						EditorGUILayout.BeginVertical();
+
+						_tree.Draw(false);
+
+						EditorGUILayout.EndVertical();
+						GUILayout.Space(2);
+						EditorGUILayout.EndHorizontal();
+
+						if (model.Kind == EvaluatorGraphNodeKind.Evaluator)
+							GUILayout.Space(2);
 
 						var changed = EditorGUI.EndChangeCheck();
-						if (model.Kind == EvaluatorGraphNodeKind.ConstantValue && _constantValueField != null)
+						var syncConstant = model.Kind == EvaluatorGraphNodeKind.ConstantValue;
+						if (changed || syncConstant)
 						{
 							_tree.ApplyChanges();
-							var constantValue = _constantValueField.GetValue(_treeTarget);
-							if (!ConstantValuesEqual(model.ConstantValue, constantValue))
-							{
-								model.ConstantValue = constantValue;
-								changed             = true;
-							}
-						}
-						else if (changed)
-						{
-							_tree.ApplyChanges();
+							changed |= SyncInlineEditorModel(model);
 						}
 
 						if (changed)
@@ -2510,13 +2786,79 @@ namespace Fusumity.Editor
 					}
 				});
 
+				_hasInlineEditor       = true;
+				_inlineEditorContainer = container;
 				extensionContainer.Add(container);
-				ScheduleInlineEditorResize(container, model);
+				SetInlineEditorExpanded(false, false);
 				RegisterCallback<DetachFromPanelEvent>(_ =>
 				{
 					_tree?.Dispose();
 					_tree = null;
 				});
+			}
+
+			private static bool HasInlineEditorContent(PropertyTree tree, EvaluatorGraphNodeModel model)
+			{
+				if (model?.Kind == EvaluatorGraphNodeKind.ConstantValue)
+					return true;
+
+				var valueProperty = tree?.RootProperty?.Children.Get("value");
+				return HasDrawableInlineContent(valueProperty);
+			}
+
+			private static bool HasDrawableInlineContent(InspectorProperty property)
+			{
+				if (property == null)
+					return false;
+
+				for (var i = 0; i < property.Children.Count; i++)
+				{
+					var child = property.Children[i];
+					if (child.ValueEntry != null || HasDrawableInlineContent(child))
+						return true;
+				}
+
+				return false;
+			}
+
+			private void SetInlineEditorExpanded(bool value, bool updateSize)
+			{
+				_inlineEditorExpanded = _hasInlineEditor && value;
+
+				// Keep GraphView's built-in node expansion always enabled.
+				// The custom caret only toggles the inline Odin tree, not ports/main content.
+				expanded = true;
+				RefreshExpandedState();
+
+				if (_inlineEditorContainer != null)
+					_inlineEditorContainer.style.display = _inlineEditorExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+
+				_inlineFoldoutButton?.MarkDirtyRepaint();
+
+				if (!updateSize)
+					return;
+
+				if (_inlineEditorExpanded)
+					ScheduleInlineEditorResize(_inlineEditorContainer, _model);
+				else
+					SetCollapsedInlineEditorSize(_model);
+			}
+
+			private void SetCollapsedInlineEditorSize(EvaluatorGraphNodeModel model)
+			{
+				if (model == null)
+					return;
+
+				var position = GetPosition();
+				var height = model.Height;
+				if (Mathf.Abs(position.height - height) <= 1f)
+					return;
+
+				position.height = height;
+				SetPosition(position);
+				expanded = true;
+				RefreshExpandedState();
+				RefreshPorts();
 			}
 
 			private void ScheduleInlineEditorResize(IMGUIContainer container, EvaluatorGraphNodeModel model)
@@ -2537,6 +2879,7 @@ namespace Fusumity.Editor
 
 					position.height = height;
 					SetPosition(position);
+					expanded = true;
 					RefreshExpandedState();
 					RefreshPorts();
 				}).StartingIn(0);
@@ -2553,7 +2896,28 @@ namespace Fusumity.Editor
 				return left.Equals(right);
 			}
 
-			private object GetInlineEditorTarget(EvaluatorGraphNodeModel model)
+			private bool SyncInlineEditorModel(EvaluatorGraphNodeModel model)
+			{
+				if (model?.Kind != EvaluatorGraphNodeKind.ConstantValue ||
+					_treeContainer is not ITreeContainer treeContainer ||
+					_constantValueField == null)
+				{
+					return false;
+				}
+
+				var constant = treeContainer.WeakValue;
+				if (constant == null)
+					return false;
+
+				var value = _constantValueField.GetValue(constant);
+				if (ConstantValuesEqual(model.ConstantValue, value))
+					return false;
+
+				model.ConstantValue = value;
+				return true;
+			}
+
+			private object GetInlineEditorObj(EvaluatorGraphNodeModel model)
 			{
 				if (model.Kind == EvaluatorGraphNodeKind.Evaluator)
 					return model.Evaluator;
@@ -2567,66 +2931,6 @@ namespace Fusumity.Editor
 				_constantValueField = GetFieldInHierarchy(constantType, "value");
 				_constantValueField?.SetValue(constant, model.ConstantValue);
 				return constant;
-			}
-
-			private static void DrawInlineProperties(InspectorProperty rootProperty, bool emptyLabel)
-			{
-				if (rootProperty == null)
-					return;
-
-				var useSpace = rootProperty.Children.Count >= 1;
-				if (useSpace)
-				{
-					GUILayout.Space(2);
-					EditorGUILayout.BeginHorizontal();
-					GUILayout.Space(2);
-					EditorGUILayout.BeginVertical();
-				}
-
-				for (var i = 0; i < rootProperty.Children.Count; i++)
-				{
-					var child = rootProperty.Children[i];
-					if (IsGraphProperty(child))
-						continue;
-
-					if (emptyLabel)
-						child.Draw(GUIContent.none);
-					else
-						child.Draw();
-				}
-
-				if (useSpace)
-				{
-					EditorGUILayout.EndVertical();
-					GUILayout.Space(2);
-					EditorGUILayout.EndHorizontal();
-				}
-			}
-
-			private static bool IsGraphProperty(InspectorProperty property)
-			{
-				if (property == null)
-					return false;
-
-				if (IsGraphPropertyType(property.ValueEntry?.BaseValueType) ||
-					IsGraphPropertyType(property.ValueEntry?.TypeOfValue) ||
-					IsGraphPropertyType(property.Info.TypeOfValue))
-					return true;
-
-				var value = property.ValueEntry?.WeakSmartValue;
-				if (value is IEvaluator || value is IEvaluatedValue)
-					return true;
-
-				if (value is IEnumerable enumerable && value is not string)
-				{
-					foreach (var item in enumerable)
-					{
-						if (item is IEvaluator)
-							return true;
-					}
-				}
-
-				return false;
 			}
 
 			private static bool IsGraphPropertyType(Type type)
@@ -3110,8 +3414,16 @@ namespace Fusumity.Editor
 				IconColor     = iconColor;
 			}
 
-			public float Height => Mathf.Max(86f, 54f + Mathf.Max(1, Rows.Count) * ROW_HEIGHT + Ports.Count * 5f +
-				(Kind == EvaluatorGraphNodeKind.Evaluator || Kind == EvaluatorGraphNodeKind.ConstantValue ? 160f : 0f));
+			public float Height
+			{
+				get
+				{
+					var labelRows = Rows.Count + (string.IsNullOrEmpty(Subtitle) ? 0 : 1);
+					var portRows = Kind == EvaluatorGraphNodeKind.Root ? Ports.Count : Mathf.Max(1, Ports.Count);
+					var minHeight = Kind == EvaluatorGraphNodeKind.Root ? 86f : 112f;
+					return Mathf.Max(minHeight, 54f + (labelRows + portRows) * ROW_HEIGHT);
+				}
+			}
 
 			public EvaluatorGraphPortModel AddPort(
 				string label,
@@ -3196,6 +3508,25 @@ namespace Fusumity.Editor
 			public new bool Equals(object x, object y) => ReferenceEquals(x, y);
 
 			public int GetHashCode(object obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+		}
+	}
+
+	public interface ITreeContainer
+	{
+		object WeakValue { get; }
+	}
+
+	[Serializable]
+	public sealed class TreeContainer<T> : ITreeContainer
+	{
+		[HideLabel]
+		public T value;
+
+		public object WeakValue => value;
+
+		public TreeContainer(T value)
+		{
+			this.value = value;
 		}
 	}
 }

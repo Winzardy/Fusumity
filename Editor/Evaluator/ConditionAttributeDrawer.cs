@@ -32,6 +32,12 @@ namespace Fusumity.Editor
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var type = Property.ValueEntry.BaseValueType;
+			if (!type.IsGenericType)
+			{
+				CallNextDrawer(label);
+				return;
+			}
+
 			var contextType = type.GenericTypeArguments[0];
 			_trueType    ??= typeof(NoneCondition<>).MakeGenericType(contextType);
 			_trueDefault ??= (ICondition) Activator.CreateInstance(_trueType);
@@ -51,7 +57,7 @@ namespace Fusumity.Editor
 				var lastRect = GUILayoutUtility.GetLastRect();
 
 				if (typeof(IBridgeEvaluator).IsAssignableFrom(Property.ParentType) &&
-				    Property.Parent.ParentType.IsArray)
+					Property.Parent.ParentType.IsArray)
 					lastRect.x += GUIHelper.CurrentIndentAmount;
 
 				var labelWidth = label == null || label.text.IsNullOrEmpty()
