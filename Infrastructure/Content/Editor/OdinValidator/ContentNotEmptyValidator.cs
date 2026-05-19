@@ -1,6 +1,6 @@
-using System;
 using Content.Editor;
 using JetBrains.Annotations;
+using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Validation;
 
 [assembly: RegisterValidationRule(typeof(ContentNotEmptyValidator),
@@ -15,24 +15,13 @@ using Sirenix.OdinInspector.Editor.Validation;
 
 namespace Content.Editor
 {
-	public class ContentNotEmptyValidator : ContentNotEmptyValidator<NotEmptyAttribute>
+	public class ContentNotEmptyValidator : AttributeValidator<NotEmptyAttribute>
 	{
-	}
+		protected override void Validate(ValidationResult result) => Validate(Property, result);
 
-	public class ContentNotNullJetbrainsValidator : ContentNotEmptyValidator<NotNullAttribute>
-	{
-	}
-
-	public class ContentNotNullValidator : ContentNotEmptyValidator<System.Diagnostics.CodeAnalysis.NotNullAttribute>
-	{
-	}
-
-	public class ContentNotEmptyValidator<T> : AttributeValidator<T>
-		where T : Attribute
-	{
-		protected override void Validate(ValidationResult result)
+		internal static void Validate(InspectorProperty property, ValidationResult result)
 		{
-			var valueEntry = Property.ValueEntry;
+			var valueEntry = property.ValueEntry;
 
 			if (valueEntry == null)
 				return;
@@ -40,14 +29,30 @@ namespace Content.Editor
 			if (valueEntry.WeakSmartValue is IContentReference reference)
 			{
 				if (reference.IsEmpty())
-					result.AddError($"Content Reference '{Property.NiceName}' must not be empty!");
+					result.AddError($"Content Reference '{property.NiceName}' must not be empty!");
 				if (!reference.IsValid())
-					result.AddError($"Content Reference '{Property.NiceName}' invalid!");
+					result.AddError($"Content Reference '{property.NiceName}' invalid!");
 			}
 
 			if (valueEntry.WeakSmartValue is IContentEntry entry)
 				if (ContentNotEmptyUtility.IsNull(entry))
-					result.AddError($"Content Entry '{Property.NiceName}' must not be null");
+					result.AddError($"Content Entry '{property.NiceName}' must not be null");
+		}
+	}
+
+	public class ContentNotNullJetbrainsValidator : AttributeValidator<NotNullAttribute>
+	{
+		protected override void Validate(ValidationResult result)
+		{
+			ContentNotEmptyValidator.Validate(Property, result);
+		}
+	}
+
+	public class ContentNotNullValidator : AttributeValidator<System.Diagnostics.CodeAnalysis.NotNullAttribute>
+	{
+		protected override void Validate(ValidationResult result)
+		{
+			ContentNotEmptyValidator.Validate(Property, result);
 		}
 	}
 }

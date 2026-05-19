@@ -11,6 +11,14 @@ namespace Content.Editor
 	{
 		protected override void Validate(ValidationResult result)
 		{
+			var valueEntry = Property.ValueEntry;
+
+			if (valueEntry == null)
+				return;
+
+			if(Value == null)
+				return;
+
 			if (!Value.IsEmpty() && !Value.IsValid())
 				result.AddError($"Content Reference '{Property.NiceName}' invalid!");
 		}
