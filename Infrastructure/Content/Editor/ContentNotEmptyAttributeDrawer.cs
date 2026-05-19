@@ -1,21 +1,11 @@
-using System;
-using Content.Editor;
 using Fusumity.Editor;
 using JetBrains.Annotations;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.OdinInspector.Editor.Validation;
-using Sirenix.Utilities.Editor;
 using UnityEngine;
-
-[assembly: RegisterValidator(typeof(ContentNotEmptyValidator))]
 
 namespace Content.Editor
 {
-	using UnityObject = UnityEngine.Object;
-
-	public class ContentNotEmptyValidator : ContentNotEmptyValidator<NotEmptyAttribute>
-	{
-	}
+	using UnityObject = Object;
 
 	public static class ContentNotEmptyUtility
 	{
@@ -31,26 +21,6 @@ namespace Content.Editor
 			}
 
 			return contentEntry.RawValue == null;
-		}
-	}
-
-	public class ContentNotEmptyValidator<T> : AttributeValidator<T>
-		where T : Attribute
-	{
-		protected override void Validate(ValidationResult result)
-		{
-			var valueEntry = Property.ValueEntry;
-
-			if (valueEntry == null)
-				return;
-
-			if (valueEntry.WeakSmartValue is IContentReference reference)
-				if (reference.IsEmpty())
-					result.AddError($"Content Reference '{Property.NiceName}' must not be empty");
-
-			if (valueEntry.WeakSmartValue is IContentEntry entry)
-				if (ContentNotEmptyUtility.IsNull(entry))
-					result.AddError($"Content Entry '{Property.NiceName}' must not be null");
 		}
 	}
 
