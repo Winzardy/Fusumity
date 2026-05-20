@@ -23,8 +23,13 @@ namespace Trading.Editor
 				case nameof(TradeRewardProgression.schemeSource):
 					attributes.Add(new LabelTextAttribute("Progress Source"));
 					break;
-				case nameof(TradeRewardProgression.scheme):
+				case nameof(TradeCostProgression.Key):
+					attributes.Add(new ShowIfAttribute(nameof(TradeCostProgression.ShowSchemeEditor)));
+					attributes.Add(new ShowInInspectorAttribute());
+					break;
+				case nameof(TradeRewardProgression.schemeEntry):
 					attributes.Add(new ShowIfAttribute(nameof(TradeRewardProgression.ShowSchemeEditor)));
+					attributes.Add(new HideLabelAttribute());
 					break;
 
 				case nameof(TradeRewardProgression.schemeReference):
@@ -72,7 +77,6 @@ namespace Trading.Editor
 			if (property
 					.ParentValueProperty? // Stage
 					.ParentValueProperty? // Array
-					.ParentValueProperty? // ContentEntry
 					.ParentValueProperty?
 					.ValueEntry.WeakSmartValue is TradeRewardProgression progression)
 				return progression.schemeSource == TradeProgressionSchemeSource.Local;
@@ -91,7 +95,6 @@ namespace Trading.Editor
 			if (property
 					.ParentValueProperty? // Stage
 					.ParentValueProperty? // Array
-					.ParentValueProperty? // ContentEntry
 					.ParentValueProperty?.ValueEntry.WeakSmartValue is TradeRewardProgression progression)
 			{
 				return progression.schemeSource == TradeProgressionSchemeSource.Local;

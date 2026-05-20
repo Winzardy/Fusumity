@@ -1,16 +1,16 @@
 using System;
 using Content;
-using Sapientia;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
 namespace Fusumity.Editor
 {
+	using Clipboard = Fusumity.Utility.Clipboard;
+
 	public static class FusumityEditorGUIHelper
 	{
 		public static Color objectFieldBackgroundColor
@@ -187,11 +187,15 @@ namespace Fusumity.Editor
 				{
 					var originColor = GUI.color;
 					{
-						GUI.color *= 0.7f;
-						if (GUI.Button(clipboardButtonRect, clipboardToolbar, GUIStyle.none))
-							Clipboard.Copy(copiedText);
+						GUI.color   *= 0.7f;
+						GUI.enabled =  true;
+						{
+							if (GUI.Button(clipboardButtonRect, clipboardToolbar, GUIStyle.none))
+								Clipboard.Copy(copiedText);
 
-						EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
+							EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
+						}
+						GUI.enabled = originEnabled;
 					}
 					GUI.color = originColor;
 				}
@@ -202,11 +206,14 @@ namespace Fusumity.Editor
 					clipboardButtonRect2.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					var originColor = GUI.color;
 					{
-						GUI.color *= 0.7f;
-						if (GUI.Button(clipboardButtonRect2, GUIContent.none, GUIStyle.none))
-							Clipboard.Copy(guid.high.ToString());
-
-						EditorGUIUtility.AddCursorRect(clipboardButtonRect2, MouseCursor.Link);
+						GUI.color   *= 0.7f;
+						GUI.enabled =  true;
+						{
+							if (GUI.Button(clipboardButtonRect2, GUIContent.none, GUIStyle.none))
+								Clipboard.Copy(guid.high.ToString());
+							EditorGUIUtility.AddCursorRect(clipboardButtonRect2, MouseCursor.Link);
+						}
+						GUI.enabled = originEnabled;
 					}
 					GUI.color = originColor;
 				}
@@ -228,11 +235,15 @@ namespace Fusumity.Editor
 			{
 				var originColor = GUI.color;
 				{
-					GUI.color *= 0.7f;
-					if (GUI.Button(rawModeButtonRect, rawModeToolbar, GUIStyle.none))
-						rawMode = !rawMode;
+					GUI.color   *= 0.7f;
+					GUI.enabled =  true;
+					{
+						if (GUI.Button(rawModeButtonRect, rawModeToolbar, GUIStyle.none))
+							rawMode = !rawMode;
 
-					EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
+						EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
+					}
+					GUI.enabled = originEnabled;
 				}
 				GUI.color = originColor;
 			}

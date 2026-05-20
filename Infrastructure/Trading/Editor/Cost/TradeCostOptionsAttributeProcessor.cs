@@ -38,8 +38,8 @@ namespace Trading.Editor
 			if (!TradeCostAttributeProcessor.Filter(type, property.Parent))
 				return false;
 
-			return !typeof(IEnumerable<TradeCost>)
-			   .IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+			return !typeof(TradeCostCollection).IsAssignableFrom(type)
+				&& type.HasAttribute<SerializableAttribute>();
 		}
 
 		private bool IsInsideCollection(InspectorProperty? property)

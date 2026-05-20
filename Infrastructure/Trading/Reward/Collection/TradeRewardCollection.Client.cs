@@ -21,10 +21,12 @@ namespace Trading
 		/// <summary>
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
-		public bool Filter(Type type) => type.HasAttribute<SerializableAttribute>();
+		public bool Filter(Type type) => !typeof(TradeRewardCollection).IsAssignableFrom(type)
+			&& type.HasAttribute<SerializableAttribute>();
 
 		[ClientOnly]
 		public string visual;
+
 		public string VisualId { get => visual; }
 
 		protected internal override IEnumerable<TradeRewardDrop> OnEnumerateDrop(Tradeboard board, TradeRewardDrop parent)

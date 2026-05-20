@@ -20,6 +20,7 @@ namespace Trading.Editor
 					var typeSelectorSettingsAttribute = new TypeSelectorSettingsAttribute
 					{
 						FilterTypesFunction = nameof(TradeRewardCollection.Filter),
+						ShowNoneItem = false
 					};
 					attributes.Add(typeSelectorSettingsAttribute);
 					if (!IsInsideCollection(parentProperty))
