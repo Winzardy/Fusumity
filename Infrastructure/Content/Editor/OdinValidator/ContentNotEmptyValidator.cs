@@ -6,12 +6,12 @@ using Sirenix.OdinInspector.Editor.Validation;
 [assembly: RegisterValidationRule(typeof(ContentNotEmptyValidator),
 	Name = "Content Not Empty",
 	Description = "Validates that content references and entries are not empty, null, or invalid")]
-[assembly: RegisterValidationRule(typeof(ContentNotNullJetbrainsValidator),
-	Name = "Content Not Empty (NotNull from JetBrains)",
-	Description = "Validates that content references and entries are not empty, null, or invalid")]
-[assembly: RegisterValidationRule(typeof(ContentNotNullValidator),
-	Name = "Content Not Empty (NotNull from CodeAnalysis)",
-	Description = "Validates that content references and entries are not empty, null, or invalid")]
+// [assembly: RegisterValidationRule(typeof(ContentNotNullJetbrainsValidator),
+// 	Name = "Content Not Empty (NotNull from JetBrains)",
+// 	Description = "Validates that content references and entries are not empty, null, or invalid")]
+// [assembly: RegisterValidationRule(typeof(ContentNotNullValidator),
+// 	Name = "Content Not Empty (NotNull from CodeAnalysis)",
+// 	Description = "Validates that content references and entries are not empty, null, or invalid")]
 
 namespace Content.Editor
 {
@@ -40,19 +40,19 @@ namespace Content.Editor
 		}
 	}
 
-	public class ContentNotNullJetbrainsValidator : AttributeValidator<NotNullAttribute>
-	{
-		protected override void Validate(ValidationResult result)
-		{
-			ContentNotEmptyValidator.Validate(Property, result);
-		}
-	}
-
-	public class ContentNotNullValidator : AttributeValidator<System.Diagnostics.CodeAnalysis.NotNullAttribute>
-	{
-		protected override void Validate(ValidationResult result)
-		{
-			ContentNotEmptyValidator.Validate(Property, result);
-		}
-	}
+	// public class ContentNotNullJetbrainsValidator : AttributeValidator<NotNullAttribute>
+	// {
+	// 	protected override void Validate(ValidationResult result)
+	// 	{
+	// 		ContentNotEmptyValidator.Validate(Property, result);
+	// 	}
+	// }
+	//
+	// public class ContentNotNullValidator : AttributeValidator<System.Diagnostics.CodeAnalysis.NotNullAttribute>
+	// {
+	// 	protected override void Validate(ValidationResult result)
+	// 	{
+	// 		ContentNotEmptyValidator.Validate(Property, result);
+	// 	}
+	// }
 }
