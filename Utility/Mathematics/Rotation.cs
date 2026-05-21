@@ -58,6 +58,16 @@ namespace Fusumity.Utility
 			return vector.Rotate_Rad(rad);
 		}
 
+		public static Rotation operator +(Rotation a, Rotation b)
+		{
+			return new Rotation(a.rad + b.rad);
+		}
+
+		public static Rotation operator -(Rotation a, Rotation b)
+		{
+			return new Rotation(a.rad - b.rad);
+		}
+
 		public static Rotation operator -(Rotation rotation)
 		{
 			return new Rotation(-rotation.rad);
