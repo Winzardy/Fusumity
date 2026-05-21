@@ -16,11 +16,11 @@ namespace Content.Editor
 			if (valueEntry == null)
 				return;
 
-			if(Value == null)
+			if (Value == null)
 				return;
 
 			if (!Value.IsEmpty() && !Value.IsValid())
-				result.AddError($"Content Reference '{Property.NiceName}' invalid!");
+				result.AddError($"Content by guid [ {Value.Guid} ] invalid (not found) (property path: {Property.Path})!");
 		}
 	}
 }
