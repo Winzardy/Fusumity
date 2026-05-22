@@ -73,6 +73,12 @@ namespace UI
 				case UIProgressBarLayout.Type.ScrollBar:
 					_layout.scrollBar.size = 1;
 					break;
+
+				case UIProgressBarLayout.Type.Mask:
+					var padding = _layout.mask.padding;
+					padding.z = _layout.mask.rectTransform.rect.width;
+					_layout.mask.padding = padding;
+					break;
 			}
 
 			if (_layout.label != null)

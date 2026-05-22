@@ -39,6 +39,18 @@ namespace UI
 					   .SetEase(_layout.animationEase));
 
 					break;
+
+				case UIProgressBarLayout.Type.Mask:
+
+					sequence.AppendCallback(() =>
+					{
+						var rightPadding = _layout.mask.rectTransform.rect.width * (1 - value);
+						var padding = _layout.mask.padding;
+						padding.z = rightPadding;
+						_layout.mask.padding = padding;
+					});
+
+					break;
 			}
 
 			if (_layout.hideOutsideAnimation)
@@ -68,6 +80,9 @@ namespace UI
 						break;
 					case UIProgressBarLayout.Type.ScrollBar:
 						_layout.scrollBar.SetActive(false);
+						break;
+					case UIProgressBarLayout.Type.Mask:
+						_layout.mask.SetActive(false);
 						break;
 				}
 			}
