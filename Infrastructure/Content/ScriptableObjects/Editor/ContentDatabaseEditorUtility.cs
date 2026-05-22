@@ -634,5 +634,37 @@ namespace Content.ScriptableObjects.Editor
 			scriptableObject.Refresh();
 			ContentDebug.Logging.Nested.refresh = originRefreshEnabled;
 		}
+
+		public static TScrobject GetScrobjectFromDb<TScrobject, TDatabase>(string scrobjectId, bool useCache = true)
+		   where TScrobject : ContentScriptableObject
+		   where TDatabase : ContentDatabaseScriptableObject
+		{
+			if (scrobjectId.IsNullOrEmpty())
+				return null;
+
+			var db = useCache ? EditorAssetsCache.GetCachedAsset<TDatabase>() : AssetDatabaseUtility.GetAsset<TDatabase>();
+
+			foreach (var scrobj in db.scriptableObjects)
+			{
+				if (scrobj is not IIdentifiable identifiable)
+					continue;
+
+				if (identifiable.Id == scrobjectId)
+				{
+					var cast = scrobj as TScrobject;
+					if (cast == null)
+					{
+						Debug.LogError(
+							$"Could not find valid scrobject of type [ {typeof(TScrobject).Name} ] " +
+							$"with id [ {scrobjectId} ] in database of type [ {typeof(TDatabase).Name} ]." +
+							$"\nDuplicate ids could be in place.");
+					}
+
+					return cast;
+				}
+			}
+
+			return null;
+		}
 	}
 }

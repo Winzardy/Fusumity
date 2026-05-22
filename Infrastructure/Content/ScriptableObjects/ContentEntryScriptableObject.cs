@@ -1,13 +1,15 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using Content.Editor;
+using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Extensions;
+using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentEntryScriptableObject<T> : ContentEntryScriptableObject,
-		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>
+		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>, IIdentifiable
 	{
 		private const string DEFAULT_ID_REGEX_PATTERN = @"^\d+_";
 
@@ -112,6 +114,20 @@ namespace Content.ScriptableObjects
 		protected virtual void OnImport(ref T value)
 		{
 		}
+
+#if UNITY_EDITOR
+		public void ForceCreateEntry()
+		{
+			if (_entry != null)
+				return;
+
+			var guid = SerializableGuid.New();
+			_entry = new ScriptableContentEntry<T>(default, in guid)
+			{
+				scriptableObject = this
+			};
+		}
+#endif
 
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>
 			scriptableObject ? new(in scriptableObject._entry.Guid) : new(SerializableGuid.Empty);

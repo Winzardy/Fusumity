@@ -9,7 +9,7 @@ namespace UI.Scroll
 		where TViewModel : class
 
 	{
-		private TView _view;
+		protected TView _view;
 
 		protected override void OnLayoutInstalled()
 		{

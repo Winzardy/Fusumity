@@ -12,8 +12,8 @@ namespace UI
 
 		public bool IsEmptyOrInvalid() => sprite == null && reference.IsEmptyOrInvalid();
 
-		public static implicit operator UISpriteInfo(Sprite sprite) => new() {sprite                            = sprite};
-		public static implicit operator UISpriteInfo(AssetReference<Sprite> reference) => new() {reference = reference};
+		public static implicit operator UISpriteInfo(Sprite sprite) => new() { sprite = sprite };
+		public static implicit operator UISpriteInfo(AssetReference<Sprite> reference) => new() { reference = reference };
 
 		public override string ToString()
 		{
