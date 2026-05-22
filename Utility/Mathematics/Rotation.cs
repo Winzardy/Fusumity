@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Fusumity.Utility;
 using Sapientia.Extensions;
 using Unity.Burst;
 using Unity.Mathematics;
@@ -58,6 +57,16 @@ namespace Fusumity.Utility
 			return vector.Rotate_Rad(rad);
 		}
 
+		public static Rotation operator +(Rotation a, Rotation b)
+		{
+			return new Rotation(a.rad + b.rad);
+		}
+
+		public static Rotation operator -(Rotation a, Rotation b)
+		{
+			return new Rotation(a.rad - b.rad);
+		}
+
 		public static Rotation operator -(Rotation rotation)
 		{
 			return new Rotation(-rotation.rad);
@@ -71,6 +80,11 @@ namespace Fusumity.Utility
 		public static implicit operator Rotation(float rad)
 		{
 			return new Rotation(rad);
+		}
+
+		public override string ToString()
+		{
+			return $"(rad: {rad}, deg: {rad.ToDeg()})";
 		}
 	}
 }
