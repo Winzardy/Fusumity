@@ -135,6 +135,9 @@ namespace UI.Editor
 
 		private Rect DrawSwitcher(IStateSwitcher target, int depth, int maxDepth)
 		{
+			if (target is not Component component || !component)
+				return default;
+
 			var name = target.Name;
 
 			var isSelected = depth == 0 && maxDepth > 1 && _isExpanded;

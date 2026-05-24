@@ -6,7 +6,6 @@ namespace UI
 	public class GraphicColorIntComparisonStateSwitcher : IntComparisonStateSwitcher
 	{
 		[Space]
-
 		[SerializeField]
 		private Graphic _graphic;
 		[SerializeField]

@@ -170,6 +170,8 @@ namespace Fusumity.Editor
 				return;
 
 			var iconRect = GetOpenButtonIconRect(property);
+			if (iconRect == default)
+				return;
 			var color = GUI.color;
 			GUI.color = iconRect.Contains(Event.current.mousePosition) ? Color.white : color * 0.75f;
 			SdfIcons.DrawIcon(iconRect, SdfIconType.Diagram2Fill);

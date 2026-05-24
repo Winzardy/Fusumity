@@ -33,6 +33,10 @@ namespace Fusumity.Editor
 		public const string FIX64_COMPARE_CATEGORY = "Comparison";
 		public const SdfIconType FIX64_COMPARE_ICON = SdfIconType.ArrowLeftRight;
 
+		public const string BLACKBOARD_VALUE_NAME = "\u2009Blackboard Value";
+		public const string BLACKBOARD_VALUE_CATEGORY = "/";
+		public const SdfIconType BLACKBOARD_VALUE_ICON = SdfIconType.BoxArrowLeft;
+
 		public const string FIX64_RANGE_CONDITION_NAME = "\u2009Float In Range";
 		public const string FIX64_RANGE_CONDITION_CATEGORY = "Comparison";
 		public const SdfIconType FIX64_RANGE_CONDITION_ICON = SdfIconType.ArrowsCollapse;
@@ -223,6 +227,15 @@ namespace Fusumity.Editor
 					EvaluatorTypeRegistryConstants.EVALUATOR_COLOR,
 					SdfIconType.DiamondFill,
 					10000,
+					out presentation);
+
+			if (genericTypeDefinition == typeof(BlackboardValueEvaluator<>))
+				return TryMakePresentation(
+					EvaluatorTypeRegistryConstants.BLACKBOARD_VALUE_NAME,
+					EvaluatorTypeRegistryConstants.BLACKBOARD_VALUE_CATEGORY,
+					EvaluatorTypeRegistryConstants.EVALUATOR_COLOR,
+					EvaluatorTypeRegistryConstants.BLACKBOARD_VALUE_ICON,
+					1,
 					out presentation);
 
 			return false;
