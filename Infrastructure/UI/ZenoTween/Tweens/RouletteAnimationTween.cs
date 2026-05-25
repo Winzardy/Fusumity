@@ -2,6 +2,8 @@ using System;
 using DG.Tweening;
 using Fusumity;
 using Fusumity.Utility;
+using Sapientia;
+using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -21,7 +23,7 @@ namespace ZenoTween.Participant.Tweens
 		[Space]
 		public RotateMode rotateMode = RotateMode.Fast;
 
-		public int fullRotations = 0;
+		public EvaluatedValue<Blackboard, int> fullRotations = 0;
 
 		[PropertyRange(0, 0.5f)]
 		public float offsetBorder;
@@ -45,7 +47,7 @@ namespace ZenoTween.Participant.Tweens
 			var targetAngle =
 				index * segmentAngle +
 				randomOffset +
-				fullRotations * 360f;
+				fullRotations.Evaluate(blackboard) * 360f;
 			var tween = pivot.DOLocalRotate(
 				new Vector3(0, 0, -targetAngle),
 				duration,

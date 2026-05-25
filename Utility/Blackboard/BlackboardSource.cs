@@ -1,5 +1,7 @@
 #nullable enable
+using Fusumity.Utility;
 using Sapientia;
+using Sapientia.Deterministic;
 using Sapientia.Pooling;
 using UnityEngine;
 
@@ -12,6 +14,9 @@ namespace Fusumity
 		private void Awake()
 		{
 			Pool<Blackboard>.Get(out _blackboard);
+
+			_blackboard.Register(UnityRandomizer<int>.Default);
+			_blackboard.Register(UnityRandomizer<Fix64>.Default);
 		}
 
 		private void OnDestroy()
@@ -33,5 +38,7 @@ namespace Fusumity
 		{
 			return _blackboard!.Register(value, key);
 		}
+
+		public static implicit operator Blackboard(BlackboardSource source) => source._blackboard;
 	}
 }
