@@ -175,19 +175,18 @@ namespace UI
 				return;
 
 			var localDirection = localPosition.normalized;
-			var localRightDirection = new Vector3(localDirection.y, -localDirection.x);
+			var angle = Mathf.Atan2(localDirection.y, localDirection.x) * Mathf.Rad2Deg;
 
-			//FaceTargetCenter направляет к цели локальную -up сторону элемента.
-			var localUpDirection = facingMode switch
+			angle += facingMode switch
 			{
-				RadialLayoutGroupFacingMode.Center => localDirection,
-				RadialLayoutGroupFacingMode.FromCenter => -localDirection,
-				RadialLayoutGroupFacingMode.Right => -localRightDirection,
-				RadialLayoutGroupFacingMode.Left => localRightDirection,
-				_ => localDirection
+				RadialLayoutGroupFacingMode.Center => -90f,
+				RadialLayoutGroupFacingMode.FromCenter => 90f,
+				RadialLayoutGroupFacingMode.Right => 180f,
+				RadialLayoutGroupFacingMode.Left => 0f,
+				_ => -90f
 			};
 
-			child.up = rectTransform.TransformDirection(localUpDirection);
+			child.localEulerAngles = new Vector3(0f, 0f, angle);
 		}
 
 		private void Fill(List<RectTransform> children, out int count)

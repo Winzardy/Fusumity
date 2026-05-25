@@ -13,8 +13,7 @@ namespace ZenoTween
 
 		public void Play()
 		{
-			_player?.Dispose();
-			_player = new AnimationSequencePlayer(sequence);
+			_player ??= new AnimationSequencePlayer(sequence);
 			_player.Play();
 		}
 

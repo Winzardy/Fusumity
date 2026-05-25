@@ -23,8 +23,6 @@ namespace Trading
 			else
 				foreach (var reward in b.OnEnumerateDrop(board, parent))
 					yield return reward;
-
-
 		}
 	}
 }
