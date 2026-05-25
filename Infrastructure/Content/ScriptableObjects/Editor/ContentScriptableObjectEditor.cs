@@ -87,6 +87,9 @@ namespace Content.ScriptableObjects.Editor
 			if (!so.NeedSync())
 				return;
 
+			var enabled = GUI.enabled;
+			GUI.enabled = true;
+
 			_richButtonStyle ??= new GUIStyle(GUI.skin.button)
 			{
 				richText  = true,
@@ -119,6 +122,8 @@ namespace Content.ScriptableObjects.Editor
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.Space(10);
+
+			GUI.enabled = enabled;
 		}
 
 		private static Color GetSyncButtonColor()
