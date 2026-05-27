@@ -116,7 +116,7 @@ namespace Content.ScriptableObjects
 		}
 
 #if UNITY_EDITOR
-		public void ForceCreateEntry(SerializableGuid? guid = null)
+		public void ForceCreateEntry(string id, SerializableGuid? guid = null)
 		{
 			if (_entry != null)
 				return;
@@ -124,6 +124,7 @@ namespace Content.ScriptableObjects
 			guid ??= SerializableGuid.New();
 			_entry = new ScriptableContentEntry<T>(default, guid.Value)
 			{
+				id = id,
 				scriptableObject = this
 			};
 		}
