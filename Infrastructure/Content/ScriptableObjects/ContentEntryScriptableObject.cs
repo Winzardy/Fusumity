@@ -1,12 +1,8 @@
-﻿using Content.Editor;
-using Fusumity.Editor.Utility;
+﻿using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using System;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-using Sapientia;
-using Sapientia.Extensions;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
