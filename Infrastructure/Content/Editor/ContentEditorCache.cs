@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Collections;
+using Sapientia.Pooling;
 using UnityEngine;
 
 namespace Content.Editor
@@ -40,16 +41,20 @@ namespace Content.Editor
 			}
 		}
 
-		public static int version => cache.Count + (_refreshCount*10000);
+		public static int version => cache.Count;
 
 		public static void ClearAndRefreshScrObjs()
 		{
 			Cleared?.Invoke();
 
+			if (!_typeToCollection.IsNullOrEmpty())
+				foreach (var list in _typeToCollection.Values)
+					list.ReleaseToStaticPool();
 			_typeToCollection?.Clear();
+
 			_cache ??= new();
 			_cache.Clear();
-			_refreshCount++;
+
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject", null))
 				Register(scriptableObject);
 		}
@@ -60,7 +65,7 @@ namespace Content.Editor
 			var typeName = typeof(T).Name;
 			if (!_typeToCollection.TryGetValue(typeName, out var cachedCollection))
 			{
-				cachedCollection = _typeToCollection[typeName] = new List<ScriptableObject>();
+				cachedCollection = _typeToCollection[typeName] = ListPool<ScriptableObject>.Get();
 
 				// Fill
 				foreach (var asset in cache.Values)
