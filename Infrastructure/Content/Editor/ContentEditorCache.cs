@@ -23,6 +23,12 @@ namespace Content.Editor
 
 		internal static event Action Cleared;
 
+		private static int _refreshCount;
+
+		static ContentEditorCache() => Cleared += HandleCleared;
+
+		private static void HandleCleared() => _typeToVersion.Clear();
+
 		private static Dictionary<string, ScriptableObject> cache
 		{
 			get
@@ -34,7 +40,7 @@ namespace Content.Editor
 			}
 		}
 
-		public static int version => cache.Count;
+		public static int version => cache.Count + (_refreshCount*10000);
 
 		public static void ClearAndRefreshScrObjs()
 		{
@@ -43,6 +49,7 @@ namespace Content.Editor
 			_typeToCollection?.Clear();
 			_cache ??= new();
 			_cache.Clear();
+			_refreshCount++;
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject", null))
 				Register(scriptableObject);
 		}
