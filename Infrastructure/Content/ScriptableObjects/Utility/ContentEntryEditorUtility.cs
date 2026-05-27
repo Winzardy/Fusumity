@@ -1,20 +1,14 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Content.ScriptableObjects;
 using Fusumity.Editor.Utility;
 using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.Extensions.Reflection;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
-using UnityEngine;
 
 namespace Content.Editor
 {
@@ -38,7 +32,8 @@ namespace Content.Editor
 
 		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
 		{
-			if (asset is not IContentEntryScriptableObject scriptableObject)
+			if (asset is not IContentEntryScriptableObject scriptableObject
+				|| scriptableObject.ScriptableContentEntry == null)
 				return;
 
 			if (!asset)

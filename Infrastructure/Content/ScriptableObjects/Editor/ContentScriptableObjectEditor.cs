@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System.Reflection;
+using Content.Editor;
 using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Fusumity.Utility;
@@ -17,7 +18,7 @@ namespace Content.ScriptableObjects.Editor
 	[CanEditMultipleObjects]
 	public class ContentScriptableObjectEditor : AdvancedScriptableObjectEditor
 	{
-		private float? _cacheWidth;
+		private float? _scriptFieldWidthCache;
 		private MonoScript _cacheMonoScript;
 
 		protected override bool TryGetDocumentationUrl(out string url)
@@ -42,7 +43,34 @@ namespace Content.ScriptableObjects.Editor
 			var originalForceHideMonoScriptInEditor = ForceHideMonoScriptInEditor;
 			ForceHideMonoScriptInEditor = true;
 			{
-				DrawAssetReference();
+				if (target is IContentEntryScriptableObject scriptableObject)
+				{
+					var asset = (ContentScriptableObject) scriptableObject;
+					if (!scriptableObject.enabled)
+					{
+						if (FusumityEditorGUILayout.MessageBoxButton(
+							"Данный контент помечен как <u><b>неиспользуемый</b></u> и будет пропущен при сборке и валидации",
+							"Enable",
+							MessageType.Info))
+						{
+							scriptableObject.enabled = true;
+							ContentDatabaseEditorUtility.AddToDatabase(asset);
+						}
+					}
+
+					if (scriptableObject.enabled && IsDebug())
+					{
+						var database = ContentDatabaseEditorUtility.GetDatabase(asset);
+						DrawAssetReference(database);
+					}
+					else
+					{
+						DrawAssetReference();
+					}
+				}
+
+				var originEnabled = GUI.enabled;
+				GUI.enabled = DrawEnabledToggle();
 
 				if (SirenixEditorGUI.BeginFadeGroup(target, ContentEntryMonoScriptVisibilityMenu.IsEnable))
 				{
@@ -55,14 +83,14 @@ namespace Content.ScriptableObjects.Editor
 
 							serializedObject.Update();
 
-							_cacheWidth ??= FusumityEditorGUILayout.GetHalfFieldWidth();
+							_scriptFieldWidthCache ??= FusumityEditorGUILayout.GetHalfFieldWidth();
 							if (Event.current != null && Event.current.type == EventType.Repaint)
-								_cacheWidth = FusumityEditorGUILayout.GetHalfFieldWidth();
+								_scriptFieldWidthCache = FusumityEditorGUILayout.GetHalfFieldWidth();
 
 							var fieldInfo = parentType.GetField(IContentEntrySource.ENTRY_FIELD_NAME,
 								BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 							fieldInfo?.FieldType.GetGenericArguments()[0]
-								.DrawMonoScriptReference(ref _cacheMonoScript, GUILayout.Width(_cacheWidth!.Value));
+								.DrawMonoScriptReference(ref _cacheMonoScript, GUILayout.Width(_scriptFieldWidthCache!.Value));
 						}
 					}
 					else
@@ -74,8 +102,45 @@ namespace Content.ScriptableObjects.Editor
 				SirenixEditorGUI.EndFadeGroup();
 
 				DrawDefaultInspector();
+
+				GUI.enabled = originEnabled;
 			}
 			ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+		}
+
+		protected override bool IsDebug() => ContentEntryDebugModeMenu.IsEnable;
+
+		private bool DrawEnabledToggle()
+		{
+			if (target is IContentEntryScriptableObject scriptableObject)
+			{
+				if (!FusumityEditorGUIHelper.drawAssetReference)
+					return scriptableObject.enabled;
+
+				var toggleRect = GUILayoutUtility.GetLastRect();
+				toggleRect   =  toggleRect.AlignLeft(20);
+				toggleRect.x -= 15.5f;
+
+				var prev = scriptableObject.enabled;
+
+				scriptableObject.enabled = GUI.Toggle(
+					toggleRect,
+					scriptableObject.enabled,
+					new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
+
+				if (prev != scriptableObject.enabled)
+				{
+					var asset = (ContentScriptableObject) scriptableObject;
+					if (scriptableObject.enabled)
+						ContentDatabaseEditorUtility.AddToDatabase(asset);
+					else
+						ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+				}
+
+				return scriptableObject.enabled;
+			}
+
+			return true;
 		}
 
 		private static GUIStyle _richButtonStyle;

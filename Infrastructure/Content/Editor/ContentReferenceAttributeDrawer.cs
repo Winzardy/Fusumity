@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Fusumity.Editor;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -172,24 +174,24 @@ namespace Content.Editor
 				case ContentDrawerMode.Guid:
 					if (Property.ValueEntry.WeakSmartValue is SerializableGuid guid)
 					{
-						isEmpty = guid == SerializableGuid.Empty;
-						source = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
+						isEmpty      = guid == SerializableGuid.Empty;
+						source       = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
 						invalidLabel = guid.ToString();
 					}
 
 					break;
 				case ContentDrawerMode.String:
 					var id = (string) Property.ValueEntry.WeakSmartValue;
-					isEmpty = id.IsNullOrEmpty();
-					source = !isEmpty ? FindSelectedSource(_valueType, id) : null;
+					isEmpty      = id.IsNullOrEmpty();
+					source       = !isEmpty ? FindSelectedSource(_valueType, id) : null;
 					invalidLabel = id;
 					break;
 				case ContentDrawerMode.Reference:
 					if (Property.Parent.ValueEntry.WeakSmartValue is IContentReference reference)
 					{
 						isSingle = reference.IsSingle;
-						isEmpty = !isSingle && reference.Guid == SerializableGuid.Empty;
-						source = !isEmpty ? FindSelectedSource(reference) : null;
+						isEmpty  = !isSingle && reference.Guid == SerializableGuid.Empty;
+						source   = !isEmpty ? FindSelectedSource(reference) : null;
 						invalidLabel = isSingle
 							? $"{reference.ValueType.Name} (not found single entry by type)"
 							: reference.Guid.ToString();
@@ -249,7 +251,7 @@ namespace Content.Editor
 				var tryGetValue = ContentReferenceAttributeProcessor.propertyToGUIContent.TryGetValue(Property.Parent, out var GUIContent);
 				if (tryGetValue)
 				{
-					targetLabel.text = GUIContent.text;
+					targetLabel.text    = GUIContent.text;
 					targetLabel.tooltip = GUIContent.tooltip;
 				}
 				else
@@ -286,137 +288,150 @@ namespace Content.Editor
 			if (useInlineEditor && !EditorGUIUtility.hierarchyMode && _targetObject)
 			{
 				EditorGUI.indentLevel += 1;
-				useIndent = true;
+				useIndent             =  true;
 			}
+
+			bool forceDisableInlineEditor = false;
+			bool useDropdown;
 
 			var originColor = GUI.color;
-			Rect? objectFieldPosition = null;
-			var useDropdownBySettings = drawerSettingsAttribute?.Dropdown ?? false;
-			var useDropdown = Attribute.Dropdown || useDropdownBySettings;
-
-			if (invalid)
 			{
+				var errorColor = ObjectIsNullUtility.GetInvalidColor(GUI.color);
+				var canBeEmpty = Property.Info.GetAttribute<CanBeEmptyAttribute>() != null
+					|| Property.Info.GetAttribute<CanBeNullAttribute>() != null
+					|| Property.Info.GetAttribute<MaybeNullAttribute>() != null;
+
+				if (!canBeEmpty)
+					if (typeof(IContentReference).IsAssignableFrom(Property.ParentType))
+						canBeEmpty = Property.ParentValueProperty.Info.GetAttribute<CanBeEmptyAttribute>() != null;
+
+				if (isEmpty
+					&& !canBeEmpty
+					&& GUI.enabled)
+					GUI.color = errorColor;
+				Rect? objectFieldPosition = null;
+				var useDropdownBySettings = drawerSettingsAttribute?.Dropdown ?? false;
+				useDropdown = Attribute.Dropdown || useDropdownBySettings;
+
+				if (invalid)
+				{
+					if (useDropdown)
+					{
+						GUI.color = errorColor;
+					}
+					else
+					{
+						EditorGUILayout.LabelField(targetLabel);
+						var position = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
+						if (!targetLabel.text.IsNullOrEmpty())
+						{
+							position.width -= EditorGUIUtility.labelWidth;
+							position.x     += EditorGUIUtility.labelWidth;
+						}
+
+						targetLabel = GUIContent.none;
+
+						GUI.color = errorColor;
+
+						// var cacheGuiEnabled = GUI.enabled;
+						// GUI.enabled = false;
+
+						SirenixEditorFields.TextField(position, targetLabel, invalidLabel);
+
+						//GUI.enabled = cacheGuiEnabled;
+
+						// var labelPos = position;
+						// labelPos.x += 3;
+						// EditorGUI.LabelField(labelPos, invalidLabel);
+
+						position.x          += position.width - 20;
+						position.width      =  20;
+						objectFieldPosition =  position;
+					}
+				}
+
 				if (useDropdown)
 				{
-					GUI.color = Color.red;
-				}
-				else
-				{
-					EditorGUILayout.LabelField(targetLabel);
-					var position = GUILayoutUtility.GetLastRect().AlignBottom(EditorGUIUtility.singleLineHeight);
-					if (!targetLabel.text.IsNullOrEmpty())
+					string id = null;
+					if (source is {ContentEntry: IIdentifiable identifiable})
 					{
-						position.width -= EditorGUIUtility.labelWidth;
-						position.x += EditorGUIUtility.labelWidth;
+						id = identifiable.Id;
 					}
 
-					targetLabel = GUIContent.none;
-
-					GUI.color = Color.red;
-
-					var cacheGuiEnabled = GUI.enabled;
-					GUI.enabled = false;
-
-					GUI.enabled = false;
-
-					SirenixEditorFields.TextField(position, targetLabel, "");
-
-					GUI.enabled = cacheGuiEnabled;
-
-					var labelPos = position;
-					labelPos.x += 3;
-					EditorGUI.LabelField(labelPos, invalidLabel);
-
-					position.x += position.width - 20;
-					position.width = 20;
-					objectFieldPosition = position;
-				}
-			}
-
-			var forceDisableInlineEditor = false;
-
-			if (useDropdown)
-			{
-				string id = null;
-				if (source is {ContentEntry: IIdentifiable identifiable})
-				{
-					id = identifiable.Id;
-				}
-
-				var ids = ContentEditorCache.GetAllIdsByValueType(_valueType, true);
-				var selectedIds = GenericSelector<string>.DrawSelectorDropdown(targetLabel, id.IsNullOrEmpty() ? NONE_LABEL : id, rect =>
-				{
-					var selector = new GenericSelector<string>(
-						string.Empty,
-						ids,
-						false,
-						static s => s.IsNullOrEmpty() ? NONE_LABEL : s);
-					selector.EnableSingleClickToSelect();
-					selector.SetSelection(id);
-					selector.ShowInPopup(rect);
-					return selector;
-				});
-
-				if (!selectedIds.IsNullOrEmpty())
-				{
-					var selectedId = selectedIds.FirstOrDefault();
-
-					if (selectedId.IsNullOrEmpty())
+					var ids = ContentEditorCache.GetAllIdsByValueType(_valueType, true);
+					var selectedIds = GenericSelector<string>.DrawSelectorDropdown(targetLabel, id.IsNullOrEmpty() ? NONE_LABEL : id, rect =>
 					{
-						source = null;
-					}
-					else
+						var selector = new GenericSelector<string>(
+							string.Empty,
+							ids,
+							false,
+							static s => s.IsNullOrEmpty() ? NONE_LABEL : s);
+						selector.EnableSingleClickToSelect();
+						selector.SetSelection(id);
+						selector.ShowInPopup(rect);
+						return selector;
+					});
+
+					if (!selectedIds.IsNullOrEmpty())
 					{
-						if (ContentEditorCache.TryGetSource(_valueType, selectedId, out var selectedSource))
-							source = selectedSource;
-					}
-				}
-			}
-			else
-			{
-				if (isSingle || invalid)
-				{
-					if (objectFieldPosition.HasValue)
-					{
-						source = (IContentEntrySource) EditorGUI.ObjectField
-						(
-							objectFieldPosition.Value,
-							targetLabel,
-							_targetObject,
-							_valueTypeToSourceType[_valueType],
-							false
-						);
-					}
-					else
-					{
-						source = (IContentEntrySource) EditorGUILayout.ObjectField
-						(
-							targetLabel,
-							_targetObject,
-							_valueTypeToSourceType[_valueType],
-							false
-						);
+						var selectedId = selectedIds.FirstOrDefault();
+
+						if (selectedId.IsNullOrEmpty())
+						{
+							source = null;
+						}
+						else
+						{
+							if (ContentEditorCache.TryGetSource(_valueType, selectedId, out var selectedSource))
+								source = selectedSource;
+						}
 					}
 				}
 				else
 				{
-					if (source is INestedContentEntrySource _)
+					if (isSingle || invalid)
 					{
-						forceDisableInlineEditor = true;
+						if (objectFieldPosition.HasValue)
+						{
+							source = (IContentEntrySource) EditorGUI.ObjectField
+							(
+								objectFieldPosition.Value,
+								targetLabel,
+								_targetObject,
+								_valueTypeToSourceType[_valueType],
+								false
+							);
+						}
+						else
+						{
+							source = (IContentEntrySource) EditorGUILayout.ObjectField
+							(
+								targetLabel,
+								_targetObject,
+								_valueTypeToSourceType[_valueType],
+								false
+							);
+						}
 					}
 					else
 					{
-						source = (IContentEntrySource) SirenixEditorFields.UnityObjectField
-						(
-							targetLabel,
-							_targetObject,
-							_valueTypeToSourceType[_valueType],
-							false
-						);
+						if (source is INestedContentEntrySource _)
+						{
+							forceDisableInlineEditor = true;
+						}
+						else
+						{
+							source = (IContentEntrySource) SirenixEditorFields.UnityObjectField
+							(
+								targetLabel,
+								_targetObject,
+								_valueTypeToSourceType[_valueType],
+								false
+							);
+						}
 					}
 				}
 			}
-
 			GUI.color = originColor;
 
 			#region Inline Editor
@@ -439,14 +454,14 @@ namespace Content.Editor
 						if (!EditorGUIUtility.hierarchyMode && _targetObject)
 						{
 							var offset = SirenixEditorGUI.FoldoutWidth + 3;
-							foldoutPosition.x -= offset;
+							foldoutPosition.x     -= offset;
 							foldoutPosition.width += offset;
 						}
 
 						var originEnabled2 = GUI.enabled;
-						GUI.enabled = true;
+						GUI.enabled   = true;
 						_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
-						GUI.enabled = originEnabled2;
+						GUI.enabled   = originEnabled2;
 
 						if (SirenixEditorGUI.BeginFadeGroup(this, useInlineEditor && _showDetailed))
 						{
@@ -475,7 +490,7 @@ namespace Content.Editor
 									var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
 									var originalDrawInlineEditor = FusumityEditorGUIHelper.drawInlineEditor;
 									FusumityEditorGUIHelper.drawAssetReference = useDropdown;
-									FusumityEditorGUIHelper.drawInlineEditor = true;
+									FusumityEditorGUIHelper.drawInlineEditor   = true;
 
 									_inlineEditor.OnInspectorGUI();
 
@@ -602,7 +617,7 @@ namespace Content.Editor
 								//Scripts/
 							}
 							FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-							OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
+							OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
 						}
 						GUIHelper.PopLabelWidth();
 						GUIHelper.PopHierarchyMode();
@@ -642,7 +657,7 @@ namespace Content.Editor
 			}
 
 			EditorGUI.indentLevel = originalIndent;
-			GUI.enabled = originEnabled;
+			GUI.enabled           = originEnabled;
 		}
 
 		private void HandleSetNoneClicked()

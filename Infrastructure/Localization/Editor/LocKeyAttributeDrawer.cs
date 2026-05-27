@@ -5,6 +5,7 @@ using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Fusumity.Utility;
 using JetBrains.Annotations;
+using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
@@ -14,8 +15,6 @@ using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Localization.Settings;
-using Clipboard = Fusumity.Utility.Clipboard;
-using ClipboardUtility = Fusumity.Utility.ClipboardUtility;
 
 namespace Localization.Editor
 {
@@ -114,7 +113,7 @@ namespace Localization.Editor
 			var originalColor = GUI.color;
 			var canBeEmpty = Property.GetAttribute<CanBeNullAttribute>() != null;
 			if (Property.ParentType == typeof(LocKey))
-				canBeEmpty = Property.Parent.GetAttribute<CanBeNullAttribute>() != null;
+				canBeEmpty = Property.Parent.GetAttribute<CanBeEmptyAttribute>() != null;
 			if (GUI.enabled)
 				GUI.color = contains
 					? originalColor

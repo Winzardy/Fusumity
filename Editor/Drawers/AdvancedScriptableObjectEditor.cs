@@ -22,6 +22,8 @@ namespace Fusumity.Editor
 
 		protected const int DOCUMENTATION_BUTTON_WIDTH = 125;
 
+		private float? _databaseFieldWidthCache;
+
 		protected bool _documentationButtonDrawn = false;
 
 		protected override bool ShouldHideOpenButton() => true;
@@ -42,7 +44,7 @@ namespace Fusumity.Editor
 			DrawDefaultInspector();
 		}
 
-		protected virtual void DrawAssetReference()
+		protected virtual void DrawAssetReference(Object database = null)
 		{
 			if (!FusumityEditorGUIHelper.drawAssetReference)
 				return;
@@ -50,10 +52,28 @@ namespace Fusumity.Editor
 			var originEnabled = GUI.enabled;
 			GUI.enabled = false;
 			{
-				EditorGUILayout.ObjectField(ASSET_LABEL, target, target.GetType(), false);
+				using (new GUILayout.HorizontalScope())
+				{
+					EditorGUILayout.ObjectField(ASSET_LABEL, target, target.GetType(), false);
+
+					if (database != null && IsDebug())
+					{
+						_databaseFieldWidthCache ??= FusumityEditorGUILayout.GetHalfFieldWidth();
+						if (Event.current != null && Event.current.type == EventType.Repaint)
+							_databaseFieldWidthCache = FusumityEditorGUILayout.GetHalfFieldWidth();
+
+						EditorGUILayout.ObjectField(string.Empty,
+							database,
+							database.GetType(),
+							false,
+							GUILayout.Width(_databaseFieldWidthCache!.Value));
+					}
+				}
 			}
 			GUI.enabled = originEnabled;
 		}
+
+		protected virtual bool IsDebug() => false;
 
 		protected void DrawScriptReference()
 		{

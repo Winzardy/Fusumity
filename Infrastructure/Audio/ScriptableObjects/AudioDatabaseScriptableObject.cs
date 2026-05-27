@@ -19,7 +19,7 @@ namespace Content.ScriptableObjects.Audio
 #endif
 	public class AudioDatabaseScriptableObject : ContentDatabaseScriptableObject<AudioSettings>, IValidatable
 	{
-		public bool Validate()
+		public bool Validate(out string message)
 		{
 			foreach (var scriptableObject in scriptableObjects)
 			{
@@ -29,10 +29,12 @@ namespace Content.ScriptableObjects.Audio
 				if (cast.Id != Value.MasterMixerName)
 					continue;
 
-				ContentDebug.LogError($"Id [ {Value.MasterMixerName} ] is busy with the system!", cast);
+
+				message = $"Id [ {Value.MasterMixerName} ] is busy with the system!";
 				return false;
 			}
 
+			message = null;
 			return true;
 		}
 	}

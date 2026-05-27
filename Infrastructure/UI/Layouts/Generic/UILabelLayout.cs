@@ -10,7 +10,7 @@ namespace UI
 		[InfoBox("Automatically disables GameObject when provided with null string.", InfoMessageType.Info)]
 		public TMP_Text label;
 
-		[LabelText("Switcher (optional)")]
+		[OptionalSuffixLabel]
 		public StateSwitcher<bool> switcher;
 
 		public void SetLabel(string text)

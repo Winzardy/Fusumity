@@ -5,7 +5,6 @@ using System.Linq;
 using AssetManagement.AddressableAssets.Editor;
 using Content.Editor;
 using Fusumity.Editor.Utility;
-using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -24,6 +23,8 @@ namespace Content.ScriptableObjects.Editor
 		private const string ADDRESSABLE_NAME_FORMAT = "Database/{0}";
 
 		public const string DEFAULT_NAME_ENDING = "Database";
+
+		private static bool _syncContentCalledThisFrame;
 
 		private static List<ContentDatabaseScriptableObject> _cache;
 
@@ -80,22 +81,10 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void AddToDatabase(ContentScriptableObject scriptableObject)
 		{
-			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
+			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
 
-			MiscDatabaseScriptableObject miscDatabase = null;
-			foreach (var database in dbs)
-			{
-				if (IsMatch(database, scriptableObject))
-				{
-					Add(database);
-					return;
-				}
-
-				if (database is MiscDatabaseScriptableObject misc)
-					miscDatabase = misc;
-			}
-
-			Add(miscDatabase);
+			var database = GetDatabase(scriptableObject);
+			Add(database);
 
 			void Add(ContentDatabaseScriptableObject database)
 			{
@@ -110,22 +99,8 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
 		{
-			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
-
-			MiscDatabaseScriptableObject miscDatabase = null;
-			foreach (var database in dbs)
-			{
-				if (IsMatch(database, scriptableObject))
-				{
-					Remove(database);
-					return;
-				}
-
-				if (database is MiscDatabaseScriptableObject misc)
-					miscDatabase = misc;
-			}
-
-			Remove(miscDatabase);
+			var database = GetDatabase(scriptableObject);
+			Remove(database);
 
 			void Remove(ContentDatabaseScriptableObject database)
 			{
@@ -137,8 +112,29 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
+		public static ContentDatabaseScriptableObject GetDatabase(ContentScriptableObject scriptableObject)
+		{
+			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
+			MiscDatabaseScriptableObject miscDatabase = null;
+			foreach (var database in dbs)
+			{
+				if (IsMatch(database, scriptableObject))
+					return database;
+
+				if (database is MiscDatabaseScriptableObject misc)
+					miscDatabase = misc;
+			}
+			return miscDatabase;
+		}
+
 		public static void SyncContent()
 		{
+			if (_syncContentCalledThisFrame)
+				return;
+
+			_syncContentCalledThisFrame = true;
+			EditorApplication.delayCall += ResetSyncContentCalledThisFrame;
+
 			var scriptableObjects = AssetDatabaseUtility.GetAssets<ContentScriptableObject>()
 				.ToList();
 			var dbs = AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
@@ -167,6 +163,11 @@ namespace Content.ScriptableObjects.Editor
 			AssetDatabase.SaveAssets();
 			ContentEditorCache.ClearAndRefreshScrObjs();
 			ContentEntryEditorUtility.ClearCache();
+		}
+
+		private static void ResetSyncContentCalledThisFrame()
+		{
+			_syncContentCalledThisFrame = false;
 		}
 
 		public static void ValidateDatabases()
@@ -507,7 +508,7 @@ namespace Content.ScriptableObjects.Editor
 		private static bool TryValidate(IContentScriptableObject scriptableObject)
 		{
 			if (scriptableObject is IValidatable validatable)
-				return validatable.Validate();
+				return validatable.Validate(out _);
 
 			return true;
 		}

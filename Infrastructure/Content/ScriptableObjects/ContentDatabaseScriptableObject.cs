@@ -14,7 +14,7 @@ namespace Content.ScriptableObjects
 
 		protected ref readonly T Value => ref _entry.Value;
 
-		public Type ValueType => typeof(T);
+		public override Type ValueType => typeof(T);
 
 		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry => _entry;
 
@@ -35,6 +35,8 @@ namespace Content.ScriptableObjects
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
+		protected override IScriptableContentEntry BaseScriptableContentEntry => _entry;
+
 		bool IContentEntrySource.Validate()
 		{
 #if UNITY_EDITOR
@@ -44,15 +46,15 @@ namespace Content.ScriptableObjects
 				return false;
 			}
 #endif
-			if (Value is IValidatable validatable && !validatable.Validate())
+			if (Value is IValidatable validatable && !validatable.Validate(out var message))
 			{
-				ContentDebug.LogError("Value is not valid!", this);
+				ContentDebug.LogError($"Value is not valid! (error: {message})", this);
 				return false;
 			}
 
-			if (this is IValidatable soValidatable && !soValidatable.Validate())
+			if (this is IValidatable soValidatable && !soValidatable.Validate(out var soMessage))
 			{
-				ContentDebug.LogError("Scriptable Object is not valid!", this);
+				ContentDebug.LogError($"Scriptable Object is not valid! (error: {soMessage})", this);
 				return false;
 			}
 
@@ -68,6 +70,11 @@ namespace Content.ScriptableObjects
 		public Toggle<int> priority;
 
 		public List<ContentScriptableObject> scriptableObjects;
+
+		public override bool Enabled { get => true; }
+
+		protected override IScriptableContentEntry BaseScriptableContentEntry { get => null; }
+		public override Type ValueType { get => null; }
 
 		public virtual void OnUpdateContent()
 		{
