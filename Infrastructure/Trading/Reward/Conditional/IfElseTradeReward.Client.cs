@@ -6,22 +6,23 @@ using Sirenix.OdinInspector;
 namespace Trading
 {
 	[TypeRegistryItem(
-		"\u2009Condition",
+		"\u2009If / else",
 		"/",
-		SdfIconType.BagCheck,
+		SdfIconType.Alt,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
 		lightIconColorA: A)]
-	public partial class ConditionalTradeReward
+	public partial class IfElseTradeReward
 	{
 		protected internal override IEnumerable<TradeRewardDrop> OnEnumerateDrop(Tradeboard board, TradeRewardDrop parent)
 		{
-			if (!condition.IsFulfilled(board))
-				yield break;
-
-			foreach (var actualReward in reward.OnEnumerateDrop(board, parent))
-				yield return actualReward;
+			if (condition.IsFulfilled(board))
+				foreach (var reward in a.OnEnumerateDrop(board, parent))
+					yield return reward;
+			else
+				foreach (var reward in b.OnEnumerateDrop(board, parent))
+					yield return reward;
 		}
 	}
 }

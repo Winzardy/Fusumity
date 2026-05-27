@@ -17,6 +17,15 @@ namespace UI
 		Bottom = 2,
 	}
 
+	public enum RadialLayoutGroupFacingMode
+	{
+		None = 0,
+		Center = 1,
+		FromCenter = 2,
+		Right = 3,
+		Left = 4,
+	}
+
 	[HideMonoScript]
 	[AddComponentMenu("Layout/Radial Layout Group", 152)]
 	public class RadialLayoutGroup : LayoutGroup
@@ -46,6 +55,10 @@ namespace UI
 
 		[Tooltip("Аналог Reverse")]
 		public bool clockwise;
+
+		[Tooltip("Поворачивает элементы относительно центра окружности, как FaceTargetCenter")]
+		[FormerlySerializedAs("faceTargetCenter")]
+		public RadialLayoutGroupFacingMode facingMode;
 
 		protected override void OnEnable()
 		{
@@ -81,6 +94,9 @@ namespace UI
 
 				var groupRect = rectTransform.rect;
 				var groupMaxDimension = groupRect.width.Max(groupRect.height);
+				var spacingDiameter = groupMaxDimension > Mathf.Epsilon
+					? groupMaxDimension
+					: Mathf.Abs(radialPadding) * 2;
 
 				var angle = startAngle;
 
@@ -94,8 +110,11 @@ namespace UI
 
 					if (equalSpacing)
 						a += Mathf.PI * 2 / childrenCount;
-					else
-						a += Mathf.Asin((childMaxDimension + spacing + (useItemSize ? 0 : -childMaxDimension)) / groupMaxDimension) * 2;
+					else if (spacingDiameter > Mathf.Epsilon)
+					{
+						var spacingRatio = (childMaxDimension + spacing + (useItemSize ? 0 : -childMaxDimension)) / spacingDiameter;
+						a += Mathf.Asin(Mathf.Clamp(spacingRatio, -1, 1)) * 2;
+					}
 
 					a += angleSpacing;
 
@@ -135,13 +154,39 @@ namespace UI
 
 					child.anchorMin = child.anchorMax = child.pivot = Vector2MathUtility.center;
 
+					if (facingMode != RadialLayoutGroupFacingMode.None)
+						ApplyFacingMode(currentChild, localPosition);
+
 					var drivenTransformProperties = DrivenTransformProperties.Anchors |
 						DrivenTransformProperties.AnchoredPosition |
 						DrivenTransformProperties.Pivot;
 
+					if (facingMode != RadialLayoutGroupFacingMode.None)
+						drivenTransformProperties |= DrivenTransformProperties.Rotation;
+
 					m_Tracker.Add(this, child, drivenTransformProperties);
 				}
 			}
+		}
+
+		private void ApplyFacingMode(RectTransform child, Vector3 localPosition)
+		{
+			if (localPosition.sqrMagnitude <= Mathf.Epsilon)
+				return;
+
+			var localDirection = localPosition.normalized;
+			var angle = Mathf.Atan2(localDirection.y, localDirection.x) * Mathf.Rad2Deg;
+
+			angle += facingMode switch
+			{
+				RadialLayoutGroupFacingMode.Center => -90f,
+				RadialLayoutGroupFacingMode.FromCenter => 90f,
+				RadialLayoutGroupFacingMode.Right => 180f,
+				RadialLayoutGroupFacingMode.Left => 0f,
+				_ => -90f
+			};
+
+			child.localEulerAngles = new Vector3(0f, 0f, angle);
 		}
 
 		private void Fill(List<RectTransform> children, out int count)

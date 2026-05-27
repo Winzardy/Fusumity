@@ -26,8 +26,9 @@ namespace Trading
 		/// <summary>
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
-		public bool Filter(Type type) =>
-			!typeof(IEnumerable<TradeReward>).IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+		public bool Filter(Type type) => !typeof(TradeRewardCollection).IsAssignableFrom(type)
+			&& !typeof(WeightedTradeRewardCollection).IsAssignableFrom(type)
+			&& type.HasAttribute<SerializableAttribute>();
 
 		public bool CanShowRollMode()
 		{

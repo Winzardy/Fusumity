@@ -28,7 +28,12 @@ namespace UI.Editor
 
 			var size = corners[2] - corners[0];
 			var rect = rectTransform.rect;
-			var paddingScale = rect.width != 0 ? size.x / rect.width : size.y / rect.height;
+			var paddingScale = 1f;
+			if (Mathf.Abs(rect.width) > Mathf.Epsilon)
+				paddingScale = size.x / rect.width;
+			else if (Mathf.Abs(rect.height) > Mathf.Epsilon)
+				paddingScale = size.y / rect.height;
+
 			var normalized = new Vector3 {x = Mathf.Cos(current.startAngle), y = Mathf.Sin(current.startAngle)};
 			var localPosition = new Vector3 {x = normalized.x * size.x / 2, y = normalized.y * size.y / 2};
 			localPosition += normalized * current.radialPadding * paddingScale;

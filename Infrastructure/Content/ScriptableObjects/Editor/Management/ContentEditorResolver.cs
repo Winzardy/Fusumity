@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Content.Management;
 using Fusumity.Editor.Utility;
+using Sapientia.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,6 +42,9 @@ namespace Content.Editor
 
 		public UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid)
 		{
+			if (guid.IsEmpty())
+				return null;
+
 			if (ContentEditorCache.TryGetSource(typeof(T), in guid, out var source) &&
 				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 				return contentEntry;
@@ -50,6 +54,9 @@ namespace Content.Editor
 
 		public UniqueContentEntry<T> GetEntry<T>(string id)
 		{
+			if (id.IsNullOrEmpty())
+				return null;
+
 			if (ContentEditorCache.TryGetSource(typeof(T), id, out var source) &&
 				source.ContentEntry is UniqueContentEntry<T> contentEntry)
 				return contentEntry;
@@ -113,9 +120,21 @@ namespace Content.Editor
 			return false;
 		}
 
-		public ref readonly T Get<T>(in SerializableGuid guid) => ref GetEntry<T>(in guid).Value;
+		public ref readonly T Get<T>(in SerializableGuid guid)
+		{
+			var entry = GetEntry<T>(in guid);
+			if (entry != null)
+				return ref entry.Value;
+			return ref ContentDefaultEmptyValue<T>.value;
+		}
 
-		public ref readonly T Get<T>(string id) => ref GetEntry<T>(id).Value;
+		public ref readonly T Get<T>(string id)
+		{
+			var entry = GetEntry<T>(id);
+			if (entry != null)
+				return ref entry.Value;
+			return ref ContentDefaultEmptyValue<T>.value;
+		}
 
 		public ref readonly T Get<T>(int index) => throw new NotImplementedException("Index can only be used at runtime");
 

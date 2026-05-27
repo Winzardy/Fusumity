@@ -1,5 +1,4 @@
 using Fusumity.Attributes.Odin;
-using Fusumity.Reactive;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -8,10 +7,7 @@ namespace UI
 	/// <summary>
 	/// Задача <see cref="Pulsar"/> выдавать нормализованное значение от 0 до 1 глобально, да так чтобы все "мигающие" активности были синхронные
 	/// </summary>
-#if UNITY_EDITOR
-	[ExecuteAlways]
-#endif
-	public abstract class Pulsar : MonoBehaviour
+	public abstract class Pulsar : Updatable
 	{
 		[SerializeField]
 		[Minimum(0), Unit(Units.Second)]
@@ -25,46 +21,26 @@ namespace UI
 		private Vector2 _range = new Vector2(0, 1);
 
 		[SerializeField, BoxGroup]
-		private bool _updateInEditMode = true;
-		[SerializeField, BoxGroup]
 		[Tooltip("Use Time.realtimeSinceStartup instead of the local tick when updating, to sync with other pulsars.")]
 		private bool _useGlobalTick = true;
+
 		[SerializeField, BoxGroup, ShowIf("@this._useGlobalTick == false")]
 		private bool _resetTickOnEnable = true;
+
 		[SerializeField, BoxGroup]
 		[Tooltip("Reset value to 0 instead of the lower range on disabling.")]
 		private bool _resetValueToZero;
 
-		private bool _subscribed;
 		private float _localTick;
 
-		private void OnEnable() => TrySubscribe();
-
-		private void OnDisable() => TryUnsubscribe();
-
-		private void OnDestroy() => TryUnsubscribe();
-
-		private void TrySubscribe()
+		protected override void OnEnabled()
 		{
-			if (_subscribed)
-				return;
-
 			_localTick = 0;
-			_subscribed = true;
-			UnityLifecycle.UpdateEvent.Subscribe(OnUpdate);
-			OnEnabled();
-			SetInitialValue();
 		}
 
-		private void TryUnsubscribe()
+		protected override void OnDisabled()
 		{
-			if (!_subscribed)
-				return;
-
 			_localTick = 0;
-			_subscribed = false;
-			UnityLifecycle.UpdateEvent.UnSubscribe(OnUpdate);
-			OnDisabled();
 
 			if (_resetValueToZero)
 			{
@@ -76,15 +52,7 @@ namespace UI
 			}
 		}
 
-		protected virtual void OnEnabled()
-		{
-		}
-
-		protected virtual void OnDisabled()
-		{
-		}
-
-		private void OnUpdate()
+		protected override void OnUpdate()
 		{
 			if (!_useGlobalTick)
 			{
@@ -108,15 +76,5 @@ namespace UI
 		}
 
 		protected abstract void OnUpdate(float normalizedValue);
-
-#if UNITY_EDITOR
-		private void Update()
-		{
-			if (_updateInEditMode && !Application.isPlaying)
-			{
-				OnUpdate();
-			}
-		}
-#endif
 	}
 }

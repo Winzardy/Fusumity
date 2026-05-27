@@ -20,6 +20,14 @@ namespace Content.Editor
 
 		private static Dictionary<string, ScriptableObject> _cache;
 
+		internal static event Action Cleared;
+
+		private static int _refreshCount;
+
+		static ContentEditorCache() => Cleared += HandleCleared;
+
+		private static void HandleCleared() => _typeToVersion.Clear();
+
 		private static Dictionary<string, ScriptableObject> cache
 		{
 			get
@@ -31,12 +39,15 @@ namespace Content.Editor
 			}
 		}
 
-		public static int version => cache.Count;
+		public static int version => cache.Count + _refreshCount;
 
 		public static void ClearAndRefreshScrObjs()
 		{
+			Cleared?.Invoke();
+
 			_cache ??= new();
 			_cache.Clear();
+			_refreshCount++;
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
 				Register(scriptableObject);
 		}
@@ -253,6 +264,15 @@ namespace Content.Editor
 		internal static readonly Dictionary<Type, EditorTypeSingleResolver> typeToResolver = new(1);
 		internal static readonly Dictionary<Type, Action> typeToClearAction = new(1);
 
+		static EditorSingleContentEntryShortcut() => ContentEditorCache.Cleared += HandleCleared;
+
+		private static void HandleCleared()
+		{
+			_typeToMethod.Clear();
+			typeToResolver.Clear();
+			typeToClearAction.Clear();
+		}
+
 		public static bool Contains(Type type) =>
 			typeToResolver.TryGetValue(type, out var resolver) && resolver() != null;
 
@@ -284,6 +304,13 @@ namespace Content.Editor
 	internal static class EditorSingleContentEntryShortcut<T>
 	{
 		private static IContentEntrySource<T> _source;
+
+		static EditorSingleContentEntryShortcut() => ContentEditorCache.Cleared += HandleCleared;
+
+		private static void HandleCleared()
+		{
+			_source = null;
+		}
 
 		internal static void RegisterRaw(IContentEntrySource raw)
 		{
@@ -340,6 +367,18 @@ namespace Content.Editor
 		internal static readonly Dictionary<Type, Func<IEnumerable<IContentEntrySource>>> typeToGetAllFunc = new(1);
 
 		internal static Dictionary<SerializableGuid, NestedContentEntrySource> nestedToSource;
+
+		static EditorContentEntryMap() => ContentEditorCache.Cleared += HandleCleared;
+
+		private static void HandleCleared()
+		{
+			_typeToMethod.Clear();
+			typeToResolver.Clear();
+			typeToClearAction.Clear();
+			typeToAnyFunc.Clear();
+			typeToGetAllFunc.Clear();
+			nestedToSource?.Clear();
+		}
 
 		public static IEnumerable<IContentEntrySource> GetAll(Type type)
 		{
@@ -428,7 +467,7 @@ namespace Content.Editor
 				nestedToSource[guid] = new NestedContentEntrySource
 				{
 					source = source,
-					guid = guid
+					guid   = guid
 				};
 			}
 		}
@@ -438,6 +477,14 @@ namespace Content.Editor
 	{
 		private static readonly Dictionary<SerializableGuid, IUniqueContentEntrySource<T>> _dictionary = new(1);
 		private static readonly Dictionary<string, Reference<SerializableGuid>> _idToGuid = new(1);
+
+		static EditorContentEntryMap() => ContentEditorCache.Cleared += HandleCleared;
+
+		private static void HandleCleared()
+		{
+			_dictionary.Clear();
+			_idToGuid.Clear();
+		}
 
 		/// <summary>
 		/// <see cref="EditorContentEntryMap.Register"/>
@@ -466,7 +513,7 @@ namespace Content.Editor
 				var id = uniqueSource.Id;
 
 				_dictionary[guid] = uniqueSource;
-				_idToGuid[id] = new(guid);
+				_idToGuid[id]     = new(guid);
 			}
 
 			EditorContentEntryMap.RegisterNestedSafe(source);
