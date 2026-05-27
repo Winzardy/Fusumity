@@ -22,7 +22,7 @@ namespace Content.Editor
 
 		internal static event Action Cleared;
 
-		private static int _versionCounter;
+		private static int _refreshCount;
 
 		private static Dictionary<string, ScriptableObject> cache
 		{
@@ -35,10 +35,7 @@ namespace Content.Editor
 			}
 		}
 
-		// Меняется на каждый ClearAndRefreshScrObjs, чтобы Drawer-ы и Refresh(Type) инвалидировались.
-		// Раньше было => cache.Count, но Count не меняется после пере-заполнения тем же набором ассетов,
-		// из-за чего _typeToVersion и кеш _found в Drawer-ах не перепроверялись.
-		public static int version => _versionCounter;
+		public static int version => cache.Count + _refreshCount;
 
 		public static void ClearAndRefreshScrObjs()
 		{
@@ -47,7 +44,7 @@ namespace Content.Editor
 			_cache ??= new();
 			_cache.Clear();
 			_typeToVersion.Clear();
-			_versionCounter++;
+			_refreshCount++;
 			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
 				Register(scriptableObject);
 		}
