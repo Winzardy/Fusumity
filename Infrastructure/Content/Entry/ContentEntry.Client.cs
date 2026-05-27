@@ -2,12 +2,20 @@
 #define CONTENT_ENTRY_BUFFER
 #endif
 using System;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace Content
 {
 	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver
 	{
+		// [ClientOnly]
+		// [HideInInspector]
+		// [SerializeField]
+		// private long timeCreated;
+
 		public void SetValue(in T newValue) => ContentEditValue = newValue;
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -16,6 +24,11 @@ namespace Content
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
+			// if (timeCreated == 0)
+			// 	timeCreated = DateTime.UtcNow.Ticks;
+			//
+			// //ContentDebug.LogError(guid);
+
 #if CONTENT_ENTRY_BUFFER
 			ContentEntryBuffer.Add(this);
 #endif

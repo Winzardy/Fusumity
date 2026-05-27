@@ -40,7 +40,7 @@ namespace Content.ScriptableObjects.Editor
 
 			if (!shouldShowEditor)
 			{
-				if (isDebugMode)
+				if (isDebugMode && GUI.enabled)
 					DrawCollapsedRow(scriptableObject, label);
 
 				return;
