@@ -9,24 +9,27 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		protected long timeCreated;
 
-		public DateTime CreationTime => new DateTime(timeCreated, DateTimeKind.Utc)
-			.ToLocalTime();
+		public string techDescription;
 
-		public long TimeCreated => timeCreated;
+		public DateTime CreationTime
+		{
+			get => new DateTime(timeCreated, DateTimeKind.Utc)
+				.ToLocalTime();
+		}
+
+		public long TimeCreated { get => timeCreated; }
 
 		/// <summary>
 		/// Не всегда является временем когда был создан ассет, но стремится к этому
 		/// </summary>
-		public string CreationTimeStr => CreationTime.ToString(CultureInfo.InvariantCulture);
-
-		public virtual IContentEntry Import(bool clone) => null;
+		public string CreationTimeStr { get => CreationTime.ToString(CultureInfo.InvariantCulture); }
 
 		/// <summary>
 		/// Используется ли контент? Если нет, то при обновлении базы пропустит ScriptableObject
 		/// </summary>
-		public virtual bool Enabled => true;
+		public virtual bool Enabled { get => true; }
 
-		public string techDescription;
+		public virtual IContentEntry Import(bool clone) => null;
 
 		public void SyncedUpdate() => OnUpdated();
 
@@ -35,5 +38,7 @@ namespace Content.ScriptableObjects
 		}
 
 		public override string ToString() => $"[ 	<b>{name}</b>	 ]	(type: {GetType().Name})";
+
+		protected internal virtual bool SkipValidation() => false;
 	}
 }

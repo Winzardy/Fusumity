@@ -19,6 +19,7 @@ namespace Content.Editor
 		private static Dictionary<Type, int> _typeToVersion = new();
 
 		private static Dictionary<string, ScriptableObject> _cache;
+		private static Dictionary<string, List<ScriptableObject>> _typeToCollection;
 
 		internal static event Action Cleared;
 
@@ -39,10 +40,32 @@ namespace Content.Editor
 		{
 			Cleared?.Invoke();
 
+			_typeToCollection?.Clear();
 			_cache ??= new();
 			_cache.Clear();
-			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>())
+			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject", null))
 				Register(scriptableObject);
+		}
+
+		public static IEnumerable<T> GetAssets<T>()
+		{
+			_typeToCollection ??= new Dictionary<string, List<ScriptableObject>>();
+			var typeName = typeof(T).Name;
+			if (!_typeToCollection.TryGetValue(typeName, out var cachedCollection))
+			{
+				cachedCollection = _typeToCollection[typeName] = new List<ScriptableObject>();
+
+				// Fill
+				foreach (var asset in cache.Values)
+					if (asset is T)
+						cachedCollection.Add(asset);
+			}
+
+			foreach (var asset in cachedCollection)
+			{
+				if (asset is T cast)
+					yield return cast;
+			}
 		}
 
 		public static void Register(ScriptableObject scriptableObject)

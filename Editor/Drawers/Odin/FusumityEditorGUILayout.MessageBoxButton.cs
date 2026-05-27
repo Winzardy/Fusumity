@@ -41,10 +41,10 @@ namespace Fusumity.Editor
 
 			_messageBoxWithButtonStyle.padding = new RectOffset
 			{
-				left = _messageBoxWithButtonStyle.padding.left + 1,
+				left = _messageBoxWithButtonStyle.padding.left + 2,
 				right = _messageBoxWithButtonStyle.padding.right + BUTTON_WIDTH + BUTTON_PADDING + BUTTON_PADDING,
-				top = _messageBoxWithButtonStyle.padding.top + 2,
-				bottom = _messageBoxWithButtonStyle.padding.bottom + 2
+				top = _messageBoxWithButtonStyle.padding.top + 3,
+				bottom = _messageBoxWithButtonStyle.padding.bottom + 3
 			};
 		}
 	}

@@ -92,6 +92,11 @@ namespace Content.Editor
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + reference.guid.guid + " ]");
 		}
+
+		public static void Validate()
+		{
+			ContentValidator.Validate();
+		}
 	}
 
 	public static class ContentEditorExtensions

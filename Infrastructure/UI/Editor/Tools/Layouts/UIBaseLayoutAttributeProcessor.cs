@@ -9,6 +9,8 @@ using ShowIfAttribute = Sirenix.OdinInspector.ShowIfAttribute;
 
 namespace UI.Editor
 {
+	using UnityObject = UnityEngine.Object;
+
 	public class UIBaseLayoutAttributeProcessor : OdinAttributeProcessor<UIBaseLayout>
 	{
 		private static readonly string[] CONTROL_CHILD_NAMES =
@@ -21,7 +23,14 @@ namespace UI.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-
+			var valueEntry = property.ValueEntry;
+			if (valueEntry == null)
+				return;
+			if (!typeof(UnityObject).IsAssignableFrom(valueEntry.TypeOfValue))
+				return;
+			var value = valueEntry.WeakSmartValue as UnityObject;
+			if (value == null)
+				return;
 			attributes.Add(new InlineEditorAttribute(InlineEditorObjectFieldModes.Foldout));
 		}
 

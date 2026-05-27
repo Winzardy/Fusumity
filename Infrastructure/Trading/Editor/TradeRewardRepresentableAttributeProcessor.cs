@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Content;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Survivor.Interop;
@@ -27,6 +28,7 @@ namespace Trading.Editor
 					{
 						Space = 5
 					});
+					attributes.Add(new CanBeNullAttribute());
 					break;
 			}
 		}

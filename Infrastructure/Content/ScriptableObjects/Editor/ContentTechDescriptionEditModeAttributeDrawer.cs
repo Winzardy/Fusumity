@@ -41,13 +41,13 @@ namespace Content.ScriptableObjects.Editor
 			if (!shouldShowEditor)
 			{
 				if (isDebugMode)
-					DrawCollapsedRow(label);
+					DrawCollapsedRow(scriptableObject, label);
 
 				return;
 			}
 
 			if (isDebugMode && _cachedButtonRect.HasValue)
-				DrawButton(_cachedButtonRect.Value, isEditMode);
+				DrawButton(scriptableObject, _cachedButtonRect.Value, isEditMode);
 
 			var canEdit = isDebugMode && isEditMode;
 			var originalEnabled = GUI.enabled;
@@ -68,13 +68,13 @@ namespace Content.ScriptableObjects.Editor
 			_cachedButtonRect = BuildButtonRect(rect);
 		}
 
-		private void DrawCollapsedRow(GUIContent label)
+		private void DrawCollapsedRow(ContentScriptableObject scriptableObject, GUIContent label)
 		{
 			var rect = EditorGUILayout.GetControlRect();
 			var buttonLabel = label?.text ?? Property.NiceName;
 			var buttonRect = EditorGUI.PrefixLabel(rect, new GUIContent(buttonLabel));
 
-			GUIHelper.PushGUIEnabled(true);
+			GUIHelper.PushGUIEnabled(scriptableObject.Enabled);
 			{
 				if (GUI.Button(buttonRect, ADD_BUTTON_LABEL, SirenixGUIStyles.MiniButton))
 					ToggleEditMode(true);
@@ -82,11 +82,11 @@ namespace Content.ScriptableObjects.Editor
 			GUIHelper.PopGUIEnabled();
 		}
 
-		private void DrawButton(Rect buttonRect, bool isEditMode)
+		private void DrawButton(ContentScriptableObject scriptableObject, Rect buttonRect, bool isEditMode)
 		{
 			EditorGUIUtility.AddCursorRect(buttonRect, MouseCursor.Link);
 
-			GUIHelper.PushGUIEnabled(true);
+			GUIHelper.PushGUIEnabled(scriptableObject.Enabled);
 			{
 				if (GUI.Button(buttonRect, GUIContent.none, GUIStyle.none))
 					ToggleEditMode(!isEditMode);
@@ -116,7 +116,7 @@ namespace Content.ScriptableObjects.Editor
 				ICON_SIZE,
 				ICON_SIZE);
 
-			SdfIcons.DrawIcon(iconRect, isEditMode ? SdfIconType.PencilFill : SdfIconType.Pencil, color);
+			SdfIcons.DrawIcon(iconRect, isEditMode ? SdfIconType.XCircleFill : SdfIconType.Pencil, color);
 		}
 
 		private void ToggleEditMode(bool enabled)

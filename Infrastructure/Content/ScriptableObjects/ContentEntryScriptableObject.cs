@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using UnityEngine;
@@ -77,6 +78,8 @@ namespace Content.ScriptableObjects
 
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
 
+		protected override IScriptableContentEntry BaseScriptableContentEntry => _entry;
+
 		private bool IsExternallyIdentifiable => typeof(IExternallyIdentifiable).IsAssignableFrom(typeof(T));
 
 		bool IContentEntrySource.Validate()
@@ -94,15 +97,15 @@ namespace Content.ScriptableObjects
 				return false;
 			}
 
-			if (Value is IValidatable validatable && !validatable.Validate())
+			if (Value is IValidatable validatable && !validatable.Validate(out var message))
 			{
-				ContentDebug.LogError("Value is not valid!", this);
+				ContentDebug.LogError($"Value is not valid! (error: {message})", this);
 				return false;
 			}
 
-			if (this is IValidatable soValidatable && !soValidatable.Validate())
+			if (this is IValidatable soValidatable && !soValidatable.Validate(out var soMessage))
 			{
-				ContentDebug.LogError("Scriptable Object is not valid!", this);
+				ContentDebug.LogError($"Scriptable Object is not valid! (error: {soMessage})", this);
 				return false;
 			}
 
@@ -125,9 +128,23 @@ namespace Content.ScriptableObjects
 		}
 	}
 
-	public abstract partial class ContentEntryScriptableObject : ContentScriptableObject
+	public abstract partial class ContentEntryScriptableObject : ContentScriptableObject, IContentEntryScriptableObject
 	{
+		[HideInInspector]
+		public bool enabled = true;
+
+		public override bool Enabled { get => enabled; }
+
 		public abstract Type ValueType { get; }
+		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry { get => BaseScriptableContentEntry; }
+
+		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
+
+		bool IContentEntryScriptableObject.enabled
+		{
+			get => enabled;
+			set => enabled = value;
+		}
 	}
 
 	public interface IUniqueContentEntryScriptableObject<T> : IContentEntryScriptableObject<T>, IUniqueContentEntrySource<T>,
@@ -137,22 +154,23 @@ namespace Content.ScriptableObjects
 
 	public interface IContentEntryScriptableObject<T> : IContentEntryScriptableObject, IContentEntrySource<T>
 	{
-		public IScriptableContentEntry<T> ScriptableContentEntry { get; }
+		IScriptableContentEntry<T> ScriptableContentEntry { get; }
 
-		public ref T EditValue => ref ScriptableContentEntry.EditValue;
+		ref T EditValue => ref ScriptableContentEntry.EditValue;
 	}
 
 	public interface IUniqueContentEntryScriptableObject : IContentEntryScriptableObject, IUniqueContentEntrySource
 	{
-		public bool Enabled { get; }
-		public bool UseCustomId { get; }
+		bool Enabled { get; }
+		bool UseCustomId { get; }
 	}
 
 	public interface IContentEntryScriptableObject : IContentScriptableObject
 	{
-		public IScriptableContentEntry ScriptableContentEntry { get; }
+		[CanBeNull] IScriptableContentEntry ScriptableContentEntry { get; }
+		Type ValueType { get; }
 
-		public Type ValueType { get; }
+		internal bool enabled { get; set; }
 	}
 
 	public partial interface IContentScriptableObject

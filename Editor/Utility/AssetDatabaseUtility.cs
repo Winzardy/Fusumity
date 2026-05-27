@@ -164,6 +164,20 @@ namespace Fusumity.Editor.Utility
 			return assets;
 		}
 
+		public static T[] GetAssets<T>(string typeName, string path = null) where T : UnityObject
+		{
+			var guids = GetAssetsGuids(typeName, path);
+
+			var assets = new T[guids.Length];
+			for (int i = 0; i < guids.Length; i++)
+			{
+				T asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				assets[i] = asset;
+			}
+
+			return assets;
+		}
+
 		public static T GetPrefab<T>(string path) where T : MonoBehaviour
 		{
 			if (path.IsNullOrEmpty())
@@ -306,9 +320,14 @@ namespace Fusumity.Editor.Utility
 
 		public static string[] GetAssetsGuids(Type type, string path = null)
 		{
+			return GetAssetsGuids(type.Name, path);
+		}
+
+		public static string[] GetAssetsGuids(string typeName, string path = null)
+		{
 			return string.IsNullOrEmpty(path)
-				? AssetDatabase.FindAssets($"t:{type.Name}")
-				: AssetDatabase.FindAssets($"t:{type.Name}", new string[] { path });
+				? AssetDatabase.FindAssets($"t:{typeName}")
+				: AssetDatabase.FindAssets($"t:{typeName}", new string[] { path });
 		}
 
 		public static void Rename(UnityObject asset, string newName, bool setDirty = false)

@@ -10,13 +10,13 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		private ScriptableSingleContentEntry<T> _entry;
 
-		public IScriptableContentEntry<T> ScriptableContentEntry => _entry;
+		public IScriptableContentEntry<T> ScriptableContentEntry { get => _entry; }
 
-		public ref readonly T Value => ref _entry.Value;
+		public ref readonly T Value { get => ref _entry.Value; }
 
-		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry => _entry;
+		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry { get => _entry; }
 
-		public Type ValueType => typeof(T);
+		public override Type ValueType { get => typeof(T); }
 
 		public override IContentEntry Import(bool clone)
 		{
@@ -32,8 +32,9 @@ namespace Content.ScriptableObjects
 		{
 		}
 
-		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
-		IContentEntry IContentEntrySource.ContentEntry => _entry;
+		IContentEntry<T> IContentEntrySource<T>.ContentEntry { get => _entry; }
+		IContentEntry IContentEntrySource.ContentEntry { get => _entry; }
+		protected override IScriptableContentEntry BaseScriptableContentEntry { get => _entry; }
 
 		bool IContentEntrySource.Validate()
 		{
@@ -44,15 +45,15 @@ namespace Content.ScriptableObjects
 				return false;
 			}
 #endif
-			if (Value is IValidatable validatable && !validatable.Validate())
+			if (Value is IValidatable validatable && !validatable.Validate(out var message))
 			{
-				ContentDebug.LogError("Value is not valid!", this);
+				ContentDebug.LogError($"Value is not valid! (error: {message})", this);
 				return false;
 			}
 
-			if (this is IValidatable soValidatable && !soValidatable.Validate())
+			if (this is IValidatable soValidatable && !soValidatable.Validate(out var soMessage))
 			{
-				ContentDebug.LogError("Scriptable Object is not valid!", this);
+				ContentDebug.LogError($"Scriptable Object is not valid! (error: {soMessage})", this);
 				return false;
 			}
 
@@ -60,7 +61,22 @@ namespace Content.ScriptableObjects
 		}
 	}
 
-	public abstract class SingleContentEntryScriptableObject : ContentScriptableObject
+	public abstract class SingleContentEntryScriptableObject : ContentScriptableObject, IContentEntryScriptableObject
 	{
+		[HideInInspector]
+		public bool enabled = true;
+
+		public override bool Enabled { get  => enabled; }
+
+		public abstract Type ValueType { get; }
+		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry { get => BaseScriptableContentEntry; }
+
+		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
+
+		bool IContentEntryScriptableObject.enabled
+		{
+			get => enabled;
+			set => enabled = value;
+		}
 	}
 }
