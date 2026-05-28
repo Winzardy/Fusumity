@@ -84,8 +84,10 @@ namespace Content.Editor
 		{
 			_cache[scriptableObject.ToGuid()] = scriptableObject;
 
+			if (_typeToCollection == null)
+				return;
 			var typeName = scriptableObject.GetType().Name;
-			if(_typeToCollection.ContainsKey(typeName))
+			if (_typeToCollection.ContainsKey(typeName))
 				_typeToCollection[typeName].Add(scriptableObject);
 		}
 
