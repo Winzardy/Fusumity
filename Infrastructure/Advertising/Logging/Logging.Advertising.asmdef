@@ -2,9 +2,7 @@
     "name": "Logging.Advertising",
     "rootNamespace": "",
     "references": [
-        "Logging",
-        "Advertising",
-        "Ashary"
+        "Advertising"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,7 +11,7 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "ADVERTISING"
+        "ADVERTISING", "FULLWEIGHT_MODE"
     ],
     "versionDefines": [],
     "noEngineReferences": false

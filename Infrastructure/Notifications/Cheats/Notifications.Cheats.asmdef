@@ -1,12 +1,24 @@
 {
-  "name": "Notifications.Cheats",
-  "references": [
-    "Notifications",
-    "Content",
-    "MCK",
-    "Sapientia",
-    "Localization",
-    "UnityEditor.UI",
-    "UnityEngine.UI"
-  ]
+    "name": "Notifications.Cheats",
+    "rootNamespace": "",
+    "references": [
+        "Notifications",
+        "Content",
+        "MCK",
+        "Sapientia",
+        "Localization",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "FULLWEIGHT_MODE"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

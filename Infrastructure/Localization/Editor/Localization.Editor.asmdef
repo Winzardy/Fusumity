@@ -2,14 +2,10 @@
     "name": "Localization.Editor",
     "rootNamespace": "",
     "references": [
-        "I2Loc",
         "Localization",
         "Sapientia",
         "Fusumity",
-        "Fusumity.Editor",
-        "Unity.Mathematics",
-        "Unity.Localization",
-        "Unity.Localization.Editor"
+        "Fusumity.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,7 +15,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": ["FULLWEIGHT_MODE"],
     "versionDefines": [],
     "noEngineReferences": false
 }
