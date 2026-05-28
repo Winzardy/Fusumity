@@ -13,7 +13,11 @@ namespace Booting
 		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT,
 			CHANNEL_NAME.ColorTextInEditorOnly(COLOR));
 
-		private static readonly WLogContext _log = WLogContext.Create(CHANNEL_NAME, miniStackTracePosition: MiniStackTracePosition.End);
+		private static readonly WLogContext _log = WLogContext.Create(CHANNEL_NAME
+#if !FULLWEIGHT_MODE
+			, WLogType.Error
+#endif
+			, miniStackTracePosition: MiniStackTracePosition.End);
 
 		private static void Log(string msg)
 		{
