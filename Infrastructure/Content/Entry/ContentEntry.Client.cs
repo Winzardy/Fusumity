@@ -9,13 +9,12 @@ using UnityEngine;
 
 namespace Content
 {
-	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver
+	public interface IContentEntryT : IUniqueContentEntry
 	{
-		// [ClientOnly]
-		// [HideInInspector]
-		// [SerializeField]
-		// private long timeCreated;
+	}
 
+	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver, IContentEntryT
+	{
 		public void SetValue(in T newValue) => ContentEditValue = newValue;
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -24,11 +23,6 @@ namespace Content
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-			// if (timeCreated == 0)
-			// 	timeCreated = DateTime.UtcNow.Ticks;
-			//
-			// //ContentDebug.LogError(guid);
-
 #if CONTENT_ENTRY_BUFFER
 			ContentEntryBuffer.Add(this);
 #endif

@@ -20,7 +20,7 @@ namespace Fusumity.Editor.Drawers
 					"Synchronization is required!";
 				var buttonLabel = "Sync";
 
-				Debug.LogError(msg);
+				Debug.LogWarning(msg);
 
 				if (FusumityEditorGUILayout.MessageBoxButton(msg, buttonLabel, MessageType.Error))
 				{

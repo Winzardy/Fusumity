@@ -26,11 +26,8 @@ namespace Content.ScriptableObjects.Editor
 
 		private static bool _syncContentCalledThisFrame;
 
-		private static List<ContentDatabaseScriptableObject> _cache;
-
-		public static List<ContentDatabaseScriptableObject> Databases
-			=> _cache ??= AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>()
-				.ToList();
+		public static IEnumerable<ContentDatabaseScriptableObject> Databases
+			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>().ToList();
 
 		public static void Create<T>(string name = null, string addressableName = null) where T : ContentDatabaseScriptableObject
 		{
@@ -55,7 +52,7 @@ namespace Content.ScriptableObjects.Editor
 
 			database = AssetDatabaseUtility.CreateScriptableObject<T>(path, name);
 
-			_cache?.Add(database);
+			ContentEditorCache.Register(database);
 
 			addressableName ??= name.Remove(DEFAULT_NAME_ENDING);
 			database.MakeAddressable(
@@ -81,8 +78,6 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void AddToDatabase(ContentScriptableObject scriptableObject)
 		{
-			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
-
 			var database = GetDatabase(scriptableObject);
 			Add(database);
 

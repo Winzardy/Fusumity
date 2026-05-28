@@ -9,12 +9,11 @@ namespace Content.Editor
 {
 	public static partial class ContentEntryEditorUtility
 	{
-		[CanBeNull]
 		public static MemberReflectionReference<IUniqueContentEntry> ToContentReference(this InspectorProperty property)
 		{
 			//TODO: нужно чтобы Nested обязательно лежали в IContentEntry... (подумать)
 			if (!property.Path.Contains(IContentEntrySource.ENTRY_FIELD_NAME))
-				return null;
+				return default;
 
 			//skipSteps = 1 потому что пропускаем _entry
 			var reference = property.ToReference<IUniqueContentEntry>(1);
@@ -31,6 +30,22 @@ namespace Content.Editor
 
 		public static void RestoreGuid(this InspectorProperty property, IUniqueContentEntry entry, in SerializableGuid guid) =>
 			RestoreGuid(entry, in guid, property.UnityPropertyPath, property.Tree.UnitySerializedObject.targetObject);
+
+		public static bool TrackArrayLength(this InspectorProperty property, ContentScriptableObject asset)
+		{
+			var parent = property.Parent;
+			if (parent == null)
+				return false;
+
+			var arrayPath = parent.UnityPropertyPath;
+			if (string.IsNullOrEmpty(arrayPath))
+				arrayPath = parent.Path;
+
+			if (string.IsNullOrEmpty(arrayPath))
+				return false;
+
+			return TrackArrayLength(asset, arrayPath, parent.Children.Count);
+		}
 
 		public static void RecursiveRegenerateGuidForChildren(this InspectorProperty property, ContentScriptableObject asset)
 		{

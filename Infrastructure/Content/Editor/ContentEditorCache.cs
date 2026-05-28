@@ -83,12 +83,16 @@ namespace Content.Editor
 		public static void Register(ScriptableObject scriptableObject)
 		{
 			_cache[scriptableObject.ToGuid()] = scriptableObject;
+
+			var typeName = scriptableObject.GetType().Name;
+			if(_typeToCollection.ContainsKey(typeName))
+				_typeToCollection[typeName].Add(scriptableObject);
 		}
 
 		public static void Refresh<T>(IUniqueContentEntrySource<T> source)
 		{
 			var asset = (ScriptableObject) source;
-			cache[asset.ToGuid()] = asset;
+			Register(asset);
 			Register(typeof(T), source);
 		}
 

@@ -40,7 +40,7 @@ namespace AssetManagement.Editor
 
 			using (ListPool<GameObject>.Get(out var list))
 			{
-				foreach (var obj in AssetDatabaseUtility.LoadPrefabs())
+				foreach (var obj in AssetDatabaseUtility.GetPrefabsOfType(entry.AssetType.Name))
 				{
 					if (obj.TryGetComponent(entry.AssetType, out _))
 						list.Add(obj);
