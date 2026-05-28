@@ -7,7 +7,6 @@ namespace UI.Scroll
 		where TView : IView<TViewModel>
 		where TLayout : UIScrollItemLayout
 		where TViewModel : class
-
 	{
 		public TView View { get; private set; }
 
