@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using UnityEngine.Scripting;
 
 namespace Analytics
@@ -40,6 +42,25 @@ namespace Analytics
 		{
 			var payload = new AnalyticsEventPayload(id);
 			Send(ref payload);
+		}
+
+		protected void Send(string id, params (string, object)[] parameters)
+		{
+			if (parameters.IsNullOrEmpty())
+			{
+				Send(id);
+			}
+			else
+			{
+				using (DictionaryPool<string, object>.Get(out var dict))
+				{
+					foreach ((string key, object value) in parameters)
+					{
+						dict.Add(key, value);
+					}
+					Send(id, dict);
+				}
+			}
 		}
 
 		protected void Send(string id, Dictionary<string, object> parameters)
