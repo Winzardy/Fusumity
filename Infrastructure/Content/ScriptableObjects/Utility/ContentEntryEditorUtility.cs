@@ -201,22 +201,27 @@ namespace Content.Editor
 				Track((asset, reference), in entry.Guid);
 			} while (iterator.Next(true));
 
-			SetDirty(serializedObject, refreshAndSave);
-
 			scriptableObject.ScriptableContentEntry.ClearNested();
 
 			foreach (var reference in map.Keys)
 			{
 				ref var guid = ref map[reference];
-				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference))
-					throw new Exception($"Can't add nested entry with guid [ {guid} ] by path [ {reference.Path} ]");
+				if (!scriptableObject.ScriptableContentEntry!.RegisterNestedEntry(guid, reference))
+				{
+					var entry = reference.Resolve(scriptableObject.ScriptableContentEntry);
+					guid = RegenerateGuid(entry, reference.Path, asset, false);
+					scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference);
+				}
 			}
+
+			SetDirty(serializedObject, refreshAndSave);
 
 			map.ReleaseToStaticPool();
 
 			if (log && ContentDebug.Logging.Nested.refresh)
 			{
-				var collection = scriptableObject.ScriptableContentEntry.Nested
+				var collection = scriptableObject.ScriptableContentEntry
+					.Nested
 					.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
 						true);
 				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
@@ -237,10 +242,10 @@ namespace Content.Editor
 			entry.ClearNestedCollection();
 		}
 
-		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
+		public static SerializableGuid RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
 		{
 			var prevEntryGuid = entry.Guid;
-			entry.RegenerateGuid();
+			var newGuid = entry.RegenerateGuid();
 			EditorUtility.SetDirty(source);
 
 			if (refreshAndSave)
@@ -254,6 +259,8 @@ namespace Content.Editor
 				msg += " for content entry by path: <u>" + path + "</u>";
 				ContentDebug.LogWarning(msg, source);
 			}
+
+			return newGuid;
 		}
 
 		private static void RestoreGuid(IUniqueContentEntry entry, in SerializableGuid guid, string path, UnityObject source)

@@ -5,6 +5,7 @@ using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Fusumity.MVVM.UI;
 using Game.UI;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -35,9 +36,11 @@ namespace UI
 
 		[Space]
 		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
+		[CanBeNull]
 		public string uId;
 
 		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
+		[CanBeNull]
 		public string groupId;
 	}
 
@@ -49,10 +52,12 @@ namespace UI
 
 		[ShowIf(nameof(button), null)]
 		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
+		[CanBeNull]
 		public string uId;
 
 		[ShowIf(nameof(button), null)]
 		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
+		[CanBeNull]
 		public string groupId;
 	}
 }

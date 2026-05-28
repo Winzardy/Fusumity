@@ -31,11 +31,8 @@ namespace Content.ScriptableObjects
 #if UNITY_EDITOR
 				if (_entry == null)
 				{
-					var nullException =
-						ContentDebug.NullException(
-							$"Null entry by type [ {typeof(T).Name} ] in scriptable object [ {name}  ] by type [ {GetType().Name} ]");
-					ContentDebug.LogException(nullException, this);
-					throw nullException;
+					ContentDebug.LogError($"Null entry by type [ {typeof(T).Name} ] in scriptable object [ {name}  ] by type [ {GetType().Name} ]", this);
+					return string.Empty;
 				}
 #endif
 
@@ -125,7 +122,7 @@ namespace Content.ScriptableObjects
 			guid ??= SerializableGuid.New();
 			_entry = new ScriptableContentEntry<T>(default, guid.Value)
 			{
-				id = id,
+				id               = id,
 				scriptableObject = this
 			};
 		}
@@ -155,11 +152,7 @@ namespace Content.ScriptableObjects
 
 		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
 
-		bool IContentEntryScriptableObject.enabled
-		{
-			get => enabled;
-			set => enabled = value;
-		}
+		bool IContentEntryScriptableObject.enabled { get => enabled; set => enabled = value; }
 	}
 
 	public interface IUniqueContentEntryScriptableObject<T> : IContentEntryScriptableObject<T>, IUniqueContentEntrySource<T>,
