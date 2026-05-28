@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
 using UnityEngine.Serialization;
@@ -8,6 +9,7 @@ namespace Audio
 	[Serializable]
 	public struct AudioEventRequest
 	{
+		[CanBeNull]
 		public string id;
 
 		public bool loop;

@@ -40,20 +40,14 @@ namespace AssetManagement.Editor
 
 		public static IEnumerable<ValueDropdownItem<GameObject>> FilterByRequiredComponent(InspectorProperty property)
 		{
-			if (!TryGetRequirement(property, out var requirement, out var componentType, out _))
-				return null;
+			if (!TryGetRequirement(property, out _, out var componentType, out _))
+				yield break;
 
 			if (componentType == null)
-				return Array.Empty<ValueDropdownItem<GameObject>>();
+				yield break;
 
-			var result = new List<ValueDropdownItem<GameObject>>();
-			foreach (var prefab in AssetDatabaseUtility.GetPrefabsOfType(componentType.Name))
-			{
-				if (prefab != null)
-					result.Add(new ValueDropdownItem<GameObject>(prefab.name, prefab));
-			}
-
-			return result;
+			foreach (var obj in AssetDatabaseUtility.EnumeratePrefabsOfType(componentType))
+				yield return new ValueDropdownItem<GameObject>(obj.name, obj);
 		}
 
 		internal static bool ValidateRequiredComponent(InspectorProperty property, out string message)

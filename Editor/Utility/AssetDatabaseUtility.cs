@@ -1,10 +1,11 @@
-﻿using Sapientia.Collections;
-using Sapientia.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Sapientia.Collections;
+using Sapientia.Extensions;
 using UnityEditor;
+using UnityEditor.Search;
 using UnityEngine;
 
 namespace Fusumity.Editor.Utility
@@ -13,6 +14,17 @@ namespace Fusumity.Editor.Utility
 
 	public static class AssetDatabaseUtility
 	{
+		[InitializeOnLoadMethod]
+		private static void WarmupSearch()
+		{
+			using var context = SearchService.CreateContext(
+				"asset",
+				"t:prefab",
+				SearchFlags.Synchronous);
+			SearchService.GetItems(context);
+
+		}
+
 		public static string ToGuid(this UnityObject obj)
 		{
 			var path = AssetDatabase.GetAssetPath(obj);
@@ -251,25 +263,23 @@ namespace Fusumity.Editor.Utility
 			return assets;
 		}
 
-		public static List<GameObject> GetPrefabsOfType(string type, string path = null)
+		public static List<GameObject> GetPrefabsOfType(Type type)
 		{
-			var guids = GetAssetsGuids<GameObject>(path);
-
 			var assets = new List<GameObject>();
-			for (int i = 0; i < guids.Length; i++)
-			{
-				var asset = AssetDatabase.LoadAssetByGUID<GameObject>(guids[i]);
-				if (PrefabUtility.IsPartOfAnyPrefab(asset))
-				{
-					var component = asset.GetComponent(type);
-					if (component != null)
-					{
-						assets.Add(asset);
-					}
-				}
-			}
+			foreach (var gameObject in EnumeratePrefabsOfType(type))
+				assets.Add(gameObject);
 
 			return assets;
+		}
+
+		public static IEnumerable<GameObject> EnumeratePrefabsOfType(Type type)
+		{
+			using var context = SearchService.CreateContext(
+				"asset",
+				$"t:{type.Name}");
+			var items = SearchService.GetItems(context, SearchFlags.Synchronous);
+			foreach (var item in items)
+				yield return item.ToObject<GameObject>();
 		}
 
 		public static T CreateScriptableObject<T>(string path, string assetName, bool saveAssets = true) where T : ScriptableObject
@@ -385,16 +395,16 @@ namespace Fusumity.Editor.Utility
 			}
 		}
 
-		public static string GetFolderPath(UnityEngine.Object obj)
+		public static string GetFolderPath(UnityObject obj)
 		{
 			string path = AssetDatabase.GetAssetPath(obj);
 			if (path.IsNullOrEmpty())
 			{
 				path = "Assets";
 			}
-			else if (System.IO.Path.GetExtension(path) != "")
+			else if (Path.GetExtension(path) != "")
 			{
-				path = path.Replace(System.IO.Path.GetFileName(path), "");
+				path = path.Replace(Path.GetFileName(path), "");
 			}
 
 			return path;
@@ -422,7 +432,7 @@ namespace Fusumity.Editor.Utility
 			return FindScriptsPaths(typeName, partialMatch).FirstOrDefault();
 		}
 
-		public static string FindScriptPath(System.Type type, bool partialMatch = true)
+		public static string FindScriptPath(Type type, bool partialMatch = true)
 		{
 			return FindScriptPath(type.Name, partialMatch);
 		}

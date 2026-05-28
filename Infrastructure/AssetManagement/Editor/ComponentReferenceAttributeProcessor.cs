@@ -33,13 +33,13 @@ namespace AssetManagement.Editor
 			attributes.Add(dropdown);
 		}
 
-		public static IEnumerable<GameObject> Filter(InspectorProperty property)
+		public static IEnumerable<ValueDropdownItem<GameObject>> Filter(InspectorProperty property)
 		{
 			if (property.Parent.ValueEntry.WeakSmartValue is not ComponentReference entry)
 				yield break;
 
-			foreach (var obj in AssetDatabaseUtility.GetPrefabsOfType(entry.AssetType.Name))
-				yield return obj;
+			foreach (var obj in AssetDatabaseUtility.EnumeratePrefabsOfType(entry.AssetType))
+				yield return new ValueDropdownItem<GameObject>(obj.name, obj);
 		}
 	}
 }
