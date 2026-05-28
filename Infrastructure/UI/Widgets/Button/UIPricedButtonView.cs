@@ -54,6 +54,9 @@ namespace UI
 
 			_button.UpdateBanner();
 		}
+
+		public void SetStyle(string style)
+			=> _button.SetStyle(style);
 	}
 
 	public interface IPricedButtonViewModel : IStatefulButtonViewModel

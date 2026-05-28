@@ -148,14 +148,24 @@ namespace UI.Scroll
 
 		public void RefreshVisible()
 		{
+			foreach (var item in GetVisibleItems())
+			{
+				item.Refresh();
+			}
+		}
+
+		public IEnumerable<TItem> GetVisibleItems()
+		{
 			if (_cells.IsNullOrEmpty())
-				return;
+				yield break;
 
 			for (int i = 0; i < _layout.ActiveCells.Count; i++)
 			{
 				var cell = _layout.ActiveCells[i] as TItemLayout;
-				if (_cells.TryGetValue(cell!, out var item))
-					item.Refresh();
+				if (_cells.TryGetValue(cell, out var item))
+				{
+					yield return item;
+				}
 			}
 		}
 

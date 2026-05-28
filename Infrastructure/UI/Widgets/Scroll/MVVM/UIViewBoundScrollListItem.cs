@@ -9,27 +9,27 @@ namespace UI.Scroll
 		where TViewModel : class
 
 	{
-		protected TView _view;
+		public TView View { get; private set; }
 
 		protected override void OnLayoutInstalled()
 		{
-			_view = CreateView();
+			View = CreateView();
 		}
 
 		protected override void OnLayoutCleared()
 		{
-			if (_view is IDisposable view)
+			if (View is IDisposable view)
 				view.Dispose();
 		}
 
 		protected override void OnShow(TViewModel viewModel)
 		{
-			_view.Update(viewModel);
+			View.Update(viewModel);
 		}
 
 		protected override void OnReset(bool deactivate)
 		{
-			_view.Reset();
+			View.Reset();
 		}
 
 		protected abstract TView CreateView();

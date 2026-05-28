@@ -70,11 +70,18 @@ namespace ZenoTween.Utility
 			}
 		}
 
-		public void Stop()
+		public void Stop(bool rewind = false)
 		{
 			if (_cached)
 			{
-				_tween?.Pause();
+				if (rewind)
+				{
+					_tween?.Rewind();
+				}
+				else
+				{
+					_tween?.Pause();
+				}
 			}
 			else
 			{
@@ -82,11 +89,16 @@ namespace ZenoTween.Utility
 			}
 		}
 
-		public void Complete(bool withCallbacks = true)
+		public void Complete(bool withCallbacks = true, bool rewind = false)
 		{
 			if (IsPlaying)
 			{
 				_tween.Complete(withCallbacks);
+
+				if (_cached && rewind)
+				{
+					_tween.Rewind();
+				}
 			}
 		}
 	}

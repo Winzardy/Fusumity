@@ -1,8 +1,7 @@
-﻿using System;
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
+using System;
 using UI;
 using UnityEngine;
-using ZenoTween.Participant.Callbacks.UI;
 
 namespace ZenoTween.Participant.Callbacks
 {
