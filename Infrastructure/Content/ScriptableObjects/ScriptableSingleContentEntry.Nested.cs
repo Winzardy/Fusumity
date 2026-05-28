@@ -7,11 +7,29 @@ namespace Content.ScriptableObjects
 	internal sealed partial class ScriptableSingleContentEntry<T>
 	{
 		public SerializableDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> nested;
-		public override IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested => nested;
 
-		public bool RegisterNestedEntry(in SerializableGuid nestedGuid, MemberReflectionReference<IUniqueContentEntry> reference)
-			=> nested.TryAdd(nestedGuid, reference);
+		public override IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested
+			=> NestedMap;
 
-		public void ClearNestedCollection() => nested.Clear();
+		private SerializableDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> NestedMap
+			=> nested ??= new();
+
+		public bool RegisterNestedEntry(in SerializableGuid nestedGuid, in MemberReflectionReference<IUniqueContentEntry> reference)
+		{
+			if (NestedMap.TryAdd(nestedGuid, reference))
+				return true;
+
+			return NestedMap.TryGetValue(nestedGuid, out var registeredReference)
+				&& registeredReference.Path == reference.Path;
+		}
+
+		public bool TryGetNestedEntryReference(in SerializableGuid nestedGuid,
+			out MemberReflectionReference<IUniqueContentEntry> reference)
+			=> NestedMap.TryGetValue(nestedGuid, out reference);
+
+		public void SetNestedEntryReference(in SerializableGuid nestedGuid, in MemberReflectionReference<IUniqueContentEntry> reference)
+			=> NestedMap[nestedGuid] = reference;
+
+		public void ClearNestedCollection() => NestedMap.Clear();
 	}
 }

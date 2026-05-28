@@ -10,11 +10,17 @@ namespace ZenoTween
 
 		[HideLabel, Space]
 		public AnimationSequence sequence;
+		public bool cacheTween;
 
 		public void Play()
 		{
-			_player ??= new AnimationSequencePlayer(sequence);
+			_player ??= new AnimationSequencePlayer(sequence, cacheTween);
 			_player.Play();
+		}
+
+		public void Stop()
+		{
+			_player?.Stop(rewind: true);
 		}
 
 		private void OnDestroy()

@@ -261,6 +261,11 @@ namespace UI.Scroll
 		public CellWillRecycleDelegate cellWillRecycled;
 
 		/// <summary>
+		/// Scroller has been initalized.
+		/// </summary>
+		public Action scrollInitialized;
+
+		/// <summary>
 		/// This delegate is called when the scroll rect scrolls
 		/// </summary>
 		public ScrollScrolledDelegate scrollScrolled;
@@ -619,6 +624,8 @@ namespace UI.Scroll
 
 		public SimpleList<UIScrollItemLayout> ActiveCells => _activeCells;
 
+		public bool IsInitialized => _initialized;
+
 		public void Initialize()
 		{
 			if (_initialized)
@@ -712,6 +719,8 @@ namespace UI.Scroll
 			_lastScrollbarVisibility = _scrollbarVisibility;
 
 			_initialized = true;
+
+			scrollInitialized?.Invoke();
 		}
 
 		private void UpdatePaddingByMode()

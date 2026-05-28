@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sapientia.Collections;
+using System;
+using System.Collections.Generic;
 using UI.Scroll.Pagination;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 using ZenoTween;
 using ZenoTween.Utility;
 
@@ -112,6 +113,7 @@ namespace UI.Scroll
 		{
 			_data = data;
 
+			OnDataReceived(data);
 			_layout.ReloadData(normalizedScrollPosition);
 			Updated?.Invoke(data, normalizedScrollPosition);
 			OnUpdated(normalizedScrollPosition);
@@ -146,14 +148,24 @@ namespace UI.Scroll
 
 		public void RefreshVisible()
 		{
+			foreach (var item in GetVisibleItems())
+			{
+				item.Refresh();
+			}
+		}
+
+		public IEnumerable<TItem> GetVisibleItems()
+		{
 			if (_cells.IsNullOrEmpty())
-				return;
+				yield break;
 
 			for (int i = 0; i < _layout.ActiveCells.Count; i++)
 			{
 				var cell = _layout.ActiveCells[i] as TItemLayout;
-				if (_cells.TryGetValue(cell!, out var item))
-					item.Refresh();
+				if (_cells.TryGetValue(cell, out var item))
+				{
+					yield return item;
+				}
 			}
 		}
 
@@ -196,6 +208,10 @@ namespace UI.Scroll
 			Action onComplete = null,
 			bool completeCachedTween = true) =>
 			_layout.TweenTo(itemIndex, tweenType, time, onComplete, completeCachedTween);
+
+		protected virtual void OnDataReceived(TItemArgs[] data)
+		{
+		}
 
 		protected virtual void OnUpdated(float normalizedScrollPosition)
 		{
@@ -264,6 +280,18 @@ namespace UI.Scroll
 		{
 			item = FindCellAtDataIndex(dataIndex);
 			return item != null;
+		}
+
+		protected bool TryGetData(TItem item, out TItemArgs data)
+		{
+			if (item == null || _data.IsNullOrEmpty() || !_data.WithinBounds(item.DataIndex))
+			{
+				data = default;
+				return false;
+			}
+
+			data = _data[item.DataIndex];
+			return true;
 		}
 
 		private static TItemLayout GetNativeItemLayout(UIScrollLayout scrollLayout)
@@ -375,6 +403,7 @@ namespace UI.Scroll
 			_template = template;
 
 			_layout.Delegate = this;
+			_layout.scrollInitialized = OnScrollInitialized;
 			_layout.cellVisibilityChanged = OnCellVisibilityChanged;
 			_layout.cellWillRecycled = CellWillRecycled;
 			_layout.scrollBeganSnapping = OnScrollBeganSnapping;
@@ -384,6 +413,11 @@ namespace UI.Scroll
 			_layout.cellInstantiated = OnCellInitialized;
 			_layout.beginDrag = OnBeginDrag;
 			_layout.endedDrag = OnEndDrag;
+
+			if (_layout.IsInitialized)
+			{
+				OnScrollInitialized();
+			}
 		}
 
 		protected internal sealed override void OnLayoutInstalledInternal()
@@ -445,6 +479,10 @@ namespace UI.Scroll
 
 		private void OnCellInitialized(UIScrollLayout layout, UIScrollItemLayout cell)
 			=> OnCellInitialized(cell);
+
+		protected virtual void OnScrollInitialized()
+		{
+		}
 
 		protected virtual void OnScroll(Vector2 val, float scrollPosition)
 		{

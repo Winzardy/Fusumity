@@ -2,11 +2,18 @@
 #define CONTENT_ENTRY_BUFFER
 #endif
 using System;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace Content
 {
-	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver
+	public interface IContentEntryT : IUniqueContentEntry
+	{
+	}
+
+	public sealed partial class ContentEntry<T> : ISerializationCallbackReceiver, IContentEntryT
 	{
 		public void SetValue(in T newValue) => ContentEditValue = newValue;
 

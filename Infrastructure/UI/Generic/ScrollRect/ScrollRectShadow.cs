@@ -7,6 +7,7 @@ using UnityEngine.UI;
 namespace UI
 {
 	//TODO: Loop как обрабатывать...
+	// загадка века...
 	[RequireComponent(typeof(ScrollRect))]
 	public class ScrollRectShadow : UIBehaviour, ICanvasElement
 	{

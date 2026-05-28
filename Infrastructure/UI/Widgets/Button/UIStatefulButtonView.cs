@@ -87,8 +87,7 @@ namespace UI
 
 		private void UpdateStyle()
 		{
-			if (_layout.switcher != null)
-				_layout.switcher.Switch(ViewModel.Style);
+			SetStyle(ViewModel.Style);
 		}
 
 		private void UpdateInteractable()
@@ -118,6 +117,12 @@ namespace UI
 				return;
 
 			_clickElement.IsLockResistant = ignore;
+		}
+
+		public void SetStyle(string style)
+		{
+			if (_layout.switcher != null)
+				_layout.switcher.Switch(style);
 		}
 
 		private void HandleClick()

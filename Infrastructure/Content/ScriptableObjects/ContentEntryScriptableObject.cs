@@ -1,14 +1,14 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Extensions;
+using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentEntryScriptableObject<T> : ContentEntryScriptableObject,
-		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>
+		IIdentifierSource<ScriptableContentEntry<T>>, IUniqueContentEntryScriptableObject<T>, IIdentifiable
 	{
 		private const string DEFAULT_ID_REGEX_PATTERN = @"^\d+_";
 
@@ -31,11 +31,8 @@ namespace Content.ScriptableObjects
 #if UNITY_EDITOR
 				if (_entry == null)
 				{
-					var nullException =
-						ContentDebug.NullException(
-							$"Null entry by type [ {typeof(T).Name} ] in scriptable object [ {name}  ] by type [ {GetType().Name} ]");
-					ContentDebug.LogException(nullException, this);
-					throw nullException;
+					ContentDebug.LogError($"Null entry by type [ {typeof(T).Name} ] in scriptable object [ {name}  ] by type [ {GetType().Name} ]", this);
+					return string.Empty;
 				}
 #endif
 
@@ -116,6 +113,21 @@ namespace Content.ScriptableObjects
 		{
 		}
 
+#if UNITY_EDITOR
+		public void ForceCreateEntry(string id, SerializableGuid? guid = null)
+		{
+			if (_entry != null)
+				return;
+
+			guid ??= SerializableGuid.New();
+			_entry = new ScriptableContentEntry<T>(default, guid.Value)
+			{
+				id               = id,
+				scriptableObject = this
+			};
+		}
+#endif
+
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>
 			scriptableObject ? new(in scriptableObject._entry.Guid) : new(SerializableGuid.Empty);
 
@@ -140,11 +152,7 @@ namespace Content.ScriptableObjects
 
 		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
 
-		bool IContentEntryScriptableObject.enabled
-		{
-			get => enabled;
-			set => enabled = value;
-		}
+		bool IContentEntryScriptableObject.enabled { get => enabled; set => enabled = value; }
 	}
 
 	public interface IUniqueContentEntryScriptableObject<T> : IContentEntryScriptableObject<T>, IUniqueContentEntrySource<T>,

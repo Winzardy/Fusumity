@@ -11,7 +11,8 @@ namespace UI
 		public enum Type
 		{
 			Image,
-			ScrollBar
+			ScrollBar,
+			Mask
 		}
 
 		public Type type;
@@ -24,6 +25,9 @@ namespace UI
 
 		[ShowIf(nameof(type), Type.ScrollBar)]
 		public Scrollbar scrollBar;
+
+		[ShowIf(nameof(type), Type.Mask)]
+		public RectMask2D mask;
 
 		[TitleGroup("Animation")]
 		[LabelText("Duration")]

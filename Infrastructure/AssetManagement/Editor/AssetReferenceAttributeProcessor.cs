@@ -49,7 +49,7 @@ namespace AssetManagement.Editor
 
 			using (ListPool<GameObject>.Get(out var list))
 			{
-				foreach (var prefab in AssetDatabaseUtility.LoadPrefabs())
+				foreach (var prefab in AssetDatabaseUtility.GetPrefabsOfType(componentType.Name))
 				{
 					if (prefab != null && HasRequiredComponent(prefab, componentType, requirement.IncludeChildren))
 						list.Add(prefab);

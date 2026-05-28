@@ -1,12 +1,15 @@
 ﻿using Fusumity.MVVM.UI;
 using JetBrains.Annotations;
 using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI
 {
 	public class UIProgressBarView : UIView<IProgressBarViewModel, UIProgressBarLayout>
 	{
 		private UIProgressBar _widget;
+		private bool? _foundLayoutGroup;
 
 		public UIProgressBarView(UIProgressBarLayout layout) : base(layout)
 		{
@@ -72,6 +75,23 @@ namespace UI
 
 				case UIProgressBarLayout.Type.ScrollBar:
 					_layout.scrollBar.size = 1;
+					break;
+
+				case UIProgressBarLayout.Type.Mask:
+
+					if (!_foundLayoutGroup.HasValue)
+					{
+						_foundLayoutGroup = GameObject.TryGetComponent(out LayoutGroup _);
+					}
+
+					if (_foundLayoutGroup.Value)
+					{
+						LayoutRebuilder.ForceRebuildLayoutImmediate(_layout.rectTransform);
+					}
+
+					var padding = _layout.mask.padding;
+					padding.z = _layout.mask.rectTransform.rect.width;
+					_layout.mask.padding = padding;
 					break;
 			}
 

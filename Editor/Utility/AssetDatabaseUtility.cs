@@ -21,22 +21,15 @@ namespace Fusumity.Editor.Utility
 
 		public static UnityObject ToAsset(this string guid)
 		{
-			var path = AssetDatabase.GUIDToAssetPath(guid);
-			return AssetDatabase.LoadAssetAtPath<UnityObject>(path);
+			var g = new GUID(guid);
+			return AssetDatabase.LoadAssetByGUID<UnityObject>(g);
 		}
 
 		public static T ToAsset<T>(this string guid)
 			where T : UnityObject
 		{
-			var path = AssetDatabase.GUIDToAssetPath(guid);
-			return AssetDatabase.LoadAssetAtPath<T>(path);
-		}
-
-		public static IEnumerable<GameObject> LoadPrefabs(string[] searchInFolders = null, string filter = "t:prefab")
-		{
-			return AssetDatabase.FindAssets(filter, searchInFolders)
-			   .Select(AssetDatabase.GUIDToAssetPath)
-			   .Select(AssetDatabase.LoadAssetAtPath<GameObject>);
+			var g = new GUID(guid);
+			return AssetDatabase.LoadAssetByGUID<T>(g);
 		}
 
 		public static bool TryGetAssetByName<T>(string name, out T obj) where T : UnityObject
@@ -62,8 +55,7 @@ namespace Fusumity.Editor.Utility
 			var guids = GetAssetsGuids<T>();
 			for (int i = 0; i < guids.Length; i++)
 			{
-				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
-				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				var asset = AssetDatabase.LoadAssetByGUID<T>(guids[i]);
 				if (asset != null && predicate.Invoke(asset))
 				{
 					obj = asset;
@@ -84,7 +76,7 @@ namespace Fusumity.Editor.Utility
 				var path = AssetDatabase.GUIDToAssetPath(guids[i]);
 				if (pathPredicate.Invoke(path))
 				{
-					var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+					var asset = AssetDatabase.LoadAssetByGUID<T>(guids[i]);
 					return asset;
 				}
 			}
@@ -107,8 +99,7 @@ namespace Fusumity.Editor.Utility
 				Debug.LogWarning($"Found more than one asset of type: [ {type} ]");
 			}
 
-			var assetPath = AssetDatabase.GUIDToAssetPath(guids.First());
-			return AssetDatabase.LoadAssetAtPath(assetPath, type);
+			return AssetDatabase.LoadAssetByGUID(guids.First(), type);
 		}
 
 		public static void GetAsset<T>(out T asset, string path = null) where T : UnityObject
@@ -143,7 +134,7 @@ namespace Fusumity.Editor.Utility
 			var assets = new UnityObject[guids.Length];
 			for (int i = 0; i < guids.Length; i++)
 			{
-				UnityObject asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guids[i]), type);
+				UnityObject asset = AssetDatabase.LoadAssetByGUID(guids[i], type);
 				assets[i] = asset;
 			}
 
@@ -157,7 +148,7 @@ namespace Fusumity.Editor.Utility
 			var assets = new T[guids.Length];
 			for (int i = 0; i < guids.Length; i++)
 			{
-				T asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				var asset = AssetDatabase.LoadAssetByGUID<T>(guids[i]);
 				assets[i] = asset;
 			}
 
@@ -171,7 +162,7 @@ namespace Fusumity.Editor.Utility
 			var assets = new T[guids.Length];
 			for (int i = 0; i < guids.Length; i++)
 			{
-				T asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				var asset = AssetDatabase.LoadAssetByGUID<T>(guids[i]);
 				assets[i] = asset;
 			}
 
@@ -211,7 +202,8 @@ namespace Fusumity.Editor.Utility
 			var assets = new List<T>();
 			for (int i = 0; i < guids.Length; i++)
 			{
-				var asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				var asset = AssetDatabase.LoadAssetByGUID<GameObject>(guids[i]);
+
 				if (PrefabUtility.IsPartOfAnyPrefab(asset))
 				{
 					if (includeChildren)
@@ -248,7 +240,7 @@ namespace Fusumity.Editor.Utility
 			var assets = new List<GameObject>();
 			for (int i = 0; i < guids.Length; i++)
 			{
-				var asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				var asset = AssetDatabase.LoadAssetByGUID<GameObject>(guids[i]);
 				if (PrefabUtility.IsPartOfAnyPrefab(asset))
 				{
 					if (asset.GetComponentInChildren(type))
@@ -266,7 +258,7 @@ namespace Fusumity.Editor.Utility
 			var assets = new List<GameObject>();
 			for (int i = 0; i < guids.Length; i++)
 			{
-				var asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guids[i]));
+				var asset = AssetDatabase.LoadAssetByGUID<GameObject>(guids[i]);
 				if (PrefabUtility.IsPartOfAnyPrefab(asset))
 				{
 					var component = asset.GetComponent(type);
@@ -282,13 +274,13 @@ namespace Fusumity.Editor.Utility
 
 		public static T CreateScriptableObject<T>(string path, string assetName, bool saveAssets = true) where T : ScriptableObject
 		{
-			return (T)CreateScriptableObject(typeof(T), path, assetName, saveAssets);
+			return (T) CreateScriptableObject(typeof(T), path, assetName, saveAssets);
 		}
 
 		public static T CreateScriptableObject<T>(Type type, string path, string assetName, bool saveAssets = true)
 			where T : ScriptableObject
 		{
-			return (T)CreateScriptableObject(type, path, assetName, saveAssets);
+			return (T) CreateScriptableObject(type, path, assetName, saveAssets);
 		}
 
 		public static ScriptableObject CreateScriptableObject(Type type, string path, string assetName, bool saveAssets = true)
@@ -313,21 +305,21 @@ namespace Fusumity.Editor.Utility
 			return asset;
 		}
 
-		public static string[] GetAssetsGuids<T>(string path = null)
+		public static GUID[] GetAssetsGuids<T>(string path = null)
 		{
 			return GetAssetsGuids(typeof(T), path);
 		}
 
-		public static string[] GetAssetsGuids(Type type, string path = null)
+		public static GUID[] GetAssetsGuids(Type type, string path = null)
 		{
 			return GetAssetsGuids(type.Name, path);
 		}
 
-		public static string[] GetAssetsGuids(string typeName, string path = null)
+		public static GUID[] GetAssetsGuids(string typeName, string path = null)
 		{
 			return string.IsNullOrEmpty(path)
-				? AssetDatabase.FindAssets($"t:{typeName}")
-				: AssetDatabase.FindAssets($"t:{typeName}", new string[] { path });
+				? AssetDatabase.FindAssetGUIDs($"t:{typeName}")
+				: AssetDatabase.FindAssetGUIDs($"t:{typeName}", new string[] {path});
 		}
 
 		public static void Rename(UnityObject asset, string newName, bool setDirty = false)
@@ -400,8 +392,7 @@ namespace Fusumity.Editor.Utility
 			{
 				path = "Assets";
 			}
-			else
-			if (System.IO.Path.GetExtension(path) != "")
+			else if (System.IO.Path.GetExtension(path) != "")
 			{
 				path = path.Replace(System.IO.Path.GetFileName(path), "");
 			}
@@ -430,6 +421,7 @@ namespace Fusumity.Editor.Utility
 		{
 			return FindScriptsPaths(typeName, partialMatch).FirstOrDefault();
 		}
+
 		public static string FindScriptPath(System.Type type, bool partialMatch = true)
 		{
 			return FindScriptPath(type.Name, partialMatch);

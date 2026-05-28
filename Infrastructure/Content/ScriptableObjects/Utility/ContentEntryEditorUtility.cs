@@ -19,7 +19,11 @@ namespace Content.Editor
 		private static readonly Dictionary<SerializableGuid, IContentEntryScriptableObject> _guidToSource = new();
 
 		private static readonly Dictionary<string, SerializableGuid> _tracking = new();
-		private static readonly HashSet<SerializableGuid> _trackingByGuid = new();
+		private static readonly Dictionary<SerializableGuid, string> _trackingByGuid = new();
+		private static readonly Dictionary<string, int> _arrayLengthByPath = new();
+		private static readonly HashSet<string> _changedArrayPaths = new();
+		private static readonly HashSet<int> _scheduledRefreshAssetIds = new();
+		private static readonly List<ContentScriptableObject> _scheduledRefreshAssets = new();
 
 		private static bool _scheduledRefreshAndSave;
 
@@ -28,6 +32,11 @@ namespace Content.Editor
 			_guidToSource.Clear();
 			_tracking.Clear();
 			_trackingByGuid.Clear();
+			_arrayLengthByPath.Clear();
+			_changedArrayPaths.Clear();
+			_scheduledRefreshAssetIds.Clear();
+			_scheduledRefreshAssets.Clear();
+			EditorApplication.delayCall -= HandleScheduledNestedRefresh;
 		}
 
 		public static void Refresh(this ContentScriptableObject asset, bool refreshAndSave = false)
@@ -76,11 +85,34 @@ namespace Content.Editor
 		public static bool Track(in (ContentScriptableObject target, MemberReflectionReference<IUniqueContentEntry> reference) key,
 			in SerializableGuid guid)
 		{
-			if (!_trackingByGuid.Add(guid))
+			if (!key.target || guid == SerializableGuid.Empty)
 				return false;
 
-			var hash = $"{key.target.GetInstanceID()}:{key.reference.Path}";
-			return _tracking.TryAdd(hash, guid);
+			var hash = GetTrackingHash(key.target, key.reference);
+			if (_tracking.TryGetValue(hash, out var trackedGuid))
+			{
+				if (trackedGuid == guid)
+				{
+					_trackingByGuid[guid] = hash;
+					return false;
+				}
+
+				if (_trackingByGuid.TryGetValue(trackedGuid, out var trackedHash)
+					&& trackedHash == hash)
+					_trackingByGuid.Remove(trackedGuid);
+
+				_tracking[hash]       = guid;
+				_trackingByGuid[guid] = hash;
+				return true;
+			}
+
+			if (_trackingByGuid.TryGetValue(guid, out var previousHash)
+				&& previousHash != hash)
+				_tracking.Remove(previousHash);
+
+			_tracking[hash]       = guid;
+			_trackingByGuid[guid] = hash;
+			return true;
 		}
 
 		public static bool Untrack(in (ContentScriptableObject asset, MemberReflectionReference<IUniqueContentEntry> reference) key)
@@ -88,9 +120,13 @@ namespace Content.Editor
 			if (!key.asset)
 				return false;
 
-			var hash = $"{key.asset.GetInstanceID()}:{key.reference.Path}";
+			var hash = GetTrackingHash(key.asset, key.reference);
 			if (_tracking.TryGetValue(hash, out var guid))
-				_trackingByGuid.Remove(guid);
+			{
+				if (_trackingByGuid.TryGetValue(guid, out var trackedHash)
+					&& trackedHash == hash)
+					_trackingByGuid.Remove(guid);
+			}
 
 			return _tracking.Remove(hash);
 		}
@@ -98,8 +134,67 @@ namespace Content.Editor
 		public static bool TryGet(in (ContentScriptableObject asset, MemberReflectionReference<IUniqueContentEntry> reference) key,
 			out SerializableGuid guid)
 		{
-			var hash = $"{key.asset.GetInstanceID()}:{key.reference.Path}";
+			var hash = GetTrackingHash(key.asset, key.reference);
 			return _tracking.TryGetValue(hash, out guid);
+		}
+
+		public static bool TrackArrayLength(ContentScriptableObject asset, string arrayPath, int length)
+		{
+			var hash = GetTrackingHash(asset, arrayPath);
+			if (!_arrayLengthByPath.TryGetValue(hash, out var trackedLength))
+			{
+				_arrayLengthByPath[hash] = length;
+				return _changedArrayPaths.Contains(hash);
+			}
+
+			if (trackedLength == length)
+				return _changedArrayPaths.Contains(hash);
+
+			_arrayLengthByPath[hash] = length;
+			_changedArrayPaths.Add(hash);
+			ScheduleNestedRefresh(asset);
+			return true;
+		}
+
+		public static void ScheduleNestedRefresh(ContentScriptableObject asset)
+			=> ScheduleNestedRefreshInternal(asset);
+
+		private static string GetTrackingHash(ContentScriptableObject asset,
+			MemberReflectionReference<IUniqueContentEntry> reference)
+			=> GetTrackingHash(asset, reference.Path);
+
+		private static string GetTrackingHash(ContentScriptableObject asset, string path)
+			=> $"{asset.GetInstanceID()}:{path}";
+
+		private static void ScheduleNestedRefreshInternal(ContentScriptableObject asset)
+		{
+			if (!asset)
+				return;
+
+			if (!_scheduledRefreshAssetIds.Add(asset.GetInstanceID()))
+				return;
+
+			_scheduledRefreshAssets.Add(asset);
+			EditorApplication.delayCall -= HandleScheduledNestedRefresh;
+			EditorApplication.delayCall += HandleScheduledNestedRefresh;
+		}
+
+		private static void HandleScheduledNestedRefresh()
+		{
+			try
+			{
+				foreach (var asset in _scheduledRefreshAssets)
+				{
+					if (asset)
+						asset.Refresh(false);
+				}
+			}
+			finally
+			{
+				_scheduledRefreshAssetIds.Clear();
+				_scheduledRefreshAssets.Clear();
+				_changedArrayPaths.Clear();
+			}
 		}
 
 		public static void ResolveCache(IContentEntryScriptableObject scriptable)
@@ -190,33 +285,38 @@ namespace Content.Editor
 					continue;
 
 				var reference = iterator.ToContentReference();
-				if (reference == null)
+				if (reference.IsEmpty())
 					continue;
 
 				if (regenerateGuid)
 					RegenerateGuid(entry, iterator.propertyPath, asset, false);
 
 				map.SetOrAdd(reference, entry.Guid);
-
-				Track((asset, reference), in entry.Guid);
 			} while (iterator.Next(true));
-
-			SetDirty(serializedObject, refreshAndSave);
 
 			scriptableObject.ScriptableContentEntry.ClearNested();
 
 			foreach (var reference in map.Keys)
 			{
 				ref var guid = ref map[reference];
-				if (!scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference))
-					throw new Exception($"Can't add nested entry with guid [ {guid} ] by path [ {reference.Path} ]");
+				if (!scriptableObject.ScriptableContentEntry!.RegisterNestedEntry(guid, reference))
+				{
+					var entry = reference.Resolve(scriptableObject.ScriptableContentEntry);
+					guid = RegenerateGuid(entry, reference.Path, asset, false);
+					scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference);
+				}
+
+				Track((asset, reference), in guid);
 			}
+
+			SetDirty(serializedObject, refreshAndSave);
 
 			map.ReleaseToStaticPool();
 
 			if (log && ContentDebug.Logging.Nested.refresh)
 			{
-				var collection = scriptableObject.ScriptableContentEntry.Nested
+				var collection = scriptableObject.ScriptableContentEntry
+					.Nested
 					.GetCompositeString(x => $"[	{x.Key}	 ] {x.Value}",
 						true);
 				ContentDebug.Log($"Nested entries refreshed for source [ {asset.name} ]:" +
@@ -237,10 +337,10 @@ namespace Content.Editor
 			entry.ClearNestedCollection();
 		}
 
-		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
+		public static SerializableGuid RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)
 		{
 			var prevEntryGuid = entry.Guid;
-			entry.RegenerateGuid();
+			var newGuid = entry.RegenerateGuid();
 			EditorUtility.SetDirty(source);
 
 			if (refreshAndSave)
@@ -254,6 +354,8 @@ namespace Content.Editor
 				msg += " for content entry by path: <u>" + path + "</u>";
 				ContentDebug.LogWarning(msg, source);
 			}
+
+			return newGuid;
 		}
 
 		private static void RestoreGuid(IUniqueContentEntry entry, in SerializableGuid guid, string path, UnityObject source)

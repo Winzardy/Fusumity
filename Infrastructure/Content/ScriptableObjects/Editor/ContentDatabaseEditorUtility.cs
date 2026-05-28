@@ -26,11 +26,8 @@ namespace Content.ScriptableObjects.Editor
 
 		private static bool _syncContentCalledThisFrame;
 
-		private static List<ContentDatabaseScriptableObject> _cache;
-
-		public static List<ContentDatabaseScriptableObject> Databases
-			=> _cache ??= AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>()
-				.ToList();
+		public static IEnumerable<ContentDatabaseScriptableObject> Databases
+			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>().ToList();
 
 		public static void Create<T>(string name = null, string addressableName = null) where T : ContentDatabaseScriptableObject
 		{
@@ -55,7 +52,7 @@ namespace Content.ScriptableObjects.Editor
 
 			database = AssetDatabaseUtility.CreateScriptableObject<T>(path, name);
 
-			_cache?.Add(database);
+			ContentEditorCache.Register(database);
 
 			addressableName ??= name.Remove(DEFAULT_NAME_ENDING);
 			database.MakeAddressable(
@@ -81,8 +78,6 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void AddToDatabase(ContentScriptableObject scriptableObject)
 		{
-			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
-
 			var database = GetDatabase(scriptableObject);
 			Add(database);
 
@@ -634,6 +629,38 @@ namespace Content.ScriptableObjects.Editor
 			ContentDebug.Logging.Nested.refresh = false;
 			scriptableObject.Refresh();
 			ContentDebug.Logging.Nested.refresh = originRefreshEnabled;
+		}
+
+		public static TScrobject GetScrobjectFromDb<TScrobject, TDatabase>(string scrobjectId, bool useCache = true)
+		   where TScrobject : ContentScriptableObject
+		   where TDatabase : ContentDatabaseScriptableObject
+		{
+			if (scrobjectId.IsNullOrEmpty())
+				return null;
+
+			var db = useCache ? EditorAssetsCache.GetCachedAsset<TDatabase>() : AssetDatabaseUtility.GetAsset<TDatabase>();
+
+			foreach (var scrobj in db.scriptableObjects)
+			{
+				if (scrobj is not IIdentifiable identifiable)
+					continue;
+
+				if (identifiable.Id == scrobjectId)
+				{
+					var cast = scrobj as TScrobject;
+					if (cast == null)
+					{
+						Debug.LogError(
+							$"Could not find valid scrobject of type [ {typeof(TScrobject).Name} ] " +
+							$"with id [ {scrobjectId} ] in database of type [ {typeof(TDatabase).Name} ]." +
+							$"\nDuplicate ids could be in place.");
+					}
+
+					return cast;
+				}
+			}
+
+			return null;
 		}
 	}
 }

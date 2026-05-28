@@ -22,7 +22,7 @@ namespace Fusumity.Utility
 				case ServicesInitializationState.Uninitialized:
 					Debug.Log("[UnityServices] Initializing");
 					await Unity.Services.Core.UnityServices.InitializeAsync()
-					   .AsUniTask().AttachExternalCancellation(cancellationToken);
+						.AsUniTask().AttachExternalCancellation(cancellationToken);
 					servicesInitializationState = Unity.Services.Core.UnityServices.State;
 					var success = servicesInitializationState == ServicesInitializationState.Initialized;
 					Debug.Log($"[UnityServices] Initialized UnityServices, success: {success}");
@@ -31,7 +31,9 @@ namespace Fusumity.Utility
 				case ServicesInitializationState.Initializing:
 					var tcs = new UniTaskCompletionSource<bool>();
 
-					Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
+					var subscribed = true;
+
+					Unity.Services.Core.UnityServices.Initialized      += OnInitializedInternal;
 					Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
 
 					try
@@ -43,28 +45,38 @@ namespace Fusumity.Utility
 					{
 						return false;
 					}
+					finally
+					{
+						Unsubscribe();
+					}
+
+					void Unsubscribe()
+					{
+						if (!subscribed)
+							return;
+
+						subscribed = false;
+
+						Unity.Services.Core.UnityServices.Initialized      -= OnInitializedInternal;
+						Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
+					}
 
 					void OnInitializedInternal()
 					{
-						Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
-						Unity.Services.Core.UnityServices.InitializeFailed += OnInitializeFailedInternal;
-
+						Unsubscribe();
 						tcs.TrySetResult(true);
 					}
 
 					void OnInitializeFailedInternal(Exception exception)
 					{
-						Unity.Services.Core.UnityServices.Initialized += OnInitializedInternal;
-						Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
-
+						Unsubscribe();
 						Debug.LogException(exception);
 						tcs.TrySetResult(false);
 					}
 
 					void Cancel()
 					{
-						Unity.Services.Core.UnityServices.Initialized -= OnInitializedInternal;
-						Unity.Services.Core.UnityServices.InitializeFailed -= OnInitializeFailedInternal;
+						Unsubscribe();
 						tcs.TrySetCanceled();
 					}
 			}

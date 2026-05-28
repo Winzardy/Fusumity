@@ -296,7 +296,7 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			{
-				var errorColor = ObjectIsNullUtility.GetInvalidColor(GUI.color);
+				var errorColor = ObjectIsNullUtility.GetWarningColor(originColor);
 				var canBeEmpty = Property.Info.GetAttribute<CanBeEmptyAttribute>() != null
 					|| Property.Info.GetAttribute<CanBeNullAttribute>() != null
 					|| Property.Info.GetAttribute<MaybeNullAttribute>() != null;
@@ -315,6 +315,7 @@ namespace Content.Editor
 
 				if (invalid)
 				{
+					errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
 					if (useDropdown)
 					{
 						GUI.color = errorColor;
@@ -439,7 +440,7 @@ namespace Content.Editor
 			var labelWidthInEditor = GUIHelper.BetterLabelWidth - 4f;
 			targetLabel.tooltip = originalTooltip;
 
-			if (!forceDisableInlineEditor)
+			if (useInlineEditor && !forceDisableInlineEditor)
 				TryCreateEditor();
 
 			if (!forceDisableInlineEditor && _inlineEditor)
@@ -524,10 +525,10 @@ namespace Content.Editor
 
 			if (source is INestedContentEntrySource nestedSource)
 			{
-				var rawValue = nestedSource.UniqueContentEntry?.RawValue;
-
 				if (Property.Parent.ValueEntry.WeakSmartValue is not IContentReference reference)
 					return;
+
+				var rawValue = nestedSource.UniqueContentEntry?.RawValue;
 
 				var originEnable = GUI.enabled;
 				EditorGUI.indentLevel = originalIndent;
@@ -710,13 +711,6 @@ namespace Content.Editor
 				return source;
 			}
 
-			ContentEditorCache.ClearAndRefreshScrObjs();
-			if (ContentEditorCache.TryGetSource(type, id, out source))
-			{
-				_found = (id, source, ContentEditorCache.version);
-				return source;
-			}
-
 			_found = (id, null, ContentEditorCache.version);
 			return null;
 		}
@@ -733,13 +727,6 @@ namespace Content.Editor
 				return source;
 			}
 
-			ContentEditorCache.ClearAndRefreshScrObjs();
-			if (ContentEditorCache.TryGetSource(type, in guid, out source))
-			{
-				_found = (guid.ToString(), source, ContentEditorCache.version);
-				return source;
-			}
-
 			_found = (guid.ToString(), null, ContentEditorCache.version);
 			return null;
 		}
@@ -751,13 +738,6 @@ namespace Content.Editor
 					return _found.source;
 
 			if (ContentEditorCache.TryGetSource(reference, _valueType, out var source))
-			{
-				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
-				return source;
-			}
-
-			ContentEditorCache.ClearAndRefreshScrObjs();
-			if (ContentEditorCache.TryGetSource(reference, _valueType, out source))
 			{
 				_found = (reference.Guid.ToString(), source, ContentEditorCache.version);
 				return source;

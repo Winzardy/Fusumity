@@ -5,7 +5,6 @@ using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Fusumity.Utility;
 using Sapientia.Extensions.Reflection;
-using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -43,11 +42,13 @@ namespace Content.ScriptableObjects.Editor
 			var originalForceHideMonoScriptInEditor = ForceHideMonoScriptInEditor;
 			ForceHideMonoScriptInEditor = true;
 			{
+				var originEnabled = GUI.enabled;
 				if (target is IContentEntryScriptableObject scriptableObject)
 				{
 					var asset = (ContentScriptableObject) scriptableObject;
 					if (!scriptableObject.enabled)
 					{
+						GUI.enabled = true;
 						if (FusumityEditorGUILayout.MessageBoxButton(
 							"Данный контент помечен как <u><b>неиспользуемый</b></u> и будет пропущен при сборке и валидации",
 							"Enable",
@@ -56,6 +57,8 @@ namespace Content.ScriptableObjects.Editor
 							scriptableObject.enabled = true;
 							ContentDatabaseEditorUtility.AddToDatabase(asset);
 						}
+
+						GUI.enabled = originEnabled;
 					}
 
 					if (scriptableObject.enabled && IsDebug())
@@ -69,8 +72,7 @@ namespace Content.ScriptableObjects.Editor
 					}
 				}
 
-				var originEnabled = GUI.enabled;
-				GUI.enabled = DrawEnabledToggle();
+				GUI.enabled = DrawEnabledToggle() && originEnabled;
 
 				if (SirenixEditorGUI.BeginFadeGroup(target, ContentEntryMonoScriptVisibilityMenu.IsEnable))
 				{
@@ -123,11 +125,15 @@ namespace Content.ScriptableObjects.Editor
 
 				var prev = scriptableObject.enabled;
 
-				scriptableObject.enabled = GUI.Toggle(
-					toggleRect,
-					scriptableObject.enabled,
-					new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
-
+				var originEnabled = GUI.enabled;
+				GUI.enabled = true;
+				{
+					scriptableObject.enabled = GUI.Toggle(
+						toggleRect,
+						scriptableObject.enabled,
+						new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
+				}
+				GUI.enabled = originEnabled;
 				if (prev != scriptableObject.enabled)
 				{
 					var asset = (ContentScriptableObject) scriptableObject;
@@ -151,6 +157,9 @@ namespace Content.ScriptableObjects.Editor
 				return;
 			if (!so.NeedSync())
 				return;
+
+			var enabled = GUI.enabled;
+			GUI.enabled = true;
 
 			_richButtonStyle ??= new GUIStyle(GUI.skin.button)
 			{
@@ -184,6 +193,8 @@ namespace Content.ScriptableObjects.Editor
 			}
 			GUILayout.EndHorizontal();
 			GUILayout.Space(10);
+
+			GUI.enabled = enabled;
 		}
 
 		private static Color GetSyncButtonColor()

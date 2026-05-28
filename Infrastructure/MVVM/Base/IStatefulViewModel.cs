@@ -33,9 +33,18 @@ namespace Fusumity.MVVM
 
 		public event Action<bool> ActiveStateChanged;
 
-		public AnemicStatefulViewModel(string id = null)
+		public AnemicStatefulViewModel()
+		{
+		}
+
+		public AnemicStatefulViewModel(string id)
 		{
 			Id = id;
+		}
+
+		public AnemicStatefulViewModel(int index)
+		{
+			Id = index.ToString();
 		}
 
 		public void SetActive(bool isActive)
