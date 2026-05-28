@@ -9,7 +9,6 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace AssetManagement.Editor
 {
@@ -27,7 +26,7 @@ namespace AssetManagement.Editor
 			if (!IsGameObjectEntry(parentProperty))
 				return;
 
-			if (!parentProperty.Attributes.HasAttribute<AssetReferenceRequiredComponentAttribute>())
+			if (!TryGetRequiredComponentAttribute(parentProperty, out _, false))
 				return;
 
 			var className = nameof(AssetReferenceAttributeProcessor);
@@ -41,33 +40,40 @@ namespace AssetManagement.Editor
 
 		public static IEnumerable<ValueDropdownItem<GameObject>> FilterByRequiredComponent(InspectorProperty property)
 		{
-			if (!TryGetRequirement(property, out var requirement, out var componentType))
+			if (!TryGetRequirement(property, out var requirement, out var componentType, out _))
 				return null;
 
 			if (componentType == null)
 				return Array.Empty<ValueDropdownItem<GameObject>>();
 
-			using (ListPool<GameObject>.Get(out var list))
+			var result = new List<ValueDropdownItem<GameObject>>();
+			foreach (var prefab in AssetDatabaseUtility.GetPrefabsOfType(componentType.Name))
 			{
-				foreach (var prefab in AssetDatabaseUtility.GetPrefabsOfType(componentType.Name))
-				{
-					if (prefab != null && HasRequiredComponent(prefab, componentType, requirement.IncludeChildren))
-						list.Add(prefab);
-				}
-
-				return list.Select(x => new ValueDropdownItem<GameObject>(x.name, x)).ToArray();
+				if (prefab != null)
+					result.Add(new ValueDropdownItem<GameObject>(prefab.name, prefab));
 			}
+
+			return result;
 		}
 
 		internal static bool ValidateRequiredComponent(InspectorProperty property, out string message)
 		{
 			message = null;
 
-			if (!TryGetRequirement(property, out var requirement, out var componentType))
+			if (!TryGetRequirement(property, out var requirement, out var componentType, out var error))
 				return true;
 
-			if (componentType == null)
+			if (!string.IsNullOrEmpty(error))
+			{
+				message = error;
 				return false;
+			}
+
+			if (componentType == null)
+			{
+				message = "Required component type is not set";
+				return false;
+			}
 
 			if (property?.ValueEntry?.WeakSmartValue is not GameObject gameObject || gameObject == null)
 				return true;
@@ -96,10 +102,12 @@ namespace AssetManagement.Editor
 
 		private static bool TryGetRequirement(InspectorProperty property,
 			out AssetReferenceRequiredComponentAttribute attribute,
-			out Type componentType)
+			out Type componentType,
+			out string error)
 		{
 			attribute     = null;
 			componentType = null;
+			error         = null;
 
 			if (!TryGetRequiredComponentAttribute(property, out attribute))
 				return false;
@@ -107,24 +115,34 @@ namespace AssetManagement.Editor
 			componentType = attribute.ComponentType;
 
 			if (!attribute.ComponentTypeName.IsNullOrEmpty())
-				ReflectionUtility.TryGetType(attribute.ComponentTypeName, out componentType);
+			{
+				if (!ReflectionUtility.TryGetType(attribute.ComponentTypeName, out componentType))
+					error = $"Unable to resolve required component type [ {attribute.ComponentTypeName} ]";
+			}
+
+			if (componentType != null && !typeof(Component).IsAssignableFrom(componentType))
+				error = $"Required type [ {componentType.FullName} ] is not a Unity component";
 
 			return true;
 		}
 
 		private static bool TryGetRequiredComponentAttribute(InspectorProperty property,
-			out AssetReferenceRequiredComponentAttribute attribute)
+			out AssetReferenceRequiredComponentAttribute attribute,
+			bool includeParents = true)
 		{
 			attribute = null;
 			var current = property;
 
 			while (current != null)
 			{
-				if (current.Attributes.HasAttribute<AssetReferenceRequiredComponentAttribute>())
-				{
-					attribute = current.Attributes.GetAttribute<AssetReferenceRequiredComponentAttribute>();
+				attribute = current.Attributes.GetAttribute<AssetReferenceRequiredComponentAttribute>() ??
+					current.GetAttribute<AssetReferenceRequiredComponentAttribute>();
+
+				if (attribute != null)
 					return true;
-				}
+
+				if (!includeParents)
+					break;
 
 				current = current.Parent;
 			}

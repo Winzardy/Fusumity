@@ -49,14 +49,8 @@ namespace Content.ScriptableObjects
 				return;
 			}
 
-			if (_entry == null)
-			{
-				_entry = new ScriptableContentEntry<T>(default, in guid)
-				{
-					scriptableObject = this
-				};
+			if (TryCreateEntry(guid))
 				return;
-			}
 
 			if (_entry.Guid == guid)
 				return;
@@ -77,6 +71,25 @@ namespace Content.ScriptableObjects
 				return true;
 
 			return _entry.Guid != guid;
+		}
+
+		public bool TryCreateEntry(in SerializableGuid guid, string id = null)
+		{
+			if (_entry != null)
+				return false;
+
+			_entry = new ScriptableContentEntry<T>(default, guid)
+			{
+				scriptableObject = this
+			};
+			SetId(id);
+			return true;
+		}
+
+		public void SetId(string id)
+		{
+			useCustomId = !id.IsNullOrEmpty();
+			_entry.id   = id;
 		}
 	}
 
