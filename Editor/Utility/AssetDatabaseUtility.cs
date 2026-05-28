@@ -22,7 +22,6 @@ namespace Fusumity.Editor.Utility
 				"t:prefab",
 				SearchFlags.Synchronous);
 			SearchService.GetItems(context);
-
 		}
 
 		public static string ToGuid(this UnityObject obj)

@@ -26,16 +26,10 @@ namespace AssetManagement.Editor
 			if (!IsGameObjectEntry(parentProperty))
 				return;
 
-			if (!TryGetRequiredComponentAttribute(parentProperty, out _, false))
+			if (!TryGetRequiredComponentAttribute(parentProperty, out var attribute, false))
 				return;
 
-			var className = nameof(AssetReferenceAttributeProcessor);
-			var dropdown = new ValueDropdownAttribute($"@{className}.{nameof(FilterByRequiredComponent)}($property)")
-			{
-				AppendNextDrawer = true
-			};
-			attributes.Add(dropdown);
-			attributes.Add(new ValidateRequiredAssetComponentAttribute());
+			attributes.Add(new ComponentReferencePickerAttribute(attribute.ComponentType));
 		}
 
 		public static IEnumerable<ValueDropdownItem<GameObject>> FilterByRequiredComponent(InspectorProperty property)
