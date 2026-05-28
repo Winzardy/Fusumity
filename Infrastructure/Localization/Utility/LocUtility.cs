@@ -8,7 +8,7 @@ namespace Localization
 		{
 			if (!LocManager.IsInitialized)
 			{
-#if UNITY_EDITOR
+#if UNITY_EDITOR && FULLWEIGHT_MODE
 				return LocManager.GetEditor(key);
 #endif
 				return key;
