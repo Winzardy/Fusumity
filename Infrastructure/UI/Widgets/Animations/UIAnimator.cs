@@ -260,21 +260,19 @@ namespace UI
 
 		private bool TryResolveSequenceCreator(string key, out Func<Sequence> sequenceCreator)
 		{
-			if (!_keyToSequenceCreator.TryGetValue(key, out sequenceCreator))
-			{
-				var fallbackKeys = key.Split(AnimationLayer.FALLBACK_SEPARATOR);
+			if (_keyToSequenceCreator.TryGetValue(key, out sequenceCreator))
+				return true;
 
-				for (int i = 0; i < fallbackKeys.Length; i++)
-				{
-					var fallbackKey = fallbackKeys[i];
-					if (_keyToSequenceCreator.TryGetValue(fallbackKey, out sequenceCreator))
-						break;
-				}
+			var fallbackKeys = key.Split(AnimationLayer.FALLBACK_SEPARATOR);
+			for (int i = 0; i < fallbackKeys.Length; i++)
+			{
+				if (_keyToSequenceCreator.TryGetValue(fallbackKeys[i], out sequenceCreator))
+					return true;
 			}
 
-			return true;
-		}
+			return false;
 
+		}
 		public bool IsPlaying()
 		{
 			foreach (var layer in _layers.Values)

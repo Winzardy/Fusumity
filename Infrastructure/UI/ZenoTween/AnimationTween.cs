@@ -187,7 +187,7 @@ namespace ZenoTween
 
 		private Tween _editorTween;
 
-		private bool _editorReset = true;
+		private bool _editorReset = false;
 		private bool _loop = false;
 		private float _duration = 1;
 
