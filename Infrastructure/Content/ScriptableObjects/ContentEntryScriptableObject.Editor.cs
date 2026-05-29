@@ -10,9 +10,6 @@ namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentEntryScriptableObject<T>
 	{
-		// ReSharper disable once StaticMemberInGenericType
-		private static readonly HashSet<string> _firstSkip = new();
-
 		// ReSharper disable once InconsistentNaming
 		/// <summary>
 		/// Only inspector
@@ -49,7 +46,7 @@ namespace Content.ScriptableObjects
 				return;
 			}
 
-			if (TryCreateEntry(guid))
+			if (ForceCreateEntry(guid))
 				return;
 
 			if (_entry.Guid == guid)
@@ -73,7 +70,7 @@ namespace Content.ScriptableObjects
 			return _entry.Guid != guid;
 		}
 
-		public bool TryCreateEntry(in SerializableGuid guid, string id = null)
+		public bool ForceCreateEntry(in SerializableGuid guid, string id = null)
 		{
 			if (_entry != null)
 				return false;
