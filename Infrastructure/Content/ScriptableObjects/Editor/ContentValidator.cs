@@ -8,12 +8,12 @@ using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Sapientia;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityObject = UnityEngine.Object;
 
 namespace Content.Editor
 {
+	using UnityObject = UnityEngine.Object;
+
 	public static class ContentValidator
 	{
 		private const string TITLE = "Validate Content";
@@ -38,12 +38,17 @@ namespace Content.Editor
 		}
 
 		[MenuItem(ContentMenuConstants.TOOLS_MENU + "Validate/Run")]
-		public static void Validate()
+		private static void ValidateRunEditor()
 		{
-			Validate(SyncBeforeValidate);
+			Validate();
 		}
 
-		public static void Validate(bool sync)
+		public static bool Validate()
+		{
+			return Validate(SyncBeforeValidate);
+		}
+
+		public static bool Validate(bool sync)
 		{
 			if (sync)
 				ContentDatabaseEditorUtility.SyncContent();
@@ -71,7 +76,7 @@ namespace Content.Editor
 
 					foreach (var scriptableObject in database.scriptableObjects)
 					{
-						if (!InternalEditorUtility.inBatchMode)
+						if (!Application.isBatchMode)
 						{
 							var scriptableObjectName = scriptableObject ? scriptableObject.name : "null";
 							var progressValue = totalProgress > 0 ? progress / totalProgress : 1;
@@ -108,19 +113,18 @@ namespace Content.Editor
 				if (errorCount > 0)
 				{
 					ContentDebug.LogError($"Validation failed (errors: {errorCount})");
-					if (InternalEditorUtility.inBatchMode)
-						EditorApplication.Exit(1);
-
-					return;
+					return false;
 				}
 
 				ContentDebug.Log("Validation passed");
 			}
 			finally
 			{
-				if (!InternalEditorUtility.inBatchMode)
+				if (!Application.isBatchMode)
 					EditorUtility.ClearProgressBar();
 			}
+
+			return true;
 		}
 
 		private static int ValidateContentReferences(ContentScriptableObject scriptableObject)

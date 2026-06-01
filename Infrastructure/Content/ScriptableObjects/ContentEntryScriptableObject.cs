@@ -156,7 +156,6 @@ namespace Content.ScriptableObjects
 
 	public interface IUniqueContentEntryScriptableObject : IContentEntryScriptableObject, IUniqueContentEntrySource
 	{
-		bool Enabled { get; }
 		bool UseCustomId { get; }
 	}
 

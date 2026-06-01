@@ -470,7 +470,7 @@ namespace Content.ScriptableObjects.Editor
 
 							if (!collided && TryValidate(scriptableObject))
 							{
-								if (!scriptableObject.Enabled)
+								if (!scriptableObject.enabled)
 									continue;
 
 								content.Add(scriptableObject);

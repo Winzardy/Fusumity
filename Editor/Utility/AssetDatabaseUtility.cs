@@ -17,11 +17,21 @@ namespace Fusumity.Editor.Utility
 		[InitializeOnLoadMethod]
 		private static void WarmupSearch()
 		{
-			using var context = SearchService.CreateContext(
-				"asset",
-				"t:prefab",
-				SearchFlags.Synchronous);
-			SearchService.GetItems(context);
+			if (Application.isBatchMode)
+				return;
+
+			EditorApplication.delayCall += static () =>
+			{
+				EditorApplication.delayCall += static () =>
+				{
+					using var context = SearchService.CreateContext(
+						"asset",
+						"t:prefab");
+
+					foreach (var _ in SearchService.GetItems(context))
+						break;
+				};
+			};
 		}
 
 		public static string ToGuid(this UnityObject obj)

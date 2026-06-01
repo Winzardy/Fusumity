@@ -1,5 +1,6 @@
 ﻿using ActionBusSystem;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +19,7 @@ namespace UI
 		public GraphicRaycaster raycaster;
 
 		[BoxGroup("Close", showLabel: false)]
+		[CanBeNull]
 		public Button close;
 		[BoxGroup("Close", showLabel: false)]
 		[ShowIf(nameof(close), null)]

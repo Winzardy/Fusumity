@@ -43,7 +43,7 @@ namespace Content.ScriptableObjects.Editor
 			ForceHideMonoScriptInEditor = true;
 			{
 				var originEnabled = GUI.enabled;
-				if (target is IContentEntryScriptableObject scriptableObject)
+				if (target is IContentEntryScriptableObject scriptableObject and not ContentDatabaseScriptableObject)
 				{
 					var asset = (ContentScriptableObject) scriptableObject;
 					if (!scriptableObject.enabled)
@@ -70,6 +70,10 @@ namespace Content.ScriptableObjects.Editor
 					{
 						DrawAssetReference();
 					}
+				}
+				else
+				{
+					DrawAssetReference();
 				}
 
 				GUI.enabled = DrawEnabledToggle() && originEnabled;
@@ -114,7 +118,7 @@ namespace Content.ScriptableObjects.Editor
 
 		private bool DrawEnabledToggle()
 		{
-			if (target is IContentEntryScriptableObject scriptableObject)
+			if (target is IContentEntryScriptableObject scriptableObject and not ContentDatabaseScriptableObject)
 			{
 				if (!FusumityEditorGUIHelper.drawAssetReference)
 					return scriptableObject.enabled;
