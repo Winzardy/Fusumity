@@ -17,12 +17,17 @@ namespace Fusumity.Editor.Utility
 		[InitializeOnLoadMethod]
 		private static void WarmupSearch()
 		{
-			EditorApplication.delayCall += () =>
+			if (Application.isBatchMode)
+				return;
+
+			EditorApplication.delayCall += static () =>
 			{
 				using var context = SearchService.CreateContext(
 					"asset",
 					"t:prefab");
-				SearchService.GetItems(context);
+
+				foreach (var _ in SearchService.GetItems(context))
+					break;
 			};
 		}
 
