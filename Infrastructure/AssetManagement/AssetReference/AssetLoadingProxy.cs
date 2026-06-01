@@ -59,6 +59,26 @@ namespace AssetManagement
 			_entry = entry;
 		}
 
+		public void Dispose()
+		{
+			if (_disposed)
+				return;
+
+			_disposed = true;
+
+			_cts?.Cancel();
+			_loadingTcs?.TrySetCanceled();
+
+			_cts?.Dispose();
+			_cts        = null;
+			_loadingTcs = null;
+
+			if (_loadedAsset != null)
+			{
+				_entry.ReleaseSafe();
+			}
+		}
+
 		public async UniTask<TAsset> LoadAsync(CancellationToken token = default)
 		{
 			if (_disposed)
@@ -78,7 +98,7 @@ namespace AssetManagement
 			}
 
 			_loadingTcs = new UniTaskCompletionSource<TAsset>();
-			_cts = new CancellationTokenSource();
+			_cts        = new CancellationTokenSource();
 
 			try
 			{
@@ -100,42 +120,24 @@ namespace AssetManagement
 			}
 			catch (OperationCanceledException)
 			{
-				_loadingTcs.TrySetCanceled();
+				if (!_disposed)
+					_loadingTcs.TrySetCanceled();
 				throw;
 			}
 			catch (Exception ex)
 			{
-				_loadingTcs.TrySetException(ex);
+				if (!_disposed)
+					_loadingTcs.TrySetException(ex);
 				throw;
 			}
 			finally
 			{
 				_cts?.Dispose();
-				_cts = null;
+				_cts        = null;
 				_loadingTcs = null;
 			}
 
 			return _loadedAsset;
-		}
-
-		public void Dispose()
-		{
-			if (_disposed)
-				return;
-
-			_disposed = true;
-
-			_cts?.Cancel();
-			_loadingTcs?.TrySetCanceled();
-
-			_cts?.Dispose();
-			_cts = null;
-			_loadingTcs = null;
-
-			if (_loadedAsset != null)
-			{
-				_entry.ReleaseSafe();
-			}
 		}
 	}
 
@@ -163,9 +165,10 @@ namespace AssetManagement
 		}
 
 		public bool HasEntry(IAssetReference<T> entry) => _loadingProxies.ContainsKey(entry);
+
 		public bool EntryLoaded(IAssetReference<T> entry)
 			=> _loadingProxies.TryGetValue(entry, out var proxy) &&
-			proxy.IsLoaded;
+				proxy.IsLoaded;
 
 		public UniTask<T> LoadAsync(IAssetReference<T> entry, CancellationToken token)
 		{
