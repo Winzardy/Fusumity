@@ -20,7 +20,7 @@ namespace Content.Editor
 		private static Dictionary<Type, int> _typeToVersion = new();
 
 		private static Dictionary<string, ScriptableObject> _cache;
-		private static Dictionary<string, List<ScriptableObject>> _typeToCollection;
+		private static Dictionary<string, HashSet<ScriptableObject>> _typeToCollection;
 
 		internal static event Action Cleared;
 
@@ -61,11 +61,11 @@ namespace Content.Editor
 
 		public static IEnumerable<T> GetAssets<T>()
 		{
-			_typeToCollection ??= new Dictionary<string, List<ScriptableObject>>();
+			_typeToCollection ??= new Dictionary<string, HashSet<ScriptableObject>>();
 			var typeName = typeof(T).Name;
 			if (!_typeToCollection.TryGetValue(typeName, out var cachedCollection))
 			{
-				cachedCollection = _typeToCollection[typeName] = ListPool<ScriptableObject>.Get();
+				cachedCollection = _typeToCollection[typeName] = HashSetPool<ScriptableObject>.Get();
 
 				// Fill
 				foreach (var asset in cache.Values)
