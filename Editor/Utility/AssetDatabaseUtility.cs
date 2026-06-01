@@ -22,12 +22,15 @@ namespace Fusumity.Editor.Utility
 
 			EditorApplication.delayCall += static () =>
 			{
-				using var context = SearchService.CreateContext(
-					"asset",
-					"t:prefab");
+				EditorApplication.delayCall += static () =>
+				{
+					using var context = SearchService.CreateContext(
+						"asset",
+						"t:prefab");
 
-				foreach (var _ in SearchService.GetItems(context))
-					break;
+					foreach (var _ in SearchService.GetItems(context))
+						break;
+				};
 			};
 		}
 
