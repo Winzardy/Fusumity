@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using JetBrains.Annotations;
+using Sapientia;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
@@ -32,10 +33,18 @@ namespace Fusumity.Editor
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var valueEntry = Property.ValueEntry;
-			var isValid = ObjectIsNullUtility.Validate(valueEntry);
+			var validationState = ObjectIsNullUtility.ValidateState(valueEntry);
 			var originColor = GUI.color;
-			if (!isValid)
-				GUI.color = ObjectIsNullUtility.GetWarningColor(originColor);
+			switch (validationState)
+			{
+				case ObjectIsNullUtility.ValidationState.Warning:
+					GUI.color = ObjectIsNullUtility.GetWarningColor(originColor);
+					break;
+				case ObjectIsNullUtility.ValidationState.Invalid:
+					GUI.color = ObjectIsNullUtility.GetInvalidColor(originColor);
+					break;
+			}
+
 			CallNextDrawer(label);
 			GUI.color = originColor;
 		}
@@ -43,6 +52,13 @@ namespace Fusumity.Editor
 
 	public static class ObjectIsNullUtility
 	{
+		public enum ValidationState
+		{
+			Valid = 0,
+			Warning = 1,
+			Invalid = 2,
+		}
+
 		public static Color GetInvalidColor(Color original)
 		{
 			return Color.Lerp(original, SirenixGUIStyles.RedErrorColor, 0.8f);
@@ -55,36 +71,67 @@ namespace Fusumity.Editor
 
 		public static bool Validate(IPropertyValueEntry valueEntry)
 		{
+			return ValidateState(valueEntry) == ValidationState.Valid;
+		}
+
+		public static ValidationState ValidateState(IPropertyValueEntry valueEntry)
+		{
 			if (!GUI.enabled)
-				return true;
+				return ValidationState.Valid;
 
 			var property = valueEntry.Property;
 			if (property != null)
 			{
 				if (!property.State.Visible)
-					return true;
+					return ValidationState.Valid;
 
 				if (!property.State.Enabled)
-					return true;
+					return ValidationState.Valid;
 
 				if (property.Info.GetMemberInfo() is not FieldInfo fieldInfo)
-					return true;
-
-				if (HasNullableAttribute(property))
-					return true;
+					return ValidationState.Valid;
 
 				// ignore Unity internal structs/classes
 				if (IsUnityOwnedType(fieldInfo.DeclaringType))
-					return true;
+					return ValidationState.Valid;
 			}
 
+			if (!IsNull(valueEntry))
+				return ValidationState.Valid;
+
+			if (property != null && HasRequiredAttribute(property))
+				return ValidationState.Invalid;
+
+			if (property != null && HasNullableAttribute(property))
+				return ValidationState.Valid;
+
+			return ValidationState.Warning;
+		}
+
+		private static bool IsNull(IPropertyValueEntry valueEntry)
+		{
 			if (typeof(UnityObject).IsAssignableFrom(valueEntry.TypeOfValue))
 			{
 				var unityObject = valueEntry.WeakSmartValue as UnityObject;
-				return unityObject != null;
+				return unityObject == null;
 			}
 
-			return valueEntry.WeakSmartValue != null;
+			return valueEntry.WeakSmartValue == null;
+		}
+
+		public static bool HasRequiredAttribute(InspectorProperty property)
+		{
+			if (property == null)
+				return false;
+
+			if (property.Info.GetAttribute<NotEmptyAttribute>() != null)
+				return true;
+			if (property.Info.GetAttribute<JetBrains.Annotations.NotNullAttribute>() != null)
+				return true;
+			if (property.Info.GetAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null)
+				return true;
+
+			return false;
 		}
 
 		private static bool HasNullableAttribute(InspectorProperty property)

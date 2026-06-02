@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using AssetManagement.AddressableAssets.Editor;
 using Cysharp.Threading.Tasks;
 using Sapientia.Pooling;
 using UnityEngine;
@@ -149,7 +150,7 @@ namespace AssetManagement
 			reference == null || !(reference.AssetReference?.RuntimeKeyIsValid() ?? false);
 
 		public static bool IsValid(this IAssetReference reference) =>
-			reference is { AssetReference: not null } && reference.AssetReference.RuntimeKeyIsValid();
+			reference is {AssetReference: not null} && reference.AssetReference.RuntimeKeyIsValid();
 
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReference> references,
 			CancellationToken cancellationToken = default)

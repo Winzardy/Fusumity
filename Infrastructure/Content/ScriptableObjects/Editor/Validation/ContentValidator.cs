@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
+using JetBrains.Annotations;
 using Sapientia;
 using UnityEditor;
 using UnityEngine;
@@ -22,6 +23,18 @@ namespace Content.Editor
 		private const string SYNC_BEFORE_VALIDATE_MENU = ContentMenuConstants.TOOLS_MENU + "Validate/Sync Before Validate";
 
 		private static bool SyncBeforeValidate { get => EditorPrefs.GetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, true); set => EditorPrefs.SetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, value); }
+
+		private static bool _cancelRequested;
+
+		static ContentValidator()
+		{
+			AssemblyReloadEvents.beforeAssemblyReload += CancelBeforeAssemblyReload;
+		}
+
+		private static void CancelBeforeAssemblyReload()
+		{
+			_cancelRequested = true;
+		}
 
 		[MenuItem(SYNC_BEFORE_VALIDATE_MENU, priority = 100)]
 		public static void ToggleSyncBeforeValidate()
@@ -50,13 +63,20 @@ namespace Content.Editor
 
 		public static bool Validate(bool sync)
 		{
+			_cancelRequested = false;
+
 			if (sync)
 				ContentDatabaseEditorUtility.SyncContent();
 
+			if (IsValidationCancellationRequested())
+				return CancelValidation();
+
 			var errorCount = 0;
+			var warningCount = 0;
 
 			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>()
 				.ToList();
+			var valueValidators = ContentValidationSettings.Settings.customValidators;
 
 			float totalProgress = 0;
 			foreach (var database in dbs)
@@ -79,11 +99,18 @@ namespace Content.Editor
 						if (!Application.isBatchMode)
 						{
 							var scriptableObjectName = scriptableObject ? scriptableObject.name : "null";
+							var label = $"{database.name} / {scriptableObjectName}";
 							var progressValue = totalProgress > 0 ? progress / totalProgress : 1;
-							EditorUtility.DisplayProgressBar(TITLE,
-								$"{database.name} / {scriptableObjectName}",
-								progressValue);
+							if (EditorUtility.DisplayCancelableProgressBar(TITLE,
+								label,
+								progressValue))
+							{
+								return CancelValidation("user");
+							}
 						}
+
+						if (IsValidationCancellationRequested())
+							return CancelValidation();
 
 						progress++;
 
@@ -106,17 +133,17 @@ namespace Content.Editor
 							}
 						}
 
-						errorCount += ValidateContentReferences(scriptableObject);
+						errorCount += ValidateContentReferences(scriptableObject, valueValidators, ref warningCount);
 					}
 				}
 
 				if (errorCount > 0)
 				{
-					ContentDebug.LogError($"Validation failed (errors: {errorCount})");
+					ContentDebug.LogError($"Validation failed (errors: {errorCount}, warnings: {warningCount})");
 					return false;
 				}
 
-				ContentDebug.Log("Validation passed");
+				ContentDebug.Log($"Validation passed (warnings: {warningCount})");
 			}
 			finally
 			{
@@ -127,7 +154,23 @@ namespace Content.Editor
 			return true;
 		}
 
-		private static int ValidateContentReferences(ContentScriptableObject scriptableObject)
+		private static bool IsValidationCancellationRequested()
+		{
+			return _cancelRequested || EditorApplication.isCompiling;
+		}
+
+		private static bool CancelValidation(string reason = null)
+		{
+			reason ??= _cancelRequested
+				? "domain reload"
+				: "editor compilation";
+			ContentDebug.LogWarning($"Validation canceled ({reason})");
+			return false;
+		}
+
+		private static int ValidateContentReferences(ContentScriptableObject scriptableObject,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount)
 		{
 			if (!scriptableObject)
 				return 0;
@@ -138,7 +181,10 @@ namespace Content.Editor
 				scriptableObject.name,
 				scriptableObject,
 				visited,
-				false);
+				false,
+				false,
+				valueValidators,
+				ref warningCount);
 		}
 
 		private static int ValidateContentReferences(object target,
@@ -146,30 +192,36 @@ namespace Content.Editor
 			string path,
 			ContentScriptableObject context,
 			HashSet<object> visited,
-			bool canBeEmpty)
+			bool canBeEmpty,
+			bool failIfEmpty,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount)
 		{
-			if (target == null || targetType == null)
+			if (targetType == null)
 				return 0;
+
+			var errorCount = ValidateContentValue(target, targetType, path, context, canBeEmpty, valueValidators);
+			if (target == null)
+				return errorCount;
 
 			if (target is IContentReference reference)
-				return ValidateContentReference(reference, path, context, canBeEmpty);
+				return errorCount + ValidateContentReference(reference, path, context, canBeEmpty, failIfEmpty, ref warningCount);
 
 			if (IsTerminal(targetType))
-				return 0;
+				return errorCount;
 
 			if (target is UnityObject && target != context)
-				return 0;
+				return errorCount;
 
 			if (targetType.IsClass && !visited.Add(target))
-				return 0;
+				return errorCount;
 
 			if (target is IDictionary dictionary)
-				return ValidateDictionary(dictionary, path, context, visited, canBeEmpty);
+				return errorCount + ValidateDictionary(dictionary, path, context, visited, canBeEmpty, failIfEmpty, valueValidators, ref warningCount);
 
 			if (target is IEnumerable enumerable && target is not string)
-				return ValidateEnumerable(enumerable, path, context, visited, canBeEmpty);
+				return errorCount + ValidateEnumerable(enumerable, path, context, visited, canBeEmpty, failIfEmpty, valueValidators, ref warningCount);
 
-			var errorCount = 0;
 			foreach (var field in GetSerializableFields(targetType))
 			{
 				if (field.Name == nameof(ContentDatabaseScriptableObject.scriptableObjects))
@@ -192,7 +244,53 @@ namespace Content.Editor
 					$"{path}.{field.Name}",
 					context,
 					visited,
-					CanBeEmpty(field));
+					CanBeEmpty(field),
+					FailIfEmpty(field),
+					valueValidators,
+					ref warningCount);
+			}
+
+			return errorCount;
+		}
+
+		private static int ValidateContentValue(object value,
+			Type valueType,
+			string path,
+			ContentScriptableObject context,
+			bool canBeEmpty,
+			IReadOnlyList<IContentValueValidator> validators)
+		{
+			if (validators == null || validators.Count == 0)
+				return 0;
+
+			var errorCount = 0;
+			var validationContext = new ContentValidationContext(value, valueType, path, context, canBeEmpty);
+			foreach (var validator in validators)
+			{
+				if (validator == null)
+					continue;
+
+				string message;
+				try
+				{
+					if (validator.Validate(validationContext, out message))
+						continue;
+				}
+				catch (Exception e)
+				{
+					ContentDebug.LogError(
+						$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
+						context);
+					errorCount++;
+					continue;
+				}
+
+				if (string.IsNullOrEmpty(message))
+					message =
+						$"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+
+				ContentDebug.LogError(message, context);
+				errorCount++;
 			}
 
 			return errorCount;
@@ -202,7 +300,10 @@ namespace Content.Editor
 			string path,
 			ContentScriptableObject context,
 			HashSet<object> visited,
-			bool canBeEmpty)
+			bool canBeEmpty,
+			bool failIfEmpty,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount)
 		{
 			var errorCount = 0;
 			foreach (DictionaryEntry entry in dictionary)
@@ -212,14 +313,20 @@ namespace Content.Editor
 					$"{path}[key: {entry.Key}]",
 					context,
 					visited,
-					canBeEmpty);
+					canBeEmpty,
+					failIfEmpty,
+					valueValidators,
+					ref warningCount);
 
 				errorCount += ValidateContentReferences(entry.Value,
 					entry.Value?.GetType(),
 					$"{path}[{entry.Key}]",
 					context,
 					visited,
-					canBeEmpty);
+					canBeEmpty,
+					failIfEmpty,
+					valueValidators,
+					ref warningCount);
 			}
 
 			return errorCount;
@@ -229,7 +336,10 @@ namespace Content.Editor
 			string path,
 			ContentScriptableObject context,
 			HashSet<object> visited,
-			bool canBeEmpty)
+			bool canBeEmpty,
+			bool failIfEmpty,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount)
 		{
 			var errorCount = 0;
 			var index = 0;
@@ -240,7 +350,10 @@ namespace Content.Editor
 					$"{path}[{index}]",
 					context,
 					visited,
-					canBeEmpty);
+					canBeEmpty,
+					failIfEmpty,
+					valueValidators,
+					ref warningCount);
 				index++;
 			}
 
@@ -250,14 +363,27 @@ namespace Content.Editor
 		private static int ValidateContentReference(IContentReference reference,
 			string path,
 			ContentScriptableObject context,
-			bool canBeEmpty)
+			bool canBeEmpty,
+			bool failIfEmpty,
+			ref int warningCount)
 		{
 			if (reference.IsEmpty())
 			{
+				if (failIfEmpty)
+				{
+					ContentDebug.LogError(
+						$"Empty ContentReference [ {path} ] with [NotEmpty] or [NotNull] attribute",
+						context);
+					return 1;
+				}
+
 				if (!canBeEmpty)
+				{
+					warningCount++;
 					ContentDebug.LogWarning(
 						$"Empty ContentReference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
 						context);
+				}
 
 				return 0;
 			}
@@ -286,6 +412,13 @@ namespace Content.Editor
 			return field.GetCustomAttribute<CanBeEmptyAttribute>() != null ||
 				field.GetCustomAttribute<JetBrains.Annotations.CanBeNullAttribute>() != null ||
 				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.MaybeNullAttribute>() != null;
+		}
+
+		private static bool FailIfEmpty(FieldInfo field)
+		{
+			return field.GetCustomAttribute<NotEmptyAttribute>() != null ||
+				field.GetCustomAttribute<JetBrains.Annotations.NotNullAttribute>() != null ||
+				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null;
 		}
 
 		private static IEnumerable<FieldInfo> GetSerializableFields(Type type)
