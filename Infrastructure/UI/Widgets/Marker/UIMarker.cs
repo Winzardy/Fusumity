@@ -173,6 +173,9 @@ namespace UI
 				{
 					var distance = worldPosition - position;
 
+					// Дистанцию меряем по горизонтали. Инстансы миров разнесены по Y (ViewRoot), вертикаль раздула бы её (BUG-321).
+					distance.y = 0f;
+
 					if (!distanceRange.Contains(distance))
 					{
 						DisableInternal();
