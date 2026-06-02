@@ -89,7 +89,7 @@ namespace Analytics
 				if (_isValidationEnabled && !integration.IsValid(in payload, out var error))
 				{
 					// даже если была ошибка при валидации, то все равно отправляем событие, вдруг мы просто неправильно написали правила валидации
-					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}");
+					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}\n{payload.ToJson()}");
 				}
 
 				integration.SendEvent(in payload);
