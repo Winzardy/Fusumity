@@ -49,9 +49,51 @@ namespace Content.ScriptableObjects.Editor
 		[Serializable]
 		public class ProjectSettings
 		{
-			[SerializeReference]
 			[ListDrawerSettings(Expanded = true)]
-			public List<IContentValueValidator> customValidators;
+			public List<ContentValueValidatorEntry> customValidators;
+
+			internal List<IContentValueValidator> GetEnabledCustomValidators()
+			{
+				if (customValidators == null || customValidators.Count == 0)
+					return null;
+
+				var result = new List<IContentValueValidator>();
+				foreach (var entry in customValidators)
+				{
+					if (entry is not {disable: false, validator: not null})
+						continue;
+
+					result.Add(entry.validator);
+				}
+
+				return result;
+			}
+
+			internal T GetEnabledCustomValidator<T>()
+				where T : class, IContentValueValidator
+			{
+				if (customValidators == null || customValidators.Count == 0)
+					return null;
+
+				foreach (var entry in customValidators)
+				{
+					if (entry is {disable: false, validator: T validator})
+						return validator;
+				}
+
+				return null;
+			}
+		}
+
+		[Serializable]
+		public struct ContentValueValidatorEntry
+		{
+			public bool disable;
+
+			[SerializeReference]
+			[HideLabel]
+			[DisableIf(nameof(disable))]
+			public IContentValueValidator validator;
 		}
 	}
 }

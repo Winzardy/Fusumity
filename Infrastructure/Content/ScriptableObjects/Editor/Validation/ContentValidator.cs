@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Sapientia;
+using Sapientia.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -60,6 +61,13 @@ namespace Content.Editor
 			return Validate(SyncBeforeValidate);
 		}
 
+		public static bool TryGetValidator<T>(out T validator)
+			where T : class, IContentValueValidator
+		{
+			validator = ContentValidationSettings.Settings.GetEnabledCustomValidator<T>();
+			return validator != null;
+		}
+
 		public static bool Validate(bool sync)
 		{
 			_cancelRequested = false;
@@ -75,7 +83,7 @@ namespace Content.Editor
 
 			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>()
 				.ToList();
-			var valueValidators = ContentValidationSettings.Settings.customValidators;
+			var valueValidators = GetEnabledCustomValidators();
 
 			float totalProgress = 0;
 			foreach (var database in dbs)
@@ -153,6 +161,11 @@ namespace Content.Editor
 			}
 
 			return true;
+		}
+
+		private static IReadOnlyList<IContentValueValidator> GetEnabledCustomValidators()
+		{
+			return ContentValidationSettings.Settings.GetEnabledCustomValidators();
 		}
 
 		private static bool IsValidationCancellationRequested()
@@ -286,9 +299,14 @@ namespace Content.Editor
 					continue;
 				}
 
-				if (string.IsNullOrEmpty(message))
-					message =
-						$"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+				if (message == null)
+				{
+					errorCount++;
+					continue;
+				}
+
+				if (message.IsNullOrEmpty())
+					message = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
 
 				ContentDebug.LogError(message, context);
 				errorCount++;
