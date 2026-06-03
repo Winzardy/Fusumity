@@ -127,13 +127,8 @@ namespace AssetManagement
 			if (a is null || b is null)
 				return false;
 
-			return SameAsset(a.AssetReference, b.AssetReference);
-		}
-
-		public static bool SameAsset(this UnityAssetReference a, UnityAssetReference b)
-		{
-			var aKey = (string) a.RuntimeKey;
-			var bKey = (string) b.RuntimeKey;
+			var aKey = (string) a.AssetReference.RuntimeKey;
+			var bKey = (string) b.AssetReference.RuntimeKey;
 
 			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
 		}
