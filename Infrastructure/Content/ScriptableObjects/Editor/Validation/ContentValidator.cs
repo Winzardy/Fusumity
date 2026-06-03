@@ -477,7 +477,7 @@ namespace Content.Editor
 				if (failIfEmpty)
 				{
 					ContentDebug.LogError(
-						FormatLogMessage($"Empty ContentReference [ {path} ] with [NotEmpty] or [NotNull] attribute",
+						FormatLogMessage($"Empty сontent reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
 							logMessageFormatter),
 						logContext);
 					return 1;
@@ -487,7 +487,7 @@ namespace Content.Editor
 				{
 					warningCount++;
 					ContentDebug.LogWarning(
-						FormatLogMessage($"Empty ContentReference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
+						FormatLogMessage($"Empty сontent reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
 							logMessageFormatter),
 						logContext);
 				}
@@ -509,7 +509,7 @@ namespace Content.Editor
 				return 0;
 
 			ContentDebug.LogError(
-				FormatLogMessage($"Invalid ContentReference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
+				FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
 					logMessageFormatter),
 				logContext);
 			return 1;
