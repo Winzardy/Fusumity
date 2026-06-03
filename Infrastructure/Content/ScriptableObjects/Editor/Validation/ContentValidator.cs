@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
-using JetBrains.Annotations;
 using Sapientia;
 using UnityEditor;
 using UnityEngine;
@@ -20,7 +19,7 @@ namespace Content.Editor
 		private const string TITLE = "Validate Content";
 
 		private const string SYNC_BEFORE_VALIDATE_PREF_KEY = "ContentValidator.SyncBeforeValidate";
-		private const string SYNC_BEFORE_VALIDATE_MENU = ContentMenuConstants.TOOLS_MENU + "Validate/Sync Before Validate";
+		private const string SYNC_BEFORE_VALIDATE_MENU = ContentMenuConstants.VALIDATION_MENU + "Sync Before Validate";
 
 		private static bool SyncBeforeValidate { get => EditorPrefs.GetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, true); set => EditorPrefs.SetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, value); }
 
@@ -36,21 +35,21 @@ namespace Content.Editor
 			_cancelRequested = true;
 		}
 
-		[MenuItem(SYNC_BEFORE_VALIDATE_MENU, priority = 100)]
+		[MenuItem(SYNC_BEFORE_VALIDATE_MENU, priority = 99)]
 		public static void ToggleSyncBeforeValidate()
 		{
 			SyncBeforeValidate = !SyncBeforeValidate;
 			Menu.SetChecked(SYNC_BEFORE_VALIDATE_MENU, SyncBeforeValidate);
 		}
 
-		[MenuItem(SYNC_BEFORE_VALIDATE_MENU, true, priority = 100)]
+		[MenuItem(SYNC_BEFORE_VALIDATE_MENU, true, priority = 99)]
 		public static bool ToggleSyncBeforeValidateValidate()
 		{
 			Menu.SetChecked(SYNC_BEFORE_VALIDATE_MENU, SyncBeforeValidate);
 			return true;
 		}
 
-		[MenuItem(ContentMenuConstants.TOOLS_MENU + "Validate/Run")]
+		[MenuItem(ContentMenuConstants.VALIDATION_MENU + "Validate", priority = 119)]
 		private static void ValidateRunEditor()
 		{
 			Validate();
@@ -139,11 +138,13 @@ namespace Content.Editor
 
 				if (errorCount > 0)
 				{
-					ContentDebug.LogError($"Validation failed (errors: {errorCount}, warnings: {warningCount})");
+					ContentDebug.LogError($"Validation failed (errors: {errorCount}, warnings️: {warningCount})");
 					return false;
 				}
 
-				ContentDebug.Log($"Validation passed (warnings: {warningCount})");
+				ContentDebug.Log(warningCount > 0
+					? $"Validation passed (warnings️: {warningCount})"
+					: "Validation passed");
 			}
 			finally
 			{

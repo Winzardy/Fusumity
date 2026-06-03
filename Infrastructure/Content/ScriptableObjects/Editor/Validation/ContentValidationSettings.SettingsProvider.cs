@@ -7,7 +7,7 @@ namespace Content.ScriptableObjects.Editor
 {
 	public partial class ContentValidationSettings
 	{
-		[MenuItem(ContentMenuConstants.TOOLS_MENU + "Validate/Settings", priority = 99)]
+		[MenuItem(ContentMenuConstants.VALIDATION_MENU + "Settings", priority = 79)]
 		private static void OpenValidationSettings()
 		{
 			SettingsService.OpenProjectSettings(SETTINGS_PROVIDER_PATH);
