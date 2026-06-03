@@ -33,6 +33,9 @@ namespace Content.Editor
 
 		private static void CancelBeforeAssemblyReload()
 		{
+			if (Application.isBatchMode)
+				return;
+
 			_cancelRequested = true;
 		}
 
@@ -195,7 +198,7 @@ namespace Content.Editor
 
 		private static bool IsValidationCancellationRequested()
 		{
-			return _cancelRequested || EditorApplication.isCompiling;
+			return !Application.isBatchMode && (_cancelRequested || EditorApplication.isCompiling);
 		}
 
 		private static bool CancelValidation(string reason = null)
@@ -477,7 +480,7 @@ namespace Content.Editor
 				if (failIfEmpty)
 				{
 					ContentDebug.LogError(
-						FormatLogMessage($"Empty сontent reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
+						FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
 							logMessageFormatter),
 						logContext);
 					return 1;
@@ -487,7 +490,7 @@ namespace Content.Editor
 				{
 					warningCount++;
 					ContentDebug.LogWarning(
-						FormatLogMessage($"Empty сontent reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
+						FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
 							logMessageFormatter),
 						logContext);
 				}
