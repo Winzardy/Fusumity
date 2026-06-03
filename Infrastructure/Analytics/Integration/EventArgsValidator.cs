@@ -39,7 +39,7 @@ namespace Analytics.Integration
 		{
 			if (!_validateIdRegex.IsMatch(args.id))
 			{
-				error = "invalid event id";
+				error = $"({nameof(IdValidCharactersRule)}) invalid event id";
 				return false;
 			}
 
@@ -60,7 +60,7 @@ namespace Analytics.Integration
 			{
 				if (!_validateIdRegex.IsMatch(parameter))
 				{
-					error = $"invalid parameter id '{parameter}'";
+					error = $"({nameof(ParamIdValidCharactersRule)}) invalid parameter id '{parameter}'";
 					return false;
 				}
 			}
@@ -82,7 +82,7 @@ namespace Analytics.Integration
 			{
 				if (args.id.StartsWith(reservedPrefix))
 				{
-					error = $"used reserved prefix {reservedPrefix}";
+					error = $"({nameof(IdNotUseReservedPrefixesRule)}) used reserved prefix {reservedPrefix}";
 					return false;
 				}
 			}
@@ -106,7 +106,7 @@ namespace Analytics.Integration
 				{
 					if (args.id.StartsWith(parameter))
 					{
-						error = $"used reserved prefix '{reservedPrefix}' for parameter '{parameter}'";
+						error = $"({nameof(ParamIdNotUseReservedPrefixesRule)}) used reserved prefix '{reservedPrefix}' for parameter '{parameter}'";
 						return false;
 					}
 				}
@@ -124,16 +124,16 @@ namespace Analytics.Integration
 		public ParamsCountRule(int maxParamsCount) => _maxParamsCount = maxParamsCount;
 		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
-			error = args.parameters.Count > _maxParamsCount ? "too many parameters count" : null;
+			error = args.parameters.Count > _maxParamsCount ? $"({nameof(ParamsCountRule)}) too many parameters count" : null;
 			return error == null;
 		}
 	}
 
-	public class IdNotUsedReservedNamesRule : IEventArgsValidationRule
+	public class IdNotUseReservedNamesRule : IEventArgsValidationRule
 	{
 		private readonly string[] _reservedNames;
 
-		public IdNotUsedReservedNamesRule(params string[] reservedNames) => _reservedNames = reservedNames;
+		public IdNotUseReservedNamesRule(params string[] reservedNames) => _reservedNames = reservedNames;
 
 		public bool IsValid(in AnalyticsEventPayload args, out string error)
 		{
@@ -141,7 +141,7 @@ namespace Analytics.Integration
 			{
 				if (args.id == reservedName)
 				{
-					error = "used reserved name";
+					error = $"({nameof(IdNotUseReservedNamesRule)}) used reserved name";
 					return false;
 				}
 			}
@@ -165,7 +165,7 @@ namespace Analytics.Integration
 				{
 					if (parameter == reservedName)
 					{
-						error = $"used reserved name for parameter '{parameter}'";
+						error = $"({nameof(ParamIdNotUsedReservedNamesRule)}) used reserved name for parameter '{parameter}'";
 						return false;
 					}
 				}

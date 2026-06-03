@@ -217,6 +217,12 @@ namespace UI.Windows
 
 		private void Show([NotNull] IWindow window, in WindowQueueContext context, bool fromQueue = false)
 		{
+			if (ShouldEnqueueByPriority(window, fromQueue))
+			{
+				Enqueue(window, in context);
+				return;
+			}
+
 			var immediate = false;
 
 			if (fromQueue)
@@ -235,6 +241,31 @@ namespace UI.Windows
 
 			if (!context.overlaid)
 				Shown?.Invoke(window, fromQueue);
+		}
+
+		private bool ShouldEnqueueByPriority(IWindow window, bool fromQueue)
+		{
+			if (fromQueue)
+				return false;
+
+			if (_current.window == null)
+				return false;
+
+			if (!_current.window.Active)
+				return false;
+
+			if (_current.window == window)
+				return false;
+
+			return _current.window.Priority > window.Priority;
+		}
+
+		private void Enqueue(IWindow window, in WindowQueueContext context)
+		{
+			var queueContext = context;
+			queueContext.window = window;
+
+			_queue.Enqueue(window, in queueContext);
 		}
 
 		private void TryHide(IWindow window, bool fromQueue)

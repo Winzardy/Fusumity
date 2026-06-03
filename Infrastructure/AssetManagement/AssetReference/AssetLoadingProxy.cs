@@ -70,7 +70,7 @@ namespace AssetManagement
 			_loadingTcs?.TrySetCanceled();
 
 			_cts?.Dispose();
-			_cts        = null;
+			_cts = null;
 			_loadingTcs = null;
 
 			if (_loadedAsset != null)
@@ -98,7 +98,7 @@ namespace AssetManagement
 			}
 
 			_loadingTcs = new UniTaskCompletionSource<TAsset>();
-			_cts        = new CancellationTokenSource();
+			_cts = new CancellationTokenSource();
 
 			try
 			{
@@ -120,20 +120,18 @@ namespace AssetManagement
 			}
 			catch (OperationCanceledException)
 			{
-				if (!_disposed)
-					_loadingTcs.TrySetCanceled();
+				_loadingTcs?.TrySetCanceled();
 				throw;
 			}
 			catch (Exception ex)
 			{
-				if (!_disposed)
-					_loadingTcs.TrySetException(ex);
+				_loadingTcs?.TrySetException(ex);
 				throw;
 			}
 			finally
 			{
 				_cts?.Dispose();
-				_cts        = null;
+				_cts = null;
 				_loadingTcs = null;
 			}
 

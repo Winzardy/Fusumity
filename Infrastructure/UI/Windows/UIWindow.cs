@@ -12,6 +12,8 @@ namespace UI.Windows
 	{
 		internal event Action<IWindow> RequestedClose;
 
+		internal int Priority { get; }
+
 		internal void Initialize(UIWindowConfig config);
 
 		/// <param name="args">Важно подметить, что аргументы могут быть изменены в процессе использования окна!
@@ -101,6 +103,8 @@ namespace UI.Windows
 		string IIdentifiable.Id => Id;
 
 		event Action<IWindow> IWindow.RequestedClose { add => RequestedClose += value; remove => RequestedClose -= value; }
+
+		int IWindow.Priority => _config.priority;
 
 		public override WidgetFlags Flags { get => _config.flags; }
 

@@ -1,7 +1,6 @@
 using System;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
-using UnityEditor;
 
 namespace Content.Editor
 {
@@ -92,8 +91,6 @@ namespace Content.Editor
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + reference.guid.guid + " ]");
 		}
-
-		public static bool Validate() => ContentValidator.Validate();
 	}
 
 	public static class ContentEditorExtensions

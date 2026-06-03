@@ -1,4 +1,5 @@
 ﻿using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -11,39 +12,6 @@ namespace Fusumity.Editor.Drawers
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			//if (Attribute.topPadding > 0)
-			//	GUILayout.Space(Attribute.topPadding);
-
-			//// Используем тот же метод что и TitleAttributeDrawer от Odin
-			//SirenixEditorGUI.Title(
-			//	Attribute.title,
-			//	"",                          // subtitle
-			//	TextAlignment.Left,
-			//	Attribute.lineThickness > 0, // horizontalLine
-			//	Attribute.bold
-			//);
-
-			//CallNextDrawer(label);
-
-			//if (Attribute.topPadding > 0)
-			//	GUILayout.Space(Attribute.topPadding);
-
-			//var style = new GUIStyle(SirenixGUIStyles.BoldTitle)
-			//{
-			//	fontSize = Attribute.fontSize,
-			//	fontStyle = Attribute.bold ? FontStyle.Bold : FontStyle.Normal,
-			//	richText = true,
-			//};
-
-			//GUILayout.Label(Attribute.title, style);
-
-			//var color = Attribute.color ?? SirenixGUIStyles.BorderColor;
-			//SirenixEditorGUI.HorizontalLineSeparator(color, Attribute.lineThickness);
-
-			//GUILayout.Space(2);
-
-			//CallNextDrawer(label);
-
 			if (Attribute.topPadding > 0)
 				GUILayout.Space(Attribute.topPadding);
 
