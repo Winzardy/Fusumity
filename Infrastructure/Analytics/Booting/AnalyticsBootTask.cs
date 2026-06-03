@@ -40,7 +40,6 @@ namespace Booting.Analytics
 
 		public override void OnBootCompleted()
 		{
-			base.OnBootCompleted();
 			_aggregator.Dispose();
 			_aggregator = null;
 		}
