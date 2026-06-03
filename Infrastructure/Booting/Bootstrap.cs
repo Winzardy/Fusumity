@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -29,6 +30,8 @@ namespace Booting
 #endif
 		public IBootTask[] tasks;
 
+		public event Action<IBootTask, float> TaskBooted;
+
 		private List<IBootTask> _bootedTasks;
 
 		private void Start()
@@ -46,9 +49,10 @@ namespace Booting
 		{
 			_bootedTasks = new();
 
-			var loadingTime = 0f;
+			var loadingTime = Time.realtimeSinceStartup;
 			string passedTimeStr;
 			using var blackboard = new Blackboard();
+			blackboard.Register(this);
 			foreach (var task in tasks)
 			{
 				if (!task.Active)
@@ -66,7 +70,7 @@ namespace Booting
 				var taskName = task.GetType().Name
 				   .UnderlineText();
 
-				loadingTime += passedTime;
+				TaskBooted?.Invoke(task, passedTime);
 
 				Log($"Launched the task [ {taskName} ] in {passedTimeStr} seconds");
 
@@ -74,7 +78,7 @@ namespace Booting
 				token.ThrowIfCancellationRequested();
 			}
 
-			passedTimeStr = loadingTime
+			passedTimeStr = (Time.realtimeSinceStartup - loadingTime)
 			   .ToString(CultureInfo.InvariantCulture)
 			   .BoldText();
 

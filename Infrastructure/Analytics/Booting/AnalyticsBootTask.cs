@@ -4,6 +4,7 @@ using Analytics;
 using Content;
 using Cysharp.Threading.Tasks;
 using Sapientia;
+using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,8 +20,9 @@ namespace Booting.Analytics
 		public override int Priority => HIGH_PRIORITY - 120;
 
 		public bool @await;
+		private BootTaskAnalyticsAggregator _aggregator;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AnalyticsSettings>();
 			var isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
@@ -33,11 +35,51 @@ namespace Booting.Analytics
 					.Forget(Bootstrap.LogException);
 
 			AnalyticsCenter.Set(management);
+			_aggregator = new BootTaskAnalyticsAggregator(blackboard.Get<Bootstrap>());
+		}
+
+		public override void OnBootCompleted()
+		{
+			base.OnBootCompleted();
+			_aggregator.Dispose();
+			_aggregator = null;
 		}
 
 		protected override void OnDispose()
 		{
 			AnalyticsCenter.Clear();
+			_aggregator?.Dispose();
+		}
+	}
+
+	public class BootTaskAnalyticsAggregator : AnalyticsAggregator
+	{
+		private readonly Bootstrap _bootstrap;
+
+		public BootTaskAnalyticsAggregator(Bootstrap bootstrap)
+		{
+			_bootstrap = bootstrap;
+
+			_bootstrap.TaskBooted += OnTaskBooted;
+		}
+
+		protected override void OnDisposeInternal()
+		{
+			base.OnDisposeInternal();
+
+			_bootstrap.TaskBooted -= OnTaskBooted;
+		}
+
+		private void OnTaskBooted(IBootTask task, float time)
+		{
+			using (DictionaryPool<string, object>.Get(out var parameters))
+			{
+				parameters["name"] = task.GetType().Name;
+				parameters["Duration"] = time;
+				parameters["Time"] = Time.realtimeSinceStartup;
+
+				Send("BootTask", parameters);
+			}
 		}
 	}
 }
