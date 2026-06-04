@@ -78,11 +78,17 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void AddToDatabase(ContentScriptableObject scriptableObject)
 		{
+			if (scriptableObject is ContentDatabaseScriptableObject)
+				return;
+
 			var database = GetDatabase(scriptableObject);
 			Add(database);
 
 			void Add(ContentDatabaseScriptableObject database)
 			{
+				if (database.scriptableObjects.Contains(scriptableObject))
+					return;
+
 				database.scriptableObjects.Add(scriptableObject);
 				scriptableObject.SyncedUpdate();
 
@@ -94,12 +100,18 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
 		{
+			if (scriptableObject is ContentDatabaseScriptableObject)
+				return;
+
 			var database = GetDatabase(scriptableObject);
 			Remove(database);
 
 			void Remove(ContentDatabaseScriptableObject database)
 			{
-				database.scriptableObjects.Remove(scriptableObject);
+				var remove = database.scriptableObjects.Remove(scriptableObject);
+
+				if (!remove)
+					return;
 
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
@@ -119,6 +131,7 @@ namespace Content.ScriptableObjects.Editor
 				if (database is MiscDatabaseScriptableObject misc)
 					miscDatabase = misc;
 			}
+
 			return miscDatabase;
 		}
 
@@ -548,7 +561,7 @@ namespace Content.ScriptableObjects.Editor
 
 			if (!collisionsMap.TryGetValue(type, out var checker))
 			{
-				checker             = new HashSet<string>();
+				checker = new HashSet<string>();
 				collisionsMap[type] = checker;
 			}
 
@@ -632,8 +645,8 @@ namespace Content.ScriptableObjects.Editor
 		}
 
 		public static TScrobject GetScrobjectFromDb<TScrobject, TDatabase>(string scrobjectId, bool useCache = true)
-		   where TScrobject : ContentScriptableObject
-		   where TDatabase : ContentDatabaseScriptableObject
+			where TScrobject : ContentScriptableObject
+			where TDatabase : ContentDatabaseScriptableObject
 		{
 			if (scrobjectId.IsNullOrEmpty())
 				return null;

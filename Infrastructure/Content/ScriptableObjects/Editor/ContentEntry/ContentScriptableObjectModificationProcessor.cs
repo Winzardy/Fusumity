@@ -4,6 +4,39 @@ using UnityEditor;
 
 namespace Content.ScriptableObjects.Editor
 {
+	public class ContentPostprocessor : AssetPostprocessor
+	{
+		private static void OnPostprocessAllAssets(
+			string[] importedAssets,
+			string[] deletedAssets,
+			string[] movedAssets,
+			string[] movedFromAssetPaths)
+		{
+			foreach (var path in importedAssets)
+			{
+				var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(path);
+
+				if (!asset)
+					continue;
+
+				if (asset.Enabled)
+					ContentDatabaseEditorUtility.AddToDatabase(asset);
+				else
+					ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+			}
+
+			foreach (var path in deletedAssets)
+			{
+				var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(path);
+
+				if (!asset)
+					continue;
+
+				ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+			}
+		}
+	}
+
 	public class ContentScriptableObjectModificationProcessor : AssetModificationProcessor
 	{
 		private const string ASSET_EXTENSION = ".asset";
@@ -21,6 +54,9 @@ namespace Content.ScriptableObjects.Editor
 
 				if (asset is ContentEntryScriptableObject entryScriptableObject)
 					entryScriptableObject.Sync(false);
+
+				if (asset.Enabled)
+					ContentDatabaseEditorUtility.AddToDatabase(asset);
 
 				var origin = ContentDebug.Logging.Nested.refresh;
 				ContentDebug.Logging.Nested.refresh = false;
