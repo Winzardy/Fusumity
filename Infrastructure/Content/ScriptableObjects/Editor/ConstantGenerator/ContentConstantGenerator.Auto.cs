@@ -6,18 +6,6 @@ using UnityEditor;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public class ContentAssetModificationProcessor : AssetModificationProcessor
-	{
-		public static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options)
-		{
-			var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(assetPath);
-			if (asset)
-				ContentAutoConstantsGenerator.ForceInvokeWithDelay(asset.GetType());
-
-			return AssetDeleteResult.DidNotDelete;
-		}
-	}
-
 	[InitializeOnLoad]
 	public static class ContentAutoConstantsGenerator
 	{
