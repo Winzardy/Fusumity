@@ -3,7 +3,6 @@ using System.IO;
 using Content.Editor;
 using Sapientia.Extensions;
 using UnityEditor;
-using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {

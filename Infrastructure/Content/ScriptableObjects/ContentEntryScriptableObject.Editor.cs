@@ -57,6 +57,9 @@ namespace Content.ScriptableObjects
 			_entry.scriptableObject = this;
 			_entry.SetGuid(in guid);
 
+			useCustomId = false;
+			_entry.SetId(null);
+
 			ContentEditorCache.Refresh(this);
 		}
 
