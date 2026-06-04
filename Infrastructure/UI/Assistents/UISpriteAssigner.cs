@@ -84,6 +84,8 @@ namespace UI
 				if (handle.SameAsset(iconRef) && TryReuseHandle(image, handle, callback, disableDuringLoad))
 					return;
 
+				if (!disableDuringLoad)
+					handle.RestoreImageState(image);
 				handle.Release();
 			}
 
@@ -102,6 +104,8 @@ namespace UI
 					TryReuseHandle(image, _single.handle, callback, disableDuringLoad))
 					return true;
 
+				if (!disableDuringLoad)
+					_single.handle.RestoreImageState(image);
 				_single.handle.Release();
 				_single.handle = new SpriteAssignerHandle(spriteRef);
 				StartLoading(image, _single.handle, callback, disableDuringLoad);
@@ -143,6 +147,9 @@ namespace UI
 			if (handle.IsLoaded)
 			{
 				image.sprite = handle.Sprite;
+				if (disableDuringLoad)
+					image.enabled = true;
+				handle.RestoreImageState(image);
 				callback?.Invoke();
 				return true;
 			}
@@ -150,24 +157,28 @@ namespace UI
 			if (!handle.IsLoading)
 				return false;
 
-			handle.AddCallback(PrepareCallback(image, callback, disableDuringLoad));
+			ApplyLoadingState(image, handle, disableDuringLoad);
+			handle.AddCallback(callback);
 			return true;
 		}
 
 		private void StartLoading(Image image, SpriteAssignerHandle handle, Action callback, bool disableDuringLoad)
 		{
-			handle.AddCallback(PrepareCallback(image, callback, disableDuringLoad));
+			ApplyLoadingState(image, handle, disableDuringLoad);
+			handle.AddCallback(callback);
 			LoadAndPlaceAsync(image, handle).Forget();
 		}
 
-		private static Action PrepareCallback(Image image, Action callback, bool disableDuringLoad)
+		private static void ApplyLoadingState(Image image, SpriteAssignerHandle handle, bool disableDuringLoad)
 		{
 			if (!disableDuringLoad)
-				return callback;
+			{
+				handle.RestoreImageState(image);
+				return;
+			}
 
 			image.enabled = false;
-			callback += () => image.enabled = true;
-			return callback;
+			handle.MarkImageDisabled();
 		}
 
 		private bool IsCurrentHandle(Image image, SpriteAssignerHandle handle)
@@ -182,21 +193,26 @@ namespace UI
 
 		private async UniTaskVoid LoadAndPlaceAsync(Image image, SpriteAssignerHandle handle)
 		{
+			var spriteRef = handle.spriteRef;
 			handle.cts = new CancellationTokenSource();
 			var cts = handle.cts;
 			var token = cts.Token;
+			var assetLoaded = false;
 
 			OnStartLoading();
 
 			try
 			{
-				var sprite = await handle.spriteRef.LoadAsync(token);
+				var sprite = await spriteRef.LoadAsync(token);
+				assetLoaded = true;
 
 				if (token.IsCancellationRequested || _disposed || image == null || !IsCurrentHandle(image, handle))
 					return;
 
 				image.sprite = sprite;
 				handle.MarkLoaded(sprite);
+				assetLoaded = false;
+				handle.RestoreImageState(image);
 				handle.InvokeCallback();
 			}
 			catch (OperationCanceledException)
@@ -207,6 +223,9 @@ namespace UI
 			}
 			finally
 			{
+				if (assetLoaded)
+					spriteRef.Release();
+
 				OnEndLoading();
 				handle.ReleaseLoadingCts(cts);
 			}
@@ -224,6 +243,7 @@ namespace UI
 		private Action _callback;
 		private bool _loaded;
 		private Sprite _sprite;
+		private bool _disabledImage;
 
 		public bool IsLoaded { get => _loaded; }
 		public bool IsLoading { get => cts != null && !cts.IsCancellationRequested; }
@@ -237,10 +257,20 @@ namespace UI
 
 		public bool SameAsset(IAssetReference<Sprite> target) => spriteRef.SameAsset(target);
 		public void AddCallback(Action callback) => _callback += callback;
+		public void MarkImageDisabled() => _disabledImage = true;
 		public void MarkLoaded(Sprite sprite)
 		{
 			_sprite = sprite;
 			_loaded = true;
+		}
+
+		public void RestoreImageState(Image image)
+		{
+			if (!_disabledImage || image == null)
+				return;
+
+			image.enabled = true;
+			_disabledImage = false;
 		}
 
 		public void InvokeCallback()
@@ -260,13 +290,18 @@ namespace UI
 
 		public void Release()
 		{
+			var releaseAsset = _loaded;
+
 			_callback = null;
 			_loaded = false;
 			_sprite = null;
+			_disabledImage = false;
 
 			AsyncUtility.TriggerAndSetNull(ref cts);
 
-			spriteRef?.Release();
+			if (releaseAsset)
+				spriteRef?.Release();
+
 			spriteRef = null;
 		}
 	}

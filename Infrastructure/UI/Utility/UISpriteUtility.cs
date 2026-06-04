@@ -25,6 +25,7 @@ namespace UI
 			{
 				assigner.TryCancelOrClear(image);
 				image.sprite = icon ? icon : defaultIconSprite;
+				image.enabled = image.sprite != null;
 				callback?.Invoke();
 			}
 		}
@@ -36,7 +37,10 @@ namespace UI
 
 			if (info.sprite != null)
 			{
+				assigner.TryCancelOrClear(image);
 				image.sprite = info.sprite;
+				image.enabled = true;
+				callback?.Invoke();
 			}
 			else
 			if (!info.reference.IsEmptyOrInvalid())
@@ -46,7 +50,10 @@ namespace UI
 			else
 			if (defaultIcon != null)
 			{
+				assigner.TryCancelOrClear(image);
 				image.sprite = defaultIcon;
+				image.enabled = true;
+				callback?.Invoke();
 			}
 		}
 	}
