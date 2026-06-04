@@ -65,65 +65,55 @@ namespace ZenoTween
 		public bool UseType { get => !(IsLoop && lifetimeByParent); }
 		public bool UseRepeat { get => type != Type.Immediate && repeat > 0; }
 
+		protected object _target;
+
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
 			var tweenSpeed = sequence?.timeScale ?? speed;
-			var tween = Create(tweenSpeed);
-
-			if (tween == null)
-				return;
 
 			if (sequence == null)
 			{
 				sequence = DOTween.Sequence();
 				if (target != null)
 					sequence.SetTarget(target);
+
+				BindTweenToOwner(sequence, target);
 			}
 
-			if (type != Type.Immediate)
+			if (type == Type.Immediate)
 			{
-				ApplyTweenSettings(tween);
-				if (IsLoop && lifetimeByParent)
+				switch (immediateType)
 				{
-					sequence.JoinCallback(() =>
-					{
-#if UNITY_EDITOR
-						DOTweenEditorPreview.PrepareTweenForPreview(tween);
-#endif
-						tween.Play();
-					});
-					sequence.OnComplete(() => tween.KillSafe());
-					sequence.OnKill(() => tween.KillSafe());
-
-					return;
+					case ImmediateType.Join:
+						sequence.JoinCallback(Immediate);
+						break;
+					case ImmediateType.Append:
+						sequence.AppendCallback(Immediate);
+						break;
+					case ImmediateType.Prepend:
+						sequence.PrependCallback(Immediate);
+						break;
 				}
+
+				return;
 			}
+
+			if (IsLoop && lifetimeByParent)
+			{
+				BindLoopLifetimeToParent(sequence, CreateLoopTween, target);
+				return;
+			}
+
+			var tween = Create(tweenSpeed, target);
+
+			if (tween == null)
+				return;
+
+			BindTweenToOwner(tween, target);
+			ApplyTweenSettings(tween);
 
 			switch (type)
 			{
-				case Type.Immediate:
-					switch (immediateType)
-					{
-						case ImmediateType.Join:
-							sequence.JoinCallback(Immediate);
-							break;
-						case ImmediateType.Append:
-							sequence.AppendCallback(Immediate);
-							break;
-						case ImmediateType.Prepend:
-							sequence.PrependCallback(Immediate);
-							break;
-					}
-
-					void Immediate()
-					{
-#if UNITY_EDITOR
-						DOTweenEditorPreview.PrepareTweenForPreview(tween);
-#endif
-						tween.Complete(true);
-					}
-
-					break;
 				case Type.Join:
 					sequence.Join(tween);
 					break;
@@ -134,6 +124,109 @@ namespace ZenoTween
 					sequence.Prepend(tween);
 					break;
 			}
+
+			void Immediate()
+			{
+				var immediateTween = Create(tweenSpeed, target);
+				if (immediateTween == null)
+					return;
+
+				BindTweenToOwner(immediateTween, target);
+
+#if UNITY_EDITOR
+				if (!Application.isPlaying)
+					DOTweenEditorPreview.PrepareTweenForPreview(immediateTween);
+#endif
+
+				immediateTween.Complete(true);
+				immediateTween.KillSafe();
+			}
+
+			Tween CreateLoopTween()
+			{
+				var tween = Create(tweenSpeed, target);
+				if (tween == null)
+					return null;
+
+				BindTweenToOwner(tween, target);
+				ApplyTweenSettings(tween);
+				return tween;
+			}
+		}
+
+		private static void BindLoopLifetimeToParent(Sequence sequence, Func<Tween> createTween, object target)
+		{
+			Tween tween = null;
+
+			sequence.JoinCallback(() =>
+			{
+				tween?.KillSafe();
+
+				tween = createTween?.Invoke();
+				if (tween == null)
+					return;
+
+				BindTweenToOwner(tween, target);
+
+#if UNITY_EDITOR
+				DOTweenEditorPreview.PrepareTweenForPreview(tween);
+#endif
+				tween.Play();
+			});
+			AppendOnComplete(sequence, KillTween);
+			AppendOnKill(sequence, KillTween);
+
+			void KillTween()
+			{
+				tween?.KillSafe();
+				tween = null;
+			}
+		}
+
+		protected static Tween BindTweenToOwner(Tween tween, object owner)
+		{
+			if (tween == null || owner == null)
+				return tween;
+
+			if (TryResolveLink(owner, out var link))
+				tween.SetLink(link, LinkBehaviour.KillOnDestroy);
+
+			tween.SetId(owner);
+
+			return tween;
+		}
+
+		private static bool TryResolveLink(object target, out GameObject link)
+		{
+			link = target switch
+			{
+				GameObject gameObject => gameObject,
+				Component component => component.gameObject,
+				_ => null
+			};
+
+			return link != null;
+		}
+
+		private static void AppendOnComplete(Sequence sequence, TweenCallback callback)
+		{
+			var previous = sequence.onComplete;
+			sequence.OnComplete(() =>
+			{
+				previous?.Invoke();
+				callback?.Invoke();
+			});
+		}
+
+		private static void AppendOnKill(Sequence sequence, TweenCallback callback)
+		{
+			var previous = sequence.onKill;
+			Debug.LogError("was");
+			sequence.OnKill(() =>
+			{
+				previous?.Invoke();
+				callback?.Invoke();
+			});
 		}
 
 		protected void ApplyTweenSettings(in Tween tween, bool useDelay = true)
@@ -174,8 +267,12 @@ namespace ZenoTween
 		protected float _inheritedSpeed = 1f;
 
 		protected Tween Create(float inheritedSpeed)
+			=> Create(inheritedSpeed, null);
+
+		protected Tween Create(float inheritedSpeed, object target)
 		{
 			_inheritedSpeed = inheritedSpeed;
+			_target = target;
 			return Create();
 		}
 
@@ -217,7 +314,7 @@ namespace ZenoTween
 			if (_editorTween == null)
 				return;
 
-			_loop        = loop;
+			_loop = loop;
 			_editorReset = reset;
 
 			if (delay > 0)

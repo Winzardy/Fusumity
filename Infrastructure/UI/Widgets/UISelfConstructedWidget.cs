@@ -83,10 +83,14 @@ namespace UI
 		protected override void LayoutClearingInternal()
 		{
 			if (!_layout)
+			{
+				_animator?.Reset();
 				return;
+			}
 
 			OnLayoutClearedInternal();
 			DisposeAndClearChildren();
+			_animator?.Reset();
 
 			UIFactory.Destroy(_layout);
 			_layout = null;

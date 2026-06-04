@@ -54,18 +54,9 @@ namespace UI
 
 		public virtual void Dispose()
 		{
-#if UNITY_EDITOR
-			if (_layout)
-				_layout.DebugRequestedAnimation -= DebugPlay;
-#endif
-
-			_layout = null;
+			Reset();
 
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _keyToSequenceCreator);
-
-			foreach (var layer in _layers.Values)
-				layer.tween?.KillSafe();
-
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _layers);
 
 			OnDispose();
@@ -78,11 +69,8 @@ namespace UI
 			if (_layout && _layout == layout)
 				return false;
 
-#if UNITY_EDITOR
-			if (_layout)
-				_layout.DebugRequestedAnimation -= DebugPlay;
+			Reset();
 
-#endif
 			_layout = layout;
 
 			Fill(_keyToSequenceCreator);
@@ -92,6 +80,37 @@ namespace UI
 			_layout.DebugRequestedAnimation += DebugPlay;
 #endif
 			return true;
+		}
+
+		public virtual void Reset()
+		{
+			var layout = _layout;
+
+#if UNITY_EDITOR
+			if (layout)
+				layout.DebugRequestedAnimation -= DebugPlay;
+#endif
+
+			if (_layers != null)
+			{
+				foreach (var layer in _layers.Values)
+				{
+					layer.tween?.KillSafe();
+					layer.tween = null;
+					layer.args = null;
+					layer.clipName = null;
+				}
+
+				_layers.Clear();
+			}
+
+			if (layout)
+				DOTween.Kill(layout);
+
+			_layout = null;
+			_lastKey = null;
+
+			_keyToSequenceCreator?.Clear();
 		}
 
 		public void Play(in WidgetAnimationArgs args, bool immediate = false)
@@ -202,6 +221,7 @@ namespace UI
 			}
 
 			sequence.SetTarget(_layout);
+			sequence.SetLink(_layout.gameObject, LinkBehaviour.KillOnDestroy);
 
 			if (!debug && !immediate)
 			{
@@ -231,6 +251,7 @@ namespace UI
 				finally
 				{
 					AnimationTweenCallback.immediate = cacheImmediate;
+					sequence.KillSafe();
 				}
 
 				args.endCallback?.Invoke(args.key);
@@ -243,18 +264,22 @@ namespace UI
 
 			void OnPrepend()
 			{
-				if (layer.args.key == AnimationType.OPENING)
+				var args = layer.args;
+
+				if (args.key == AnimationType.OPENING)
 					SetVisible(true);
 
-				layer.args.startCallback?.Invoke(layer.args.key);
+				args.startCallback?.Invoke(args.key);
 			}
 
 			void OnAppend()
 			{
-				if (layer.args.key == AnimationType.CLOSING)
+				var args = layer.args;
+
+				if (args.key == AnimationType.CLOSING)
 					SetVisible(false);
 
-				layer.args.endCallback?.Invoke(layer.args.key);
+				args.endCallback?.Invoke(args.key);
 			}
 		}
 
@@ -271,8 +296,8 @@ namespace UI
 			}
 
 			return false;
-
 		}
+
 		public bool IsPlaying()
 		{
 			foreach (var layer in _layers.Values)
@@ -345,7 +370,7 @@ namespace UI
 					{
 						Sequence sequence = null;
 						OnCreateCustomSequence(pair.key, ref sequence);
-						pair.sequence?.Participate(ref sequence);
+						pair.sequence?.Participate(ref sequence, _layout);
 						return sequence;
 					}
 				}
@@ -366,7 +391,7 @@ namespace UI
 				OnCreateOpeningSequence(ref sequence);
 
 			if (_layout.UseLayoutAnimations)
-				_layout.openingSequence?.Participate(ref sequence);
+				_layout.openingSequence?.Participate(ref sequence, _layout);
 
 			return sequence;
 		}
@@ -383,7 +408,7 @@ namespace UI
 				OnCreateClosingSequence(ref sequence);
 
 			if (_layout.UseLayoutAnimations)
-				_layout.closingSequence?.Participate(ref sequence);
+				_layout.closingSequence?.Participate(ref sequence, _layout);
 
 			return sequence;
 		}

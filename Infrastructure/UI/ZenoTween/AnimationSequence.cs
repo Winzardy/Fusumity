@@ -31,24 +31,29 @@ namespace ZenoTween
 		public Toggle<TimeScaleMode> timeScale = new()
 		{
 			enable = false,
-			value  = DOTween.defaultTimeScaleIndependent ? TimeScaleMode.Unscaled : TimeScaleMode.Scaled
+			value = DOTween.defaultTimeScaleIndependent ? TimeScaleMode.Unscaled : TimeScaleMode.Scaled
 		};
 
 		protected override Tween Create()
 		{
-			var sequence = participants.ToSequence(
+			var target = _target;
 #if UNITY_EDITOR
-				_ownerEditor,
+			target ??= _ownerEditor;
 #endif
-				speed: _inheritedSpeed * speed
-			);
+			var sequence = participants.ToSequence(target, speed: _inheritedSpeed * speed);
 			return sequence;
 			//root is ignored here, otherwise there will be a dead loop.
 		}
 
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
-			base.Participate(ref sequence, target);
+			if (sequence == null)
+				sequence = ToSequence(target);
+			else
+				base.Participate(ref sequence, target);
+
+			if (sequence == null)
+				return;
 
 			//Важно понимать что данный метод переопределяет режим для всех! Защиту от дурака позже сделаю...
 			if (timeScale)
@@ -66,6 +71,11 @@ namespace ZenoTween
 				return null;
 
 			var sequence = DOTween.Sequence();
+			if (target != null)
+				sequence.SetTarget(target);
+			else
+				Debug.LogWarning("Sequence target is null");
+
 			sequence.timeScale = inheritedSpeed;
 			ApplyTweenSettings(sequence, !delayOnce);
 			participants.Participate(ref sequence, target);

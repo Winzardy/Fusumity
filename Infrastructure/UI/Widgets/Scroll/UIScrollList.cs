@@ -528,7 +528,7 @@ namespace UI.Scroll
 				return;
 
 			_scrollSequence = DOTween.Sequence();
-			_layout.scrollSequence.Participate(ref _scrollSequence);
+			_layout.scrollSequence.Participate(ref _scrollSequence, _layout);
 			_scrollSequence
 				.SetAutoKill(false)
 				.Pause();
