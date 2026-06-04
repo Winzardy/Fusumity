@@ -311,12 +311,11 @@ namespace UI
 			}
 #endif
 		}
-
-#if DebugLog
-		public static class UILayoutDebug
-		{
-			public static Toggle<int> debugDelayMs = 3000;
-		}
-#endif
 	}
+#if DebugLog
+	public static class UILayoutDebug
+	{
+		public static Toggle<int> debugDelayMs = 3000;
+	}
+#endif
 }

@@ -56,6 +56,7 @@ namespace Content.ScriptableObjects.Editor
 						{
 							scriptableObject.enabled = true;
 							ContentDatabaseEditorUtility.AddToDatabase(asset);
+							EditorUtility.SetDirty(asset);
 						}
 
 						GUI.enabled = originEnabled;
@@ -124,7 +125,7 @@ namespace Content.ScriptableObjects.Editor
 					return scriptableObject.enabled;
 
 				var toggleRect = GUILayoutUtility.GetLastRect();
-				toggleRect   =  toggleRect.AlignLeft(20);
+				toggleRect = toggleRect.AlignLeft(20);
 				toggleRect.x -= 15.5f;
 
 				var prev = scriptableObject.enabled;
@@ -145,6 +146,7 @@ namespace Content.ScriptableObjects.Editor
 						ContentDatabaseEditorUtility.AddToDatabase(asset);
 					else
 						ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+					EditorUtility.SetDirty(asset);
 				}
 
 				return scriptableObject.enabled;
@@ -167,7 +169,7 @@ namespace Content.ScriptableObjects.Editor
 
 			_richButtonStyle ??= new GUIStyle(GUI.skin.button)
 			{
-				richText  = true,
+				richText = true,
 				alignment = TextAnchor.MiddleCenter
 			};
 
@@ -222,7 +224,7 @@ namespace Content.ScriptableObjects.Editor
 
 		static ContentEntryMonoScriptVisibilityMenu()
 		{
-			_enable                     =  EditorPrefs.GetBool(PATH, false);
+			_enable = EditorPrefs.GetBool(PATH, false);
 			EditorApplication.delayCall += () => { Toggle(_enable); };
 		}
 

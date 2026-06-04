@@ -346,7 +346,9 @@ namespace Content.Editor
 						// var cacheGuiEnabled = GUI.enabled;
 						// GUI.enabled = false;
 
-						SirenixEditorFields.TextField(position, targetLabel, invalidLabel);
+						var textPosition = position;
+						textPosition.width -= 17;
+						SirenixEditorFields.TextField(textPosition, targetLabel, invalidLabel);
 
 						//GUI.enabled = cacheGuiEnabled;
 

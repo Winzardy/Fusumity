@@ -1,3 +1,7 @@
+using Sapientia;
+using Sirenix.OdinInspector;
+using UI;
+
 namespace Content.ScriptableObjects.UI
 {
 	using UnityEngine;
@@ -17,6 +21,17 @@ namespace Content.ScriptableObjects.UI
 #endif
 	public class UIDatabaseScriptableObject : ContentDatabaseScriptableObject
 	{
+#if DebugLog
+		[TitleGroup("Debug")]
+		[ShowInInspector]
+		[SuffixLabel("ms", true)]
+		[LabelText("Custom Layout Destroy Delay")]
+		public Toggle<int> DebugLayoutDestroyDelay
+		{
+			get => UILayoutDebug.debugDelayMs;
+			set => UILayoutDebug.debugDelayMs = value;
+		}
+#endif
 		public Sprite placeholderSprite;
 		public Color placeholderColor;
 	}
