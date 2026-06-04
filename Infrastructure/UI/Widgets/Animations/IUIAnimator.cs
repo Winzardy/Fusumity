@@ -39,5 +39,6 @@ namespace UI
 		where TLayout : UIBaseLayout
 	{
 		bool SetupLayout(TLayout layout);
+		void Reset();
 	}
 }

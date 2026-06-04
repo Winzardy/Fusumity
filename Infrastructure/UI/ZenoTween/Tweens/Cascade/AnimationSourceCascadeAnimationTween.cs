@@ -15,7 +15,9 @@ namespace ZenoTween.Participant.Tweens
 			if (!childTransform.TryGetComponent(out AnimationSequenceSource childSource))
 				return null;
 
-			return childSource.sequence.ToTween(childSource);
+			var owner = _target ?? childSource;
+			var tween = childSource.sequence.ToTween(owner);
+			return BindTweenToOwner(tween, owner);
 		}
 	}
 }
