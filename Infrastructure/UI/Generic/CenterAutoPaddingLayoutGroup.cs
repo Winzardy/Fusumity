@@ -56,6 +56,9 @@ namespace UI
 		[Button("Force Update")]
 		private void UpdatePadding()
 		{
+			if(!enabled)
+				return;
+
 			if (viewport == null || layoutGroup == null)
 				return;
 
