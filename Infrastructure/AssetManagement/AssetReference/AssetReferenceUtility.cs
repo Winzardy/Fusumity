@@ -149,7 +149,7 @@ namespace AssetManagement
 			reference == null || !(reference.AssetReference?.RuntimeKeyIsValid() ?? false);
 
 		public static bool IsValid(this IAssetReference reference) =>
-			reference is { AssetReference: not null } && reference.AssetReference.RuntimeKeyIsValid();
+			reference is {AssetReference: not null} && reference.AssetReference.RuntimeKeyIsValid();
 
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReference> references,
 			CancellationToken cancellationToken = default)

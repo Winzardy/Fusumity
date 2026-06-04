@@ -56,6 +56,11 @@ namespace ZenoTween.Utility
 				_tween.KillSafe();
 				var sequence = _sequence.ToSequence(null);
 
+				if (args.delay > 0)
+				{
+					sequence.PrependInterval(args.delay);
+				}
+
 				if (args.onStart != null)
 				{
 					sequence.PrependCallback(args.onStart);
@@ -105,6 +110,8 @@ namespace ZenoTween.Utility
 
 	public struct AnimationSequencePlayerArgs
 	{
+		public float delay;
+
 		public TweenCallback onStart;
 		public TweenCallback onComplete;
 	}

@@ -58,7 +58,7 @@ namespace ZenoTween.Participant.Tweens
 
 			sequence.AppendCallback(() => rectTransform.anchoredPosition = _originalPos.Value);
 			sequence.Append(rectTransform.DOScale(_originalScale.Value * popScale, popDuration).SetEase(Ease.OutBack));
-			sequence.Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(popDuration * 0.4f));
+			sequence.Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(popDuration * 0.25f));
 
 			sequence.Join(flashImage.DOFade(1f, flashShowDuration).From(0));
 			sequence.Append(flashImage.DOFade(0, flashDissipateDuration));

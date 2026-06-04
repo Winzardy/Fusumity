@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using UnityEngine;
 
 namespace Fusumity.Utility
 {
@@ -50,6 +51,20 @@ namespace Fusumity.Utility
 				return UniTask.NextFrame(token);
 
 			return UniTask.DelayFrame(frames, cancellationToken: token);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async UniTask<Vector3> ButtonUp(CancellationToken ct = default)
+		{
+			await Until(() => Input.GetMouseButtonUp(0), ct);
+			return Input.mousePosition;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static async UniTask<Vector3> ButtonDown(CancellationToken ct = default)
+		{
+			await Until(() => Input.GetMouseButtonDown(0), ct);
+			return Input.mousePosition;
 		}
 	}
 }

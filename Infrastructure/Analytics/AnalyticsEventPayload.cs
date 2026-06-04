@@ -26,7 +26,7 @@ namespace Analytics
 				str += "\n	" + pair.Key + "=" + pair.Value + ";";
 			}
 
-			return $"\nId: {id}{str}";
+			return $"Id: {id}{str}";
 		}
 	}
 }
