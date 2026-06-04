@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Sapientia;
+using Sapientia.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -32,6 +33,9 @@ namespace Content.Editor
 
 		private static void CancelBeforeAssemblyReload()
 		{
+			if (Application.isBatchMode)
+				return;
+
 			_cancelRequested = true;
 		}
 
@@ -60,6 +64,13 @@ namespace Content.Editor
 			return Validate(SyncBeforeValidate);
 		}
 
+		public static bool TryGetValidator<T>(out T validator)
+			where T : class, IContentValueValidator
+		{
+			validator = ContentValidationSettings.Settings.GetEnabledCustomValidator<T>();
+			return validator != null;
+		}
+
 		public static bool Validate(bool sync)
 		{
 			_cancelRequested = false;
@@ -75,7 +86,7 @@ namespace Content.Editor
 
 			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>()
 				.ToList();
-			var valueValidators = ContentValidationSettings.Settings.customValidators;
+			var valueValidators = GetEnabledValidators();
 
 			float totalProgress = 0;
 			foreach (var database in dbs)
@@ -155,9 +166,39 @@ namespace Content.Editor
 			return true;
 		}
 
+		public static IReadOnlyList<IContentValueValidator> GetEnabledValidators()
+		{
+			return ContentValidationSettings.Settings.GetEnabledCustomValidators();
+		}
+
+		public static int ValidateContentObject(object target,
+			Type targetType,
+			string path,
+			ContentScriptableObject source,
+			object logContext,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount,
+			bool inspectUnityObject = false,
+			Func<string, string> logMessageFormatter = null)
+		{
+			var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+			return ValidateContentReferences(target,
+				targetType,
+				path,
+				source,
+				logContext ?? source,
+				visited,
+				false,
+				false,
+				valueValidators,
+				ref warningCount,
+				inspectUnityObject,
+				logMessageFormatter);
+		}
+
 		private static bool IsValidationCancellationRequested()
 		{
-			return _cancelRequested || EditorApplication.isCompiling;
+			return !Application.isBatchMode && (_cancelRequested || EditorApplication.isCompiling);
 		}
 
 		private static bool CancelValidation(string reason = null)
@@ -181,47 +222,84 @@ namespace Content.Editor
 				scriptableObject.GetType(),
 				scriptableObject.name,
 				scriptableObject,
+				scriptableObject,
 				visited,
 				false,
 				false,
 				valueValidators,
-				ref warningCount);
+				ref warningCount,
+				false,
+				null);
 		}
 
 		private static int ValidateContentReferences(object target,
 			Type targetType,
 			string path,
 			ContentScriptableObject context,
+			object logContext,
 			HashSet<object> visited,
 			bool canBeEmpty,
 			bool failIfEmpty,
 			IReadOnlyList<IContentValueValidator> valueValidators,
-			ref int warningCount)
+			ref int warningCount,
+			bool inspectUnityObject,
+			Func<string, string> logMessageFormatter)
 		{
 			if (targetType == null)
 				return 0;
 
-			var errorCount = ValidateContentValue(target, targetType, path, context, canBeEmpty, valueValidators);
+			var errorCount = ValidateContentValue(target,
+				targetType,
+				path,
+				context,
+				logContext,
+				canBeEmpty,
+				valueValidators,
+				logMessageFormatter);
 			if (target == null)
 				return errorCount;
 
 			if (target is IContentReference reference)
-				return errorCount + ValidateContentReference(reference, path, context, canBeEmpty, failIfEmpty, ref warningCount);
+				return errorCount + ValidateContentReference(reference,
+					path,
+					logContext,
+					canBeEmpty,
+					failIfEmpty,
+					ref warningCount,
+					logMessageFormatter);
 
 			if (IsTerminal(targetType))
 				return errorCount;
 
-			if (target is UnityObject && target != context)
+			if (target is UnityObject && !inspectUnityObject && target != context)
 				return errorCount;
 
 			if (targetType.IsClass && !visited.Add(target))
 				return errorCount;
 
 			if (target is IDictionary dictionary)
-				return errorCount + ValidateDictionary(dictionary, path, context, visited, canBeEmpty, failIfEmpty, valueValidators, ref warningCount);
+				return errorCount + ValidateDictionary(dictionary,
+					path,
+					context,
+					logContext,
+					visited,
+					canBeEmpty,
+					failIfEmpty,
+					valueValidators,
+					ref warningCount,
+					logMessageFormatter);
 
 			if (target is IEnumerable enumerable && target is not string)
-				return errorCount + ValidateEnumerable(enumerable, path, context, visited, canBeEmpty, failIfEmpty, valueValidators, ref warningCount);
+				return errorCount + ValidateEnumerable(enumerable,
+					path,
+					context,
+					logContext,
+					visited,
+					canBeEmpty,
+					failIfEmpty,
+					valueValidators,
+					ref warningCount,
+					logMessageFormatter);
 
 			foreach (var field in GetSerializableFields(targetType))
 			{
@@ -235,7 +313,10 @@ namespace Content.Editor
 				}
 				catch (Exception e)
 				{
-					ContentDebug.LogError($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}", context);
+					ContentDebug.LogError(
+						FormatLogMessage($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}",
+							logMessageFormatter),
+						logContext);
 					errorCount++;
 					continue;
 				}
@@ -244,11 +325,14 @@ namespace Content.Editor
 					value?.GetType() ?? field.FieldType,
 					$"{path}.{field.Name}",
 					context,
+					logContext,
 					visited,
 					CanBeEmpty(field),
 					FailIfEmpty(field),
 					valueValidators,
-					ref warningCount);
+					ref warningCount,
+					false,
+					logMessageFormatter);
 			}
 
 			return errorCount;
@@ -258,8 +342,10 @@ namespace Content.Editor
 			Type valueType,
 			string path,
 			ContentScriptableObject context,
+			object logContext,
 			bool canBeEmpty,
-			IReadOnlyList<IContentValueValidator> validators)
+			IReadOnlyList<IContentValueValidator> validators,
+			Func<string, string> logMessageFormatter)
 		{
 			if (validators == null || validators.Count == 0)
 				return 0;
@@ -280,17 +366,24 @@ namespace Content.Editor
 				catch (Exception e)
 				{
 					ContentDebug.LogError(
-						$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
-						context);
+						FormatLogMessage(
+							$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
+							logMessageFormatter),
+						logContext);
 					errorCount++;
 					continue;
 				}
 
-				if (string.IsNullOrEmpty(message))
-					message =
-						$"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+				if (message == null)
+				{
+					errorCount++;
+					continue;
+				}
 
-				ContentDebug.LogError(message, context);
+				if (message.IsNullOrEmpty())
+					message = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+
+				ContentDebug.LogError(FormatLogMessage(message, logMessageFormatter), logContext);
 				errorCount++;
 			}
 
@@ -300,11 +393,13 @@ namespace Content.Editor
 		private static int ValidateDictionary(IDictionary dictionary,
 			string path,
 			ContentScriptableObject context,
+			object logContext,
 			HashSet<object> visited,
 			bool canBeEmpty,
 			bool failIfEmpty,
 			IReadOnlyList<IContentValueValidator> valueValidators,
-			ref int warningCount)
+			ref int warningCount,
+			Func<string, string> logMessageFormatter)
 		{
 			var errorCount = 0;
 			foreach (DictionaryEntry entry in dictionary)
@@ -313,21 +408,27 @@ namespace Content.Editor
 					entry.Key?.GetType(),
 					$"{path}[key: {entry.Key}]",
 					context,
+					logContext,
 					visited,
 					canBeEmpty,
 					failIfEmpty,
 					valueValidators,
-					ref warningCount);
+					ref warningCount,
+					false,
+					logMessageFormatter);
 
 				errorCount += ValidateContentReferences(entry.Value,
 					entry.Value?.GetType(),
 					$"{path}[{entry.Key}]",
 					context,
+					logContext,
 					visited,
 					canBeEmpty,
 					failIfEmpty,
 					valueValidators,
-					ref warningCount);
+					ref warningCount,
+					false,
+					logMessageFormatter);
 			}
 
 			return errorCount;
@@ -336,11 +437,13 @@ namespace Content.Editor
 		private static int ValidateEnumerable(IEnumerable enumerable,
 			string path,
 			ContentScriptableObject context,
+			object logContext,
 			HashSet<object> visited,
 			bool canBeEmpty,
 			bool failIfEmpty,
 			IReadOnlyList<IContentValueValidator> valueValidators,
-			ref int warningCount)
+			ref int warningCount,
+			Func<string, string> logMessageFormatter)
 		{
 			var errorCount = 0;
 			var index = 0;
@@ -350,11 +453,14 @@ namespace Content.Editor
 					item?.GetType(),
 					$"{path}[{index}]",
 					context,
+					logContext,
 					visited,
 					canBeEmpty,
 					failIfEmpty,
 					valueValidators,
-					ref warningCount);
+					ref warningCount,
+					false,
+					logMessageFormatter);
 				index++;
 			}
 
@@ -363,18 +469,20 @@ namespace Content.Editor
 
 		private static int ValidateContentReference(IContentReference reference,
 			string path,
-			ContentScriptableObject context,
+			object logContext,
 			bool canBeEmpty,
 			bool failIfEmpty,
-			ref int warningCount)
+			ref int warningCount,
+			Func<string, string> logMessageFormatter)
 		{
 			if (reference.IsEmpty())
 			{
 				if (failIfEmpty)
 				{
 					ContentDebug.LogError(
-						$"Empty ContentReference [ {path} ] with [NotEmpty] or [NotNull] attribute",
-						context);
+						FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
+							logMessageFormatter),
+						logContext);
 					return 1;
 				}
 
@@ -382,8 +490,9 @@ namespace Content.Editor
 				{
 					warningCount++;
 					ContentDebug.LogWarning(
-						$"Empty ContentReference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
-						context);
+						FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
+							logMessageFormatter),
+						logContext);
 				}
 
 				return 0;
@@ -403,9 +512,15 @@ namespace Content.Editor
 				return 0;
 
 			ContentDebug.LogError(
-				$"Invalid ContentReference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
-				context);
+				FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
+					logMessageFormatter),
+				logContext);
 			return 1;
+		}
+
+		private static string FormatLogMessage(string message, Func<string, string> formatter)
+		{
+			return formatter?.Invoke(message) ?? message;
 		}
 
 		private static bool CanBeEmpty(FieldInfo field)
