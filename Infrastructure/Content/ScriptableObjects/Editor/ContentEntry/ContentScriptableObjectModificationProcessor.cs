@@ -55,9 +55,6 @@ namespace Content.ScriptableObjects.Editor
 				if (asset is ContentEntryScriptableObject entryScriptableObject)
 					entryScriptableObject.Sync(false);
 
-				if (asset.Enabled)
-					ContentDatabaseEditorUtility.AddToDatabase(asset);
-
 				var origin = ContentDebug.Logging.Nested.refresh;
 				ContentDebug.Logging.Nested.refresh = false;
 				asset.Refresh();

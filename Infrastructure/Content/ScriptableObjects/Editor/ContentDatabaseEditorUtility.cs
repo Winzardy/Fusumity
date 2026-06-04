@@ -26,6 +26,8 @@ namespace Content.ScriptableObjects.Editor
 
 		private static bool _syncContentCalledThisFrame;
 
+		private static HashSet<ContentDatabaseScriptableObject> _pendingCleanup = new();
+
 		public static IEnumerable<ContentDatabaseScriptableObject> Databases
 			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>().ToList();
 
@@ -95,6 +97,24 @@ namespace Content.ScriptableObjects.Editor
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
 				AssetDatabase.SaveAssetIfDirty(database);
+
+				if (_pendingCleanup.Add(database))
+				{
+					EditorApplication.delayCall += () =>
+					{
+						Cleanup(database);
+						_pendingCleanup.Remove(database);
+					};
+				}
+			}
+		}
+
+		public static void Cleanup(ContentDatabaseScriptableObject database)
+		{
+			for (int i = database.scriptableObjects.Count - 1; i >= 0; i--)
+			{
+				if (database.scriptableObjects[i] == null)
+					database.scriptableObjects.RemoveAt(i);
 			}
 		}
 
