@@ -1,4 +1,5 @@
 using System.IO;
+using Fusumity.Attributes.Specific;
 using Sapientia.Extensions;
 using UnityEditor;
 using UnityEditor.AssetImporters;
@@ -9,6 +10,12 @@ namespace Content.ScriptableObjects.Editor
 	public abstract class ContentScriptedImporter<TScriptableObject, TValue> : ScriptedImporter
 		where TScriptableObject : ContentEntryScriptableObject<TValue>
 	{
+		public bool enabled;
+
+		public bool useCustomId;
+		[ShowIf(nameof(useCustomId))]
+		public string customId;
+
 		public sealed override void OnImportAsset(AssetImportContext ctx)
 		{
 			var id = GetId(ctx);
@@ -32,13 +39,21 @@ namespace Content.ScriptableObjects.Editor
 			if (!asset.ForceCreateEntry(serializableGuid, id))
 				asset.SetId(id);
 
+			asset.enabled = enabled;
+
 			asset.SetValue(value, false);
 
-			ctx.AddObjectToAsset(typeof(TScriptableObject).Name, asset);
+			ctx.AddObjectToAsset(nameof(TScriptableObject), asset);
 			ctx.SetMainObject(asset);
 		}
 
 		protected abstract bool TryCreateValue(AssetImportContext ctx, out TValue value);
-		protected virtual string GetId(AssetImportContext ctx) => Path.GetFileNameWithoutExtension(ctx.assetPath);
+		protected virtual string GetId(AssetImportContext ctx)
+		{
+			if (useCustomId)
+				return customId;
+
+			return Path.GetFileNameWithoutExtension(ctx.assetPath);
+		}
 	}
 }
