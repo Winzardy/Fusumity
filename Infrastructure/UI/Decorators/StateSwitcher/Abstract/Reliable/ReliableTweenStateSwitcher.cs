@@ -18,9 +18,6 @@ namespace UI
 		private Tween _tween;
 
 		[NonSerialized]
-		private readonly Dictionary<TState, Tween> _cached = new();
-
-		[NonSerialized]
 		private Dictionary<TState, AnimationSequence> _mappedSequences;
 
 		[SerializeField, HideLabel, FoldoutGroup("Default State")]
@@ -28,9 +25,6 @@ namespace UI
 
 		[SerializeField, BoxGroup("Options:"), Tooltip("Trigger state switching if default state value is provided.")]
 		private bool _switchIfDefaultValue;
-
-		[SerializeField, BoxGroup("Options:")]
-		private bool _useCache;
 
 		[Space, LabelText("State To Enable")]
 		[SerializeField]
@@ -59,8 +53,9 @@ namespace UI
 
 		protected override bool UseEquals { get => true; }
 
-		private void Awake() => Clear();
-		private void OnDestroy() => Clear();
+		private void Awake() => ClearTweens();
+		private void OnDisable() => ClearTweens();
+		private void OnDestroy() => ClearTweens();
 
 		protected override void OnStateSwitched(TState state)
 		{
@@ -74,26 +69,41 @@ namespace UI
 				Debug.LogWarning(
 					"Cannot play DOTween because GameObject is inactive. " +
 					"Applying final tween state immediately");
-				var instantTween = mappedSequences
-					.GetValueOrDefaultSafe(state, _default)
-					.ToTween(this);
+				var animationSequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
+				if (animationSequence.IsNullOrEmpty())
+					return;
+
+				var instantTween = CreateTween(animationSequence);
+				if (instantTween == null)
+					return;
 
 				instantTween.KillWithCallbacks();
 
 				return;
 			}
 
-			var tween = _useCache ? PlayTweenCached(state) : PlayTween(state);
-			if (_immediate)
-			{
-				AnimationTweenCallback.immediate = true;
-				tween.GotoWithCallbacks(1);
-				AnimationTweenCallback.immediate = false;
-			}
-#if UNITY_EDITOR
+			var tween = PlayTween(state);
 			if (tween == null)
 				return;
 
+			if (_immediate)
+			{
+				AnimationTweenCallback.immediate = true;
+				try
+				{
+					tween.GotoWithCallbacks(1);
+				}
+				finally
+				{
+					AnimationTweenCallback.immediate = false;
+					tween.KillSafe();
+				}
+			}
+			else
+			{
+				tween.Play();
+			}
+#if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
 				DG.DOTweenEditor.DOTweenEditorPreview.PrepareTweenForPreview(tween);
@@ -114,76 +124,46 @@ namespace UI
 		{
 			_tween?.KillSafe();
 
-			var sequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
+			var animationSequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
 
-			if (sequence.IsNullOrEmpty())
+			if (animationSequence.IsNullOrEmpty())
 				return null;
 
-			_tween = sequence.ToTween(this);
+			_tween = CreateTween(animationSequence);
+			if (_tween != null)
+			{
+				var tween = _tween;
+				tween.OnKill(() =>
+				{
+					if (ReferenceEquals(_tween, tween))
+						_tween = null;
+				});
+			}
 
 			return _tween;
 		}
 
-		private Tween PlayTweenCached(TState state) //TODO: Not working properly atm.
+		private Tween CreateTween(AnimationSequence animationSequence)
 		{
-			if (!_cached.TryGetValue(state, out var tween) || !tween.active)
-			{
-				var sequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
-
-				if (sequence.IsNullOrEmpty())
-					return null;
-
-				_cached[state] = tween = sequence
-					.ToTween(this)
-					.SetAutoKill(false);
-			}
-
-			if (tween.playedOnce)
-				tween.Restart();
-			else
-				tween.Play();
-
-			return tween;
+			var tween = animationSequence.ToTween(this);
+			return tween?.SetLink(gameObject, LinkBehaviour.KillOnDestroy);
 		}
 
 #if UNITY_EDITOR
-		private bool ShowIfClearButton() => _cached.Count > 0;
+		private bool ShowIfClearButton() => _tween.IsActive();
 
 		[Button, ShowIf(nameof(ShowIfClearButton))]
 #endif
-		private void Clear()
+		private void ClearTweens()
 		{
-			if (_useCache)
-			{
-				foreach (var tween in _cached.Values)
-					tween?.KillSafe();
+			_tween?.KillSafe();
+			_tween = null;
 
-				_cached.Clear();
-			}
-			else
-			{
-				_tween?.KillSafe();
-			}
+			DOTween.Kill(this);
 		}
 
 		public override bool IsTransitioning()
-		{
-			if (_useCache)
-			{
-				foreach (var tween in _cached.Values)
-				{
-					if (tween.IsPlayingSafe())
-						return true;
-				}
-			}
-			else
-			{
-				if (_tween.IsPlayingSafe())
-					return true;
-			}
-
-			return false;
-		}
+			=> _tween.IsPlayingSafe();
 
 		[Serializable]
 		public struct StatePair

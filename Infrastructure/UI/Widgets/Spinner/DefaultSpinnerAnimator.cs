@@ -15,7 +15,7 @@ namespace UI
 		{
 			Sequence sequence = null;
 
-			_layout.loopSequence?.Participate(ref sequence);
+			_layout.loopSequence?.Participate(ref sequence, _layout);
 
 			if (sequence != null)
 			{

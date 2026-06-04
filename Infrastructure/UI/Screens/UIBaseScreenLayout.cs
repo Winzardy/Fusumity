@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using JetBrains.Annotations;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +17,7 @@ namespace UI.Screens
 		public GraphicRaycaster raycaster;
 
 		[PropertySpace(0, 10)]
+		[CanBeNull]
 		public Button close;
 
 		//Защита от дурака)
