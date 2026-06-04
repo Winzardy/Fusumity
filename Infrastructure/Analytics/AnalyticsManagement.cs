@@ -92,7 +92,7 @@ namespace Analytics
 					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}\n{payload.ToJson()}");
 				}
 
-				//integration.SendEvent(in payload);
+				integration.SendEvent(in payload);
 			}
 
 			AnalyticsDebug.Log($"Sent event: {payload}\n{_cachedIntegrationsDebugMessage}");
