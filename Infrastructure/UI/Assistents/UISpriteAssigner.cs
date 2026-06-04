@@ -142,6 +142,7 @@ namespace UI
 		{
 			if (handle.IsLoaded)
 			{
+				image.sprite = handle.Sprite;
 				callback?.Invoke();
 				return true;
 			}
@@ -195,7 +196,7 @@ namespace UI
 					return;
 
 				image.sprite = sprite;
-				handle.MarkLoaded();
+				handle.MarkLoaded(sprite);
 				handle.InvokeCallback();
 			}
 			catch (OperationCanceledException)
@@ -222,9 +223,11 @@ namespace UI
 
 		private Action _callback;
 		private bool _loaded;
+		private Sprite _sprite;
 
 		public bool IsLoaded { get => _loaded; }
 		public bool IsLoading { get => cts != null && !cts.IsCancellationRequested; }
+		public Sprite Sprite { get => _sprite; }
 
 		public SpriteAssignerHandle(IAssetReference<Sprite> spriteRef)
 		{
@@ -234,7 +237,11 @@ namespace UI
 
 		public bool SameAsset(IAssetReference<Sprite> target) => spriteRef.SameAsset(target);
 		public void AddCallback(Action callback) => _callback += callback;
-		public void MarkLoaded() => _loaded = true;
+		public void MarkLoaded(Sprite sprite)
+		{
+			_sprite = sprite;
+			_loaded = true;
+		}
 
 		public void InvokeCallback()
 		{
@@ -255,6 +262,7 @@ namespace UI
 		{
 			_callback = null;
 			_loaded = false;
+			_sprite = null;
 
 			AsyncUtility.TriggerAndSetNull(ref cts);
 
