@@ -64,6 +64,7 @@ namespace Content.ScriptableObjects
 		bool IUniqueContentEntryScriptableObject.UseCustomId => IsExternallyIdentifiable || useCustomId;
 
 		IUniqueContentEntry IUniqueContentEntrySource.UniqueContentEntry => _entry;
+		long IUniqueContentEntrySource.CreationOrder => TimeCreated;
 
 		public override Type ValueType => typeof(T);
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Content.Editor;
+using Fusumity.Attributes;
 using Fusumity.Editor;
 using Fusumity.Utility;
 using Sapientia;
@@ -40,6 +41,7 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new VerticalGroupAttribute("Identifier"));
 					attributes.Add(new ShowInInspectorAttribute());
 					attributes.Add(new TooltipAttribute($"@{rootClass}.{nameof(GetTooltip)}($property)"));
+					attributes.Add(new ContentIdConflictAttribute());
 
 					if (parentProperty.SerializationRoot.ValueEntry.WeakSmartValue is not IUniqueContentEntryScriptableObject so)
 						return;
@@ -117,10 +119,12 @@ namespace Content.ScriptableObjects.Editor
 
 		public static void OnIdChanged(InspectorProperty property)
 		{
-			if (property.SerializationRoot.ValueEntry.WeakSmartValue is not IUniqueContentEntryScriptableObject
-				{
-					UseCustomId: true
-				} entryScriptableObject)
+			if (property.SerializationRoot.ValueEntry.WeakSmartValue is not IUniqueContentEntryScriptableObject entryScriptableObject)
+				return;
+
+			ContentEditorCache.RefreshByValueType(entryScriptableObject.ValueType);
+
+			if (!entryScriptableObject.UseCustomId)
 				return;
 
 			ContentAutoConstantsGenerator.ForceInvokeWithDelay(entryScriptableObject.GetType());
@@ -193,6 +197,122 @@ namespace Content.ScriptableObjects.Editor
 			}
 
 			return split[^1];
+		}
+	}
+
+	internal sealed class ContentIdConflictAttribute : Attribute, IAttributeConvertible
+	{
+		public Attribute Convert()
+			=> new ContentIdConflictValueAttribute();
+	}
+
+	internal sealed class ContentIdConflictValueAttribute : Attribute
+	{
+	}
+
+	internal sealed class ContentIdConflictValueAttributeDrawer : OdinAttributeDrawer<ContentIdConflictValueAttribute, string>
+	{
+		private static readonly HashSet<string> _activeCustomIdConflicts = new();
+		private static readonly Dictionary<string, string> _sourceGuidToActiveCustomIdConflict = new();
+
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			var originColor = GUI.color;
+			if (HasIdConflict(Property))
+				GUI.color = ObjectIsNullUtility.GetInvalidColor(originColor);
+
+			CallNextDrawer(label);
+			GUI.color = originColor;
+		}
+
+		public bool HasIdConflict(InspectorProperty property)
+		{
+			if (property?.SerializationRoot?.ValueEntry?.WeakSmartValue is not IUniqueContentEntryScriptableObject currentSource)
+				return false;
+
+			var currentEntry = currentSource.UniqueContentEntry;
+			if (currentEntry == null)
+				return false;
+
+			var sourceKey = currentEntry.Guid.ToString();
+			if (property.ValueEntry?.WeakSmartValue is not string id || id.IsNullOrEmpty())
+			{
+				ClearActiveConflict(sourceKey);
+				return false;
+			}
+
+			var entry = ResolveEntry(currentSource.ValueType, id);
+			if (entry == null || entry.Guid == currentEntry.Guid)
+			{
+				ClearActiveConflict(sourceKey);
+				return false;
+			}
+
+			var conflictKey = GetConflictKey(currentEntry, entry, id);
+			SetActiveConflict(sourceKey, conflictKey);
+			LogCustomIdConflictOnce(conflictKey, currentSource, entry, id);
+			return true;
+		}
+
+		private static IUniqueContentEntry ResolveEntry(Type valueType, string id)
+		{
+			if (!ContentEditorCache.TryGetSource(valueType, id, out var source) ||
+				source is not IUniqueContentEntrySource uniqueSource)
+				return null;
+
+			return uniqueSource.UniqueContentEntry;
+		}
+
+		private static void SetActiveConflict(string sourceKey, string conflictKey)
+		{
+			if (_sourceGuidToActiveCustomIdConflict.TryGetValue(sourceKey, out var previousKey) &&
+				previousKey != conflictKey)
+			{
+				_activeCustomIdConflicts.Remove(previousKey);
+			}
+
+			_sourceGuidToActiveCustomIdConflict[sourceKey] = conflictKey;
+		}
+
+		private static void ClearActiveConflict(string sourceKey)
+		{
+			if (!_sourceGuidToActiveCustomIdConflict.Remove(sourceKey, out var conflictKey))
+				return;
+
+			_activeCustomIdConflicts.Remove(conflictKey);
+		}
+
+		private static string GetConflictKey(IUniqueContentEntry currentEntry, IUniqueContentEntry otherEntry, string id)
+		{
+			var currentGuid = currentEntry.Guid.ToString();
+			var otherGuid = otherEntry.Guid.ToString();
+
+			var firstGuid = currentGuid;
+			var secondGuid = otherGuid;
+			if (string.CompareOrdinal(firstGuid, secondGuid) > 0)
+			{
+				firstGuid = otherGuid;
+				secondGuid = currentGuid;
+			}
+
+			return $"{currentEntry.ValueType.FullName}:{id}:{firstGuid}:{secondGuid}";
+		}
+
+		private static void LogCustomIdConflictOnce(string conflictKey, IUniqueContentEntrySource currentSource,
+			IUniqueContentEntry otherEntry, string id)
+		{
+			if (!_activeCustomIdConflicts.Add(conflictKey))
+				return;
+
+			var currentEntry = currentSource.UniqueContentEntry;
+			var currentGuid = currentEntry.Guid.ToString();
+			var otherGuid = otherEntry.Guid.ToString();
+
+			ContentDebug.LogError(
+				$"Content custom id conflict: id [ {id} ] is already used by an older entry of type [ {currentEntry.ValueType.Name} ]" +
+				$"\nCurrent guid: [ {currentGuid} ]" +
+				$"\nOther guid: [ {otherGuid} ]",
+				currentSource as UnityEngine.Object);
 		}
 	}
 }

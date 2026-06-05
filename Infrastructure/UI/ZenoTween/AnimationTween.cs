@@ -42,6 +42,8 @@ namespace ZenoTween
 		[Tooltip("Множитель скорости проигрывания твина. 1 = обычная скорость")]
 		public float speed = 1f;
 
+		//TODO ease
+
 		[Tooltip(
 			"Количество повторений. Можно установить '-1' что равно <u>бесконечно</u> (опасно, так как требует самому завершить анимацию)")]
 		public int repeat = 0;
@@ -169,7 +171,8 @@ namespace ZenoTween
 				BindTweenToOwner(tween, target);
 
 #if UNITY_EDITOR
-				DOTweenEditorPreview.PrepareTweenForPreview(tween);
+				if (!Application.isPlaying)
+					DOTweenEditorPreview.PrepareTweenForPreview(tween);
 #endif
 				tween.Play();
 			});
