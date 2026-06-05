@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-using System.Collections.Generic;
 using Content.Editor;
 using Fusumity.Editor.Utility;
 using Sapientia;

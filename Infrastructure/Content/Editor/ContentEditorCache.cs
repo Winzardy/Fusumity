@@ -98,6 +98,8 @@ namespace Content.Editor
 			Register(typeof(T), source);
 		}
 
+		public static void RefreshByValueType(Type type) => Refresh(type, true);
+
 		public static bool TryGetSource(Type type, in SerializableGuid guid, out IContentEntrySource source)
 		{
 			source = null;
@@ -511,6 +513,7 @@ namespace Content.Editor
 	{
 		private static readonly Dictionary<SerializableGuid, IUniqueContentEntrySource<T>> _dictionary = new(1);
 		private static readonly Dictionary<string, Reference<SerializableGuid>> _idToGuid = new(1);
+		private static readonly Dictionary<SerializableGuid, string> _guidToId = new(1);
 
 		static EditorContentEntryMap() => ContentEditorCache.Cleared += HandleCleared;
 
@@ -518,6 +521,7 @@ namespace Content.Editor
 		{
 			_dictionary.Clear();
 			_idToGuid.Clear();
+			_guidToId.Clear();
 		}
 
 		/// <summary>
@@ -546,11 +550,50 @@ namespace Content.Editor
 				ref readonly var guid = ref uniqueSource.UniqueContentEntry.Guid;
 				var id = uniqueSource.Id;
 
+				RemovePreviousIdIfNeeded(in guid, id);
 				_dictionary[guid] = uniqueSource;
-				_idToGuid[id]     = new(guid);
+				_guidToId[guid] = id;
+				if (ShouldReplaceIdOwner(id, in guid, uniqueSource))
+					_idToGuid[id] = new(guid);
 			}
 
 			EditorContentEntryMap.RegisterNestedSafe(source);
+		}
+
+		private static void RemovePreviousIdIfNeeded(in SerializableGuid guid, string id)
+		{
+			if (!_guidToId.TryGetValue(guid, out var previousId) || previousId == id)
+				return;
+
+			if (previousId == null || !_idToGuid.TryGetValue(previousId, out var previousGuidReference))
+				return;
+
+			if (previousGuidReference.value == guid)
+				_idToGuid.Remove(previousId);
+		}
+
+		private static bool ShouldReplaceIdOwner(string id, in SerializableGuid guid, IUniqueContentEntrySource<T> source)
+		{
+			if (!_idToGuid.TryGetValue(id, out var currentGuidReference))
+				return true;
+
+			if (currentGuidReference.value == guid)
+				return true;
+
+			if (!_dictionary.TryGetValue(currentGuidReference.value, out var currentSource))
+				return true;
+
+			return HasIdPriorityOver(source, currentSource);
+		}
+
+		private static bool HasIdPriorityOver(IUniqueContentEntrySource<T> source, IUniqueContentEntrySource<T> currentSource)
+		{
+			if (source.CreationOrder != currentSource.CreationOrder)
+				return source.CreationOrder < currentSource.CreationOrder;
+
+			return string.CompareOrdinal(
+				source.UniqueContentEntry.Guid.ToString(),
+				currentSource.UniqueContentEntry.Guid.ToString()) < 0;
 		}
 
 		private static IContentEntrySource Resolve(in SerializableGuid guid, string id = null)
@@ -570,6 +613,7 @@ namespace Content.Editor
 		{
 			_dictionary.Clear();
 			_idToGuid.Clear();
+			_guidToId.Clear();
 		}
 
 		public static bool Contains() => Any();
