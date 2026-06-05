@@ -4,8 +4,7 @@
     "references": [
         "Content",
         "Sapientia",
-        "Messaging",
-        "Simulation"
+        "Messaging"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

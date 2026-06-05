@@ -7,7 +7,6 @@
     "InAppReview",
     "InAppReview.GooglePlay",
     "InAppReview.AppStore",
-    "UnityEditor.UI",
     "UnityEngine.UI",
     "WLog",
     "Fusumity",
@@ -19,6 +18,7 @@
   "overrideReferences": false,
   "precompiledReferences": [],
   "autoReferenced": true,
+  "defineConstraints": ["FULLWEIGHT_MODE"],
   "versionDefines": [],
   "noEngineReferences": false
 }

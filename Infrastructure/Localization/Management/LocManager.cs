@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FULLWEIGHT_MODE
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -8,6 +9,7 @@ using Sapientia;
 
 namespace Localization
 {
+
 	public partial class LocManager : StaticWrapper<LocalizationResolver>
 	{
 		// ReSharper disable once InconsistentNaming
@@ -67,3 +69,4 @@ namespace Localization
 			=> resolver.AddTableAsync(tableRef, token);
 	}
 }
+#endif

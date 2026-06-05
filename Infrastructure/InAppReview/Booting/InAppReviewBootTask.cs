@@ -5,9 +5,9 @@ using Fusumity.Reactive;
 using Sirenix.OdinInspector;
 using InAppReview;
 using Sapientia;
-#if USE_GOOGLE_PLAY
+#if USE_GOOGLE_PLAY && FULLWEIGHT_MODE
 using InAppReview.GooglePlay;
-#elif UNITY_IOS
+#elif UNITY_IOS && FULLWEIGHT_MODE
 using InAppReview.AppStore;
 #endif
 
@@ -25,10 +25,10 @@ namespace Booting.InAppReview
 		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			IInAppReviewStorePlatform platform = null;
-
-#if USE_GOOGLE_PLAY
+			
+#if USE_GOOGLE_PLAY && FULLWEIGHT_MODE
 			platform = new GooglePlayInAppReview();
-#elif UNITY_IOS
+#elif UNITY_IOS && FULLWEIGHT_MODE
 			platform = new AppStoreInAppReview();
 #endif
 			InAppReviewManager.Set(platform);
