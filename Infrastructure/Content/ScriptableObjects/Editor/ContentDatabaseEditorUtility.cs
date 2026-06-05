@@ -11,12 +11,24 @@ using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
 using Sapientia.Pooling;
 using Sirenix.Utilities;
-using UI;
 using UnityEditor;
 using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
+	[InitializeOnLoad]
+	public static class ContentDatabaseCleanupOnStartup
+	{
+		static ContentDatabaseCleanupOnStartup()
+		{
+			EditorApplication.delayCall += () =>
+			{
+				foreach (var database in ContentDatabaseEditorUtility.Databases)
+					ContentDatabaseEditorUtility.RequestCleanup(database);
+			};
+		}
+	}
+
 	public static class ContentDatabaseEditorUtility
 	{
 		private const string ADDRESSABLE_GROUP = "Content Runtime Database Group";
@@ -29,7 +41,7 @@ namespace Content.ScriptableObjects.Editor
 		private static HashSet<ContentDatabaseScriptableObject> _pendingCleanup = new();
 
 		public static IEnumerable<ContentDatabaseScriptableObject> Databases
-			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>().ToList();
+			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
 
 		public static void Create<T>(string name = null, string addressableName = null) where T : ContentDatabaseScriptableObject
 		{
@@ -98,23 +110,19 @@ namespace Content.ScriptableObjects.Editor
 				EditorUtility.SetDirty(database);
 				AssetDatabase.SaveAssetIfDirty(database);
 
-				if (_pendingCleanup.Add(database))
-				{
-					EditorApplication.delayCall += () =>
-					{
-						Cleanup(database);
-						_pendingCleanup.Remove(database);
-					};
-				}
+				RequestCleanup(database);
 			}
 		}
 
-		public static void Cleanup(ContentDatabaseScriptableObject database)
+		public static void RequestCleanup(ContentDatabaseScriptableObject database)
 		{
-			for (int i = database.scriptableObjects.Count - 1; i >= 0; i--)
+			if (_pendingCleanup.Add(database))
 			{
-				if (database.scriptableObjects[i] == null)
-					database.scriptableObjects.RemoveAt(i);
+				EditorApplication.delayCall += () =>
+				{
+					database.Cleanup();
+					_pendingCleanup.Remove(database);
+				};
 			}
 		}
 
@@ -141,9 +149,8 @@ namespace Content.ScriptableObjects.Editor
 
 		public static ContentDatabaseScriptableObject GetDatabase(ContentScriptableObject scriptableObject)
 		{
-			var dbs = ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
 			MiscDatabaseScriptableObject miscDatabase = null;
-			foreach (var database in dbs)
+			foreach (var database in Databases)
 			{
 				if (IsMatch(database, scriptableObject))
 					return database;
@@ -455,7 +462,7 @@ namespace Content.ScriptableObjects.Editor
 						}
 						else
 						{
-							GUIDebug.LogWarning(
+							ContentDebug.LogWarning(
 								$"Constant generation skipped for asset '{scriptableObject.name}' " +
 								$"[{scriptableObject.GetType().FullName}] — namespace mismatch: " +
 								$"actual = '{typeNamespace ?? "<null>"}', " +

@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-using System.Collections.Generic;
 using Content.Editor;
 using Fusumity.Editor.Utility;
 using Sapientia;
@@ -56,6 +55,9 @@ namespace Content.ScriptableObjects
 			this.RecursiveRegenerateAndRefresh(!forceSave);
 			_entry.scriptableObject = this;
 			_entry.SetGuid(in guid);
+
+			useCustomId = false;
+			_entry.SetId(null);
 
 			ContentEditorCache.Refresh(this);
 		}

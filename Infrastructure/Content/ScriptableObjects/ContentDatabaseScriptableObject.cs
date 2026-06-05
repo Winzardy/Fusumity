@@ -82,6 +82,15 @@ namespace Content.ScriptableObjects
 
 		public void Sort() => scriptableObjects.Sort(SortByCreationTime);
 
+		public void Cleanup()
+		{
+			for (int i = scriptableObjects.Count - 1; i >= 0; i--)
+			{
+				if (scriptableObjects[i] == null)
+					scriptableObjects.RemoveAt(i);
+			}
+		}
+
 		private static int SortByCreationTime(ContentScriptableObject x, ContentScriptableObject y)
 			=> x.CreationTime.CompareTo(y.CreationTime);
 	}
