@@ -65,7 +65,7 @@ namespace ZenoTween
 
 		public bool IsLoop { get => repeat == -1; }
 		public bool UseType { get => !(IsLoop && lifetimeByParent); }
-		public bool UseRepeat { get => type != Type.Immediate && repeat > 0; }
+		public bool UseRepeat { get => type != Type.Immediate && repeat != 0; }
 
 		protected object _target;
 
@@ -243,9 +243,9 @@ namespace ZenoTween
 			if (!Mathf.Approximately(speed, 1f))
 				tween.timeScale *= speed;
 
-			if (repeat != 0)
+			if (UseRepeat)
 			{
-				tween.SetAutoKill(repeat > 0);
+				tween.SetAutoKill(false);
 				tween.SetLoops(repeat, repeatType);
 			}
 		}
