@@ -1,11 +1,9 @@
-﻿using AssetManagement;
+﻿using System;
+using System.Collections.Generic;
+using AssetManagement;
 using Cysharp.Threading.Tasks;
 using Sapientia.Collections;
 using Sapientia.Pooling;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using Sapientia.Utility;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,13 +35,14 @@ namespace UI
 		{
 			_disposed = true;
 
-			_single.handle?.Release();
+			ReleaseHandle(_single.image, _single.handle);
+			_single = default;
 
-			if (_imageToHandle.IsNullOrEmpty())
+			if (_imageToHandle == null)
 				return;
 
-			foreach (var entry in _imageToHandle.Values)
-				entry?.Release();
+			foreach (var (image, handle) in _imageToHandle)
+				ReleaseHandle(image, handle);
 
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
 		}
@@ -84,9 +83,7 @@ namespace UI
 				if (handle.SameAsset(iconRef) && TryReuseHandle(image, handle, callback, disableDuringLoad))
 					return;
 
-				if (!disableDuringLoad)
-					handle.RestoreImageState(image);
-				handle.Release();
+				ReleaseHandle(image, handle);
 			}
 
 			handle = new SpriteAssignerHandle(iconRef);
@@ -104,9 +101,7 @@ namespace UI
 					TryReuseHandle(image, _single.handle, callback, disableDuringLoad))
 					return true;
 
-				if (!disableDuringLoad)
-					_single.handle.RestoreImageState(image);
-				_single.handle.Release();
+				ReleaseHandle(image, _single.handle);
 				_single.handle = new SpriteAssignerHandle(spriteRef);
 				StartLoading(image, _single.handle, callback, disableDuringLoad);
 				return true;
@@ -122,12 +117,12 @@ namespace UI
 
 		public void TryCancelOrClear(Image image)
 		{
-			if(image == null)
+			if (image == null)
 				return;
 
 			if (_single.image == image)
 			{
-				_single.handle?.Release();
+				ReleaseHandle(image, _single.handle);
 				_single = default;
 				return;
 			}
@@ -138,7 +133,7 @@ namespace UI
 			if (!_imageToHandle.TryGetValue(image, out var handle))
 				return;
 
-			handle?.Release();
+			ReleaseHandle(image, handle);
 			_imageToHandle.Remove(image);
 		}
 
@@ -169,6 +164,19 @@ namespace UI
 			LoadAndPlaceAsync(image, handle).Forget();
 		}
 
+		private void ReleaseHandle(Image image, SpriteAssignerHandle handle)
+		{
+			if (handle == null)
+				return;
+
+			handle.RestoreImageState(image);
+
+			if (handle.IsLoading)
+				_spinner?.Hide(handle);
+
+			handle.Release();
+		}
+
 		private static void ApplyLoadingState(Image image, SpriteAssignerHandle handle, bool disableDuringLoad)
 		{
 			if (!disableDuringLoad)
@@ -177,8 +185,7 @@ namespace UI
 				return;
 			}
 
-			image.enabled = false;
-			handle.MarkImageDisabled();
+			handle.DisableImage(image);
 		}
 
 		private bool IsCurrentHandle(Image image, SpriteAssignerHandle handle)
@@ -194,23 +201,22 @@ namespace UI
 		private async UniTaskVoid LoadAndPlaceAsync(Image image, SpriteAssignerHandle handle)
 		{
 			var spriteRef = handle.spriteRef;
-			handle.cts = new CancellationTokenSource();
-			var cts = handle.cts;
-			var token = cts.Token;
 			var assetLoaded = false;
 
-			OnStartLoading();
+			handle.state = SpriteAssignerHandle.State.Loading;
+			_spinner?.Show(handle);
 
 			try
 			{
-				var sprite = await spriteRef.LoadAsync(token);
+				// Не отменяем загрузку: один Addressables handle может ожидаться несколькими UI
+				var sprite = await spriteRef.LoadAsync();
 				assetLoaded = true;
 
-				if (token.IsCancellationRequested || _disposed || image == null || !IsCurrentHandle(image, handle))
+				if (_disposed || image == null || !IsCurrentHandle(image, handle))
 					return;
 
 				image.sprite = sprite;
-				handle.MarkLoaded(sprite);
+				handle.SetSprite(sprite);
 				assetLoaded = false;
 				handle.RestoreImageState(image);
 				handle.InvokeCallback();
@@ -218,7 +224,7 @@ namespace UI
 			catch (OperationCanceledException)
 			{
 			}
-			catch (Exception) when (token.IsCancellationRequested || _disposed || image == null || !IsCurrentHandle(image, handle))
+			catch (Exception) when (_disposed || image == null || !IsCurrentHandle(image, handle))
 			{
 			}
 			finally
@@ -226,51 +232,63 @@ namespace UI
 				if (assetLoaded)
 					spriteRef.Release();
 
-				OnEndLoading();
-				handle.ReleaseLoadingCts(cts);
-			}
+				if (handle.state == SpriteAssignerHandle.State.Loading && !_disposed && image != null && IsCurrentHandle(image, handle))
+					handle.RestoreImageState(image);
 
-			void OnStartLoading() => _spinner?.Show(cts);
-			void OnEndLoading() => _spinner?.Hide(cts);
+				_spinner?.Hide(handle);
+				if (handle.state == SpriteAssignerHandle.State.Loading)
+					handle.state = SpriteAssignerHandle.State.Idle;
+			}
 		}
 	}
 
-	public sealed class SpriteAssignerHandle
+	internal sealed class SpriteAssignerHandle
 	{
+		internal enum State
+		{
+			Idle,
+			Loading,
+			Loaded
+		}
+
 		public IAssetReference<Sprite> spriteRef;
-		public CancellationTokenSource cts;
+		public State state;
 
 		private Action _callback;
-		private bool _loaded;
 		private Sprite _sprite;
-		private bool _disabledImage;
+		private bool _restoreImageEnable;
 
-		public bool IsLoaded { get => _loaded; }
-		public bool IsLoading { get => cts != null && !cts.IsCancellationRequested; }
+		public bool IsLoaded { get => state == State.Loaded; }
+		public bool IsLoading { get => state == State.Loading; }
 		public Sprite Sprite { get => _sprite; }
 
 		public SpriteAssignerHandle(IAssetReference<Sprite> spriteRef)
 		{
 			this.spriteRef = spriteRef;
-			cts = null;
 		}
 
 		public bool SameAsset(IAssetReference<Sprite> target) => spriteRef.SameAsset(target);
 		public void AddCallback(Action callback) => _callback += callback;
-		public void MarkImageDisabled() => _disabledImage = true;
-		public void MarkLoaded(Sprite sprite)
+
+		public void SetSprite(Sprite sprite)
 		{
 			_sprite = sprite;
-			_loaded = true;
+			state = State.Loaded;
+		}
+
+		public void DisableImage(Image image)
+		{
+			image.enabled = false;
+			_restoreImageEnable = true;
 		}
 
 		public void RestoreImageState(Image image)
 		{
-			if (!_disabledImage || image == null)
+			if (!_restoreImageEnable || image == null)
 				return;
 
 			image.enabled = true;
-			_disabledImage = false;
+			_restoreImageEnable = false;
 		}
 
 		public void InvokeCallback()
@@ -280,24 +298,15 @@ namespace UI
 			callback?.Invoke();
 		}
 
-		public void ReleaseLoadingCts(CancellationTokenSource loadingCts)
-		{
-			if (!ReferenceEquals(cts, loadingCts))
-				return;
-
-			AsyncUtility.Release(ref cts);
-		}
-
 		public void Release()
 		{
-			var releaseAsset = _loaded;
+			var releaseAsset = IsLoaded;
+
+			state = State.Idle;
 
 			_callback = null;
-			_loaded = false;
 			_sprite = null;
-			_disabledImage = false;
-
-			AsyncUtility.TriggerAndSetNull(ref cts);
+			_restoreImageEnable = false;
 
 			if (releaseAsset)
 				spriteRef?.Release();
