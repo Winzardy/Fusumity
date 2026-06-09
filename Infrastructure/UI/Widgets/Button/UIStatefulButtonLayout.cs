@@ -1,6 +1,5 @@
 ﻿using System;
 using ActionBusSystem;
-using Content;
 using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Fusumity.MVVM.UI;
@@ -30,8 +29,11 @@ namespace UI
 		[OptionalSuffixLabel]
 		public StateSwitcher<string> switcher;
 
+		[CanBeNull]
 		public UIAdBannerLayout adBanner;
+		[CanBeNull]
 		public UILabeledIconLayout labeledIcon;
+		[CanBeNull]
 		public UIAttentionIndicatorLayout indicator;
 
 		[Space]
