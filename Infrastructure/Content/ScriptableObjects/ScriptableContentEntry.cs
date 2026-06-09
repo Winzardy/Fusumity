@@ -10,7 +10,6 @@ namespace Content.ScriptableObjects
 		public string id;
 		public ContentScriptableObject scriptableObject;
 
-		public override bool IsValid() => Guid != SerializableGuid.Empty;
 		public ContentScriptableObject ScriptableObject => scriptableObject;
 		public override object Context => scriptableObject;
 
@@ -22,6 +21,8 @@ namespace Content.ScriptableObjects
 		public ScriptableContentEntry(in T value, in SerializableGuid guid) : base(in value, in guid)
 		{
 		}
+
+		public override bool IsValid() => Guid != SerializableGuid.Empty;
 
 		public override SerializableGuid RegenerateGuid()
 		{

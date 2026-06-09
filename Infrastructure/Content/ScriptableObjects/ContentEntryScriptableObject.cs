@@ -3,6 +3,7 @@ using Sapientia;
 using Sapientia.Extensions;
 using System;
 using System.Text.RegularExpressions;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Content.ScriptableObjects
@@ -18,7 +19,7 @@ namespace Content.ScriptableObjects
 		[SerializeField]
 		private ScriptableContentEntry<T> _entry;
 
-		protected ref readonly T Value => ref _entry.Value;
+		protected ref readonly T Value => ref _entry.BaseValue;
 
 		public IScriptableContentEntry<T> ScriptableContentEntry => _entry;
 
@@ -114,7 +115,31 @@ namespace Content.ScriptableObjects
 		{
 		}
 
+		#region Redirect
 
+		[ShowIf(nameof(ShowRedirectEditor))]
+		public ContentReference<T> Redirect
+		{
+			get => _entry.Redirect;
+			set => _entry.Redirect = value;
+		}
+
+		// Такой хак чтобы рисовать поле внизу если он пустой...
+		[ShowIf(nameof(ShowEmptyRedirectEditor))]
+		public ContentReference<T> EmptyRedirect
+		{
+			get => _entry.Redirect;
+			set => _entry.Redirect = value;
+		}
+
+		protected virtual bool CanUseRedirect { get => false; }
+
+		protected internal override bool UseRedirect { get => CanUseRedirect && !Redirect.IsEmpty(); }
+
+		private bool ShowRedirectEditor { get => CanUseRedirect && !Redirect.IsEmpty(); }
+		private bool ShowEmptyRedirectEditor { get => CanUseRedirect && Redirect.IsEmpty(); }
+
+		#endregion
 
 		public static implicit operator ContentReference<T>(ContentEntryScriptableObject<T> scriptableObject) =>
 			scriptableObject ? new(in scriptableObject._entry.Guid) : new(SerializableGuid.Empty);

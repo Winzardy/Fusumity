@@ -100,12 +100,35 @@ namespace Content.ScriptableObjects.Editor
 				case IContentEntrySource.ENTRY_FIELD_NAME:
 					attributes.Add(new HideLabelAttribute());
 					attributes.Add(new PropertySpaceAttribute(4));
+
+					attributes.Add(new DisableIfAttribute(nameof(ContentScriptableObject.UseRedirect)));
 					break;
 
 				case nameof(ContentScriptableObject.techDescription):
 					attributes.Add(new ContentTechDescriptionEditModeAttribute());
 					attributes.Add(new TextAreaAttribute(1, 3));
 					break;
+
+				case ContentEntryScriptableObject.REDIRECT_FIELD_NAME:
+					attributes.Add(new PropertyOrderAttribute(-1));
+
+					attributes.Add(new InfoBoxAttribute("Используются данные из другого конфига", InfoMessageType.Info, nameof(ContentScriptableObject.UseRedirect)));
+
+					AddRedirectAttributes();
+					break;
+
+				case ContentEntryScriptableObject.EMPTY_REDIRECT_FIELD_NAME:
+					attributes.Add(new LabelTextAttribute(ContentEntryScriptableObject.REDIRECT_FIELD_NAME));
+					AddRedirectAttributes();
+					break;
+
+					void AddRedirectAttributes()
+					{
+						attributes.Add(new ShowInInspectorAttribute());
+						attributes.Add(new PropertySpaceAttribute(4));
+						attributes.Add(new CanBeEmptyAttribute());
+						attributes.Add(new TooltipAttribute("Использует данные из указанного конфига вместо текущего"));
+					}
 			}
 		}
 

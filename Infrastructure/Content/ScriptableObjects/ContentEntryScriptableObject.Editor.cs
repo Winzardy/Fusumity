@@ -88,7 +88,7 @@ namespace Content.ScriptableObjects
 		public void SetId(string id)
 		{
 			useCustomId = !id.IsNullOrEmpty();
-			_entry.id   = id;
+			_entry.id = id;
 		}
 	}
 
@@ -108,6 +108,16 @@ namespace Content.ScriptableObjects
 		/// <see cref="ContentEntryScriptableObject{T}._guid"/>
 		/// </summary>
 		public const string GUID_FIELD_NAME = "_guid";
+
+		/// <summary>
+		/// <see cref="ContentEntryScriptableObject{T}.Redirect"/>
+		/// </summary>
+		public const string REDIRECT_FIELD_NAME = "Redirect";
+
+		/// <summary>
+		/// <see cref="ContentEntryScriptableObject{T}.EmptyRedirect"/>
+		/// </summary>
+		public const string EMPTY_REDIRECT_FIELD_NAME = "EmptyRedirect";
 
 		[ContextMenu("Content Entry/Regenerate All Guids (Recursive)", false, priority: 1100)]
 		public void RecursiveRegenerateGuidAndRefresh()

@@ -11,13 +11,13 @@ namespace Audio
 			if (request.id.IsNullOrEmpty())
 				return default;
 
-			return ToPlayArgs(request, disableSpatialWarning).Play();
+			return ToDefinition(request, disableSpatialWarning).Play();
 		}
 
 		public static AudioPlayback Play(this in AudioEventRequest request, Transform transform,
 			AudioPlaybackPositionMode mode = AudioPlaybackPositionMode.FollowTarget)
 		{
-			var args = request.ToPlayArgs(false);
+			var args = request.ToDefinition(false);
 			switch (mode)
 			{
 				case AudioPlaybackPositionMode.UseLastPosition:
@@ -33,7 +33,7 @@ namespace Audio
 
 		public static AudioPlayback Play(this in AudioEventRequest request, Vector3? position)
 		{
-			var args = request.ToPlayArgs(false);
+			var args = request.ToDefinition(false);
 			args.position = position;
 			return args.Play();
 		}
@@ -58,7 +58,7 @@ namespace Audio
 
 		public static void Release(this in AudioEventRequest request) => AudioManager.Release(request.id);
 
-		private static AudioEventDefinition ToPlayArgs(this in AudioEventRequest request, bool disableSpatialWarning)
+		private static AudioEventDefinition ToDefinition(this in AudioEventRequest request, bool disableSpatialWarning)
 		{
 			return new AudioEventDefinition(request.id)
 			{

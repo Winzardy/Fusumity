@@ -124,7 +124,7 @@ namespace Audio
 				{
 					if (!ContentManager.Contains<AudioEventConfig>(definition.id))
 					{
-						errorCode = PlayErrorCode.NotEventEntry;
+						errorCode = PlayErrorCode.NotFound;
 						return false;
 					}
 
@@ -406,7 +406,7 @@ namespace Audio
 	{
 		None,
 		NotFoundMixerGroup,
-		NotEventEntry,
+		NotFound,
 		EmptyPlaylist
 	}
 }
