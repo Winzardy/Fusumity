@@ -2,9 +2,14 @@
 using Sapientia;
 using Sapientia.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Sirenix.OdinInspector;
 using UnityEngine;
+#if UNITY_EDITOR
+using Content.Editor;
+using Sapientia.Pooling;
+#endif
 
 namespace Content.ScriptableObjects
 {
@@ -81,6 +86,7 @@ namespace Content.ScriptableObjects
 
 		private bool IsExternallyIdentifiable => typeof(IExternallyIdentifiable).IsAssignableFrom(typeof(T));
 
+
 		bool IContentEntrySource.Validate()
 		{
 #if UNITY_EDITOR
@@ -96,10 +102,23 @@ namespace Content.ScriptableObjects
 				return false;
 			}
 
-			if (Value is IValidatable validatable && !validatable.Validate(out var message))
+			if (!UseRedirect)
 			{
-				ContentDebug.LogError($"Value is not valid! (error: {message})", this);
-				return false;
+				if (Value is IValidatable validatable && !validatable.Validate(out var message))
+				{
+					ContentDebug.LogError($"Value is not valid! (error: {message})", this);
+					return false;
+				}
+			}
+			else
+			{
+#if UNITY_EDITOR
+				if (HasRecursiveRedirect(out var message))
+				{
+					ContentDebug.LogError(message, this);
+					return false;
+				}
+#endif
 			}
 
 			if (this is IValidatable soValidatable && !soValidatable.Validate(out var soMessage))
@@ -117,20 +136,11 @@ namespace Content.ScriptableObjects
 
 		#region Redirect
 
-		[ShowIf(nameof(ShowRedirectEditor))]
-		public ContentReference<T> Redirect
-		{
-			get => _entry.Redirect;
-			set => _entry.Redirect = value;
-		}
+		[ShowIf(nameof(ShowRedirectEditor))] public ContentReference<T> Redirect { get => _entry.Redirect; set => _entry.Redirect = value; }
 
 		// Такой хак чтобы рисовать поле внизу если он пустой...
 		[ShowIf(nameof(ShowEmptyRedirectEditor))]
-		public ContentReference<T> EmptyRedirect
-		{
-			get => _entry.Redirect;
-			set => _entry.Redirect = value;
-		}
+		public ContentReference<T> EmptyRedirect { get => _entry.Redirect; set => _entry.Redirect = value; }
 
 		protected virtual bool CanUseRedirect { get => false; }
 
@@ -138,6 +148,50 @@ namespace Content.ScriptableObjects
 
 		private bool ShowRedirectEditor { get => CanUseRedirect && !Redirect.IsEmpty(); }
 		private bool ShowEmptyRedirectEditor { get => CanUseRedirect && Redirect.IsEmpty(); }
+
+#if UNITY_EDITOR
+		private bool HasRecursiveRedirect(out string message)
+		{
+			using (HashSetPool<SerializableGuid>.Get(out var visited))
+			{
+				var current = this;
+				visited.Add(Guid);
+
+				while (current.UseRedirect)
+				{
+					var redirect = current.Redirect;
+					if (!visited.Add(redirect.guid))
+					{
+						message = $"Recursive redirect detected! (guid: {redirect.guid})";
+						return true;
+					}
+
+					if (!TryGetRedirectScriptableObject(in redirect, out current))
+						break;
+				}
+
+				message = null;
+				return false;
+			}
+		}
+
+		private static bool TryGetRedirectScriptableObject(in ContentReference<T> redirect,
+			out ContentEntryScriptableObject<T> scriptableObject)
+		{
+			foreach (var asset in ContentEditorCache.GetAssets<ContentEntryScriptableObject>())
+			{
+				if (asset is not ContentEntryScriptableObject<T> contentEntryScriptableObject ||
+					contentEntryScriptableObject.Guid != redirect.guid)
+					continue;
+
+				scriptableObject = contentEntryScriptableObject;
+				return true;
+			}
+
+			scriptableObject = null;
+			return false;
+		}
+#endif
 
 		#endregion
 
