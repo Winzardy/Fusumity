@@ -20,13 +20,13 @@ namespace Booting.Analytics
 		public override int Priority => HIGH_PRIORITY - 120;
 
 		public bool @await;
- 		[Tooltip("Используются настройки отсюда, т.к. контент система еще не готова")]
-		public AnalyticsSettings settings;
+
 		private BootTaskAnalyticsAggregator _aggregator;
 
 		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{
 			var isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
+			var settings = ContentManager.Get<AnalyticsSettings>();
 			var management = new AnalyticsManagement(settings, isValidationEnabled);
 
 			if (@await)
