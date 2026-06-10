@@ -1,5 +1,6 @@
 ﻿using System;
 using Audio;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -17,12 +18,19 @@ namespace ZenoTween.Participant.Callbacks.Audio
 		public AudioEventRequest audioEvent;
 
 		[Tooltip("Для позиционирования звука!")]
+		[LabelText("Position")]
+		[CanBeNull]
 		public Transform transform;
 
 		protected override void OnCallback()
 		{
 			if (!immediate)
-				audioEvent.Play(transform);
+			{
+				if (transform == null)
+					audioEvent.Play();
+				else
+					audioEvent.Play(transform);
+			}
 		}
 	}
 }
