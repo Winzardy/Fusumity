@@ -11,11 +11,13 @@ namespace Game.UI
 		[NotNull]
 		public Image icon;
 		[Indent, LabelText("Button")]
+		[CanBeNull]
 		public Button iconButton;
 
 		[NotNull]
 		public TMP_Text label;
 		[Indent, LabelText("Button")]
+		[CanBeNull]
 		public Button labelButton;
 		[Indent, LabelText("Style Switcher")]
 		public StateSwitcher<string> labelStyleSwitcher;

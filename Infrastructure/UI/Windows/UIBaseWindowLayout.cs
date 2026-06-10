@@ -21,6 +21,7 @@ namespace UI
 		[BoxGroup("Close", showLabel: false)]
 		[CanBeNull]
 		public Button close;
+
 		[BoxGroup("Close", showLabel: false)]
 		[ShowIf(nameof(close), null)]
 		[ConstDropdown(typeof(ActionBusElementType))] // consider it a hack, since close is a default unity button.

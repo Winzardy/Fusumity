@@ -2,6 +2,7 @@ using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace UI
@@ -52,15 +53,19 @@ namespace UI
 			UpdatePadding();
 		}
 
+		[Button("Force Update")]
 		private void UpdatePadding()
 		{
+			if(!enabled)
+				return;
+
 			if (viewport == null || layoutGroup == null)
 				return;
 
-			var contentWidth = CalculateContentSize();
-			var viewportWidth = IsHorizontal ? viewport.rect.width : viewport.rect.height;
+			var contentSize = CalculateContentSize();
+			var viewportSize = IsHorizontal ? viewport.rect.width : viewport.rect.height;
 
-			var offset = Mathf.Max(0f, (viewportWidth - contentWidth) * 0.5f * multiplier);
+			var offset = Mathf.Max(0f, (viewportSize - contentSize) * 0.5f * multiplier);
 
 			var padding = layoutGroup.padding;
 
@@ -91,9 +96,9 @@ namespace UI
 					continue;
 
 				if (IsHorizontal)
-					size += LayoutUtility.GetPreferredWidth(child);
+					size += CalculateChildSize(child, 0);
 				else
-					size += LayoutUtility.GetPreferredHeight(child);
+					size += CalculateChildSize(child, 1);
 
 				childCount++;
 			}
@@ -104,15 +109,35 @@ namespace UI
 			return size;
 		}
 
+		private static float CalculateChildSize(RectTransform child, int axis)
+		{
+			// LayoutUtility reads cached values from LayoutGroup, so nested groups must be resolved first.
+			if (child.TryGetComponent(typeof(ILayoutGroup), out _))
+				LayoutRebuilder.ForceRebuildLayoutImmediate(child);
+
+			return LayoutUtility.GetPreferredSize(child, axis);
+		}
+
 		private static bool IsIgnore(RectTransform child)
 		{
 			if (child == null || !child.gameObject.activeInHierarchy)
 				return true;
 
-			if (!child.TryGetComponent(out ILayoutIgnorer ignorer))
-				return true;
+			using (ListPool<Component>.Get(out var ignorers))
+			{
+				child.GetComponents(typeof(ILayoutIgnorer), ignorers);
 
-			return ignorer.ignoreLayout;
+				if (ignorers.Count == 0)
+					return false;
+
+				for (var i = 0; i < ignorers.Count; i++)
+				{
+					if (ignorers[i] is ILayoutIgnorer ignorer && !ignorer.ignoreLayout)
+						return false;
+				}
+			}
+
+			return true;
 		}
 
 		private void OnMultiplierChanged()

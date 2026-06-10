@@ -77,7 +77,10 @@ namespace UI
 				if (instantTween == null)
 					return;
 
+				var origin = AnimationTweenCallback.immediate;
+				AnimationTweenCallback.immediate = true;
 				instantTween.KillWithCallbacks();
+				AnimationTweenCallback.immediate = origin;
 
 				return;
 			}

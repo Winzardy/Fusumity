@@ -70,6 +70,17 @@ namespace Content.ScriptableObjects
 		public bool DisableTechDescriptionValidate() => _useTechDescription;
 
 		private bool ShowTechDescriptionEditor => !techDescription.IsNullOrEmpty() || _useTechDescription;
+
+		[ContextMenu("Validate")]
+		private void ValidateEditor()
+		{
+			if (this is IContentEntrySource source)
+			{
+				var result = source.Validate();
+				if (result)
+					ContentDebug.Log("Validation succeeded", this);
+			}
+		}
 	}
 }
 #endif
