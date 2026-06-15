@@ -10,12 +10,14 @@ namespace ZenoTween.Participant.Tweens
 	public class AnimationSourceCascadeAnimationTween : CascadeAnimationTween
 	{
 		//TODO: убрать duration из настроек так как он игнорируется...
-		protected override Tween CreateByChild(Transform childTransform, float _)
+		protected override Tween CreateByChild(Transform childTransform, float durationPerChild)
 		{
 			if (!childTransform.TryGetComponent(out AnimationSequenceSource childSource))
 				return null;
 
-			return childSource.sequence.ToTween(childSource);
+			var owner = _target ?? childSource;
+			var tween = childSource.sequence.ToTween(owner, duration / durationPerChild);
+			return BindTweenToOwner(tween, owner);
 		}
 	}
 }

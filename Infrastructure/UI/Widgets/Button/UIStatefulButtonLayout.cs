@@ -1,6 +1,5 @@
 ﻿using System;
 using ActionBusSystem;
-using Content;
 using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Fusumity.MVVM.UI;
@@ -30,16 +29,19 @@ namespace UI
 		[OptionalSuffixLabel]
 		public StateSwitcher<string> switcher;
 
+		[CanBeNull]
 		public UIAdBannerLayout adBanner;
+		[CanBeNull]
 		public UILabeledIconLayout labeledIcon;
+		[CanBeNull]
 		public UIAttentionIndicatorLayout indicator;
 
 		[Space]
-		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
+		[ConstDropdown(typeof(ActionBusElementType))]
 		[CanBeNull]
 		public string uId;
 
-		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
+		[ConstDropdown(typeof(ActionBusGroupType))]
 		[CanBeNull]
 		public string groupId;
 	}
@@ -51,12 +53,12 @@ namespace UI
 		public Button button;
 
 		[ShowIf(nameof(button), null)]
-		[ContentReference(typeof(ActionBusElementConfig), dropdown: true)]
+		[ConstDropdown(typeof(ActionBusElementType))]
 		[CanBeNull]
 		public string uId;
 
 		[ShowIf(nameof(button), null)]
-		[ContentReference(typeof(ActionBusGroupConfig), dropdown: true)]
+		[ConstDropdown(typeof(ActionBusGroupType))]
 		[CanBeNull]
 		public string groupId;
 	}

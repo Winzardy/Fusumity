@@ -29,6 +29,8 @@ namespace Content.ScriptableObjects
 		/// </summary>
 		public virtual bool Enabled { get => true; }
 
+		protected internal virtual bool UseRedirect { get => false; }
+
 		public virtual IContentEntry Import(bool clone) => null;
 
 		public void SyncedUpdate() => OnUpdated();

@@ -1,4 +1,5 @@
-﻿using Sapientia.Extensions;
+﻿using AssetManagement.AddressableAssets.Editor;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
@@ -24,6 +25,12 @@ namespace Content.ScriptableObjects.Editor
 			base.OnHeaderGUI();
 
 			DrawGenerateConstantButton();
+
+			if (target.IsAddressable())
+			{
+				target.RemoveFromAddressables();
+				ContentDebug.LogWarning($"'{target.name}' cannot be Addressable and was automatically removed");
+			}
 		}
 
 		private void DrawGenerateConstantButton()

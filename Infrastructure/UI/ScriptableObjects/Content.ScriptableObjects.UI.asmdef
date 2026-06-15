@@ -10,7 +10,8 @@
         "Content.ScriptableObjects.Editor",
         "UI.Screens",
         "UI.Tabs",
-        "UI.Popovers"
+        "UI.Popovers",
+        "Sapientia"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

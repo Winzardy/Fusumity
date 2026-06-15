@@ -8,11 +8,22 @@ using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEngine;
+using ShowIfAttribute = Sirenix.OdinInspector.ShowIfAttribute;
 
 namespace Content.Editor
 {
 	public class DisableContentEntryDrawerAttribute : Attribute
 	{
+	}
+
+	internal class ContentEntryGroupStyleAttribute : Attribute
+	{
+		public InspectorProperty InspectorProperty { get; }
+
+		public ContentEntryGroupStyleAttribute(InspectorProperty property)
+		{
+			InspectorProperty = property;
+		}
 	}
 
 	public class ContentEntryAttributeProcessor : OdinAttributeProcessor<IContentEntry>
@@ -43,7 +54,6 @@ namespace Content.Editor
 			switch (member.Name)
 			{
 				case ContentConstants.VALUE_FIELD_NAME:
-
 					//TODO: Добавить свой AssetSelector...
 					if (typeof(Component).IsAssignableFrom(contentEntry.ValueType))
 						attributes.Add(new FastAssetSelectorAttribute());
@@ -79,6 +89,7 @@ namespace Content.Editor
 					break;
 
 				case ContentConstants.GUID_FIELD_NAME:
+				case ContentConstants.REDIRECT_FIELD_NAME:
 					attributes.Add(new HideInInspector());
 
 					break;
@@ -121,9 +132,6 @@ namespace Content.Editor
 				property.Tree.UnitySerializedObject.targetObject);
 		}
 
-
-
-
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
@@ -165,16 +173,6 @@ namespace Content.Editor
 			}
 
 			return tooltip;
-		}
-	}
-
-	internal class ContentEntryGroupStyleAttribute : Attribute
-	{
-		public InspectorProperty InspectorProperty { get; }
-
-		public ContentEntryGroupStyleAttribute(InspectorProperty property)
-		{
-			InspectorProperty = property;
 		}
 	}
 }

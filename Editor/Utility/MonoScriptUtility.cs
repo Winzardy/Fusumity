@@ -10,6 +10,10 @@ namespace Fusumity.Editor.Utility
 {
 	public static class MonoScriptUtility
 	{
+		private static MonoScript[] _cache;
+
+		private static MonoScript[] scripts => _cache ??= CollectByPriority();
+
 		private static Dictionary<string, MonoScript> _pathToScript;
 		private static Dictionary<Type, MonoScript> _typeToScript;
 		private static Dictionary<string, HashSet<Type>> _scriptToTypes;
@@ -20,11 +24,10 @@ namespace Fusumity.Editor.Utility
 			if (typeName.IsNullOrEmpty())
 				return null;
 
-			_typeNameToScript ??= new Dictionary<string, MonoScript>(16);
+			_typeNameToScript ??= new Dictionary<string, MonoScript>(8);
 			if (_typeNameToScript.TryGetValue(typeName, out var cachedScript))
 				return cachedScript;
 
-			var scripts = AssetDatabaseUtility.GetAssets<MonoScript>();
 			foreach (var script in scripts)
 			{
 				if (script.name == typeName)
@@ -56,9 +59,7 @@ namespace Fusumity.Editor.Utility
 			var scriptType = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
 			var scriptTypeName = scriptType.GetScriptTypeName();
 
-			_pathToScript ??= AssetDatabaseUtility.GetAssets<MonoScript>()
-			   .ToDictionary(AssetDatabase.GetAssetPath, x => x);
-
+			_pathToScript ??= scripts.ToDictionary(AssetDatabase.GetAssetPath, x => x);
 			_typeToScript ??= new Dictionary<Type, MonoScript>(16);
 			if (_typeToScript.TryGetValue(type, out var cachedScript))
 				return cachedScript;
@@ -120,6 +121,22 @@ namespace Fusumity.Editor.Utility
 
 			if (scriptType != type)
 				_scriptToTypes[scriptPath].Add(scriptType);
+		}
+
+		private static MonoScript[] CollectByPriority()
+		{
+			var assets = AssetDatabaseUtility.GetAssets<MonoScript>();
+
+			Array.Sort(assets, static (x, y) =>
+			{
+				var xHasDot = x.name.Contains('.');
+				var yHasDot = y.name.Contains('.');
+				if (xHasDot == yHasDot)
+					return string.CompareOrdinal(x.name, y.name);
+				return xHasDot ? 1 : -1;
+			});
+
+			return assets;
 		}
 
 		private static string GetScriptTypeName(this Type type)
@@ -189,6 +206,8 @@ namespace Fusumity.Editor.Utility
 
 		public static void ClearCache()
 		{
+			_cache = null;
+
 			_pathToScript?.Clear();
 			_typeToScript?.Clear();
 			_typeNameToScript?.Clear();

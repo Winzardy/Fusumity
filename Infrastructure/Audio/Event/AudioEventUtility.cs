@@ -13,6 +13,14 @@ namespace Audio
 			if (definition.id.IsNullOrEmpty())
 				return null;
 
+#if UNITY_EDITOR
+			if (!UnityEngine.Application.isPlaying)
+			{
+				Content.ContentManager.Get<AudioEventConfig>(definition.id)
+					.PlayEditor();
+				return null;
+			}
+#endif
 			return AudioManager.Play(ref definition);
 		}
 

@@ -48,7 +48,6 @@ namespace Content.ScriptableObjects.Editor
 					var asset = (ContentScriptableObject) scriptableObject;
 					if (!scriptableObject.enabled)
 					{
-						GUI.enabled = true;
 						if (FusumityEditorGUILayout.MessageBoxButton(
 							"Данный контент помечен как <u><b>неиспользуемый</b></u> и будет пропущен при сборке и валидации",
 							"Enable",
@@ -56,9 +55,8 @@ namespace Content.ScriptableObjects.Editor
 						{
 							scriptableObject.enabled = true;
 							ContentDatabaseEditorUtility.AddToDatabase(asset);
+							EditorUtility.SetDirty(asset);
 						}
-
-						GUI.enabled = originEnabled;
 					}
 
 					if (scriptableObject.enabled && IsDebug())
@@ -124,20 +122,16 @@ namespace Content.ScriptableObjects.Editor
 					return scriptableObject.enabled;
 
 				var toggleRect = GUILayoutUtility.GetLastRect();
-				toggleRect   =  toggleRect.AlignLeft(20);
+				toggleRect = toggleRect.AlignLeft(20);
 				toggleRect.x -= 15.5f;
 
 				var prev = scriptableObject.enabled;
 
-				var originEnabled = GUI.enabled;
-				GUI.enabled = true;
-				{
-					scriptableObject.enabled = GUI.Toggle(
-						toggleRect,
-						scriptableObject.enabled,
-						new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
-				}
-				GUI.enabled = originEnabled;
+				scriptableObject.enabled = GUI.Toggle(
+					toggleRect,
+					scriptableObject.enabled,
+					new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
+
 				if (prev != scriptableObject.enabled)
 				{
 					var asset = (ContentScriptableObject) scriptableObject;
@@ -145,6 +139,7 @@ namespace Content.ScriptableObjects.Editor
 						ContentDatabaseEditorUtility.AddToDatabase(asset);
 					else
 						ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+					EditorUtility.SetDirty(asset);
 				}
 
 				return scriptableObject.enabled;
@@ -167,7 +162,7 @@ namespace Content.ScriptableObjects.Editor
 
 			_richButtonStyle ??= new GUIStyle(GUI.skin.button)
 			{
-				richText  = true,
+				richText = true,
 				alignment = TextAnchor.MiddleCenter
 			};
 
@@ -222,7 +217,7 @@ namespace Content.ScriptableObjects.Editor
 
 		static ContentEntryMonoScriptVisibilityMenu()
 		{
-			_enable                     =  EditorPrefs.GetBool(PATH, false);
+			_enable = EditorPrefs.GetBool(PATH, false);
 			EditorApplication.delayCall += () => { Toggle(_enable); };
 		}
 

@@ -28,7 +28,7 @@ namespace UI
 		protected override void OnEnable()
 		{
 			base.OnEnable();
-
+			CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
 			UpdateShadows();
 			scrollRect.onValueChanged.AddListener(OnValueChanged);
 		}
@@ -36,6 +36,7 @@ namespace UI
 		protected override void OnDisable()
 		{
 			base.OnDisable();
+			CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
 			scrollRect.onValueChanged.RemoveListener(OnValueChanged);
 		}
 

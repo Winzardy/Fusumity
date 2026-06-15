@@ -6,6 +6,9 @@ namespace Fusumity.Utility
 {
 	public static class RichTextUtility
 	{
+		private static readonly bool _useColorText = Application.isEditor && !IsBatchMode();
+		private static bool IsBatchMode()  => Array.IndexOf(Environment.GetCommandLineArgs(), "-batchmode") >= 0;
+
 		public static bool IsRichText(this string text) => text.IndexOf('<') >= 0;
 
 		public static string InsertByLink(this string text, string linkId, string value)
@@ -26,7 +29,7 @@ namespace Fusumity.Utility
 		public static string ColorTextInEditorOnly(this string text, Color color)
 		{
 #if UNITY_EDITOR
-			return ColorText(text, color, Application.isEditor || !Application.isBatchMode);
+			return ColorText(text, color, _useColorText);
 #endif
 			return text;
 		}

@@ -49,6 +49,7 @@ namespace ZenoTween
 
 			var sequence = DOTween.Sequence();
 			sequence.timeScale = speed;
+			BindToOwner(sequence, target);
 			participants.Participate(ref sequence, target);
 			return sequence;
 		}
@@ -58,11 +59,29 @@ namespace ZenoTween
 			if (participants.IsNullOrEmpty())
 				return;
 
-			if (target != null)
-				sequence.SetTarget(target);
+			BindToOwner(sequence, target);
 
 			foreach (var participant in participants)
-				participant.Participate(ref sequence);
+				participant?.Participate(ref sequence, target);
+		}
+
+		private static void BindToOwner(Sequence sequence, object owner)
+		{
+			if (sequence == null || owner == null)
+				return;
+
+			sequence.SetTarget(owner);
+			sequence.SetId(owner);
+
+			var link = owner switch
+			{
+				GameObject gameObject => gameObject,
+				Component component => component.gameObject,
+				_ => null
+			};
+
+			if (link != null)
+				sequence.SetLink(link, LinkBehaviour.KillOnDestroy);
 		}
 	}
 }

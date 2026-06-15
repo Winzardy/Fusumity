@@ -4,7 +4,6 @@ using Fusumity.Utility;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using ZenoTween;
 using ZenoTween.Participant.Callbacks;
@@ -15,7 +14,7 @@ namespace UI
 	public abstract class TweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
 		[NonSerialized]
-		private readonly Dictionary<TState, Tween> _cached = new();
+		private Tween _tween;
 
 		[SerializeField, HideLabel, FoldoutGroup("Default State")]
 		private AnimationSequence _default;
@@ -26,13 +25,13 @@ namespace UI
 
 		protected override bool UseEquals { get => true; }
 
-		private void Awake() => Clear();
-
-		private void OnDestroy() => Clear();
+		private void Awake() => ClearTweens();
+		private void OnDestroy() => ClearTweens();
 
 		protected override void OnStateSwitched(TState state)
 		{
 			Tween tween;
+			AnimationSequence animationSequence;
 
 			// На неактивном GameObject твин может не запуститься или работать некорректно.
 			// Точное поведение не исследовалось, поэтому сразу применяем конечное состояние
@@ -42,31 +41,54 @@ namespace UI
 					"Cannot play DOTween because GameObject is inactive. " +
 					"Applying final tween state immediately");
 
-				tween = _dictionary.GetValueOrDefaultSafe(state, _default).ToTween(this);
+				animationSequence = _dictionary.GetValueOrDefaultSafe(state, _default);
+				if (animationSequence.IsNullOrEmpty())
+					return;
+
+				tween = CreateTween(animationSequence);
+				if (tween == null)
+					return;
+
+				var origin = AnimationTweenCallback.immediate;
+				AnimationTweenCallback.immediate = true;
 				tween.KillWithCallbacks();
+				AnimationTweenCallback.immediate = origin;
 
 				return;
 			}
 
-			if (!_cached.TryGetValue(state, out tween) || !tween.active)
-			{
-				_cached[state] = tween = _dictionary.GetValueOrDefaultSafe(state, _default)
-					.ToTween(this)
-					.SetAutoKill(false);
-			}
+			_tween?.KillSafe();
+
+			animationSequence = _dictionary.GetValueOrDefaultSafe(state, _default);
+			if (animationSequence.IsNullOrEmpty())
+				return;
+
+			tween = CreateTween(animationSequence);
+			if (tween == null)
+				return;
 
 			if (_immediate)
 			{
 				AnimationTweenCallback.immediate = true;
-				tween.GotoWithCallbacks(1);
-				AnimationTweenCallback.immediate = false;
+				try
+				{
+					tween.GotoWithCallbacks(1);
+				}
+				finally
+				{
+					AnimationTweenCallback.immediate = false;
+					tween.KillSafe();
+				}
 			}
 			else
 			{
-				if (tween.playedOnce)
-					tween.Restart();
-				else
-					tween.Play();
+				_tween = tween;
+				tween.OnKill(() =>
+				{
+					if (ReferenceEquals(_tween, tween))
+						_tween = null;
+				});
+				tween.Play();
 			}
 
 #if UNITY_EDITOR
@@ -86,28 +108,26 @@ namespace UI
 #endif
 		}
 
+		private Tween CreateTween(AnimationSequence animationSequence)
+		{
+			var tween = animationSequence.ToTween(this);
+			return tween?.SetLink(gameObject, LinkBehaviour.KillOnDestroy);
+		}
+
 #if UNITY_EDITOR
-		private bool ShowIfClearButton() => _cached.Count > 0;
+		private bool ShowIfClearButton() => _tween.IsActive();
 
 		[Button, ShowIf(nameof(ShowIfClearButton))]
 #endif
-		private void Clear()
+		private void ClearTweens()
 		{
-			foreach (var tween in _cached.Values)
-				tween?.KillSafe();
+			_tween?.KillSafe();
+			_tween = null;
 
-			_cached.Clear();
+			DOTween.Kill(this);
 		}
 
 		public override bool IsTransitioning()
-		{
-			foreach (var tween in _cached.Values)
-			{
-				if (tween.IsPlayingSafe())
-					return true;
-			}
-
-			return false;
-		}
+			=> _tween.IsPlayingSafe();
 	}
 }

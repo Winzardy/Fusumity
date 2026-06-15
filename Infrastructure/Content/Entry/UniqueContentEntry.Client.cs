@@ -11,15 +11,22 @@ namespace Content
 
 		public void SetGuid(in SerializableGuid newGuid) => guid = newGuid;
 
-		public UniqueContentEntry<T> Clone() => new(in Value, in Guid, Id);
+		public UniqueContentEntry<T> Clone()
+		{
+			var clone = new UniqueContentEntry<T>(in BaseValue, in Guid, Id)
+			{
+				Redirect = Redirect
+			};
+			return clone;
+		}
 
 		IUniqueContentEntry IUniqueContentEntry.Clone() => Clone();
 	}
 
 	public partial interface IUniqueContentEntry
 	{
-		public SerializableGuid RegenerateGuid();
-		public void SetGuid(in SerializableGuid newGuid);
-		public IUniqueContentEntry Clone();
+		SerializableGuid RegenerateGuid();
+		void SetGuid(in SerializableGuid newGuid);
+		IUniqueContentEntry Clone();
 	}
 }

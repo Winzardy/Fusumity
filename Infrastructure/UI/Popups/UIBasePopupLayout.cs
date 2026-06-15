@@ -1,4 +1,5 @@
-﻿using UnityEngine.UI;
+﻿using JetBrains.Annotations;
+using UnityEngine.UI;
 
 namespace UI.Popups
 {
@@ -8,6 +9,7 @@ namespace UI.Popups
 		public bool useAnimations = true;
 
 		[Sirenix.OdinInspector.PropertySpace(0, 10)]
+		[CanBeNull]
 		public Button close;
 	}
 }

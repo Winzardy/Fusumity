@@ -385,6 +385,8 @@ namespace UI
 		/// </summary>
 		protected virtual void LayoutClearingInternal()
 		{
+			_animator?.Reset();
+
 			if (_layout == null)
 				return;
 

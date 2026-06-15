@@ -67,6 +67,8 @@ namespace ZenoTween.Participant.Callbacks
 		public override void PlayEditor() => OnCallback();
 #endif
 
+		internal void Invoke() => OnCallback();
+
 		protected abstract void OnCallback();
 	}
 }

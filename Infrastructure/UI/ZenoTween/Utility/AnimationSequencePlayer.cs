@@ -1,24 +1,36 @@
 ﻿using DG.Tweening;
 using System;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace ZenoTween.Utility
 {
+	using UnityObject = UnityEngine.Object;
+
 	public class AnimationSequencePlayer : IDisposable
 	{
 		private AnimationSequence _sequence;
 		private bool _cached;
+		private object _target;
+		private GameObject _link;
 
 		private Tween _tween;
 
 		public bool IsPlaying { get => _tween.IsActive() && _tween.active && _tween.IsPlaying() && !_tween.IsComplete(); }
 
-		public AnimationSequencePlayer(AnimationSequence sequence, bool cached = false)
+		public AnimationSequencePlayer(AnimationSequence sequence, bool cached = false, UnityObject owner = null)
 		{
 			Assert.IsNotNull(sequence, "Sequence cannot be null.");
 
 			_sequence = sequence;
 			_cached   = cached;
+			_target   = owner;
+			_link     = owner switch
+			{
+				GameObject gameObject => gameObject,
+				Component component => component.gameObject,
+				_ => null
+			};
 		}
 
 		public void Dispose()
@@ -38,9 +50,11 @@ namespace ZenoTween.Utility
 		{
 			if (_cached)
 			{
-				_tween ??= _sequence
-					.ToTween(null)
-					.SetAutoKill(false);
+				_tween ??= CreateTween()
+					?.SetAutoKill(false);
+
+				if (_tween == null)
+					return;
 
 				if (_tween.playedOnce)
 				{
@@ -54,7 +68,14 @@ namespace ZenoTween.Utility
 			else
 			{
 				_tween.KillSafe();
-				var sequence = _sequence.ToSequence(null);
+				var sequence = CreateSequence();
+				if (sequence == null)
+					return;
+
+				if (args.delay > 0)
+				{
+					sequence.PrependInterval(args.delay);
+				}
 
 				if (args.onStart != null)
 				{
@@ -68,6 +89,26 @@ namespace ZenoTween.Utility
 
 				_tween = sequence;
 			}
+		}
+
+		private Tween CreateTween()
+		{
+			var tween = _sequence.ToTween(_target);
+			return Link(tween);
+		}
+
+		private Sequence CreateSequence()
+		{
+			var sequence = _sequence.ToSequence(_target);
+			return Link(sequence) as Sequence;
+		}
+
+		private Tween Link(Tween tween)
+		{
+			if (tween != null && _link != null)
+				tween.SetLink(_link, LinkBehaviour.KillOnDestroy);
+
+			return tween;
 		}
 
 		public void Stop(bool rewind = false)
@@ -105,6 +146,8 @@ namespace ZenoTween.Utility
 
 	public struct AnimationSequencePlayerArgs
 	{
+		public float delay;
+
 		public TweenCallback onStart;
 		public TweenCallback onComplete;
 	}

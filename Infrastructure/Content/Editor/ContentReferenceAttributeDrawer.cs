@@ -300,15 +300,24 @@ namespace Content.Editor
 				var canBeEmpty = Property.Info.GetAttribute<CanBeEmptyAttribute>() != null
 					|| Property.Info.GetAttribute<CanBeNullAttribute>() != null
 					|| Property.Info.GetAttribute<MaybeNullAttribute>() != null;
+				var failIfEmpty = ObjectIsNullUtility.HasRequiredAttribute(Property);
 
 				if (!canBeEmpty)
 					if (typeof(IContentReference).IsAssignableFrom(Property.ParentType))
+					{
 						canBeEmpty = Property.ParentValueProperty.Info.GetAttribute<CanBeEmptyAttribute>() != null;
+						failIfEmpty |= ObjectIsNullUtility.HasRequiredAttribute(Property.ParentValueProperty);
+					}
 
 				if (isEmpty
-					&& !canBeEmpty
 					&& GUI.enabled)
-					GUI.color = errorColor;
+				{
+					if (failIfEmpty)
+						errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
+
+					if (failIfEmpty || !canBeEmpty)
+						GUI.color = errorColor;
+				}
 				Rect? objectFieldPosition = null;
 				var useDropdownBySettings = drawerSettingsAttribute?.Dropdown ?? false;
 				useDropdown = Attribute.Dropdown || useDropdownBySettings;
@@ -337,7 +346,9 @@ namespace Content.Editor
 						// var cacheGuiEnabled = GUI.enabled;
 						// GUI.enabled = false;
 
-						SirenixEditorFields.TextField(position, targetLabel, invalidLabel);
+						var textPosition = position;
+						textPosition.width -= 17;
+						SirenixEditorFields.TextField(textPosition, targetLabel, invalidLabel);
 
 						//GUI.enabled = cacheGuiEnabled;
 

@@ -14,7 +14,9 @@ namespace ZenoTween.Participant.Tweens
 
 		protected override Tween Create()
 		{
-			return source.sequence.ToTween(source, _inheritedSpeed * speed);
+			var owner = _target ?? source;
+			var tween = source.sequence.ToTween(owner, _inheritedSpeed * speed);
+			return BindTweenToOwner(tween, owner);
 		}
 	}
 }

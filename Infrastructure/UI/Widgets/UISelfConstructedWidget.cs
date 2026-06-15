@@ -83,10 +83,14 @@ namespace UI
 		protected override void LayoutClearingInternal()
 		{
 			if (!_layout)
+			{
+				_animator?.Reset();
 				return;
+			}
 
 			OnLayoutClearedInternal();
 			DisposeAndClearChildren();
+			_animator?.Reset();
 
 			UIFactory.Destroy(_layout);
 			_layout = null;
@@ -311,12 +315,11 @@ namespace UI
 			}
 #endif
 		}
-
-#if DebugLog
-		public static class UILayoutDebug
-		{
-			public static Toggle<int> debugDelayMs = 3000;
-		}
-#endif
 	}
+#if DebugLog
+	public static class UILayoutDebug
+	{
+		public static Toggle<int> debugDelayMs = 3000;
+	}
+#endif
 }

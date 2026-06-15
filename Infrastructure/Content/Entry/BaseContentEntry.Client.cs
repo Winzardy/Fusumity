@@ -17,7 +17,7 @@ namespace Content
 		[SerializeField, FormerlySerializedAs("_value")]
 		protected T value;
 
-		public ref readonly T Value => ref ContentEditValue;
+		public virtual ref readonly T Value => ref ContentEditValue;
 		ref T IContentEntry<T>.EditValue => ref ContentEditValue;
 
 		protected ref T ContentEditValue

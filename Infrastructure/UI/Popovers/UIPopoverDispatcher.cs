@@ -43,6 +43,9 @@ namespace UI
 			if (TryUpdate(ref token, args))
 				return;
 
+			if (token.IsValid())
+				token.Release();
+
 			token = Show<T>(host, args, customAnchor, immediate);
 		}
 
@@ -53,6 +56,9 @@ namespace UI
 			if (TryUpdate(ref token, args))
 				return;
 
+			if (token.IsValid())
+				token.Release();
+
 			token = Show<T>(anchor, args, immediate);
 		}
 
@@ -62,6 +68,9 @@ namespace UI
 		{
 			if (TryUpdate(ref token, args))
 				return;
+
+			if (token.IsValid())
+				token.Release();
 
 			token = Show<T>(args, immediate);
 		}
@@ -76,6 +85,9 @@ namespace UI
 		{
 			if (TryUpdate(ref token, args))
 				return;
+
+			if (token.IsValid())
+				token.Release();
 
 			token = Show<T>(policy, args, immediate);
 		}

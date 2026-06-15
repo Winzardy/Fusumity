@@ -116,7 +116,6 @@ namespace UI
 		}
 
 		public override void SetMaterialDirty() => TryRecollectChildrenGraphics();
-
 		public override void SetVerticesDirty() => TryRecollectChildrenGraphics();
 
 		private void TryRecollectChildrenGraphics()
