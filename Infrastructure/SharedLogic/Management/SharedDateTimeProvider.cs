@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Fusumity.Utility;
 using Sapientia;
 
@@ -8,25 +9,52 @@ namespace SharedLogic
 	{
 		private const string LOCAL_SAVE_DELTA_CACHE_KEY = "server_datetime_delta_cache";
 
-		private TimeSpan _timeDelta;
+		private TimeSpan _delta;
 
-		public DateTime SystemTime => DateTime.UtcNow + _timeDelta;
+		private DateTime _anchorDateTime;
+		private long _anchorTimestamp;
+
+		public DateTime SystemTime => GetNowTime() + _delta;
 
 		public SharedDateTimeProvider()
 		{
-			// Установить дельту из локального кэша
-			SetDelta(LocalSave.Load(LOCAL_SAVE_DELTA_CACHE_KEY, DateTime.UtcNow - DateTime.UtcNow));
+			var cachedDelta = LocalSave.Load(LOCAL_SAVE_DELTA_CACHE_KEY, TimeSpan.Zero);
+			ApplyDelta(cachedDelta);
 		}
 
-		public void Setup(DateTime newServerTime)
+		public void Synchronize(DateTime dateTime)
 		{
-			SetDelta(newServerTime - DateTime.UtcNow);
+			dateTime = NormalizeDateTime(dateTime);
+			ApplyDelta(dateTime - DateTime.UtcNow);
 		}
 
-		private void SetDelta(TimeSpan delta)
+		private void ApplyDelta(TimeSpan delta)
 		{
-			_timeDelta = delta;
-			LocalSave.Save(LOCAL_SAVE_DELTA_CACHE_KEY, _timeDelta);
+			_delta = delta;
+
+			_anchorDateTime = DateTime.UtcNow;
+			_anchorTimestamp = Stopwatch.GetTimestamp();
+
+			LocalSave.Save(LOCAL_SAVE_DELTA_CACHE_KEY, delta);
+		}
+
+		private DateTime GetNowTime() => _anchorDateTime + GetElapsedTime(_anchorTimestamp);
+
+		private static TimeSpan GetElapsedTime(long timestamp)
+		{
+			var elapsedTicks = Stopwatch.GetTimestamp() - timestamp;
+			var elapsedSeconds = elapsedTicks / (double) Stopwatch.Frequency;
+			return TimeSpan.FromSeconds(elapsedSeconds);
+		}
+
+		private static DateTime NormalizeDateTime(DateTime dateTime)
+		{
+			return dateTime.Kind switch
+			{
+				DateTimeKind.Local => dateTime.ToUniversalTime(),
+				DateTimeKind.Utc => dateTime,
+				_ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+			};
 		}
 	}
 }
