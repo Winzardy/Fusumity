@@ -1,12 +1,13 @@
-using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI
 {
-	// TODO: Починить
-	[Obsolete("Обманывает, надо починить")]
+	/// <summary>
+	/// Считает и задаёт радиус скругления для 9-sliced <see cref="Image"/> (круг или скруглённый
+	/// прямоугольник), управляя <see cref="Image.pixelsPerUnitMultiplier"/>.
+	/// </summary>
 	[RequireComponent(typeof(Image))]
 	public class ImageSlicedCircleRadiusCalculator : MonoBehaviour
 	{
@@ -17,46 +18,51 @@ namespace UI
 		[InlineButton(nameof(OnAutoClicked), "Auto")]
 		public float CanvasReferencePixelPerUnit = 100;
 
-		[Tooltip("Временное решение чтобы привести к корректным значениям..."), Indent]
-		public float calibrator = 0.04f;
-
-		[PropertyOrder(10)]
-		public bool forCircle = true;
-
-		[PropertyOrder(11)]
-		[HideIf(nameof(forCircle))]
-		public float textureSizeMultiplier = 1;
-
 		[ShowInInspector]
-		[Tooltip("Only Editor")]
+		[Tooltip("Радиус скругления в пикселях (как он рендерится при scale = 1). Only Editor")]
 		[SuffixLabel("in pixels (only editor)", true)]
 		public float Radius
 		{
 			get
 			{
-				if (!_image)
+				if (!TryGetBorder(out var radiusInTexels))
 					return 0;
 
-				if (_image.type != Image.Type.Sliced)
-					return 0;
-
-				return TextureSize / _image.pixelsPerUnitMultiplier /
-					(2 * (_image.sprite.pixelsPerUnit / (CanvasReferencePixelPerUnit * calibrator)));
+				// Unity рисует бордюр 9-slice как
+				//   border / (sprite.pixelsPerUnit / referencePixelsPerUnit * pixelsPerUnitMultiplier).
+				// Для круга/скругления радиус угла равен размеру бордюра.
+				return radiusInTexels * CanvasReferencePixelPerUnit /
+					(_image.sprite.pixelsPerUnit * _image.pixelsPerUnitMultiplier);
 			}
 			set
 			{
-				if (!_image)
+				if (value <= 0 || !TryGetBorder(out var radiusInTexels))
 					return;
 
-				if (_image.type != Image.Type.Sliced)
-					return;
+				UnityEditor.Undo.RecordObject(_image, "Set Sliced Radius");
 
-				_image.pixelsPerUnitMultiplier = TextureSize /
-					(2 * (_image.sprite.pixelsPerUnit / (CanvasReferencePixelPerUnit * calibrator)) * value);
+				_image.pixelsPerUnitMultiplier = radiusInTexels * CanvasReferencePixelPerUnit /
+					(_image.sprite.pixelsPerUnit * value);
+
+				UnityEditor.EditorUtility.SetDirty(_image);
 			}
 		}
 
-		public float TextureSize => _image ? _image.sprite.texture.width / (forCircle ? 1 : textureSizeMultiplier) : 0;
+		/// <summary>
+		/// Размер угла (бордюра 9-slice) в текселях спрайта. Берётся из <see cref="Sprite.border"/>,
+		/// поэтому, в отличие от ширины текстуры, не зависит от упаковки спрайта в атлас.
+		/// </summary>
+		private bool TryGetBorder(out float radiusInTexels)
+		{
+			radiusInTexels = 0;
+
+			if (!_image || !_image.sprite || _image.type != Image.Type.Sliced)
+				return false;
+
+			// border: x=left, y=bottom, z=right, w=top. Для симметричного скругления стороны равны.
+			radiusInTexels = _image.sprite.border.x;
+			return radiusInTexels > 0;
+		}
 
 		private void Reset() => _image = GetComponent<Image>();
 

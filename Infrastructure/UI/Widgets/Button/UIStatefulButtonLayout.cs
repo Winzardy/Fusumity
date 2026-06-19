@@ -25,14 +25,19 @@ namespace UI
 
 		public Image icon;
 
+		[Indent]
+		public GameObject[] iconGroup;
+
 		[Space]
 		[OptionalSuffixLabel]
 		public StateSwitcher<string> switcher;
 
 		[CanBeNull]
 		public UIAdBannerLayout adBanner;
+
 		[CanBeNull]
 		public UILabeledIconLayout labeledIcon;
+
 		[CanBeNull]
 		public UIAttentionIndicatorLayout indicator;
 

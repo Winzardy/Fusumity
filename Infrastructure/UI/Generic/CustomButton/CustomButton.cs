@@ -16,7 +16,7 @@ namespace UI
 
 		#region Legacy
 
-		[FoldoutGroup("Legacy"), Button]
+		[FoldoutGroup("Legacy"), Button, PropertyOrder(1000)]
 		public void ClearLegacyTransitions()
 		{
 			spriteStateTransitions = new SpriteStateTransition[0];
@@ -132,8 +132,13 @@ namespace UI
 
 		private ButtonTransitionState _target;
 
+		/// <summary>
+		/// Текущее целевое состояние (используется редактором для отрисовки кнопки в Scene View)
+		/// </summary>
+		internal ButtonTransitionState TargetState => _target;
+
 		[PropertySpace(10), Button]
-		private void DoStateTransition(ButtonTransitionState state, bool instant = false)
+		internal void DoStateTransition(ButtonTransitionState state, bool instant = false)
 		{
 			if (_target == state)
 				_target = ButtonTransitionType.NORMAL;

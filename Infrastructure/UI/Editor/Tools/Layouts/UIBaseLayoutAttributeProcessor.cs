@@ -50,7 +50,15 @@ namespace UI.Editor
 
 					attributes.Add(new PropertySpaceAttribute(0, 8));
 					attributes.Add(new ReadOnlyAttribute());
-					attributes.Add(new PropertyOrderAttribute(-1));
+					attributes.Add(new PropertyOrderAttribute(-4));
+					break;
+
+				case nameof(UIBaseLayout.techDescription):
+					attributes.Add(new UILayoutTechDescriptionAttribute());
+					attributes.Add(new LabelTextAttribute("Tech Description"));
+					attributes.Add(new TextAreaAttribute(1, 3));
+					attributes.Add(new PropertyOrderAttribute(-3));
+					attributes.Add(new PropertySpaceAttribute(0, 8));
 					break;
 
 				case nameof(UIBaseLayout.prefab):

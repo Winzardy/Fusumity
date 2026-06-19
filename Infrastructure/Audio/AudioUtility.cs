@@ -20,6 +20,10 @@ namespace Audio
 
 		public static Vector3 GetAudioSpatialPosition(this Vector2 screenPoint, float? minDistance = null)
 		{
+#if UNITY_EDITOR
+			if (!UnityEditor.EditorApplication.isPlaying)
+				return Vector3.zero;
+#endif
 			float screenX = Screen.width;
 			float screenY = Screen.height;
 
