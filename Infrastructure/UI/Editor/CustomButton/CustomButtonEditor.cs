@@ -103,13 +103,40 @@ namespace UI.Editor
 			};
 		}
 
+		private const string MENU_PATH = "Tools/Other/Custom Button/Scene State Controls";
+		private const string ENABLED_PREF_KEY = "CustomButtonSceneGUI.Enabled";
+
+		private static bool Enabled
+		{
+			get => EditorPrefs.GetBool(ENABLED_PREF_KEY, true);
+			set => EditorPrefs.SetBool(ENABLED_PREF_KEY, value);
+		}
+
 		static CustomButtonSceneGUI()
 		{
 			SceneView.duringSceneGui += OnSceneGUI;
 		}
 
+		[MenuItem(MENU_PATH)]
+		private static void ToggleEnabled()
+		{
+			Enabled = !Enabled;
+			SceneView.RepaintAll();
+		}
+
+		[MenuItem(MENU_PATH, true)]
+		private static bool ToggleEnabledValidate()
+		{
+			Menu.SetChecked(MENU_PATH, Enabled);
+			return true;
+		}
+
 		private static void OnSceneGUI(SceneView sceneView)
 		{
+			// Скрываем, если контролы выключены в меню (Tools/Custom Button) или в Scene View отключены Gizmos.
+			if (!Enabled || !sceneView.drawGizmos)
+				return;
+
 			var selection = Selection.gameObjects;
 			if (selection == null || selection.Length == 0)
 				return;
