@@ -87,6 +87,7 @@ namespace Fusumity.MVVM
 		/// Can be overridden with OverrideState method.
 		/// </summary>
 		public bool IsActive { get { return !_explicitlyDeactivated && (IsActiveSelf || _activeChildren > 0); } }
+		public int ActiveChildren { get =>  _activeChildren; }
 
 		public event Action<bool> ActiveStateChanged;
 
