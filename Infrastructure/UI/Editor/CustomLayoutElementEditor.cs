@@ -28,6 +28,9 @@ namespace UI.Editor
 		private SerializedProperty _minHeightRectProperty;
 		private SerializedProperty _minHeightProperty;
 
+		private SerializedProperty _preferredWidthRectProperty;
+		private SerializedProperty _preferredHeightRectProperty;
+
 		protected override void OnEnable()
 		{
 			m_IgnoreLayout = serializedObject.FindProperty("m_IgnoreLayout");
@@ -49,6 +52,9 @@ namespace UI.Editor
 			_minHeightProperty     = serializedObject.FindProperty("m_MinHeight");
 			_minHeightRectProperty = serializedObject.FindProperty("_minHeightRect");
 			_useMinHeightProperty  = serializedObject.FindProperty("_useMinHeight");
+
+			_preferredWidthRectProperty  = serializedObject.FindProperty("_preferredWidthRect");
+			_preferredHeightRectProperty = serializedObject.FindProperty("_preferredHeightRect");
 
 			m_PreferredWidth  = serializedObject.FindProperty("m_PreferredWidth");
 			m_PreferredHeight = serializedObject.FindProperty("m_PreferredHeight");
@@ -79,12 +85,10 @@ namespace UI.Editor
 				LayoutElementField(_minHeightProperty, _useMinHeightProperty, _minHeightRectProperty, false);
 				LayoutElementField(_minHeightRectProperty, _useMinHeightProperty);
 
-				var originEnabled = GUI.enabled;
-				GUI.enabled = !_useMaxWidthProperty.boolValue;
-				LayoutElementField(m_PreferredWidth, t => t.rect.width);
-				GUI.enabled = !_useMaxHeightProperty.boolValue;
-				LayoutElementField(m_PreferredHeight, t => t.rect.height);
-				GUI.enabled = originEnabled;
+				LayoutElementField(m_PreferredWidth, t => t.rect.width, _preferredWidthRectProperty);
+				LayoutElementFieldIfEnabled(_preferredWidthRectProperty, m_PreferredWidth);
+				LayoutElementField(m_PreferredHeight, t => t.rect.height, _preferredHeightRectProperty, false);
+				LayoutElementFieldIfEnabled(_preferredHeightRectProperty, m_PreferredHeight);
 
 				LayoutElementField(m_FlexibleWidth, 1);
 				LayoutElementField(m_FlexibleHeight, 1);
@@ -105,6 +109,18 @@ namespace UI.Editor
 			EditorGUILayout.PropertyField(property, new GUIContent("Rect"));
 			EditorGUI.indentLevel = originIndent;
 		}
+
+		private void LayoutElementFieldIfEnabled(SerializedProperty property, SerializedProperty floatProperty)
+		{
+			if (floatProperty.floatValue < 0)
+				return;
+
+			var originIndent = EditorGUI.indentLevel;
+			EditorGUI.indentLevel++;
+			EditorGUILayout.PropertyField(property, new GUIContent("Rect"));
+			EditorGUI.indentLevel = originIndent;
+		}
+
 
 		private void LayoutElementField(SerializedProperty property, SerializedProperty useProperty, SerializedProperty rectProperty,
 			bool width = true)
@@ -158,7 +174,8 @@ namespace UI.Editor
 			LayoutElementField(property, _ => defaultValue);
 		}
 
-		private void LayoutElementField(SerializedProperty property, Func<RectTransform, float> defaultValue)
+		private void LayoutElementField(SerializedProperty property, Func<RectTransform, float> defaultValue,
+			SerializedProperty rectProperty = null, bool width = true)
 		{
 			Rect position = EditorGUILayout.GetControlRect();
 
@@ -185,14 +202,28 @@ namespace UI.Editor
 
 			if (!property.hasMultipleDifferentValues && property.floatValue >= 0)
 			{
+				// При назначенном RectTransform значение берётся из него и поле становится read only
+				var hasRect = rectProperty != null && rectProperty.objectReferenceValue != null;
+
 				// Float field
 				EditorGUIUtility.labelWidth = 4; // Small invisible label area for drag zone functionality
+				if (hasRect)
+					GUI.enabled = false;
+
 				EditorGUI.BeginChangeCheck();
-				float newValue = EditorGUI.FloatField(floatFieldRect, new GUIContent(" "), property.floatValue);
+				float displayValue = hasRect
+					? width
+						? ((RectTransform) rectProperty.objectReferenceValue).rect.width
+						: ((RectTransform) rectProperty.objectReferenceValue).rect.height
+					: property.floatValue;
+				float newValue = EditorGUI.FloatField(floatFieldRect, new GUIContent(" "), displayValue);
 				if (EditorGUI.EndChangeCheck())
 				{
 					property.floatValue = Mathf.Max(0, newValue);
 				}
+
+				if (hasRect)
+					GUI.enabled = true;
 
 				EditorGUIUtility.labelWidth = 0;
 			}

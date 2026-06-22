@@ -20,6 +20,12 @@ namespace UI
 		[FormerlySerializedAs("root")]
 		public RectTransform rectTransform;
 
+		/// <summary>
+		/// Техническое описание-заметка для разработчиков. Показ включается через
+		/// ContextMenu "Tech Description/Enable" (см. <see cref="ShowTechDescriptionEditor"/>).
+		/// </summary>
+		public string techDescription;
+
 #if UNITY_EDITOR
 		[Tooltip("Ссылка на изначальный префаб (only editor)")]
 		[NonSerialized]

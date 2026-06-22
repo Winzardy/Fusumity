@@ -17,7 +17,7 @@ namespace UI
 		public Button button;
 
 		[Space]
-		[OptionalSuffixLabel]
+		[OptionalSuffixWideLabel]
 		public TMP_Text label;
 
 		[Indent]
@@ -25,14 +25,19 @@ namespace UI
 
 		public Image icon;
 
+		[Indent]
+		public GameObject[] iconGroup;
+
 		[Space]
-		[OptionalSuffixLabel]
+		[OptionalSuffixWideLabel]
 		public StateSwitcher<string> switcher;
 
 		[CanBeNull]
 		public UIAdBannerLayout adBanner;
+
 		[CanBeNull]
 		public UILabeledIconLayout labeledIcon;
+
 		[CanBeNull]
 		public UIAttentionIndicatorLayout indicator;
 

@@ -98,7 +98,10 @@ namespace UI
 		private void UpdateIcon()
 		{
 			if (_layout.icon == null)
+			{
+				_layout.iconGroup.SetActive(false);
 				return;
+			}
 
 			if (ViewModel.Icon.IsEmptyOrInvalid())
 				return;
@@ -108,6 +111,7 @@ namespace UI
 				AddDisposable(_assigner = new UISpriteAssigner());
 			}
 
+			_layout.iconGroup.SetActive(true);
 			_assigner.TrySetSprite(_layout.icon, ViewModel.Icon);
 		}
 
