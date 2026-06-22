@@ -140,7 +140,7 @@ namespace Fusumity.Editor
 				return true;
 			if (property.Info.GetAttribute<MaybeNullAttribute>() != null)
 				return true;
-			if (property.Info.GetAttribute<OptionalSuffixLabel>() != null)
+			if (property.Info.GetAttribute<OptionalSuffixWideLabel>() != null)
 				return true;
 
 			return false;

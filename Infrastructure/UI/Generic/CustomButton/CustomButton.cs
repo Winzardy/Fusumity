@@ -42,7 +42,7 @@ namespace UI
 
 		public List<ButtonTransition> transitions = new();
 
-		[OptionalSuffixLabel]
+		[OptionalSuffixWideLabel]
 		public StateSwitcher<bool> interactableSwitcher;
 
 		protected override void Awake()

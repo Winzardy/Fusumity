@@ -130,24 +130,64 @@ namespace UI
 
 		#endregion
 
+		#region Preferred Width
+
+		[SerializeField]
+		private RectTransform _preferredWidthRect;
+
+		public override float preferredWidth
+		{
+			get
+			{
+				var preferred = _preferredWidthRect ? _preferredWidthRect.rect.width : base.preferredWidth;
+				if (_useMaxWidth)
+				{
+					if (preferred < 0)
+						return GetMaxWidth();
+					var max = maxWidth;
+					return preferred > max ? max : preferred;
+				}
+				return preferred;
+			}
+			set => base.preferredWidth = value;
+		}
+
+		public RectTransform PreferredWidthRect { get => _preferredWidthRect; set => _preferredWidthRect = value; }
+
+		#endregion
+
+		#region Preferred Height
+
+		[SerializeField]
+		private RectTransform _preferredHeightRect;
+
+		public override float preferredHeight
+		{
+			get
+			{
+				var preferred = _preferredHeightRect ? _preferredHeightRect.rect.height : base.preferredHeight;
+				if (_useMaxHeight)
+				{
+					if (preferred < 0)
+						return GetMaxHeight();
+					var max = maxHeight;
+					return preferred > max ? max : preferred;
+				}
+				return preferred;
+			}
+			set => base.preferredHeight = value;
+		}
+
+		public RectTransform PreferredHeightRect { get => _preferredHeightRect; set => _preferredHeightRect = value; }
+
+		#endregion
+
 		private bool _ignoreOnGettingPreferredSize;
 
 		public override int layoutPriority
 		{
 			get => _ignoreOnGettingPreferredSize ? -1 : base.layoutPriority;
 			set => base.layoutPriority = value;
-		}
-
-		public override float preferredWidth
-		{
-			get => _useMaxWidth ? GetMaxWidth() : base.preferredWidth;
-			set => base.preferredWidth = _useMaxWidth ? GetMaxWidth() : value;
-		}
-
-		public override float preferredHeight
-		{
-			get => _useMaxHeight ? GetMaxHeight() : base.preferredHeight;
-			set => base.preferredHeight = _useMaxHeight ? GetMaxHeight() : value;
 		}
 
 		private float GetMaxWidth()
