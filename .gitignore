@@ -51,6 +51,12 @@ ExportedObj/
 *.pdb.meta
 *.mdb.meta
 
+# MacOS local data
+*.DS_Store
+
+# macOS system files
+.DS_Store
+
 # Unity3D generated file on crash reports
 sysinfo.txt
 
@@ -60,4 +66,3 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
-
