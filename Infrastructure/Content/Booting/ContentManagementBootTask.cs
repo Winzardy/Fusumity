@@ -25,7 +25,7 @@ namespace Booting.Content
 			var resolver = new ContentResolver();
 			ContentManager.Set(resolver);
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && FULLWEIGHT_MODE
 			ContentDatabaseEditorUtility.ValidateDatabases();
 
 			if (ClientEditorContentImporterMenu.IsEnable)
