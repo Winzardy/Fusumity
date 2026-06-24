@@ -9,7 +9,7 @@ namespace UI
 {
 	public class UIToggleBarLayout : UIViewCollectionLayout<UIToggleButtonLayout>
 	{
-		[Space, Tooltip("Optional"), OptionalSuffixLabel]
+		[Space, Tooltip("Optional"), OptionalSuffixWideLabel]
 		public Button back;
 
 		[Indent]
