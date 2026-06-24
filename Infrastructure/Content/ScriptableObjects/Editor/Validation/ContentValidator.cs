@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Sapientia;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,6 +26,8 @@ namespace Content.Editor
 
 		private static bool SyncBeforeValidate { get => EditorPrefs.GetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, true); set => EditorPrefs.SetBool(SYNC_BEFORE_VALIDATE_PREF_KEY, value); }
 
+		private static StringBuilder _activeErrorMessageBuilder;
+		private static int _activeErrorMessageNumber;
 		private static bool _cancelRequested;
 
 		static ContentValidator()
@@ -61,7 +65,7 @@ namespace Content.Editor
 
 		public static bool Validate()
 		{
-			return Validate(SyncBeforeValidate);
+			return Validate(SyncBeforeValidate, out _);
 		}
 
 		public static bool TryGetValidator<T>(out T validator)
@@ -71,7 +75,7 @@ namespace Content.Editor
 			return validator != null;
 		}
 
-		public static bool Validate(bool sync)
+		public static bool Validate(bool sync, out string errorOrMessage)
 		{
 			_cancelRequested = false;
 
@@ -79,7 +83,10 @@ namespace Content.Editor
 				ContentDatabaseEditorUtility.SyncContent();
 
 			if (IsValidationCancellationRequested())
+			{
+				errorOrMessage = null;
 				return CancelValidation();
+			}
 
 			var errorCount = 0;
 			var warningCount = 0;
@@ -95,67 +102,98 @@ namespace Content.Editor
 			var progress = 0;
 			try
 			{
-				foreach (var database in dbs)
+				using (StringBuilderPool.Get(out var errStringBuilder))
 				{
-					if (database.scriptableObjects == null)
+					var previousErrorMessageBuilder = _activeErrorMessageBuilder;
+					var previousErrorMessageNumber = _activeErrorMessageNumber;
+					_activeErrorMessageBuilder = errStringBuilder;
+					_activeErrorMessageNumber = 0;
+
+					try
 					{
-						errorCount++;
-						ContentDebug.LogError($"Null scriptable objects list in database [ {database.name} ]", database);
-						continue;
-					}
-
-					foreach (var scriptableObject in database.scriptableObjects)
-					{
-						if (!Application.isBatchMode)
+						foreach (var database in dbs)
 						{
-							var scriptableObjectName = scriptableObject ? scriptableObject.name : "null";
-							var label = $"{database.name} / {scriptableObjectName}";
-							var progressValue = totalProgress > 0 ? progress / totalProgress : 1;
-							if (EditorUtility.DisplayCancelableProgressBar(TITLE,
-								label,
-								progressValue))
+							if (database.scriptableObjects == null)
 							{
-								return CancelValidation("user");
-							}
-						}
-
-						if (IsValidationCancellationRequested())
-							return CancelValidation();
-
-						progress++;
-
-						if (!scriptableObject)
-						{
-							errorCount++;
-							ContentDebug.LogError($"Null scriptable object in database [ {database.name} ]", database);
-							continue;
-						}
-
-						if (scriptableObject.SkipValidation())
-							continue;
-
-						if (scriptableObject is IValidatable validatable)
-						{
-							if (!validatable.Validate(out var message))
-							{
+								var errorMessage = $"Null scriptable objects list in database [ {database.name} ]";
 								errorCount++;
-								ContentDebug.LogError(message, scriptableObject);
+								AppendErrorMessage(errStringBuilder, errorMessage);
+								ContentDebug.LogError(errorMessage, database);
+								continue;
+							}
+
+							foreach (var scriptableObject in database.scriptableObjects)
+							{
+								if (!Application.isBatchMode)
+								{
+									var scriptableObjectName = scriptableObject ? scriptableObject.name : "null";
+									var label = $"{database.name} / {scriptableObjectName}";
+									var progressValue = totalProgress > 0 ? progress / totalProgress : 1;
+									if (EditorUtility.DisplayCancelableProgressBar(TITLE,
+										label,
+										progressValue))
+									{
+										errorOrMessage = null;
+										return CancelValidation("user");
+									}
+								}
+
+								if (IsValidationCancellationRequested())
+								{
+									errorOrMessage = null;
+									return CancelValidation();
+								}
+
+								progress++;
+
+								if (!scriptableObject)
+								{
+									var errorMessage = $"Null scriptable object in database [ {database.name} ]";
+									errorCount++;
+									AppendErrorMessage(errStringBuilder, errorMessage);
+									ContentDebug.LogError(errorMessage, database);
+									continue;
+								}
+
+								if (scriptableObject.SkipValidation())
+									continue;
+
+								if (scriptableObject is IValidatable validatable)
+								{
+									if (!validatable.Validate(out var soMessage))
+									{
+										errorCount++;
+										AppendErrorMessage(errStringBuilder, soMessage);
+										ContentDebug.LogError(soMessage, scriptableObject);
+									}
+								}
+
+								errorCount += ValidateContentReferences(scriptableObject, valueValidators, ref warningCount, errStringBuilder);
 							}
 						}
 
-						errorCount += ValidateContentReferences(scriptableObject, valueValidators, ref warningCount);
+						if (errorCount > 0)
+						{
+							var str = $"failed (errors: {errorCount}, warnings️: {warningCount})"
+								+ (errStringBuilder.Length > 0
+									? ", errors:\n" + errStringBuilder
+									: string.Empty);
+							ContentDebug.LogError("Validation " + str);
+							errorOrMessage = "Content validation " + str;
+							return false;
+						}
+
+						errorOrMessage = warningCount > 0
+							? $"Validation passed (warnings️: {warningCount})"
+							: "Validation passed";
+						ContentDebug.Log(errorOrMessage);
+					}
+					finally
+					{
+						_activeErrorMessageBuilder = previousErrorMessageBuilder;
+						_activeErrorMessageNumber = previousErrorMessageNumber;
 					}
 				}
-
-				if (errorCount > 0)
-				{
-					ContentDebug.LogError($"Validation failed (errors: {errorCount}, warnings️: {warningCount})");
-					return false;
-				}
-
-				ContentDebug.Log(warningCount > 0
-					? $"Validation passed (warnings️: {warningCount})"
-					: "Validation passed");
 			}
 			finally
 			{
@@ -179,8 +217,11 @@ namespace Content.Editor
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
 			bool inspectUnityObject = false,
-			Func<string, string> logMessageFormatter = null)
+			Func<string, string> logMessageFormatter = null,
+			StringBuilder errorMessageBuilder = null)
 		{
+			errorMessageBuilder ??= _activeErrorMessageBuilder;
+
 			var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
 			return ValidateContentReferences(target,
 				targetType,
@@ -193,7 +234,8 @@ namespace Content.Editor
 				valueValidators,
 				ref warningCount,
 				inspectUnityObject,
-				logMessageFormatter);
+				logMessageFormatter,
+				errorMessageBuilder);
 		}
 
 		private static bool IsValidationCancellationRequested()
@@ -212,7 +254,8 @@ namespace Content.Editor
 
 		private static int ValidateContentReferences(ContentScriptableObject scriptableObject,
 			IReadOnlyList<IContentValueValidator> valueValidators,
-			ref int warningCount)
+			ref int warningCount,
+			StringBuilder errorMessageBuilder)
 		{
 			if (!scriptableObject)
 				return 0;
@@ -229,7 +272,8 @@ namespace Content.Editor
 				valueValidators,
 				ref warningCount,
 				false,
-				null);
+				null,
+				errorMessageBuilder);
 		}
 
 		private static int ValidateContentReferences(object target,
@@ -243,7 +287,8 @@ namespace Content.Editor
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
 			bool inspectUnityObject,
-			Func<string, string> logMessageFormatter)
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
 		{
 			if (targetType == null)
 				return 0;
@@ -255,7 +300,8 @@ namespace Content.Editor
 				logContext,
 				canBeEmpty,
 				valueValidators,
-				logMessageFormatter);
+				logMessageFormatter,
+				errorMessageBuilder);
 			if (target == null)
 				return errorCount;
 
@@ -266,7 +312,8 @@ namespace Content.Editor
 					canBeEmpty,
 					failIfEmpty,
 					ref warningCount,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 
 			if (IsTerminal(targetType))
 				return errorCount;
@@ -287,7 +334,8 @@ namespace Content.Editor
 					failIfEmpty,
 					valueValidators,
 					ref warningCount,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 
 			if (target is IEnumerable enumerable && target is not string)
 				return errorCount + ValidateEnumerable(enumerable,
@@ -299,7 +347,8 @@ namespace Content.Editor
 					failIfEmpty,
 					valueValidators,
 					ref warningCount,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 
 			foreach (var field in GetSerializableFields(targetType))
 			{
@@ -313,10 +362,10 @@ namespace Content.Editor
 				}
 				catch (Exception e)
 				{
-					ContentDebug.LogError(
-						FormatLogMessage($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}",
-							logMessageFormatter),
-						logContext);
+					var errorMessage = FormatLogMessage($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}",
+						logMessageFormatter);
+					AppendErrorMessage(errorMessageBuilder, errorMessage);
+					ContentDebug.LogError(errorMessage, logContext);
 					errorCount++;
 					continue;
 				}
@@ -332,7 +381,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					false,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 			}
 
 			return errorCount;
@@ -345,7 +395,8 @@ namespace Content.Editor
 			object logContext,
 			bool canBeEmpty,
 			IReadOnlyList<IContentValueValidator> validators,
-			Func<string, string> logMessageFormatter)
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
 		{
 			if (validators == null || validators.Count == 0)
 				return 0;
@@ -365,11 +416,11 @@ namespace Content.Editor
 				}
 				catch (Exception e)
 				{
-					ContentDebug.LogError(
-						FormatLogMessage(
-							$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
-							logMessageFormatter),
-						logContext);
+					var errorMessage = FormatLogMessage(
+						$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
+						logMessageFormatter);
+					AppendErrorMessage(errorMessageBuilder, errorMessage);
+					ContentDebug.LogError(errorMessage, logContext);
 					errorCount++;
 					continue;
 				}
@@ -383,7 +434,9 @@ namespace Content.Editor
 				if (message.IsNullOrEmpty())
 					message = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
 
-				ContentDebug.LogError(FormatLogMessage(message, logMessageFormatter), logContext);
+				var formattedMessage = FormatLogMessage(message, logMessageFormatter);
+				AppendErrorMessage(errorMessageBuilder, formattedMessage);
+				ContentDebug.LogError(formattedMessage, logContext);
 				errorCount++;
 			}
 
@@ -399,7 +452,8 @@ namespace Content.Editor
 			bool failIfEmpty,
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
-			Func<string, string> logMessageFormatter)
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
 		{
 			var errorCount = 0;
 			foreach (DictionaryEntry entry in dictionary)
@@ -415,7 +469,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					false,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 
 				errorCount += ValidateContentReferences(entry.Value,
 					entry.Value?.GetType(),
@@ -428,7 +483,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					false,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 			}
 
 			return errorCount;
@@ -443,7 +499,8 @@ namespace Content.Editor
 			bool failIfEmpty,
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
-			Func<string, string> logMessageFormatter)
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
 		{
 			var errorCount = 0;
 			var index = 0;
@@ -460,7 +517,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					false,
-					logMessageFormatter);
+					logMessageFormatter,
+					errorMessageBuilder);
 				index++;
 			}
 
@@ -473,16 +531,17 @@ namespace Content.Editor
 			bool canBeEmpty,
 			bool failIfEmpty,
 			ref int warningCount,
-			Func<string, string> logMessageFormatter)
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
 		{
 			if (reference.IsEmpty())
 			{
 				if (failIfEmpty)
 				{
-					ContentDebug.LogError(
-						FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
-							logMessageFormatter),
-						logContext);
+					var errorMessage = FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
+						logMessageFormatter);
+					AppendErrorMessage(errorMessageBuilder, errorMessage);
+					ContentDebug.LogError(errorMessage, logContext);
 					return 1;
 				}
 
@@ -511,11 +570,41 @@ namespace Content.Editor
 			if (reference.IsValid())
 				return 0;
 
-			ContentDebug.LogError(
-				FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
-					logMessageFormatter),
-				logContext);
+			var invalidReferenceMessage = FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
+				logMessageFormatter);
+			AppendErrorMessage(errorMessageBuilder, invalidReferenceMessage);
+			ContentDebug.LogError(invalidReferenceMessage, logContext);
 			return 1;
+		}
+
+		private static void AppendErrorMessage(StringBuilder stringBuilder, string message)
+		{
+			if (stringBuilder == null || message.IsNullOrEmpty())
+				return;
+
+			var number = stringBuilder == _activeErrorMessageBuilder
+				? ++_activeErrorMessageNumber
+				: GetNextErrorMessageNumber(stringBuilder);
+
+			stringBuilder.Append("[");
+			stringBuilder.Append(number);
+			stringBuilder.Append("] ");
+			stringBuilder.AppendLine(message);
+		}
+
+		private static int GetNextErrorMessageNumber(StringBuilder stringBuilder)
+		{
+			var number = 0;
+			for (var i = 0; i < stringBuilder.Length; i++)
+			{
+				if (i > 0 && stringBuilder[i - 1] != '\n')
+					continue;
+
+				if (char.IsDigit(stringBuilder[i]))
+					number++;
+			}
+
+			return number + 1;
 		}
 
 		private static string FormatLogMessage(string message, Func<string, string> formatter)
