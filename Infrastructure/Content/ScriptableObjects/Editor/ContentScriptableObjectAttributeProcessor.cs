@@ -242,7 +242,7 @@ namespace Content.ScriptableObjects.Editor
 		{
 			var originColor = GUI.color;
 			if (HasIdConflict(Property))
-				GUI.color = ObjectIsNullUtility.GetInvalidColor(originColor);
+				GUI.color = UnityObjectIsNullUtility.GetInvalidColor(originColor);
 
 			CallNextDrawer(label);
 			GUI.color = originColor;

@@ -40,7 +40,7 @@ namespace ZenoTween
 #if UNITY_EDITOR
 			target ??= _ownerEditor;
 #endif
-			var sequence = participants.ToSequence(target, speed: _inheritedSpeed * speed);
+			var sequence = participants.ToSequence(target, speed: _inheritedSpeed * base.speed);
 			return sequence;
 			//root is ignored here, otherwise there will be a dead loop.
 		}

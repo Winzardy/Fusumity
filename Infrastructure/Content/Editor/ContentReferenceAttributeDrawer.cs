@@ -296,24 +296,24 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			{
-				var errorColor = ObjectIsNullUtility.GetWarningColor(originColor);
+				var errorColor = UnityObjectIsNullUtility.GetWarningColor(originColor);
 				var canBeEmpty = Property.Info.GetAttribute<CanBeEmptyAttribute>() != null
 					|| Property.Info.GetAttribute<CanBeNullAttribute>() != null
 					|| Property.Info.GetAttribute<MaybeNullAttribute>() != null;
-				var failIfEmpty = ObjectIsNullUtility.HasRequiredAttribute(Property);
+				var failIfEmpty = UnityObjectIsNullUtility.HasRequiredAttribute(Property);
 
 				if (!canBeEmpty)
 					if (typeof(IContentReference).IsAssignableFrom(Property.ParentType))
 					{
 						canBeEmpty = Property.ParentValueProperty.Info.GetAttribute<CanBeEmptyAttribute>() != null;
-						failIfEmpty |= ObjectIsNullUtility.HasRequiredAttribute(Property.ParentValueProperty);
+						failIfEmpty |= UnityObjectIsNullUtility.HasRequiredAttribute(Property.ParentValueProperty);
 					}
 
 				if (isEmpty
 					&& GUI.enabled)
 				{
 					if (failIfEmpty)
-						errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
+						errorColor = UnityObjectIsNullUtility.GetInvalidColor(originColor);
 
 					if (failIfEmpty || !canBeEmpty)
 						GUI.color = errorColor;
@@ -324,7 +324,7 @@ namespace Content.Editor
 
 				if (invalid)
 				{
-					errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
+					errorColor = UnityObjectIsNullUtility.GetInvalidColor(originColor);
 					if (useDropdown)
 					{
 						GUI.color = errorColor;

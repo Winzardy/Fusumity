@@ -29,11 +29,15 @@ namespace UI
 		}
 	}
 
+	public abstract class StateSwitcher : MonoBehaviour
+	{
+	}
+
 	/// <typeparam name="TState">
 	/// Настоятельно рекомендуется использовать:<br/>
 	/// <c>bool</c>, <c>int</c>, <c>string</c>
 	/// </typeparam>
-	public abstract class StateSwitcher<TState> : MonoBehaviour, IStateSwitcher
+	public abstract class StateSwitcher<TState> : StateSwitcher, IStateSwitcher
 	{
 		protected bool _immediate;
 

@@ -12,45 +12,51 @@ namespace Fusumity.Editor
 {
 	using UnityObject = UnityEngine.Object;
 
-	public class UnityObjectAttributeProcessor : OdinAttributeProcessor<UnityObject>
+	public class UnityObjectNullCheckAttributeProcessor : OdinAttributeProcessor<UnityObject>
 	{
 		public override void ProcessSelfAttributes(
 			InspectorProperty property,
 			List<Attribute> attributes)
 		{
-			if (attributes.Exists(x => x is ObjectNullAttribute))
+			if (attributes.Exists(x => x is NullCheckAttribute))
 				return;
-			attributes.Add(new ObjectNullAttribute());
+
+			attributes.Add(new NullCheckAttribute());
 		}
 	}
 
-	public class ObjectNullAttribute : Attribute
+	public class NullCheckAttribute : Attribute
 	{
 	}
 
-	public class ObjectNullAttributeDrawer : OdinAttributeDrawer<ObjectNullAttribute>
+	[DrawerPriority(DrawerPriorityLevel.WrapperPriority)]
+	public class UnityObjectNullCheckAttributeDrawer : OdinAttributeDrawer<NullCheckAttribute>
 	{
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			var valueEntry = Property.ValueEntry;
-			var validationState = ObjectIsNullUtility.ValidateState(valueEntry);
 			var originColor = GUI.color;
-			switch (validationState)
 			{
-				case ObjectIsNullUtility.ValidationState.Warning:
-					GUI.color = ObjectIsNullUtility.GetWarningColor(originColor);
-					break;
-				case ObjectIsNullUtility.ValidationState.Invalid:
-					GUI.color = ObjectIsNullUtility.GetInvalidColor(originColor);
-					break;
+				var valueEntry = Property.ValueEntry;
+				var state = UnityObjectIsNullUtility.ValidateState(valueEntry);
+
+				switch (state)
+				{
+					case UnityObjectIsNullUtility.ValidationState.Warning:
+						GUI.color = UnityObjectIsNullUtility.GetWarningColor(originColor);
+						break;
+					case UnityObjectIsNullUtility.ValidationState.Invalid:
+						GUI.color = UnityObjectIsNullUtility.GetInvalidColor(originColor);
+						break;
+				}
+
+				CallNextDrawer(label);
 			}
 
-			CallNextDrawer(label);
 			GUI.color = originColor;
 		}
 	}
 
-	public static class ObjectIsNullUtility
+	public static class UnityObjectIsNullUtility
 	{
 		public enum ValidationState
 		{
@@ -110,13 +116,20 @@ namespace Fusumity.Editor
 
 		private static bool IsNull(IPropertyValueEntry valueEntry)
 		{
+			var value = valueEntry.WeakSmartValue;
+			if (value == null)
+				return true;
+
+			if (value is UnityObject unityObject)
+				return unityObject == null;
+
 			if (typeof(UnityObject).IsAssignableFrom(valueEntry.TypeOfValue))
 			{
-				var unityObject = valueEntry.WeakSmartValue as UnityObject;
-				return unityObject == null;
+				var typedUnityObject = value as UnityObject;
+				return typedUnityObject == null;
 			}
 
-			return valueEntry.WeakSmartValue == null;
+			return false;
 		}
 
 		public static bool HasRequiredAttribute(InspectorProperty property)
