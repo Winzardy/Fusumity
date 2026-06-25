@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Security.Cryptography;
 using Content.Management;
 using Fusumity.Utility;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Sapientia.Collections;
@@ -18,7 +17,8 @@ namespace Content.ScriptableObjects.Editor
 {
 	public class ContentDatabaseJsonFileExporter : BaseContentDatabaseExporter<ContentDatabaseJsonFileExporter.Args>
 	{
-		private string ASSETS_FOLDER_NAME = "Assets";
+		private const string ASSETS_FOLDER_NAME = "Assets";
+		private const string RESOURCES_FOLDER = "Assets/Resources";
 
 		public class Args : IContentDatabaseExporterArgs
 		{
@@ -134,13 +134,21 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				if (writing)
+				{
 					File.WriteAllText(fullPath, text);
+
+					var hash = GetFileSha256(fullPath);
+
+					File.WriteAllText(fullPath + JsonFullPath.HASH_EXTENSION, hash);
+
+					WriteAssetFile(Path.Combine(RESOURCES_FOLDER, nameof(ContentBuildInfo) + ".json" ), (new ContentBuildInfo() { contentHash = hash }).ToJson());
+				}
 
 				if (args.revealInFinder)
 					EditorUtility.RevealInFinder(fullPath);
 
 				TextAsset textAsset = null;
-				if (fullPath.Contains(ASSETS_FOLDER_NAME) && path != null)
+				if (path != null)
 				{
 					AssetDatabase.ImportAsset(path);
 					textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
@@ -164,6 +172,35 @@ namespace Content.ScriptableObjects.Editor
 
 			bool Filter(IContentEntry e) => ContentNewtonsoftContractResolver.IsAllowedType(e.ValueType, typeFiltering);
 		}
+
+		private static void WriteAssetFile(string path, string text)
+		{
+			if (string.IsNullOrEmpty(path))
+				return;
+
+			var fullAssetPath = Path.Combine(Application.dataPath.Remove(ASSETS_FOLDER_NAME), path);
+			var assetFolderPath = Path.GetDirectoryName(fullAssetPath);
+			if (!Directory.Exists(assetFolderPath))
+				Directory.CreateDirectory(assetFolderPath!);
+
+			File.WriteAllText(fullAssetPath, text);
+			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+		}
+
+		private static string GetFileSha256(string fullPath)
+		{
+			using var stream = File.OpenRead(fullPath);
+			using var sha256 = SHA256.Create();
+			var hashBytes = sha256.ComputeHash(stream);
+
+			using (StringBuilderPool.Get(out var sb))
+			{
+				for (var i = 0; i < hashBytes.Length; i++)
+					sb.Append(hashBytes[i].ToString("x2"));
+
+				return sb.ToString();
+			}
+		}
 	}
 
 	[InlineProperty]
@@ -171,6 +208,7 @@ namespace Content.ScriptableObjects.Editor
 	public struct JsonFullPath
 	{
 		public const string EXTENSION = ".json";
+		public const string HASH_EXTENSION = ".hash";
 
 		[HorizontalGroup]
 		[HideLabel, FolderPath]

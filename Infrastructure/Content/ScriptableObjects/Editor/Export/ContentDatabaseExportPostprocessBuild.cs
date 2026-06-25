@@ -3,11 +3,11 @@ using UnityEditor.Build.Reporting;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public class ContentDatabaseExportBuildProcessor : IPostprocessBuildWithReport
+	public class ContentDatabaseExportBuildProcessor : IPreprocessBuildWithReport
 	{
-		public int callbackOrder => 0;
+		public int callbackOrder => int.MaxValue;
 
-		public void OnPostprocessBuild(BuildReport report)
+		public void OnPreprocessBuild(BuildReport report)
 		{
 			ContentDatabaseExport.OnBuild(report.summary.outputPath);
 		}
