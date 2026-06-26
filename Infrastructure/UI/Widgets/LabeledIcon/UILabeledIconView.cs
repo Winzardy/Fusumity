@@ -141,8 +141,8 @@ namespace Game.UI
 			_layout.label.color = ViewModel.LabelColor.Value;
 		}
 
-		private void HandleIconClicked() => ViewModel?.IconClick();
-		private void HandleLabelClicked() => ViewModel?.LabelClick();
+		private void HandleIconClicked() => ViewModel?.IconClick(_layout.icon.rectTransform.position);
+		private void HandleLabelClicked() => ViewModel?.LabelClick(_layout.label.rectTransform.position);
 	}
 
 	public interface ILabeledIconViewModel
@@ -163,11 +163,11 @@ namespace Game.UI
 		event Action IconChanged;
 		event Action IconColorChanged;
 
-		void LabelClick()
+		void LabelClick(Vector2 pos)
 		{
 		}
 
-		void IconClick()
+		void IconClick(Vector2 pos)
 		{
 		}
 	}
