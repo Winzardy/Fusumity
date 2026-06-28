@@ -268,6 +268,7 @@ namespace ZenoTween
 			{
 				tween.SetAutoKill(false);
 				tween.SetLoops(repeat, repeatType);
+				// TODO: int.MaxValue варнинг
 			}
 		}
 

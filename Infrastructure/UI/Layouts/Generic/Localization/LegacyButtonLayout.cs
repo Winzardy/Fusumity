@@ -4,7 +4,7 @@
 	/// <summary>
 	/// Не использовать!
 	/// </summary>
-	public class LegacyButtonLayout : UILabeledButtonLayout
+	public class LegacyButtonLayout : UILegacyLabeledButtonLayout
 	{
 	}
 }

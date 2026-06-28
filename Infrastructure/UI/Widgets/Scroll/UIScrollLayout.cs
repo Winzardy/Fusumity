@@ -2,6 +2,7 @@
 using System.Collections;
 using ZenoTween;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -228,6 +229,7 @@ namespace UI.Scroll
 		public UIScrollItemLayout template;
 
 		[Tooltip("Дополнительный Scroll для навигации...")]
+		[CanBeNull]
 		public UIScrollLayout pagination;
 
 		/// <summary>

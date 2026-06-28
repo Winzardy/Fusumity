@@ -12,7 +12,7 @@ namespace UI
 	/// Дефолтный виджет, для сложных кейсов есть Generic
 	/// </summary>
 	[Obsolete("Используйте UIButton")]
-	public class UIButtonWidget : UIButtonWidget<UILabeledButtonLayout, UIButtonWidget.Args>
+	public class UIButtonWidget : UIButtonWidget<UILegacyLabeledButtonLayout, UIButtonWidget.Args>
 	{
 		public struct Args : IObseleteButtonViewModel
 		{
@@ -31,7 +31,7 @@ namespace UI
 			public string Style { get; set; }
 
 			/// <summary>
-			/// Отключить добавление префикса <see cref="UILabeledButtonLayout.ANIMATION_KEY_PREFIX"/>
+			/// Отключить добавление префикса <see cref="UILegacyLabeledButtonLayout.ANIMATION_KEY_PREFIX"/>
 			/// </summary>
 			[Obsolete("убрать после полной миграции")]
 			public bool DisablePrefixStyle { get; set; }
@@ -62,7 +62,7 @@ namespace UI
 	}
 
 	public class UIButtonWidget<TLayout, TArgs> : UIWidget<TLayout, TArgs>, IButtonWidget, IClickable<IButtonWidget>
-		where TLayout : UILabeledButtonLayout
+		where TLayout : UILegacyLabeledButtonLayout
 		where TArgs : IObseleteButtonViewModel
 	{
 		private Sprite _defaultIconSprite;
@@ -200,7 +200,7 @@ namespace UI
 				//TODO: убрать это...
 				var prev = GUIDebug.Logging.Widget.Animator.notFoundSequence;
 				GUIDebug.Logging.Widget.Animator.notFoundSequence = false;
-				var animationKey = prefix ? UILabeledButtonLayout.ANIMATION_KEY_PREFIX + style : style;
+				var animationKey = prefix ? UILegacyLabeledButtonLayout.ANIMATION_KEY_PREFIX + style : style;
 				_animator?.Play(animationKey);
 				GUIDebug.Logging.Widget.Animator.notFoundSequence = prev;
 			}
