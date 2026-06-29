@@ -9,7 +9,8 @@
         "Fusumity.Editor",
         "Unity.Mathematics",
         "Unity.Localization",
-        "Unity.Localization.Editor"
+        "Unity.Localization.Editor",
+        "Game.Editor"
     ],
     "includePlatforms": [
         "Editor"
