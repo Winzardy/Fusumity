@@ -1,3 +1,4 @@
+using Game.UI.Tooltips.Editor;
 using Sapientia.Extensions;
 using UnityEditor;
 using UnityEditor.Localization;
@@ -56,6 +57,8 @@ namespace Localization.Editor
 				}
 			}
 
+			TooltipsValidator.Validate();
+
 			void PullIntoStringTableCollection(StringTableCollection table, GoogleSheetsExtension googleExt)
 			{
 				var sheets = new GoogleSheets(googleExt.SheetsServiceProvider)
@@ -71,7 +74,7 @@ namespace Localization.Editor
 
 				LocalizationDebug.Log($"Pulled from Google Sheets for table [ {table.name} ]", table);
 
-				if(LocalizationAutoGenerationMenu.IsEnable)
+				if (LocalizationAutoGenerationMenu.IsEnable)
 					GenerateConstants();
 			}
 		}

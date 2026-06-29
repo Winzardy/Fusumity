@@ -13,6 +13,7 @@ namespace Localization
 		public static LocKey ToDescriptionKey(this in LocKey key) => key.value.ToDescriptionKey();
 		public static LocKey ToShortDescriptionKey(this in LocKey key) => key.value.ToShortDescriptionKey();
 		public static LocKey ToTooltipKey(this in LocKey key) => key.value.ToTooltipKey();
+		public static LocKey ToTooltipKeySafe(this in LocKey key) => key.IsEmpty() ? null : key.value.ToTooltipKey();
 
 		public static string ToDescriptionLocalize(this in LocKey key) => key.ToDescriptionKey().ToLocalize();
 		public static string ToShortDescriptionLocalize(this in LocKey key) => key.ToShortDescriptionKey().ToLocalize();
