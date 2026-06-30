@@ -49,7 +49,7 @@ namespace Content.ScriptableObjects.Editor
 					var scriptable = so.ScriptableContentEntry.ScriptableObject;
 
 					var classHelperName = nameof(FusumityEditorGUIHelper);
-					var memberHelperName = nameof(FusumityEditorGUIHelper.drawInlineEditor);
+					var memberHelperName = nameof(FusumityEditorGUIHelper.disableInlineEditorIdEditing);
 					attributes.Add(new DisableIfAttribute($"@{classHelperName}.{memberHelperName}"));
 
 					if (scriptable && !scriptable.name.IsNullOrEmpty())

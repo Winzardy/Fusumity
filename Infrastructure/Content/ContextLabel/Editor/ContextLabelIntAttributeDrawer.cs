@@ -33,16 +33,21 @@ namespace Content.ContextLabel.Editor
 
 		protected override void Initialize()
 		{
-			ContentManager.TryGetEntry(Attribute.Catalog, out _contentEntry);
+			TryResolveEntry();
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			if (_contentEntry == null)
 			{
-				SirenixEditorGUI.WarningMessageBox($"Not found catalog (int) by id [ {Attribute.Catalog} ] ");
-				CallNextDrawer(label);
-				return;
+				TryResolveEntry();
+				if (_contentEntry == null)
+				{
+					if (!ContentManager.initializing)
+						SirenixEditorGUI.WarningMessageBox($"Not found catalog (int) by id [ {Attribute.Catalog} ] ");
+					CallNextDrawer(label);
+					return;
+				}
 			}
 
 			TryCreateSelector();
@@ -118,6 +123,14 @@ namespace Content.ContextLabel.Editor
 			CustomizeAddMenu();
 		}
 
+		private void TryResolveEntry()
+		{
+			if (ContentManager.initializing)
+				return;
+
+			ContentManager.TryGetEntry(Attribute.Catalog, out _contentEntry);
+		}
+
 		private void CustomizeAddMenu()
 		{
 			if (!_selector.TryGetMenuItemByValue(ADD_KEY, out var menuItem))
@@ -170,7 +183,7 @@ namespace Content.ContextLabel.Editor
 			selector.SetSearchFunction(item =>
 			{
 				if (item.GetFullPath() == ADD_MENU ||
-				    item.GetFullPath() == NONE_MENU)
+					item.GetFullPath() == NONE_MENU)
 					return false;
 
 				if (item?.Value == null)

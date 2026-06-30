@@ -29,7 +29,8 @@ namespace UI.Editor
 		private const float DEFAULT_OVERLAY_WIDTH = 360f;
 		private const float MAX_OVERLAY_WIDTH = 900f;
 		private const float MAX_OVERLAY_HEIGHT = 4096f;
-		private const float BOTTOM_PADDING = 24f;
+		private const float BOTTOM_PADDING = 18f;
+		private const int ROOT_CONTAINER_COLLAPSED_THRESHOLD = 3;
 
 		private const string NONE = "None";
 		private const string TOOL_ENABLED_EDITOR_PREF_KEY = "StateSwitcherEditorOverlay.Enabled";
@@ -44,10 +45,13 @@ namespace UI.Editor
 		private readonly Dictionary<Transform, SwitcherTreeNode> _containerToNode = new();
 		private readonly Dictionary<IStateSwitcher, Dropdown> _switcherToDropdown = new();
 		private readonly Dictionary<int, bool> _foldoutStateByNodeKey = new();
+		private readonly Dictionary<int, bool> _treeFoldoutStateBySignature = new();
 		private bool _isToolEnabled = true;
+		private bool _isTreeExpanded = true;
 		private float _overlayHeight;
 		private GameObject _targetGameObject;
 		private IStateSwitcher _targetSwitcherRoot;
+		private string _treeRootLabel;
 		private int _treeSignature;
 		private SwitcherTreeNode _rootNode;
 
@@ -95,6 +99,8 @@ namespace UI.Editor
 
 		private void UpdateLayoutTargets(GameObject target)
 		{
+			_treeRootLabel = target.name;
+
 			using (ListPool<IStateSwitcher>.Get(out var stateSwitchers))
 			using (HashSetPool<IStateSwitcher>.Get(out var visited))
 			{
@@ -149,6 +155,9 @@ namespace UI.Editor
 
 		private void UpdateSwitcherTargets(IStateSwitcher stateSwitcher)
 		{
+			if (stateSwitcher is Component selectedComponent)
+				_treeRootLabel = selectedComponent.gameObject.name;
+
 			var rootSwitcher = FindRootSwitcher(stateSwitcher);
 			if (rootSwitcher == null)
 			{
@@ -277,6 +286,8 @@ namespace UI.Editor
 			}
 
 			AttachUnreachableSwitchers(root);
+			ReparentContainerNodes(root);
+			ApplyTreeRootFoldoutDefault();
 		}
 
 		private void FindSwitcherTargets(IStateSwitcher rootSwitcher, List<IStateSwitcher> stateSwitchers)
@@ -301,6 +312,7 @@ namespace UI.Editor
 			}
 
 			AttachUnreachableSwitchersToRoot();
+			ApplyTreeRootFoldoutDefault();
 		}
 
 		private void AttachGroupChildren(HashSet<SwitcherTreeNode> attached)
@@ -369,7 +381,10 @@ namespace UI.Editor
 		private void RestoreFoldoutState(SwitcherTreeNode node)
 		{
 			if (_foldoutStateByNodeKey.TryGetValue(node.Key, out var isExpanded))
+			{
 				node.IsExpanded = isExpanded;
+				node.HasFoldoutState = true;
+			}
 		}
 
 		private void AttachUnreachableSwitchers(Transform root)
@@ -420,10 +435,36 @@ namespace UI.Editor
 				CollectReachableNodes(child, reachable);
 		}
 
+		private void ApplyTreeRootFoldoutDefault()
+		{
+			if (_treeFoldoutStateBySignature.TryGetValue(_treeSignature, out var isExpanded))
+			{
+				_isTreeExpanded = isExpanded;
+				return;
+			}
+
+			_isTreeExpanded = CountContainerNodes(_rootNode, false) <= ROOT_CONTAINER_COLLAPSED_THRESHOLD;
+		}
+
+		private static int CountContainerNodes(SwitcherTreeNode node, bool includeSelf = true)
+		{
+			if (node == null)
+				return 0;
+
+			var count = includeSelf && node.Switcher == null ? 1 : 0;
+			foreach (var child in node.Children)
+				count += CountContainerNodes(child);
+
+			return count;
+		}
+
 		private void CaptureFoldoutStates()
 		{
 			if (_rootNode == null)
 				return;
+
+			if (_treeSignature != 0)
+				_treeFoldoutStateBySignature[_treeSignature] = _isTreeExpanded;
 
 			using (HashSetPool<SwitcherTreeNode>.Get(out var visited))
 				CaptureFoldoutStates(_rootNode, visited);
@@ -502,8 +543,52 @@ namespace UI.Editor
 
 			node = CreateNode(container);
 			_containerToNode.Add(container, node);
-			_rootNode.Children.Add(node);
+			AttachContainerNode(root, node);
 			return node;
+		}
+
+		private void ReparentContainerNodes(Transform root)
+		{
+			using (ListPool<SwitcherTreeNode>.Get(out var containers))
+			{
+				foreach (var node in _containerToNode.Values)
+				{
+					if (node != _rootNode)
+						containers.Add(node);
+				}
+
+				foreach (var node in containers)
+					AttachContainerNode(root, node);
+			}
+		}
+
+		private void AttachContainerNode(Transform root, SwitcherTreeNode node)
+		{
+			var parent = FindContainerParent(root, node.Transform);
+			RemoveContainerNodeFromParents(node);
+
+			if (!parent.Children.Contains(node))
+				parent.Children.Add(node);
+		}
+
+		private SwitcherTreeNode FindContainerParent(Transform root, Transform container)
+		{
+			for (var current = container.parent; current != null && current != root; current = current.parent)
+			{
+				if (_containerToNode.TryGetValue(current, out var node))
+					return node;
+			}
+
+			return _rootNode;
+		}
+
+		private void RemoveContainerNodeFromParents(SwitcherTreeNode node)
+		{
+			foreach (var parent in _containerToNode.Values)
+			{
+				if (parent != node)
+					parent.Children.Remove(node);
+			}
 		}
 
 		private static Transform GetSwitcherContainer(Transform root, Transform target)
@@ -528,11 +613,16 @@ namespace UI.Editor
 			_containerToNode.Clear();
 			_targetGameObject = null;
 			_targetSwitcherRoot = null;
+			_treeRootLabel = null;
 			_treeSignature = 0;
 			_rootNode = null;
 
 			if (clearFoldoutStates)
+			{
 				_foldoutStateByNodeKey.Clear();
+				_treeFoldoutStateBySignature.Clear();
+				_isTreeExpanded = true;
+			}
 		}
 
 		public override void OnGUI()
@@ -554,8 +644,12 @@ namespace UI.Editor
 
 				if (_isToolEnabled && _rootNode != null && _rootNode.Children.Count > 0)
 				{
-					using (HashSetPool<SwitcherTreeNode>.Get(out var visited))
-						DrawSwitcherTreeChildren(_rootNode, 0, visited);
+					DrawTreeRootRow();
+					if (_isTreeExpanded)
+					{
+						using (HashSetPool<SwitcherTreeNode>.Get(out var visited))
+							DrawSwitcherTreeChildren(_rootNode, 1, visited);
+					}
 
 					GUILayout.Space(5);
 				}
@@ -584,6 +678,24 @@ namespace UI.Editor
 			}
 			GUILayout.EndHorizontal();
 		}
+
+		private void DrawTreeRootRow()
+		{
+			using (new GUILayout.HorizontalScope())
+			{
+				var rect = GUILayoutUtility.GetRect(
+					TREE_FOLDOUT_WIDTH,
+					EditorGUIUtility.singleLineHeight,
+					GUILayout.Width(TREE_FOLDOUT_WIDTH));
+
+				_isTreeExpanded = EditorGUI.Foldout(rect, _isTreeExpanded, GUIContent.none, true);
+				EditorGUILayout.LabelField(GetTreeRootLabel(), EditorStyles.boldLabel);
+				GUILayout.Space(RIGHT_PADDING);
+			}
+		}
+
+		private string GetTreeRootLabel()
+			=> !_treeRootLabel.IsNullOrEmpty() ? _treeRootLabel : _rootNode?.Transform ? _rootNode.Transform.name : string.Empty;
 
 		private void ApplyOverlaySizeBounds()
 		{
@@ -962,6 +1074,7 @@ namespace UI.Editor
 			public readonly IStateSwitcher Switcher;
 			public readonly List<SwitcherTreeNode> Children = new();
 			public readonly int Key;
+			public bool HasFoldoutState;
 			public bool IsExpanded;
 
 			public SwitcherTreeNode(Transform transform)

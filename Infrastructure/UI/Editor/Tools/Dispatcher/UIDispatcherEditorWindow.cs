@@ -36,7 +36,7 @@ namespace UI.Editor
 		{
 			base.OnEnable();
 
-			titleContent = new GUIContent("UI Dispatcher", EditorIcons.GridLayout.Active);
+			CreateTitle();
 			minSize = new Vector2(512, 256);
 		}
 
@@ -83,9 +83,12 @@ namespace UI.Editor
 			return tree;
 		}
 
-		private void OnValidate()
+		private void OnValidate() => CreateTitle();
+
+		private void CreateTitle()
 		{
 			titleContent = new GUIContent("UI Dispatcher", EditorIcons.GridLayout.Active);
 		}
+
 	}
 }
