@@ -52,6 +52,11 @@ namespace UI
 			rect.SetActive(activity?.Invoke() ?? active);
 		}
 
+		public static void ForceRebuildLayout(this RectTransform rectTransform)
+		{
+			LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
+		}
+
 		public static RectTransform FirstOrDefault(this RectTransform parent, string name)
 		{
 			foreach (RectTransform child in parent)
