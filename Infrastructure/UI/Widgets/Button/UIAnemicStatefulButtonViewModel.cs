@@ -1,37 +1,34 @@
-﻿using Fusumity.MVVM.UI;
+﻿using Fusumity.MVVM;
+using Fusumity.MVVM.UI;
+using Game.UI;
 using System;
 
 namespace UI
 {
-	//public class UIAnemicStatefulButtonViewModel : IStatefulButtonViewModel
-	//{
-	//	private Action _onClick;
+	public class UIAnemicStatefulButtonViewModel : IStatefulButtonViewModel
+	{
+		private LabelViewModel _label;
+		private bool? _interactable;
+		private string _style;
 
-	//	public ILabelViewModel Label { get; } = new LabelViewModel();
-	//	public string Style { get; private set; }
+		public ILabelViewModel Label { get => _label; }
 
-	//	public event Action StyleChanged;
-	//	public event Action InteractableChanged;
+		public string Style { get => _style; set { _style = value; StyleChanged?.Invoke(); } }
+		public bool? Interactable { get => _interactable; set { _interactable = value; InteractableChanged?.Invoke(); } }
 
-	//	public void Click()
-	//	{
-	//		_onClick?.Invoke();
-	//	}
+		public UISpriteInfo Icon { get; set; }
+		public ILabeledIconViewModel LabeledIcon { get; set; }
+		public IStatefulViewModel Indicator { get; set; }
 
-	//	public void SetLabel(string label)
-	//	{
-	//		Label.Value = label;
-	//	}
+		public string LabelText { get => (_label ??= new LabelViewModel()).Value; set => (_label ??= new LabelViewModel()).Value = value; }
+		public Action ClickAction { get; set; }
 
-	//	public void SetStyle(string style)
-	//	{
-	//		Style = style;
-	//		StyleChanged?.Invoke();
-	//	}
+		public event Action StyleChanged;
+		public event Action InteractableChanged;
 
-	//	public void SetAction(Action action)
-	//	{
-	//		_onClick = action;
-	//	}
-	//}
+		public void Click()
+		{
+			ClickAction?.Invoke();
+		}
+	}
 }

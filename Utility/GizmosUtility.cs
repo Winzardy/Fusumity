@@ -102,6 +102,24 @@ namespace Fusumity.Utility
 			Gizmos.color = gizmoColor;
 		}
 
+		public static void DrawBoundaries(float width, float height, float verticalOffset, float horizontalOffset, Color color)
+		{
+			var topLeft = new Vector3(horizontalOffset, height - verticalOffset, 0);
+			var topRight = new Vector3(width - horizontalOffset, height - verticalOffset, 0);
+			var bottomLeft = new Vector3(horizontalOffset, verticalOffset, 0);
+			var bottomRight = new Vector3(width - horizontalOffset, verticalOffset, 0);
+
+			var prevColor = Gizmos.color;
+			Gizmos.color = color;
+
+			Gizmos.DrawLine(topLeft, topRight);
+			Gizmos.DrawLine(topRight, bottomRight);
+			Gizmos.DrawLine(bottomRight, bottomLeft);
+			Gizmos.DrawLine(bottomLeft, topLeft);
+
+			Gizmos.color = prevColor;
+		}
+
 
 		private static void DrawLineLoop(Vector3[] points)
 		{

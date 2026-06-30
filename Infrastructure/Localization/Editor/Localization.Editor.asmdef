@@ -8,7 +8,8 @@
         "Fusumity.Editor",
         "Unity.Localization",
         "Unity.Localization.Editor",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Game.Editor"
     ],
     "includePlatforms": [
         "Editor"
