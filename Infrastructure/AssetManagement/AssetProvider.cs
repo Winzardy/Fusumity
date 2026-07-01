@@ -22,6 +22,14 @@ namespace AssetManagement
 			DisposeResources();
 		}
 
+		private static void ThrowIfReferenceIsEmpty(IAssetReference reference)
+		{
+#if UNITY_EDITOR
+			if (reference.IsEmptyOrInvalid())
+				throw AssetManagementDebug.Exception($"{nameof(reference)} must not be empty");
+#endif
+		}
+
 		/// <summary>
 		/// Загрузить ассет (текстура, геймобж, текст и т.д). <br/>
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
@@ -30,6 +38,8 @@ namespace AssetManagement
 		public async UniTask<T> LoadAssetAsync<T>(IAssetReference reference, CancellationToken cancellationToken = default,
 			IProgress<float> progress = null)
 		{
+			ThrowIfReferenceIsEmpty(reference);
+
 			if (reference == null)
 			{
 				if (typeof(Component).IsAssignableFrom(typeof(T)))
@@ -56,6 +66,8 @@ namespace AssetManagement
 			IProgress<float> progress = null)
 			where T : Component
 		{
+			ThrowIfReferenceIsEmpty(reference);
+
 			if (reference == null)
 				ThrowInvalidComponentReference<T>();
 
@@ -73,6 +85,8 @@ namespace AssetManagement
 			IProgress<float> progress = null)
 			where T : Component
 		{
+			ThrowIfReferenceIsEmpty(reference);
+
 			if (reference == null)
 				ThrowInvalidComponentReference<T>();
 
@@ -112,6 +126,7 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public T LoadAsset<T>(IAssetReference reference)
 		{
+			ThrowIfReferenceIsEmpty(reference);
 			ThrowIfSyncLoadingUnsupported();
 
 			if (reference == null)
@@ -148,6 +163,7 @@ namespace AssetManagement
 		public T LoadComponent<T>(ComponentReference reference)
 			where T : Component
 		{
+			ThrowIfReferenceIsEmpty(reference);
 			ThrowIfSyncLoadingUnsupported();
 
 			if (reference == null)
@@ -163,6 +179,7 @@ namespace AssetManagement
 		public T LoadComponent<T>(IAssetReference reference)
 			where T : Component
 		{
+			ThrowIfReferenceIsEmpty(reference);
 			ThrowIfSyncLoadingUnsupported();
 
 			if (reference == null)
@@ -275,8 +292,8 @@ namespace AssetManagement
 		private static void ThrowIfSyncLoadingUnsupported()
 		{
 #if UNITY_WEBGL
-			const string SYNC_LOADING_NOT_SUPPORTED_WEBGL_MESSAGE = "The current synchronous loading implementation does not work on WebGL";
-			throw AssetManagementDebug.Exception(SYNC_LOADING_NOT_SUPPORTED_WEBGL_MESSAGE);
+			const string MESSAGE = "The current synchronous loading implementation does not work on WebGL";
+			throw AssetManagementDebug.Exception(MESSAGE);
 #endif
 		}
 
