@@ -30,6 +30,14 @@ namespace AssetManagement
 		public async UniTask<T> LoadAssetAsync<T>(IAssetReference reference, CancellationToken cancellationToken = default,
 			IProgress<float> progress = null)
 		{
+			if (reference == null)
+			{
+				if (typeof(Component).IsAssignableFrom(typeof(T)))
+					ThrowInvalidComponentReference<T>();
+
+				ThrowInvalidAssetReference<T>();
+			}
+
 			var assetReference = reference.AssetReference;
 
 			if (typeof(Component).IsAssignableFrom(typeof(T)))
@@ -48,6 +56,9 @@ namespace AssetManagement
 			IProgress<float> progress = null)
 			where T : Component
 		{
+			if (reference == null)
+				ThrowInvalidComponentReference<T>();
+
 			var assetReference = reference.AssetReference;
 			return await LoadComponentAsync<T>(assetReference, cancellationToken, progress);
 		}
@@ -62,6 +73,9 @@ namespace AssetManagement
 			IProgress<float> progress = null)
 			where T : Component
 		{
+			if (reference == null)
+				ThrowInvalidComponentReference<T>();
+
 			var assetReference = reference.AssetReference;
 			return await LoadComponentAsync<T>(assetReference, cancellationToken, progress);
 		}
@@ -88,6 +102,85 @@ namespace AssetManagement
 			where T : Component
 		{
 			return await LoadComponentByKeyAsync<T>(path, cancellationToken, progress: progress);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить ассет. Блокирует поток до готовности (<see cref="UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle.WaitForCompletion"/>). <br/>
+		/// Только для редких кейсов! Вызывает хич на главном потоке и не поддерживается на WebGL <br/>
+		/// Ассет обязательно нужно отпустить (release) после использования <see cref="Release(IAssetReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип ассета</typeparam>
+		public T LoadAsset<T>(IAssetReference reference)
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			if (reference == null)
+			{
+				if (typeof(Component).IsAssignableFrom(typeof(T)))
+					ThrowInvalidComponentReference<T>();
+
+				ThrowInvalidAssetReference<T>();
+			}
+
+			var assetReference = reference.AssetReference;
+
+			if (typeof(Component).IsAssignableFrom(typeof(T)))
+				return LoadComponent<T>(assetReference);
+
+			return LoadAsset<T>(assetReference);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить ассет по пути. См. <see cref="LoadAsset{T}(IAssetReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип ассета</typeparam>
+		public T LoadAsset<T>(string path)
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			return LoadAssetByKey<T>(path);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип компонента</typeparam>
+		public T LoadComponent<T>(ComponentReference reference)
+			where T : Component
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			if (reference == null)
+				ThrowInvalidComponentReference<T>();
+
+			return LoadComponent<T>(reference.AssetReference);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип компонента</typeparam>
+		public T LoadComponent<T>(IAssetReference reference)
+			where T : Component
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			if (reference == null)
+				ThrowInvalidComponentReference<T>();
+
+			return LoadComponent<T>(reference.AssetReference);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить GameObject и получить у него выбранный компонент по пути. См. <see cref="LoadAsset{T}(IAssetReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип компонента</typeparam>
+		public T LoadComponent<T>(string path)
+			where T : Component
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			return LoadComponentByKey<T>(path);
 		}
 
 		/// <summary>
@@ -177,6 +270,14 @@ namespace AssetManagement
 		public void ReleaseAll()
 		{
 			ReleaseAllAddressable();
+		}
+
+		private static void ThrowIfSyncLoadingUnsupported()
+		{
+#if UNITY_WEBGL
+			const string SYNC_LOADING_NOT_SUPPORTED_WEBGL_MESSAGE = "The current synchronous loading implementation does not work on WebGL";
+			throw AssetManagementDebug.Exception(SYNC_LOADING_NOT_SUPPORTED_WEBGL_MESSAGE);
+#endif
 		}
 
 		/// <summary>

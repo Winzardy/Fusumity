@@ -79,6 +79,47 @@ namespace AssetManagement
 		}
 
 		/// <summary>
+		/// Синхронно загрузить ресурс. Блокирует поток до готовности (<see cref="Resources.Load"/>). <br/>
+		/// Только для редких кейсов! Ресурс обязательно нужно отпустить (release) <see cref="Release(IResourceReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип ресурса</typeparam>
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public T LoadResource<T>(IResourceReference entry)
+			where T : UnityObject
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			return LoadResource<T>(entry.Path);
+		}
+
+		/// <summary>
+		/// Синхронно загрузить ресурс по пути. См. <see cref="LoadResource{T}(IResourceReference)"/>
+		/// </summary>
+		/// <typeparam name="T">Тип ресурса</typeparam>
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public T LoadResource<T>(string path)
+			where T : UnityObject
+		{
+			ThrowIfSyncLoadingUnsupported();
+
+			//Уже загружен/грузится — переиспользуем контейнер
+			if (_keyToResourceContainer.TryGetValue(path, out var container))
+				return container.GetResource<T>();
+
+			var asset = Resources.Load<T>(path);
+
+			if (asset == null)
+			{
+				AssetManagementDebug.LogError($"Failed to load resource: {path} is invalid");
+				throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
+			}
+
+			_keyToResourceContainer[path] = new ResourceContainer(path, asset);
+
+			return asset;
+		}
+
+		/// <summary>
 		/// Отпустить ресурс
 		/// </summary>
 		public void Release(IResourceReference reference)
@@ -126,8 +167,14 @@ namespace AssetManagement
 			private int _usages;
 			private ResourceRequest _request;
 
+			//Ассет, загруженный синхронно (без ResourceRequest)
+			private UnityObject _syncAsset;
+
 			private CancellationTokenSource _cts;
 			private CancellationTokenSource _disposeCts;
+
+			//Итоговый ассет из async-запроса или синхронной загрузки
+			private UnityObject Asset => _request != null ? _request.asset : _syncAsset;
 
 			public ResourceContainer(string path, ResourceRequest initialRequest, int usages = 1)
 			{
@@ -137,10 +184,25 @@ namespace AssetManagement
 				SetRequestInternal(initialRequest);
 			}
 
+			//Контейнер для синхронно загруженного ресурса
+			public ResourceContainer(string path, UnityObject asset, int usages = 1)
+			{
+				_path      = path;
+				_usages    = usages;
+				_syncAsset = asset;
+				_cts       = new();
+			}
+
 			public void Dispose()
 			{
 				if (_request == null)
+				{
+					//Синхронно загруженный ресурс
+					if (_syncAsset != null)
+						UnloadAsset();
+
 					return;
+				}
 
 				if (_request.isDone)
 				{
@@ -193,6 +255,22 @@ namespace AssetManagement
 				return (T) asset;
 			}
 
+			//Синхронное получение: если ассета ещё нет (async-запрос в полёте) — грузим синхронно
+			public T GetResource<T>()
+				where T : UnityObject
+			{
+				_usages++;
+
+				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
+
+				var asset = Asset;
+				if (asset != null)
+					return (T) asset;
+
+				_syncAsset = Resources.Load<T>(_path);
+				return (T) _syncAsset;
+			}
+
 			//Нет другого способа остановить подгрузку ресурса...
 			//придется через такой костыль подождать и выгрузить после...
 			private async UniTaskVoid WaitLoadResourceAndUnloadAsync()
@@ -208,12 +286,15 @@ namespace AssetManagement
 
 			private void UnloadAsset()
 			{
-				if (_request.asset is GameObject or Component or AssetBundle)
+				var asset = Asset;
+
+				if (asset is GameObject or Component or AssetBundle)
 					RequestUnloadUnusedAssets();
 				else
-					Resources.UnloadAsset(_request.asset);
+					Resources.UnloadAsset(asset);
 
-				_request = null;
+				_request   = null;
+				_syncAsset = null;
 				AsyncUtility.TriggerAndSetNull(ref _cts);
 			}
 

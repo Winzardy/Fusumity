@@ -6,7 +6,7 @@ namespace AssetManagement
 	/// <summary>
 	/// Опрашиваемый приёмник прогресса загрузки ассета. <br/>
 	/// Передаётся в загрузку как <see cref="IProgress{T}"/>, значение (нормализованное [0..1])
-	/// опрашивается через <see cref="Value"/> (например из Update)
+	/// опрашивается через <see cref="value"/> (например из Update)
 	/// </summary>
 	public sealed class AsyncOperationProgress : IProgress<float>
 	{
@@ -21,7 +21,7 @@ namespace AssetManagement
 		public bool IsDone { get => value >= 1f; }
 
 		//UniTask репортит handle.PercentComplete каждый кадр
-		void IProgress<float>.Report(float value)
-			=> value = Mathf.Clamp01(value);
+		void IProgress<float>.Report(float progress)
+			=> value = Mathf.Clamp01(progress);
 	}
 }

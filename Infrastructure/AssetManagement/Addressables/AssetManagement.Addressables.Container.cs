@@ -40,6 +40,15 @@ namespace AssetManagement
 				progress?.Report(1f);
 				return (T) _handle.Result;
 			}
+
+			//Синхронное получение: форсим завершение хэндла (WaitForCompletion блокирует поток)
+			public T GetAsset<T>()
+			{
+				_usages++;
+
+				_handle.WaitForCompletion();
+				return (T) _handle.Result;
+			}
 		}
 
 		private class AssetsContainer : Container

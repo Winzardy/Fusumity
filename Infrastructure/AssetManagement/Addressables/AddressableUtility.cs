@@ -27,6 +27,9 @@ namespace AssetManagement.AddressableAssets
 		public static UnityObject GetEditorAssetSafe(this UnityAssetReference assetReference)
 		{
 #if UNITY_EDITOR
+			if (assetReference == null)
+				return null;
+
 			return assetReference.editorAsset;
 #endif
 			return null;
@@ -34,6 +37,9 @@ namespace AssetManagement.AddressableAssets
 
 		public static bool IsRuntimeValid(this UnityAssetReference assetReference)
 		{
+			if (assetReference == null)
+				return false;
+
 			if (!assetReference.RuntimeKeyIsValid())
 				return false;
 
