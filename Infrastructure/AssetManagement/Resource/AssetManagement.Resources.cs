@@ -25,10 +25,11 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
-		public async UniTask<T> LoadResourceAsync<T>(IResourceReference entry, CancellationToken cancellationToken = default)
+		public async UniTask<T> LoadResourceAsync<T>(IResourceReference entry, CancellationToken cancellationToken = default,
+			IProgress<float> progress = null)
 			where T : UnityObject
 		{
-			return await LoadResourceAsync<T>(entry.Path, cancellationToken);
+			return await LoadResourceAsync<T>(entry.Path, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -37,10 +38,11 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ресурса</typeparam>
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
-		public async UniTask<T> LoadResourceAsync<T>(string path, CancellationToken cancellationToken)
+		public async UniTask<T> LoadResourceAsync<T>(string path, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 			where T : UnityObject
 		{
-			var usedAsset = await FindOrWaitUsedResourceByPathAsync<T>(path, cancellationToken);
+			var usedAsset = await FindOrWaitUsedResourceByPathAsync<T>(path, cancellationToken, progress);
 
 			if (!ReferenceEquals(usedAsset, null))
 				return usedAsset;
@@ -56,7 +58,7 @@ namespace AssetManagement
 			_keyToResourceContainer[path] = new ResourceContainer(path, request);
 
 			var (isCanceled, asset) = await request
-			   .WithCancellation(cancellationToken)
+			   .ToUniTask(progress, cancellationToken: cancellationToken)
 			   .SuppressCancellationThrow();
 
 			if (ReferenceEquals(asset, null))
@@ -72,6 +74,7 @@ namespace AssetManagement
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
+			progress?.Report(1f);
 			return (T) asset;
 		}
 
@@ -106,11 +109,12 @@ namespace AssetManagement
 			_keyToResourceContainer.Clear();
 		}
 
-		private async UniTask<T> FindOrWaitUsedResourceByPathAsync<T>(string path, CancellationToken cancellationToken)
+		private async UniTask<T> FindOrWaitUsedResourceByPathAsync<T>(string path, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 			where T : UnityObject
 		{
 			if (_keyToResourceContainer.TryGetValue(path, out var container))
-				return await container.GetResourceAsync<T>(cancellationToken);
+				return await container.GetResourceAsync<T>(cancellationToken, progress);
 
 			return null;
 		}
@@ -159,7 +163,7 @@ namespace AssetManagement
 				Dispose();
 			}
 
-			public async UniTask<T> GetResourceAsync<T>(CancellationToken cancellationToken)
+			public async UniTask<T> GetResourceAsync<T>(CancellationToken cancellationToken, IProgress<float> progress = null)
 				where T : UnityObject
 			{
 				_usages++;
@@ -176,7 +180,7 @@ namespace AssetManagement
 					SetRequestInternal(Resources.LoadAsync<T>(_path));
 
 				using var linked = _cts.Link(cancellationToken);
-				var (isCanceled, asset) = await _request.WithCancellation(linked.Token)
+				var (isCanceled, asset) = await _request.ToUniTask(progress, cancellationToken: linked.Token)
 				   .SuppressCancellationThrow();
 
 				if (isCanceled)
@@ -185,6 +189,7 @@ namespace AssetManagement
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 
+				progress?.Report(1f);
 				return (T) asset;
 			}
 

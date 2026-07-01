@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -31,8 +32,8 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(IAssetReference reference,
-			CancellationToken cancellationToken = default)
-			=> await provider.LoadAssetAsync<T>(reference, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+			=> await provider.LoadAssetAsync<T>(reference, cancellationToken, progress);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -41,8 +42,8 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(ComponentReference reference,
-			CancellationToken cancellationToken = default)
-			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>

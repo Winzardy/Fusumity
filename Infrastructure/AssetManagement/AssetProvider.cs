@@ -27,14 +27,15 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		public async UniTask<T> LoadAssetAsync<T>(IAssetReference reference, CancellationToken cancellationToken = default)
+		public async UniTask<T> LoadAssetAsync<T>(IAssetReference reference, CancellationToken cancellationToken = default,
+			IProgress<float> progress = null)
 		{
 			var assetReference = reference.AssetReference;
 
 			if (typeof(Component).IsAssignableFrom(typeof(T)))
-				return await LoadComponentAsync<T>(assetReference, cancellationToken);
+				return await LoadComponentAsync<T>(assetReference, cancellationToken, progress);
 
-			return await LoadAssetAsync<T>(assetReference, cancellationToken);
+			return await LoadAssetAsync<T>(assetReference, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -43,11 +44,12 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public async UniTask<T> LoadComponentAsync<T>(ComponentReference reference, CancellationToken cancellationToken)
+		public async UniTask<T> LoadComponentAsync<T>(ComponentReference reference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 			where T : Component
 		{
 			var assetReference = reference.AssetReference;
-			return await LoadComponentAsync<T>(assetReference, cancellationToken);
+			return await LoadComponentAsync<T>(assetReference, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -56,11 +58,12 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public async UniTask<T> LoadComponentAsync<T>(IAssetReference reference, CancellationToken cancellationToken)
+		public async UniTask<T> LoadComponentAsync<T>(IAssetReference reference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 			where T : Component
 		{
 			var assetReference = reference.AssetReference;
-			return await LoadComponentAsync<T>(assetReference, cancellationToken);
+			return await LoadComponentAsync<T>(assetReference, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -68,9 +71,10 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(string)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		public async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken)
+		public async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
-			return await LoadAssetAsyncByKey<T>(path, cancellationToken);
+			return await LoadAssetAsyncByKey<T>(path, cancellationToken, progress: progress);
 		}
 
 		/// <summary>
@@ -79,10 +83,11 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(string)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken)
+		public async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 			where T : Component
 		{
-			return await LoadComponentByKeyAsync<T>(path, cancellationToken);
+			return await LoadComponentByKeyAsync<T>(path, cancellationToken, progress: progress);
 		}
 
 		/// <summary>
@@ -90,10 +95,11 @@ namespace AssetManagement
 		/// Ассеты обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="ReleaseAssets"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
-		public async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReference reference, CancellationToken cancellationToken)
+		public async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReference reference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
 			var labelReference = reference.Reference;
-			return await LoadAssetsAsync<T>(labelReference, cancellationToken);
+			return await LoadAssetsAsync<T>(labelReference, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -101,9 +107,10 @@ namespace AssetManagement
 		/// Ассеты обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="ReleaseAssets"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
-		public async UniTask<IList<T>> LoadAssetsAsync<T>(string tag, CancellationToken cancellationToken)
+		public async UniTask<IList<T>> LoadAssetsAsync<T>(string tag, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
-			return await LoadAssetsAsyncByKey<T>(tag, cancellationToken);
+			return await LoadAssetsAsyncByKey<T>(tag, cancellationToken, progress);
 		}
 
 		/// <summary>
@@ -111,9 +118,10 @@ namespace AssetManagement
 		/// Ассеты обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="ReleaseAssets"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
-		public async UniTask<IList<T>> LoadAssetsAsync<T>(IEnumerable tags, CancellationToken cancellationToken)
+		public async UniTask<IList<T>> LoadAssetsAsync<T>(IEnumerable tags, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
-			return await LoadAssetsAsyncByKey<T>(tags, cancellationToken);
+			return await LoadAssetsAsyncByKey<T>(tags, cancellationToken, progress);
 		}
 
 		/// <summary>
