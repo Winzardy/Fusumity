@@ -159,13 +159,14 @@ namespace Content.Editor
 				return;
 			}
 
+			var targetLabel = new GUIContent(label ?? GUIContent.none);
+
 			if (ContentManager.initializing)
 			{
-				EditorGUILayout.LabelField(label, new GUIContent("сontent initializing..."));
+				EditorGUILayout.LabelField(targetLabel, new GUIContent("..."));
 				return;
 			}
 
-			var targetLabel = new GUIContent(label ?? GUIContent.none);
 			// Хак: убираем некорректный лейбл, проставленный редакторским кодом (через рефлексию)
 			if (targetLabel.text.Contains("[") && targetLabel.text.Contains("]"))
 				targetLabel.text = string.Empty;
