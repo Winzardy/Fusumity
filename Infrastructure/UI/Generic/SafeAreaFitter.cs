@@ -182,8 +182,11 @@ namespace UI
 		}
 
 #if UNITY_EDITOR
-		private void DisableScenePickingInEditor() =>
-			UnityEditor.SceneVisibilityManager.instance.DisablePicking(gameObject, false);
+		private void DisableScenePickingInEditor()
+		{
+			if (!Application.isPlaying)
+				UnityEditor.SceneVisibilityManager.instance.DisablePicking(gameObject, false);
+		}
 
 		private bool HasTransformChangedInEditor() =>
 			!Application.isPlaying && transform.hasChanged;
@@ -235,9 +238,7 @@ namespace UI
 			UnityEditor.Handles.color = originalColor;
 		}
 
-#endif
-
-#if !UNITY_EDITOR
+#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void DisableScenePickingInEditor()
 		{
