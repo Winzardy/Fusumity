@@ -15,17 +15,35 @@ namespace AssetManagement
 	using UnityAssetLabelReference = UnityEngine.AddressableAssets.AssetLabelReference;
 
 	/// <summary>
-	/// Заметка! <br/>
-	/// При работае с Addressables было выявлено, что
-	/// при выгрузке ассета (Release) он может остаться висеть в памяти, события которые реально его выгружают:<br/>
-	/// - Все handle'ы группы отпущены (release) <br/>
-	/// - [иногда] Подгрузка нового элемента группы, который до этого был полностью выгружен или вообще не подгружался
-	/// (с какими-то ассетами работает, с какими-то нет, природа этого явления неясна)
-	///
-	/// <br/>
-	/// Решение: Группировать ассеты как можно чаще...
-	/// Проблема группировки ассетов, что создаются потенциальные условия для дубликатов...<br/>
-	/// К счастью при билде Addressables в конце выдается репорт и в репорте можно посмотреть какие ассеты дублируются
+	/// Поведение Addressables при выгрузке ассетов зависит не только от Release(handle),
+	/// но и от того, как ассеты упакованы (Group, Bundle Layout, Pack Mode).
+	/// <br/><br/>
+	/// Наблюдение:
+	/// даже после Addressables.Release(handle) ассет может оставаться в памяти,
+	/// если:
+	/// - существуют другие живые ссылки (handle'ы, зависимости, сцены, кэшированные references)
+	/// - ассет находится в одном AssetBundle вместе с другими объектами (Pack Mode = Pack Together / Pack Separately)
+	/// - сам AssetBundle остаётся загруженным из-за других активных ассетов внутри него
+	/// <br/><br/>
+	/// Важно понимать:
+	/// Addressables не выгружает отдельные ассеты напрямую — выгружается AssetBundle.
+	/// Поэтому “ассет не выгрузился” обычно означает, что:
+	/// - bundle ещё нужен другим ассетам
+	/// - или не был реально unloaded сам bundle
+	/// <br/><br/>
+	/// Дополнительно:
+	/// поведение может отличаться при повторной загрузке, потому что Unity может:
+	/// - переиспользовать уже загруженный AssetBundle
+	/// - пересобрать внутренние зависимости
+	/// <br/><br/>
+	/// Вывод:
+	/// оптимизация выгрузки достигается не “частой группировкой”, а корректной конфигурацией:
+	/// - правильное разделение Addressables Groups
+	/// - осознанный выбор Pack Mode (Together / Separately)
+	/// - контроль shared dependencies
+	/// - отсутствие лишних удерживающих ссылок
+	/// <br/><br/>
+	/// В билде Addressables можно проверить дубли и shared dependencies через Build Report.
 	/// </summary>
 	public partial class AssetProvider
 	{
@@ -289,85 +307,5 @@ namespace AssetManagement
 
 			_keyToAssetCollectionContainer.Remove(key);
 		}
-
-		#region Sync
-
-		private T LoadAsset<T>(UnityAssetReference assetReference)
-		{
-			if (assetReference == null)
-				ThrowInvalidAssetReference<T>();
-
-			var context = assetReference.GetEditorAssetSafe();
-			if (!assetReference.IsRuntimeValid())
-			{
-				ThrowInvalidAssetReference<T>(context);
-			}
-
-			var key = assetReference.RuntimeKey;
-			return LoadAssetByKey<T>(key, context);
-		}
-
-		private T LoadComponent<T>(UnityAssetReference assetReference)
-		{
-			if (assetReference == null)
-				ThrowInvalidComponentReference<T>();
-
-			var context = assetReference.GetEditorAssetSafe();
-			if (!assetReference.IsRuntimeValid())
-			{
-				ThrowInvalidComponentReference<T>(context);
-			}
-
-			var key = assetReference.RuntimeKey;
-			return LoadComponentByKey<T>(key, context);
-		}
-
-		private T LoadComponentByKey<T>(object key, UnityObject context = null)
-		{
-			var asset = LoadAssetByKey<GameObject>(key, context);
-
-			if (!asset.TryGetComponent(out T component))
-			{
-				ReleaseAssetByKey(key);
-				ThrowInvalidComponentReference<T>(context);
-			}
-
-			return component;
-		}
-
-		private T LoadAssetByKey<T>(object key, UnityObject context = null)
-		{
-			//Уже загружен/грузится — форсим завершение синхронно и переиспользуем контейнер
-			if (_keyToAssetContainer.TryGetValue(key, out var used))
-				return used.GetAsset<T>();
-
-			var handle = Addressables.LoadAssetAsync<T>(key);
-
-			if (!handle.IsValid())
-			{
-				AssetManagementDebug.LogError($"Failed to load asset: handle by key [ {key} ] is invalid", context);
-				return default;
-			}
-
-			_keyToAssetContainer[key] = new AssetContainer(key, handle);
-
-			var asset = handle.WaitForCompletion();
-
-			if (handle.Status != AsyncOperationStatus.Succeeded)
-			{
-				ReleaseAssetByKey(key);
-				AssetManagementDebug.LogError($"Failed to load asset for key [ {key} ]" +
-					"\nAddressable:" +
-					$"\n	Exception: {handle.OperationException}" +
-					$"\n	Status: {handle.Status}" +
-					$"\n	Debug: {handle.DebugName}"
-					, context);
-				throw AssetManagementDebug.Exception("Failed to load asset");
-			}
-
-			return asset;
-		}
-
-		#endregion
 	}
 }

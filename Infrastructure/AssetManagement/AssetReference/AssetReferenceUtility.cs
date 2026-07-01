@@ -110,10 +110,41 @@ namespace AssetManagement
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadAsset{T}(IAssetReference)"/>
+		[Obsolete("Блокирует основной поток")]
+		public static T LoadOrNull<T>(this AssetReference<T> reference)
+			where T : UnityObject
+		{
+			if (reference.IsEmptyOrInvalid())
+				return null;
+
+			return AssetLoader.LoadAsset<T>(reference);
+		}
+
+		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
+		[Obsolete("Блокирует основной поток")]
+		public static T LoadOrNull<T>(this ComponentReference reference)
+			where T : Component
+		{
+			if (reference.IsEmptyOrInvalid())
+				return null;
+
+			return AssetLoader.LoadComponent<T>(reference);
+		}
+
+		/// <inheritdoc cref="AssetLoader.LoadAsset{T}(IAssetReference)"/>
+		[Obsolete("Блокирует основной поток")]
 		public static T Load<T>(this AssetReference<T> reference)
 			where T : UnityObject
 		{
 			return AssetLoader.LoadAsset<T>(reference);
+		}
+
+		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
+		[Obsolete("Блокирует основной поток")]
+		public static T Load<T>(this ComponentReference reference)
+			where T : Component
+		{
+			return AssetLoader.LoadComponent<T>(reference);
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadComponentAsync{T}(ComponentReference,System.Threading.CancellationToken,System.IProgress{float})"/>
@@ -122,13 +153,6 @@ namespace AssetManagement
 			where T : Component
 		{
 			return await AssetLoader.LoadComponentAsync<T>(reference, cancellationToken, progress);
-		}
-
-		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		public static T Load<T>(this ComponentReference reference)
-			where T : Component
-		{
-			return AssetLoader.LoadComponent<T>(reference);
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadComponentAsync{T}(ComponentReference,System.Threading.CancellationToken,System.IProgress{float})"/>
@@ -312,8 +336,8 @@ namespace AssetManagement
 			public CollectionProgress(IProgress<float> progress, IList<float> values, int index)
 			{
 				_progress = progress;
-				_values   = values;
-				_index    = index;
+				_values = values;
+				_index = index;
 			}
 
 			public void Report(float value)
