@@ -13,6 +13,8 @@ namespace Booting
 
 		public virtual int Priority => 0;
 
+		protected virtual bool ShouldSkipDispose { get => UnityLifecycle.ApplicationQuitting; }
+
 		public abstract UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
 
 		public virtual void OnBootCompleted()
@@ -21,7 +23,7 @@ namespace Booting
 
 		public sealed override void Dispose()
 		{
-			if (UnityLifecycle.ApplicationQuitting)
+			if (ShouldSkipDispose)
 				return;
 
 			base.Dispose();

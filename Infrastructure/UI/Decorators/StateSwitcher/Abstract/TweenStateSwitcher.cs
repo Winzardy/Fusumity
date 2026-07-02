@@ -72,7 +72,7 @@ namespace UI
 				AnimationTweenCallback.immediate = true;
 				try
 				{
-					tween.GotoWithCallbacks(1);
+					tween.Complete(true);
 				}
 				finally
 				{

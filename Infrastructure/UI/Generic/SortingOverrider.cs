@@ -144,7 +144,7 @@ namespace UI
 				raycaster.LateDestroyComponentSafe(CheckNeedRaycaster);
 			}
 
-			bool CheckNeedRaycaster() => _raycastTarget && enabled && Order != 0;
+			bool CheckNeedRaycaster() => this && _raycastTarget && enabled && Order != 0;
 		}
 
 		private void UpdateAll()

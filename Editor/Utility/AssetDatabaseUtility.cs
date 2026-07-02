@@ -286,7 +286,7 @@ namespace Fusumity.Editor.Utility
 			using var context = SearchService.CreateContext(
 				"asset",
 				$"t:{type.Name}");
-			var items = SearchService.GetItems(context, SearchFlags.Synchronous);
+			var items = SearchService.GetItems(context, SearchFlags.Synchronous | SearchFlags.WantsMore);
 			foreach (var item in items)
 				yield return item.ToObject<GameObject>();
 		}

@@ -108,7 +108,7 @@ namespace UI.Popovers
 		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
-		protected override List<AssetReference> PreloadAssets => _config.layout.preloadAssets;
+		protected override List<AnyAssetReference> PreloadAssets => _config.layout.preloadAssets;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{

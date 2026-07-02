@@ -29,7 +29,7 @@ namespace UI
 		protected abstract ComponentReference LayoutReference { get; }
 		protected virtual bool LayoutAutoDestroy => false;
 		protected virtual int LayoutAutoDestroyDelayMs => 5000;
-		protected virtual List<AssetReference> PreloadAssets => null;
+		protected virtual List<AnyAssetReference> PreloadAssets => null;
 
 		protected virtual string LayoutPrefixName => LAYOUT_PREFIX_NAME;
 

@@ -14,7 +14,7 @@ namespace AssetManagement.Editor
 {
 	public class AssetReferenceAttributeProcessor : BaseAssetReferenceAttributeProcessor<IAssetReference>
 	{
-		protected override string FieldName => nameof(AssetReference.assetReference);
+		protected override string FieldName => nameof(AnyAssetReference.assetReference);
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{

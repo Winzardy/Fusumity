@@ -184,7 +184,7 @@ namespace UI
 					layer.args.endCallback?.Invoke(layer.args.key);
 
 				if (layer.args.completeOnKill)
-					layer.tween.GotoWithCallbacks(1);
+					layer.tween.Complete(true);
 
 				layer.args = null;
 
@@ -246,7 +246,7 @@ namespace UI
 				try
 				{
 					sequence.SetAutoKill(true);
-					sequence.GotoWithCallbacks(1);
+					sequence.Complete(true);
 				}
 				finally
 				{

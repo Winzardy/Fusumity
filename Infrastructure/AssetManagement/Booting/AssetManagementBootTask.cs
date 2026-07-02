@@ -16,6 +16,8 @@ namespace Booting.AssetManagement
 	{
 		public override int Priority => HIGH_PRIORITY - 10;
 
+		protected override bool ShouldSkipDispose { get => false; }
+
 		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
 			var provider = new AssetProvider();

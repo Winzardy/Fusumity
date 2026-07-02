@@ -46,6 +46,7 @@ namespace UI.Editor
 		private readonly Dictionary<IStateSwitcher, Dropdown> _switcherToDropdown = new();
 		private readonly Dictionary<int, bool> _foldoutStateByNodeKey = new();
 		private readonly Dictionary<int, bool> _treeFoldoutStateBySignature = new();
+
 		private bool _isToolEnabled = true;
 		private bool _isTreeExpanded = true;
 		private float _overlayHeight;

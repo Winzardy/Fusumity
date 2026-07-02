@@ -386,11 +386,16 @@ namespace UI.Scroll
 
 			layout.Initialize();
 
-			if (layout.preserveTemplate)
+			BindLayout(layout);
+
+			if (layout.template != null)
 				SetupItemLayout(layout.template);
 
+			if (layout.IsInitialized)
+				OnScrollInitialized();
+
 			RequestReloadDataAsync(2)
-				.Forget();
+				.Forget(exp => GUIDebug.LogException(exp));
 		}
 
 		private void SetupItemLayout(UIScrollItemLayout itemTemplate)
@@ -401,23 +406,21 @@ namespace UI.Scroll
 				throw new Exception("Invalid item template!");
 
 			_template = template;
+		}
 
-			_layout.Delegate = this;
-			_layout.scrollInitialized = OnScrollInitialized;
-			_layout.cellVisibilityChanged = OnCellVisibilityChanged;
-			_layout.cellWillRecycled = CellWillRecycled;
-			_layout.scrollBeganSnapping = OnScrollBeganSnapping;
-			_layout.scrollSnapped = OnScrollSnapped;
-			_layout.scrollScrolled = OnScroll;
-			_layout.scrollScrollingChanged = OnScrollChanged;
-			_layout.cellInstantiated = OnCellInitialized;
-			_layout.beginDrag = OnBeginDrag;
-			_layout.endedDrag = OnEndDrag;
-
-			if (_layout.IsInitialized)
-			{
-				OnScrollInitialized();
-			}
+		private void BindLayout(UIScrollLayout layout)
+		{
+			layout.Delegate = this;
+			layout.scrollInitialized = OnScrollInitialized;
+			layout.cellVisibilityChanged = OnCellVisibilityChanged;
+			layout.cellWillRecycled = CellWillRecycled;
+			layout.scrollBeganSnapping = OnScrollBeganSnapping;
+			layout.scrollSnapped = OnScrollSnapped;
+			layout.scrollScrolled = OnScroll;
+			layout.scrollScrollingChanged = OnScrollChanged;
+			layout.cellInstantiated = OnCellInitialized;
+			layout.beginDrag = OnBeginDrag;
+			layout.endedDrag = OnEndDrag;
 		}
 
 		protected internal sealed override void OnLayoutInstalledInternal()
@@ -536,11 +539,14 @@ namespace UI.Scroll
 			UpdateScrollSequence();
 		}
 
-		private void UpdateScrollSequence() =>
-			_scrollSequence?.Goto(_layout.ContentSize > _layout.ViewportSize ? _layout.NormalizedScrollPosition : 0);
+		private void UpdateScrollSequence()
+		{
+			var position = _layout.ContentSize > _layout.ViewportSize ? _layout.NormalizedScrollPosition : 0;
+			_scrollSequence?.Goto(position * _scrollSequence.Duration());
+		}
 
 		/// Пока не нашел лучше способа починить поломанную дату в ScrollList
-		private async UniTaskVoid RequestReloadDataAsync(int delayFrame = 1)
+		private async UniTask RequestReloadDataAsync(int delayFrame = 1)
 		{
 			if (delayFrame > 0)
 				await UniTask.DelayFrame(delayFrame);

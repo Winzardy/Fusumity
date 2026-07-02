@@ -61,8 +61,11 @@ namespace AssetManagement
 		public override string ToString() => assetReference.ToString();
 	}
 
+	/// <remarks>
+	/// AssetReference занят Unity
+	/// </remarks>>
 	[Serializable]
-	public class AssetReference : IAssetReference
+	public class AnyAssetReference : IAssetReference
 	{
 		[FormerlySerializedAs("_assetReference")]
 		public UnityAssetReference assetReference;
@@ -83,11 +86,11 @@ namespace AssetManagement
 #endif
 		}
 
-		public static implicit operator bool(AssetReference value) => !value.IsEmptyOrInvalid();
+		public static implicit operator bool(AnyAssetReference value) => !value.IsEmptyOrInvalid();
 
-		public static bool operator ==(AssetReference a, AssetReference b) => a.SameAsset(b);
-		public static bool operator !=(AssetReference a, AssetReference b) => !(a == b);
-		public override bool Equals(object obj) => this == obj as AssetReference;
+		public static bool operator ==(AnyAssetReference a, AnyAssetReference b) => a.SameAsset(b);
+		public static bool operator !=(AnyAssetReference a, AnyAssetReference b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as AnyAssetReference;
 		public override int GetHashCode() => assetReference.GetHashCode();
 		public override string ToString() => assetReference.ToString();
 	}
@@ -127,9 +130,8 @@ namespace AssetManagement
 			if (a is null || b is null)
 				return false;
 
-			var aKey = (string) a.AssetReference.RuntimeKey;
-			var bKey = (string) b.AssetReference.RuntimeKey;
-
+			var aKey = a.AssetReference.RuntimeKey as string;
+			var bKey = b.AssetReference.RuntimeKey as string;
 			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
 		}
 	}
