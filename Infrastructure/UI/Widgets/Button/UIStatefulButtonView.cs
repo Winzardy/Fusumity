@@ -41,11 +41,6 @@ namespace UI
 			TryRegisterClickAndSubscribe(layout);
 		}
 
-		protected override void OnDispose()
-		{
-			_clickElement = null;
-		}
-
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
 			SetActive(true);
@@ -101,7 +96,6 @@ namespace UI
 				return;
 
 			_clickElement = Subscribe(layout.button, HandleClick, uId, groupId);
-			Debug.LogError(uId, layout);
 		}
 
 		protected override void OnNullViewModel()
