@@ -23,9 +23,7 @@ namespace Booting.ProjectInformation
 		{
 			var options = ContentManager.Get<ProjectInfoConfig>();
 			var platform = GetTargetPlatform();
-			var contentBuildInfo = GetContentBuildInfo();
-			Debug.LogError($"[ProjectInfoBootTask.RunAsync] {contentBuildInfo.ToJson(SerializationType.FullIndented)}"); //PTODO
-			var provider = new DefaultProjectInfoAttendant(in options, in platform, GetBuildInfo(), contentBuildInfo);
+			var provider = new DefaultProjectInfoAttendant(in options, in platform, GetBuildInfo(), GetContentBuildInfo());
 
 			ProjectInfo.Set(provider);
 			return UniTask.CompletedTask;
