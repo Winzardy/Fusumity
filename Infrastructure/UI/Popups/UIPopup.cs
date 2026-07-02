@@ -319,4 +319,9 @@ namespace UI.Popups
 			return resetting;
 		}
 	}
+
+	public static class UIPopupExtensions
+	{
+		public static bool IsNotNullAndActive(this IPopup popup) => popup != null && popup.IsActive();
+	}
 }

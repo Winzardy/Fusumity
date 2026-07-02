@@ -118,7 +118,7 @@ namespace Content.ScriptableObjects.Editor
 		{
 			if (target is IContentEntryScriptableObject scriptableObject and not ContentDatabaseScriptableObject)
 			{
-				if (!FusumityEditorGUIHelper.drawAssetReference)
+				if (!FusumityEditorGUIHelper.drawAssetReference || !FusumityEditorGUIHelper.drawEnabledToggle)
 					return scriptableObject.enabled;
 
 				var toggleRect = GUILayoutUtility.GetLastRect();

@@ -99,7 +99,17 @@ namespace Content.Editor
 			{
 				if (!IsSameReference(registeredReference, reference))
 				{
-					if (IsGuidStillRegisteredAtReference(scriptableEntry, registeredReference, in entry.Guid))
+					// Сбрасываем кэш: ResolveSafe иначе вернёт прогретый _cache, игнорируя scriptableEntry
+					registeredReference.CacheClear();
+					var registeredEntry = registeredReference.ResolveSafe(scriptableEntry);
+
+					if (ReferenceEquals(registeredEntry, entry))
+					{
+						// Путь резолвится в тот же объект — это не дубль, а другое представление
+						// пути (Odin vs SerializedProperty). Ничего не трогаем, иначе вечный
+						// repoint -> Refresh на каждый Repaint
+					}
+					else if (registeredEntry != null && registeredEntry.Guid == entry.Guid)
 					{
 						changed = ResolveDuplicate();
 					}
@@ -184,14 +194,6 @@ namespace Content.Editor
 		private static bool IsSameReference(MemberReflectionReference<IUniqueContentEntry> left,
 			MemberReflectionReference<IUniqueContentEntry> right)
 			=> !left.IsEmpty() && !right.IsEmpty() && left.Path == right.Path;
-
-		private static bool IsGuidStillRegisteredAtReference(IScriptableContentEntry scriptableEntry,
-			MemberReflectionReference<IUniqueContentEntry> reference,
-			in SerializableGuid guid)
-		{
-			var registeredEntry = reference.ResolveSafe(scriptableEntry);
-			return registeredEntry != null && registeredEntry.Guid == guid;
-		}
 
 		private bool CanRegister(InspectorProperty property, out IUniqueContentEntry entry, out UnityObject targetObject)
 		{

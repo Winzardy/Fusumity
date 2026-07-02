@@ -21,7 +21,10 @@ namespace Fusumity.Editor
 		}
 
 		public static bool drawAssetReference = true;
+		public static bool drawEnabledToggle = true;
 		public static bool drawInlineEditor = false;
+		public static bool allowInlineEditorIdEditing = false;
+		public static bool disableInlineEditorIdEditing => drawInlineEditor && !allowInlineEditorIdEditing;
 	}
 
 	public static partial class FusumityEditorGUILayout

@@ -26,6 +26,7 @@ namespace Booting.Content
 			ContentManager.Set(resolver);
 
 #if UNITY_EDITOR
+			ContentManager.initializing = true;
 			ContentDatabaseEditorUtility.ValidateDatabases();
 
 			if (ClientEditorContentImporterMenu.IsEnable)
@@ -38,6 +39,13 @@ namespace Booting.Content
 		protected override void OnDispose()
 		{
 			ContentManager.Clear();
+		}
+
+		public override void OnBootCompleted()
+		{
+#if UNITY_EDITOR
+			ContentManager.initializing = false;
+#endif
 		}
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using DG.Tweening;
+using Fusumity.Attributes.Odin;
 using UnityEngine;
+using UnityEngine.Serialization;
 using ZenoTween.Utility;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -37,7 +39,11 @@ namespace ZenoTween
 		public Type type = Type.Join;
 
 		[Tooltip("Задержка перед проигрыванием твина")]
+		[InlineToggle(nameof(unscaledDelay), "unscaled")]
 		public float delay = 0;
+
+		[HideInInspector]
+		public bool unscaledDelay;
 
 		[Tooltip("Множитель скорости проигрывания твина. 1 = обычная скорость")]
 		public float speed = 1f;
@@ -68,6 +74,7 @@ namespace ZenoTween
 		public bool UseRepeat { get => type != Type.Immediate && repeat != 0; }
 
 		protected object _target;
+		protected float _inheritedSpeed = 1f;
 
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
@@ -234,19 +241,34 @@ namespace ZenoTween
 
 		protected void ApplyTweenSettings(in Tween tween, bool useDelay = true)
 		{
+			var totalSpeed = speed;
+			totalSpeed *= _inheritedSpeed;
+			if (totalSpeed <= 0f)
+			{
+				totalSpeed = 1f;
+				Debug.LogWarning("Speed must be greater than 0!"
+#if UNITY_EDITOR
+					, _ownerEditor
+#endif
+				);
+			}
+
 			// not calling Participate here, to ensure valid order and
 			// correct loop behaviour (loops on nested tweens are not allowed in DoTween).
 			if (delay > 0 && useDelay)
-				tween.SetDelay(delay);
+			{
+				tween.SetDelay(unscaledDelay ? delay : delay * totalSpeed);
+			}
 
 			// Работает только на Sequence
-			if (!Mathf.Approximately(speed, 1f))
-				tween.timeScale *= speed;
+			if (!Mathf.Approximately(totalSpeed, 1f))
+				tween.timeScale *= totalSpeed;
 
 			if (UseRepeat)
 			{
 				tween.SetAutoKill(false);
 				tween.SetLoops(repeat, repeatType);
+				// TODO: int.MaxValue варнинг
 			}
 		}
 
@@ -266,8 +288,6 @@ namespace ZenoTween
 
 			return duration / totalSpeed;
 		}
-
-		protected float _inheritedSpeed = 1f;
 
 		protected Tween Create(float inheritedSpeed)
 			=> Create(inheritedSpeed, null);

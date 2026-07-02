@@ -27,8 +27,8 @@ namespace Game.UI
 		public event Action LabelColorChanged;
 		public event Action StyleChanged;
 
-		public void LabelClick() => LabelClickAction?.Invoke();
-		public void IconClick() => IconClickAction?.Invoke();
+		public void LabelClick(Vector2 _) => LabelClickAction?.Invoke();
+		public void IconClick(Vector2 _) => IconClickAction?.Invoke();
 
 		public void Clear()
 		{

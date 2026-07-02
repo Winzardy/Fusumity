@@ -1,37 +1,33 @@
 using Fusumity.Reactive;
+using Sapientia.Extensions;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace UI
 {
-	public interface ILateUpdatable
-	{
-		void OnLateUpdate();
-	}
-
 #if UNITY_EDITOR
 	[ExecuteAlways]
 #endif
-	public class Updatable : MonoBehaviour
+	public abstract class Updatable : MonoBehaviour
 	{
-		[SerializeField]
-		private bool _updateInEditMode = true;
+		[System.Flags]
+		protected internal enum UpdateMode
+		{
+			None,
+			Update = 1 << 0,
+			LateUpdate = 1 << 1,
+			All = Update | LateUpdate
+		}
 
 		private bool _subscribed;
+
 		private void OnEnable() => TrySubscribe();
 
 		private void OnDisable() => TryUnsubscribe();
 
 		private void OnDestroy() => TryUnsubscribe();
 
-		private ILateUpdatable _lateUpdatable;
-
-		private void Awake()
-		{
-			if (this is ILateUpdatable lateUpdatable)
-			{
-				_lateUpdatable = lateUpdatable;
-			}
-		}
+		protected virtual UpdateMode Mode { get => UpdateMode.Update; }
 
 		private void TrySubscribe()
 		{
@@ -39,10 +35,11 @@ namespace UI
 				return;
 
 			_subscribed = true;
-			UnityLifecycle.UpdateEvent.Subscribe(OnUpdate);
 
-			if (_lateUpdatable != null)
-				UnityLifecycle.UpdateEvent.Subscribe(_lateUpdatable.OnLateUpdate);
+			if (Mode.HasFlags(UpdateMode.Update))
+				UnityLifecycle.UpdateEvent.Subscribe(OnUpdate);
+			if (Mode.HasFlags(UpdateMode.LateUpdate))
+				UnityLifecycle.LateUpdateEvent.Subscribe(OnLateUpdate);
 
 			OnEnabled();
 		}
@@ -53,14 +50,20 @@ namespace UI
 				return;
 
 			_subscribed = false;
-			UnityLifecycle.UpdateEvent.UnSubscribe(OnUpdate);
-			if (_lateUpdatable != null)
-				UnityLifecycle.UpdateEvent.UnSubscribe(_lateUpdatable.OnLateUpdate);
+
+			if (Mode.HasFlags(UpdateMode.Update))
+				UnityLifecycle.UpdateEvent.UnSubscribe(OnUpdate);
+			if (Mode.HasFlags(UpdateMode.LateUpdate))
+				UnityLifecycle.LateUpdateEvent.UnSubscribe(OnLateUpdate);
 
 			OnDisabled();
 		}
 
 		protected virtual void OnUpdate()
+		{
+		}
+
+		protected virtual void OnLateUpdate()
 		{
 		}
 
@@ -72,11 +75,26 @@ namespace UI
 		{
 		}
 
+		[Space]
+		[PropertyOrder(10)]
+		[SerializeField]
+		private bool _updateInEditMode = true;
+
 #if UNITY_EDITOR
 		private void Update()
 		{
+			if (Mode.HasFlags(UpdateMode.Update))
+				return;
 			if (_updateInEditMode && !Application.isPlaying)
 				OnUpdate();
+		}
+
+		private void LateUpdate()
+		{
+			if (Mode.HasFlags(UpdateMode.LateUpdate))
+				return;
+			if (_updateInEditMode && !Application.isPlaying)
+				OnLateUpdate();
 		}
 #endif
 	}

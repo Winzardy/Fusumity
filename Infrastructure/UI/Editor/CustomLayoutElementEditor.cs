@@ -31,6 +31,9 @@ namespace UI.Editor
 		private SerializedProperty _preferredWidthRectProperty;
 		private SerializedProperty _preferredHeightRectProperty;
 
+		private SerializedProperty _ignorePreferredWidthWhenEmptyProperty;
+		private SerializedProperty _ignorePreferredHeightWhenEmptyProperty;
+
 		protected override void OnEnable()
 		{
 			m_IgnoreLayout = serializedObject.FindProperty("m_IgnoreLayout");
@@ -38,29 +41,32 @@ namespace UI.Editor
 			_target = target as CustomLayoutElement;
 
 			_maxWidthRectProperty = serializedObject.FindProperty("_maxWidthRect");
-			_useMaxWidthProperty  = serializedObject.FindProperty("_useMaxWidth");
-			_maxWidthProperty     = serializedObject.FindProperty("_maxWidth");
+			_useMaxWidthProperty = serializedObject.FindProperty("_useMaxWidth");
+			_maxWidthProperty = serializedObject.FindProperty("_maxWidth");
 
 			_maxHeightRectProperty = serializedObject.FindProperty("_maxHeightRect");
-			_useMaxHeightProperty  = serializedObject.FindProperty("_useMaxHeight");
-			_maxHeightProperty     = serializedObject.FindProperty("_maxHeight");
+			_useMaxHeightProperty = serializedObject.FindProperty("_useMaxHeight");
+			_maxHeightProperty = serializedObject.FindProperty("_maxHeight");
 
-			_minWidthProperty     = serializedObject.FindProperty("m_MinWidth");
+			_minWidthProperty = serializedObject.FindProperty("m_MinWidth");
 			_minWidthRectProperty = serializedObject.FindProperty("_minWidthRect");
-			_useMinWidthProperty  = serializedObject.FindProperty("_useMinWidth");
+			_useMinWidthProperty = serializedObject.FindProperty("_useMinWidth");
 
-			_minHeightProperty     = serializedObject.FindProperty("m_MinHeight");
+			_minHeightProperty = serializedObject.FindProperty("m_MinHeight");
 			_minHeightRectProperty = serializedObject.FindProperty("_minHeightRect");
-			_useMinHeightProperty  = serializedObject.FindProperty("_useMinHeight");
+			_useMinHeightProperty = serializedObject.FindProperty("_useMinHeight");
 
-			_preferredWidthRectProperty  = serializedObject.FindProperty("_preferredWidthRect");
+			_preferredWidthRectProperty = serializedObject.FindProperty("_preferredWidthRect");
 			_preferredHeightRectProperty = serializedObject.FindProperty("_preferredHeightRect");
 
-			m_PreferredWidth  = serializedObject.FindProperty("m_PreferredWidth");
+			_ignorePreferredWidthWhenEmptyProperty = serializedObject.FindProperty("_ignorePreferredWidthWhenEmpty");
+			_ignorePreferredHeightWhenEmptyProperty = serializedObject.FindProperty("_ignorePreferredHeightWhenEmpty");
+
+			m_PreferredWidth = serializedObject.FindProperty("m_PreferredWidth");
 			m_PreferredHeight = serializedObject.FindProperty("m_PreferredHeight");
-			m_FlexibleWidth   = serializedObject.FindProperty("m_FlexibleWidth");
-			m_FlexibleHeight  = serializedObject.FindProperty("m_FlexibleHeight");
-			m_LayoutPriority  = serializedObject.FindProperty("m_LayoutPriority");
+			m_FlexibleWidth = serializedObject.FindProperty("m_FlexibleWidth");
+			m_FlexibleHeight = serializedObject.FindProperty("m_FlexibleHeight");
+			m_LayoutPriority = serializedObject.FindProperty("m_LayoutPriority");
 		}
 
 		public override void OnInspectorGUI()
@@ -71,24 +77,31 @@ namespace UI.Editor
 
 			if (!m_IgnoreLayout.boolValue)
 			{
+				var rectLabel = new GUIContent("Rect");
+				var ignoreLabel = new GUIContent("Ignore When Empty");
+
 				EditorGUILayout.Space();
 
 				LayoutElementField(_maxWidthProperty, _useMaxWidthProperty, _maxWidthRectProperty);
-				LayoutElementField(_maxWidthRectProperty, _useMaxWidthProperty);
+
+				LayoutElementField(_maxWidthRectProperty, _useMaxWidthProperty, rectLabel);
 
 				LayoutElementField(_minWidthProperty, _useMinWidthProperty, _minWidthRectProperty);
-				LayoutElementField(_minWidthRectProperty, _useMinWidthProperty);
+				LayoutElementField(_minWidthRectProperty, _useMinWidthProperty, rectLabel);
 
 				LayoutElementField(_maxHeightProperty, _useMaxHeightProperty, _maxHeightRectProperty, false);
-				LayoutElementField(_maxHeightRectProperty, _useMaxHeightProperty);
+				LayoutElementField(_maxHeightRectProperty, _useMaxHeightProperty, rectLabel);
 
 				LayoutElementField(_minHeightProperty, _useMinHeightProperty, _minHeightRectProperty, false);
-				LayoutElementField(_minHeightRectProperty, _useMinHeightProperty);
+				LayoutElementField(_minHeightRectProperty, _useMinHeightProperty, rectLabel);
 
 				LayoutElementField(m_PreferredWidth, t => t.rect.width, _preferredWidthRectProperty);
-				LayoutElementFieldIfEnabled(_preferredWidthRectProperty, m_PreferredWidth);
+				LayoutElementFieldIfEnabled(_preferredWidthRectProperty, m_PreferredWidth, rectLabel);
+				LayoutElementFieldIfEnabled(_ignorePreferredWidthWhenEmptyProperty, m_PreferredWidth, ignoreLabel);
+
 				LayoutElementField(m_PreferredHeight, t => t.rect.height, _preferredHeightRectProperty, false);
-				LayoutElementFieldIfEnabled(_preferredHeightRectProperty, m_PreferredHeight);
+				LayoutElementFieldIfEnabled(_preferredHeightRectProperty, m_PreferredHeight, rectLabel);
+				LayoutElementFieldIfEnabled(_ignorePreferredHeightWhenEmptyProperty, m_PreferredHeight, ignoreLabel);
 
 				LayoutElementField(m_FlexibleWidth, 1);
 				LayoutElementField(m_FlexibleHeight, 1);
@@ -99,28 +112,27 @@ namespace UI.Editor
 			serializedObject.ApplyModifiedProperties();
 		}
 
-		private void LayoutElementField(SerializedProperty property, SerializedProperty useProperty)
+		private void LayoutElementField(SerializedProperty property, SerializedProperty useProperty, GUIContent label)
 		{
 			if (!useProperty.boolValue)
 				return;
 
 			var originIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel++;
-			EditorGUILayout.PropertyField(property, new GUIContent("Rect"));
+			EditorGUILayout.PropertyField(property, label);
 			EditorGUI.indentLevel = originIndent;
 		}
 
-		private void LayoutElementFieldIfEnabled(SerializedProperty property, SerializedProperty floatProperty)
+		private void LayoutElementFieldIfEnabled(SerializedProperty property, SerializedProperty floatProperty, GUIContent label)
 		{
 			if (floatProperty.floatValue < 0)
 				return;
 
 			var originIndent = EditorGUI.indentLevel;
 			EditorGUI.indentLevel++;
-			EditorGUILayout.PropertyField(property, new GUIContent("Rect"));
+			EditorGUILayout.PropertyField(property, label);
 			EditorGUI.indentLevel = originIndent;
 		}
-
 
 		private void LayoutElementField(SerializedProperty property, SerializedProperty useProperty, SerializedProperty rectProperty,
 			bool width = true)
@@ -153,7 +165,7 @@ namespace UI.Editor
 							: ((RectTransform) rectProperty.objectReferenceValue).rect.height
 						: property.floatValue);
 
-				GUI.enabled                 = true;
+				GUI.enabled = true;
 				EditorGUIUtility.labelWidth = 0;
 			}
 

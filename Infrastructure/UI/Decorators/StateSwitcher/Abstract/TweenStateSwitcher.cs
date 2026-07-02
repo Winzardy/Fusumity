@@ -94,6 +94,7 @@ namespace UI
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
+				DG.DOTweenEditor.DOTweenEditorPreview.Stop(true, true);
 				DG.DOTweenEditor.DOTweenEditorPreview.PrepareTweenForPreview(tween);
 				DG.DOTweenEditor.DOTweenEditorPreview.Start(EditorPreviewUpdate);
 			}

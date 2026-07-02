@@ -160,6 +160,13 @@ namespace Content.Editor
 			}
 
 			var targetLabel = new GUIContent(label ?? GUIContent.none);
+
+			if (ContentManager.initializing)
+			{
+				EditorGUILayout.LabelField(targetLabel, new GUIContent("..."));
+				return;
+			}
+
 			// Хак: убираем некорректный лейбл, проставленный редакторским кодом (через рефлексию)
 			if (targetLabel.text.Contains("[") && targetLabel.text.Contains("]"))
 				targetLabel.text = string.Empty;
@@ -174,24 +181,24 @@ namespace Content.Editor
 				case ContentDrawerMode.Guid:
 					if (Property.ValueEntry.WeakSmartValue is SerializableGuid guid)
 					{
-						isEmpty      = guid == SerializableGuid.Empty;
-						source       = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
+						isEmpty = guid == SerializableGuid.Empty;
+						source = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
 						invalidLabel = guid.ToString();
 					}
 
 					break;
 				case ContentDrawerMode.String:
 					var id = (string) Property.ValueEntry.WeakSmartValue;
-					isEmpty      = id.IsNullOrEmpty();
-					source       = !isEmpty ? FindSelectedSource(_valueType, id) : null;
+					isEmpty = id.IsNullOrEmpty();
+					source = !isEmpty ? FindSelectedSource(_valueType, id) : null;
 					invalidLabel = id;
 					break;
 				case ContentDrawerMode.Reference:
 					if (Property.Parent.ValueEntry.WeakSmartValue is IContentReference reference)
 					{
 						isSingle = reference.IsSingle;
-						isEmpty  = !isSingle && reference.Guid == SerializableGuid.Empty;
-						source   = !isEmpty ? FindSelectedSource(reference) : null;
+						isEmpty = !isSingle && reference.Guid == SerializableGuid.Empty;
+						source = !isEmpty ? FindSelectedSource(reference) : null;
 						invalidLabel = isSingle
 							? $"{reference.ValueType.Name} (not found single entry by type)"
 							: reference.Guid.ToString();
@@ -251,7 +258,7 @@ namespace Content.Editor
 				var tryGetValue = ContentReferenceAttributeProcessor.propertyToGUIContent.TryGetValue(Property.Parent, out var GUIContent);
 				if (tryGetValue)
 				{
-					targetLabel.text    = GUIContent.text;
+					targetLabel.text = GUIContent.text;
 					targetLabel.tooltip = GUIContent.tooltip;
 				}
 				else
@@ -288,7 +295,7 @@ namespace Content.Editor
 			if (useInlineEditor && !EditorGUIUtility.hierarchyMode && _targetObject)
 			{
 				EditorGUI.indentLevel += 1;
-				useIndent             =  true;
+				useIndent = true;
 			}
 
 			bool forceDisableInlineEditor = false;
@@ -296,35 +303,36 @@ namespace Content.Editor
 
 			var originColor = GUI.color;
 			{
-				var errorColor = ObjectIsNullUtility.GetWarningColor(originColor);
+				var errorColor = UnityObjectIsNullUtility.GetWarningColor(originColor);
 				var canBeEmpty = Property.Info.GetAttribute<CanBeEmptyAttribute>() != null
 					|| Property.Info.GetAttribute<CanBeNullAttribute>() != null
 					|| Property.Info.GetAttribute<MaybeNullAttribute>() != null;
-				var failIfEmpty = ObjectIsNullUtility.HasRequiredAttribute(Property);
+				var failIfEmpty = UnityObjectIsNullUtility.HasRequiredAttribute(Property);
 
 				if (!canBeEmpty)
 					if (typeof(IContentReference).IsAssignableFrom(Property.ParentType))
 					{
 						canBeEmpty = Property.ParentValueProperty.Info.GetAttribute<CanBeEmptyAttribute>() != null;
-						failIfEmpty |= ObjectIsNullUtility.HasRequiredAttribute(Property.ParentValueProperty);
+						failIfEmpty |= UnityObjectIsNullUtility.HasRequiredAttribute(Property.ParentValueProperty);
 					}
 
 				if (isEmpty
 					&& GUI.enabled)
 				{
 					if (failIfEmpty)
-						errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
+						errorColor = UnityObjectIsNullUtility.GetInvalidColor(originColor);
 
 					if (failIfEmpty || !canBeEmpty)
 						GUI.color = errorColor;
 				}
+
 				Rect? objectFieldPosition = null;
 				var useDropdownBySettings = drawerSettingsAttribute?.Dropdown ?? false;
 				useDropdown = Attribute.Dropdown || useDropdownBySettings;
 
 				if (invalid)
 				{
-					errorColor = ObjectIsNullUtility.GetInvalidColor(originColor);
+					errorColor = UnityObjectIsNullUtility.GetInvalidColor(originColor);
 					if (useDropdown)
 					{
 						GUI.color = errorColor;
@@ -336,7 +344,7 @@ namespace Content.Editor
 						if (!targetLabel.text.IsNullOrEmpty())
 						{
 							position.width -= EditorGUIUtility.labelWidth;
-							position.x     += EditorGUIUtility.labelWidth;
+							position.x += EditorGUIUtility.labelWidth;
 						}
 
 						targetLabel = GUIContent.none;
@@ -356,9 +364,9 @@ namespace Content.Editor
 						// labelPos.x += 3;
 						// EditorGUI.LabelField(labelPos, invalidLabel);
 
-						position.x          += position.width - 20;
-						position.width      =  20;
-						objectFieldPosition =  position;
+						position.x += position.width - 20;
+						position.width = 20;
+						objectFieldPosition = position;
 					}
 				}
 
@@ -466,14 +474,14 @@ namespace Content.Editor
 						if (!EditorGUIUtility.hierarchyMode && _targetObject)
 						{
 							var offset = SirenixEditorGUI.FoldoutWidth + 3;
-							foldoutPosition.x     -= offset;
+							foldoutPosition.x -= offset;
 							foldoutPosition.width += offset;
 						}
 
 						var originEnabled2 = GUI.enabled;
-						GUI.enabled   = true;
+						GUI.enabled = true;
 						_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
-						GUI.enabled   = originEnabled2;
+						GUI.enabled = originEnabled2;
 
 						if (SirenixEditorGUI.BeginFadeGroup(this, useInlineEditor && _showDetailed))
 						{
@@ -496,20 +504,24 @@ namespace Content.Editor
 								{
 									GUI.color = originalColor;
 
-									//Scripts
 									var originalForceHideMonoScriptInEditor = OdinEditor.ForceHideMonoScriptInEditor;
 									OdinEditor.ForceHideMonoScriptInEditor = false;
 									var originalDrawAssetReference = FusumityEditorGUIHelper.drawAssetReference;
+									var originalDrawEnabledToggle = FusumityEditorGUIHelper.drawEnabledToggle;
 									var originalDrawInlineEditor = FusumityEditorGUIHelper.drawInlineEditor;
+									var originalAllowInlineEditorIdEditing = FusumityEditorGUIHelper.allowInlineEditorIdEditing;
 									FusumityEditorGUIHelper.drawAssetReference = useDropdown;
-									FusumityEditorGUIHelper.drawInlineEditor   = true;
+									FusumityEditorGUIHelper.drawEnabledToggle = !useDropdown;
+									FusumityEditorGUIHelper.drawInlineEditor = true;
+									FusumityEditorGUIHelper.allowInlineEditorIdEditing = false;
 
 									_inlineEditor.OnInspectorGUI();
 
-									//Scripts/
 									FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-									FusumityEditorGUIHelper.drawInlineEditor   = originalDrawInlineEditor;
-									OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
+									FusumityEditorGUIHelper.drawEnabledToggle = originalDrawEnabledToggle;
+									FusumityEditorGUIHelper.drawInlineEditor = originalDrawInlineEditor;
+									FusumityEditorGUIHelper.allowInlineEditorIdEditing = originalAllowInlineEditorIdEditing;
+									OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
 
 									//Hierarchy/
 									EditorGUIUtility.hierarchyMode = originHierarchyMode;
@@ -629,7 +641,7 @@ namespace Content.Editor
 								//Scripts/
 							}
 							FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-							OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
+							OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
 						}
 						GUIHelper.PopLabelWidth();
 						GUIHelper.PopHierarchyMode();
@@ -669,7 +681,7 @@ namespace Content.Editor
 			}
 
 			EditorGUI.indentLevel = originalIndent;
-			GUI.enabled           = originEnabled;
+			GUI.enabled = originEnabled;
 		}
 
 		private void HandleSetNoneClicked()

@@ -17,7 +17,7 @@ namespace AssetManagement
 				_handle = handle;
 			}
 
-			public async UniTask<T> GetAssetAsync<T>(CancellationToken cancellationToken)
+			public async UniTask<T> GetAssetAsync<T>(CancellationToken cancellationToken, IProgress<float> progress = null)
 			{
 				_usages++;
 
@@ -28,7 +28,7 @@ namespace AssetManagement
 				}
 
 				using var linkedCts = _cts.Link(cancellationToken);
-				var isCanceled = await _handle.WithCancellation(linkedCts.Token)
+				var isCanceled = await _handle.ToUniTask(progress, cancellationToken: linkedCts.Token)
 					.SuppressCancellationThrow();
 
 				if (isCanceled)
@@ -37,6 +37,16 @@ namespace AssetManagement
 					linkedCts.Token.ThrowIfCancellationRequested();
 				}
 
+				progress?.Report(1f);
+				return (T) _handle.Result;
+			}
+
+			//Синхронное получение: форсим завершение хэндла (WaitForCompletion блокирует поток)
+			public T GetAsset<T>()
+			{
+				_usages++;
+
+				_handle.WaitForCompletion();
 				return (T) _handle.Result;
 			}
 		}
@@ -48,12 +58,12 @@ namespace AssetManagement
 			{
 			}
 
-			public async UniTask<IList<T>> GetAssetsAsync<T>(CancellationToken cancellationToken)
+			public async UniTask<IList<T>> GetAssetsAsync<T>(CancellationToken cancellationToken, IProgress<float> progress = null)
 			{
 				_usages++;
 
 				using var linkedCts = _cts.Link(cancellationToken);
-				var isCanceled = await _handle.WithCancellation(linkedCts.Token)
+				var isCanceled = await _handle.ToUniTask(progress, cancellationToken: linkedCts.Token)
 					.SuppressCancellationThrow();
 
 				if (isCanceled)
@@ -62,6 +72,7 @@ namespace AssetManagement
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 
+				progress?.Report(1f);
 				return (IList<T>) _handle.Result;
 			}
 		}

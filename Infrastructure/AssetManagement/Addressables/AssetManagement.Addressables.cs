@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AssetManagement.AddressableAssets;
@@ -12,18 +13,37 @@ namespace AssetManagement
 	using UnityObject = UnityEngine.Object;
 	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
 	using UnityAssetLabelReference = UnityEngine.AddressableAssets.AssetLabelReference;
+
 	/// <summary>
-	/// Заметка! <br/>
-	/// При работае с Addressables было выявлено, что
-	/// при выгрузке ассета (Release) он может остаться висеть в памяти, события которые реально его выгружают:<br/>
-	/// - Все handle'ы группы отпущены (release) <br/>
-	/// - [иногда] Подгрузка нового элемента группы, который до этого был полностью выгружен или вообще не подгружался
-	/// (с какими-то ассетами работает, с какими-то нет, природа этого явления неясна)
-	///
-	/// <br/>
-	/// Решение: Группировать ассеты как можно чаще...
-	/// Проблема группировки ассетов, что создаются потенциальные условия для дубликатов...<br/>
-	/// К счастью при билде Addressables в конце выдается репорт и в репорте можно посмотреть какие ассеты дублируются
+	/// Поведение Addressables при выгрузке ассетов зависит не только от Release(handle),
+	/// но и от того, как ассеты упакованы (Group, Bundle Layout, Pack Mode).
+	/// <br/><br/>
+	/// Наблюдение:
+	/// даже после Addressables.Release(handle) ассет может оставаться в памяти,
+	/// если:
+	/// - существуют другие живые ссылки (handle'ы, зависимости, сцены, кэшированные references)
+	/// - ассет находится в одном AssetBundle вместе с другими объектами (Pack Mode = Pack Together / Pack Separately)
+	/// - сам AssetBundle остаётся загруженным из-за других активных ассетов внутри него
+	/// <br/><br/>
+	/// Важно понимать:
+	/// Addressables не выгружает отдельные ассеты напрямую — выгружается AssetBundle.
+	/// Поэтому “ассет не выгрузился” обычно означает, что:
+	/// - bundle ещё нужен другим ассетам
+	/// - или не был реально unloaded сам bundle
+	/// <br/><br/>
+	/// Дополнительно:
+	/// поведение может отличаться при повторной загрузке, потому что Unity может:
+	/// - переиспользовать уже загруженный AssetBundle
+	/// - пересобрать внутренние зависимости
+	/// <br/><br/>
+	/// Вывод:
+	/// оптимизация выгрузки достигается не “частой группировкой”, а корректной конфигурацией:
+	/// - правильное разделение Addressables Groups
+	/// - осознанный выбор Pack Mode (Together / Separately)
+	/// - контроль shared dependencies
+	/// - отсутствие лишних удерживающих ссылок
+	/// <br/><br/>
+	/// В билде Addressables можно проверить дубли и shared dependencies через Build Report.
 	/// </summary>
 	public partial class AssetProvider
 	{
@@ -36,7 +56,7 @@ namespace AssetManagement
 		{
 			ReleaseAllAddressable();
 
-			_keyToAssetContainer           = null;
+			_keyToAssetContainer = null;
 			_keyToAssetCollectionContainer = null;
 		}
 
@@ -57,60 +77,79 @@ namespace AssetManagement
 			_keyToAssetCollectionContainer.Clear();
 		}
 
-		private async UniTask<T> LoadAssetAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken)
+		private static void ThrowInvalidAssetReference<T>(UnityObject context = null)
 		{
+			var exception = AssetManagementDebug.Exception($"Invalid asset reference by type [ {typeof(T)} ]");
+			AssetManagementDebug.LogException(exception, context);
+			throw exception;
+		}
+
+		private static void ThrowInvalidComponentReference<T>(UnityObject context = null)
+		{
+			var exception = AssetManagementDebug.Exception($"Invalid component reference by type [ {typeof(T)} ]");
+			AssetManagementDebug.LogException(exception, context);
+			throw exception;
+		}
+
+		private async UniTask<T> LoadAssetAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
+		{
+			if (assetReference == null)
+				ThrowInvalidAssetReference<T>();
+
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
 			{
-				var exception = AssetManagementDebug.Exception($"Invalid asset reference by type [ {typeof(T)} ]");
-				AssetManagementDebug.LogException(exception, context);
-				throw exception;
+				ThrowInvalidAssetReference<T>(context);
 			}
 
 			var key = assetReference.RuntimeKey;
-			return await LoadAssetAsyncByKey<T>(key, cancellationToken, context);
+			return await LoadAssetAsyncByKey<T>(key, cancellationToken, context, progress);
 		}
 
-		private async UniTask<T> LoadComponentAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken)
+		private async UniTask<T> LoadComponentAsync<T>(UnityAssetReference assetReference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
+			if (assetReference == null)
+				ThrowInvalidComponentReference<T>();
+
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
 			{
-				var exception = AssetManagementDebug.Exception($"Invalid component reference by type [ {typeof(T)} ]");
-				AssetManagementDebug.LogException(exception, context);
-				throw exception;
+				ThrowInvalidComponentReference<T>(context);
 			}
 
 			var key = assetReference.RuntimeKey;
-			return await LoadComponentByKeyAsync<T>(key, cancellationToken, context);
+			return await LoadComponentByKeyAsync<T>(key, cancellationToken, context, progress);
 		}
 
-		private async UniTask<T> LoadComponentByKeyAsync<T>(object key, CancellationToken cancellationToken, UnityObject context = null)
+		private async UniTask<T> LoadComponentByKeyAsync<T>(object key, CancellationToken cancellationToken,
+			UnityObject context = null, IProgress<float> progress = null)
 		{
-			var asset = await LoadAssetAsyncByKey<GameObject>(key, cancellationToken, context);
+			var asset = await LoadAssetAsyncByKey<GameObject>(key, cancellationToken, context, progress);
 
 			if (!asset.TryGetComponent(out T component))
 			{
-				var exception = AssetManagementDebug.Exception($"Invalid component reference by type [ {typeof(T)} ]");
-				AssetManagementDebug.LogException(exception, context);
 				ReleaseAssetByKey(key);
-				throw exception;
+				ThrowInvalidComponentReference<T>(context);
 			}
 
 			return component;
 		}
 
-		private async UniTask<T> FindOrWaitUsedAssetByKeyAsync<T>(object key, CancellationToken cancellationToken)
+		private async UniTask<T> FindOrWaitUsedAssetByKeyAsync<T>(object key, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
 			if (_keyToAssetContainer.TryGetValue(key, out var container))
-				return await container.GetAssetAsync<T>(cancellationToken);
+				return await container.GetAssetAsync<T>(cancellationToken, progress);
 
 			return default;
 		}
 
-		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken, UnityObject context = null)
+		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken,
+			UnityObject context = null, IProgress<float> progress = null)
 		{
-			var usedAsset = await FindOrWaitUsedAssetByKeyAsync<T>(key, cancellationToken);
+			var usedAsset = await FindOrWaitUsedAssetByKeyAsync<T>(key, cancellationToken, progress);
 
 			if (!ReferenceEquals(usedAsset, null))
 				return usedAsset;
@@ -126,7 +165,7 @@ namespace AssetManagement
 			_keyToAssetContainer[key] = new AssetContainer(key, handle);
 
 			var (isCanceled, asset) = await handle
-				.WithCancellation(cancellationToken)
+				.ToUniTask(progress, cancellationToken: cancellationToken)
 				.SuppressCancellationThrow();
 
 			if (isCanceled)
@@ -153,10 +192,13 @@ namespace AssetManagement
 				throw AssetManagementDebug.Exception("Failed to load asset");
 			}
 
+			//Гарантируем финальный репорт: MoveNext может не успеть выдать ровно 1 до завершения хэндла
+			progress?.Report(1f);
 			return asset;
 		}
 
-		private async UniTask<IList<T>> LoadAssetsAsync<T>(UnityAssetLabelReference labelReference, CancellationToken cancellationToken)
+		private async UniTask<IList<T>> LoadAssetsAsync<T>(UnityAssetLabelReference labelReference, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
 			if (!labelReference.RuntimeKeyIsValid())
 			{
@@ -165,12 +207,13 @@ namespace AssetManagement
 			}
 
 			var key = labelReference.RuntimeKey;
-			return await LoadAssetsAsyncByKey<T>(key, cancellationToken);
+			return await LoadAssetsAsyncByKey<T>(key, cancellationToken, progress);
 		}
 
-		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(object key, CancellationToken cancellationToken)
+		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(object key, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
-			var usedAssets = await FindUsedAssetsByKeyAsync<T>(key, cancellationToken);
+			var usedAssets = await FindUsedAssetsByKeyAsync<T>(key, cancellationToken, progress);
 
 			if (usedAssets != null)
 				return usedAssets;
@@ -178,7 +221,7 @@ namespace AssetManagement
 			var handle = Addressables.LoadAssetsAsync<T>(key, null);
 			_keyToAssetCollectionContainer[key] = new AssetsContainer(key, handle);
 
-			var (isCanceled, assets) = await handle.WithCancellation(cancellationToken)
+			var (isCanceled, assets) = await handle.ToUniTask(progress, cancellationToken: cancellationToken)
 				.SuppressCancellationThrow();
 
 			if (isCanceled)
@@ -187,12 +230,14 @@ namespace AssetManagement
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
+			progress?.Report(1f);
 			return assets;
 		}
 
-		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(IEnumerable keys, CancellationToken cancellationToken)
+		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(IEnumerable keys, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
-			var usedAssets = await FindUsedAssetsByKeyAsync<T>(keys, cancellationToken);
+			var usedAssets = await FindUsedAssetsByKeyAsync<T>(keys, cancellationToken, progress);
 
 			if (usedAssets != null)
 				return usedAssets;
@@ -200,7 +245,7 @@ namespace AssetManagement
 			var handle = Addressables.LoadAssetsAsync<T>(keys, null);
 			_keyToAssetCollectionContainer[keys] = new AssetsContainer(keys, handle);
 
-			var (isCanceled, assets) = await handle.WithCancellation(cancellationToken)
+			var (isCanceled, assets) = await handle.ToUniTask(progress, cancellationToken: cancellationToken)
 				.SuppressCancellationThrow();
 
 			if (isCanceled)
@@ -209,14 +254,16 @@ namespace AssetManagement
 				cancellationToken.ThrowIfCancellationRequested();
 			}
 
+			progress?.Report(1f);
 			return assets;
 		}
 
-		private async UniTask<IList<T>> FindUsedAssetsByKeyAsync<T>(object key, CancellationToken cancellationToken)
+		private async UniTask<IList<T>> FindUsedAssetsByKeyAsync<T>(object key, CancellationToken cancellationToken,
+			IProgress<float> progress = null)
 		{
 			if (_keyToAssetCollectionContainer.TryGetValue(key, out var container))
 			{
-				return await container.GetAssetsAsync<T>(cancellationToken);
+				return await container.GetAssetsAsync<T>(cancellationToken, progress);
 			}
 
 			return null;
