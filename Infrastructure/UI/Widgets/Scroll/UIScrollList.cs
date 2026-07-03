@@ -111,6 +111,8 @@ namespace UI.Scroll
 
 		public void Update(TItemArgs[] data, float normalizedScrollPosition)
 		{
+			Reset();
+
 			_data = data;
 
 			OnDataReceived(data);
