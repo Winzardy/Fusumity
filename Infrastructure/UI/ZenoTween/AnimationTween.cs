@@ -231,7 +231,6 @@ namespace ZenoTween
 		private static void AppendOnKill(Sequence sequence, TweenCallback callback)
 		{
 			var previous = sequence.onKill;
-			Debug.LogError("was");
 			sequence.OnKill(() =>
 			{
 				previous?.Invoke();
