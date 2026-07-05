@@ -109,6 +109,47 @@ namespace Fusumity.Editor
 			return true;
 		}
 
+		public static bool ToolbarButton(Rect rect, SdfIconType icon, GUIStyle style = null,
+			bool ignoreGUIEnabled = false)
+		{
+			if (style == null)
+			{
+				style = SirenixGUIStyles.ToolbarButton;
+			}
+
+			if (GUI.Button(rect, GUIContent.none, style))
+			{
+				GUIHelper.RemoveFocusControl();
+				GUIHelper.RequestRepaint();
+				return true;
+			}
+
+			if (Event.current.type == EventType.Repaint)
+			{
+				const float iconSize = 16f;
+				var iconRect = new Rect(
+					rect.x + (rect.width - iconSize) * 0.5f,
+					rect.y + (rect.height - iconSize) * 0.5f,
+					iconSize, iconSize);
+				SdfIcons.DrawIcon(iconRect, icon);
+			}
+
+			if (!ignoreGUIEnabled ||
+				Event.current.button != 0 ||
+				Event.current.rawType != EventType.MouseDown ||
+				!GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+			{
+				return false;
+			}
+
+			GUIHelper.RemoveFocusControl();
+			GUIHelper.RequestRepaint();
+			GUIHelper.PushGUIEnabled(true);
+			Event.current.Use();
+			GUIHelper.PopGUIEnabled();
+			return true;
+		}
+
 		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey,
 			bool useIndentBody = false, bool useIndent = true)
 		{
