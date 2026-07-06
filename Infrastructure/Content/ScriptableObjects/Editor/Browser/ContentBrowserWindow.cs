@@ -200,7 +200,7 @@ namespace Content.Editor
 
 				// Категория верхнего уровня — база контента (по клику открывается сама база)
 				var dbName = Nicify(module.Name);
-				tree.Add(dbName, module.Db, SdfIconType.FolderFill);
+				tree.Add(dbName, module.Db, IconFor(module.Db));
 				RegisterAssetMenuItem(module.Db, tree.GetMenuItem(dbName));
 
 				// Группировка по типам внутри базы
@@ -621,10 +621,23 @@ namespace Content.Editor
 		{
 			return so switch
 			{
-				ContentDatabaseScriptableObject => SdfIconType.FolderFill,
+				ContentDatabaseScriptableObject database => IsSingleEntryDatabase(database)
+					? SdfIconType.JournalText
+					: SdfIconType.Journal,
 				SingleContentEntryScriptableObject => SdfIconType.FileEarmarkTextFill,
 				_ => SdfIconType.FileEarmarkText
 			};
+		}
+
+		private static bool IsSingleEntryDatabase(ContentDatabaseScriptableObject database)
+		{
+			for (var type = database.GetType(); type != null; type = type.BaseType)
+			{
+				if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ContentDatabaseScriptableObject<>))
+					return true;
+			}
+
+			return false;
 		}
 
 		private static HashSet<string> LoadPinned()
@@ -2311,12 +2324,9 @@ namespace Content.Editor
 
 			EditorGUI.DrawRect(iconRect, _iconOverlayBackground);
 
-			var tex = sprite.texture;
-			var tr = sprite.textureRect;
-			var texCoords = new Rect(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height);
 			var prevColor = GUI.color;
 			GUI.color = new Color(1f, 1f, 1f, 0.5f);
-			GUI.DrawTextureWithTexCoords(iconRect, tex, texCoords);
+			FusumityGUIEditorLayout.DrawObjectFieldIconSprite(iconRect, sprite);
 			GUI.color = prevColor;
 		}
 

@@ -653,10 +653,7 @@ namespace Content.Editor
 			// Фон, чтобы скрыть дефолтную иконку (у спрайтов прозрачный фон)
 			EditorGUI.DrawRect(iconRect, _iconOverlayBackground);
 
-			var tex = sprite.texture;
-			var tr = sprite.textureRect;
-			var texCoords = new Rect(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height);
-			GUI.DrawTextureWithTexCoords(iconRect, tex, texCoords);
+			FusumityGUIEditorLayout.DrawObjectFieldIconSprite(iconRect, sprite);
 		}
 
 		// Открывает кастомный селектор, не переоткрывая его тем же кликом, что его закрыл (потеря фокуса popup'а)
