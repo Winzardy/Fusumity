@@ -35,6 +35,7 @@ namespace Content.Editor
 		private readonly Dictionary<ContentScriptableObject, OdinMenuItem> _assetMenuItems = new();
 		private readonly Dictionary<string, OdinMenuItem> _categoryMenuItems = new();
 		private readonly Dictionary<string, OdinMenuItem> _pinnedMenuItems = new();
+		private readonly Dictionary<string, double> _lastPinnedAtByKey = new();
 		private int _navigationHistoryIndex = -1;
 		private OdinMenuItem _lastNavigationHistoryItem;
 		private string _lastNavigationHistoryPath;
@@ -52,6 +53,7 @@ namespace Content.Editor
 		private const string BREADCRUMB_LINK_COLOR = "FFFFFF";
 
 		private const int MAX_NAVIGATION_HISTORY_COUNT = 64;
+		private const double SELECT_ORIGINAL_AFTER_UNPIN_SECONDS = 5d;
 
 		private const float INSPECTOR_BOTTOM_PADDING = 10f;
 		private const string DOCUMENTATION_TOOLTIP_FORMAT = "Открыть документацию для типа: {0}";
@@ -70,6 +72,10 @@ namespace Content.Editor
 		private static readonly GUIContent CATEGORY_DELETE_MODE_TOOLTIP = new(string.Empty, "Выбрать конфиги для удаления");
 		private static readonly GUIContent APPLY_CATEGORY_DELETE_TOOLTIP = new(string.Empty, "Удалить выбранные конфиги");
 		private static readonly GUIContent CANCEL_CATEGORY_DELETE_TOOLTIP = new(string.Empty, "Отменить удаление");
+		private static readonly GUIContent PINNED_DELETE_MODE_TOOLTIP = new(string.Empty, "Выбрать закрепления для удаления");
+		private static readonly GUIContent APPLY_PINNED_DELETE_TOOLTIP = new(string.Empty, "Убрать выбранные закрепления");
+		private static readonly GUIContent CANCEL_PINNED_DELETE_TOOLTIP = new(string.Empty, "Отменить удаление");
+		private static readonly GUIContent CLEAR_PINNED_TOOLTIP = new(string.Empty, "Очистить все закрепления");
 		private static readonly GUIContent BREADCRUMB_SEPARATOR = new(" / ");
 
 		private OdinMenuItem _breadcrumbLeaf;
@@ -395,11 +401,13 @@ namespace Content.Editor
 
 				items.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
 
+				var page = new PinnedPage(this);
 				var rows = new PinnedRow[items.Count];
 				for (int i = 0; i < items.Count; i++)
-					rows[i] = new PinnedRow(this, items[i].Name, items[i].MenuPath, items[i].Asset);
+					rows[i] = new PinnedRow(this, page, items[i].Key, items[i].Name, items[i].MenuPath, items[i].Asset);
 
-				tree.Add(PINNED_GROUP, new PinnedPage(rows), SdfIconType.PinAngleFill);
+				page.Items = rows;
+				tree.Add(PINNED_GROUP, page, SdfIconType.PinAngleFill);
 
 				for (int i = 0; i < items.Count; i++)
 				{
@@ -691,17 +699,78 @@ namespace Content.Editor
 			if (Pinned.Remove(key))
 			{
 				_selectPinnedKeyAfterRefresh = null;
-				_selectOriginalPathAfterRefresh = originalMenuPath;
+				_selectOriginalPathAfterRefresh = WasPinnedRecently(key) ? originalMenuPath : null;
+				_lastPinnedAtByKey.Remove(key);
 			}
 			else
 			{
 				Pinned.Add(key);
+				_lastPinnedAtByKey[key] = EditorApplication.timeSinceStartup;
 				_selectPinnedKeyAfterRefresh = key;
 				_selectOriginalPathAfterRefresh = originalMenuPath;
 			}
 
 			EditorPrefs.SetString(PINNED_PREF_KEY, string.Join("|", Pinned));
 			ForceMenuTreeRebuild();
+		}
+
+		private bool WasPinnedRecently(string key)
+		{
+			return !key.IsNullOrEmpty() &&
+				_lastPinnedAtByKey.TryGetValue(key, out var pinnedAt) &&
+				EditorApplication.timeSinceStartup - pinnedAt <= SELECT_ORIGINAL_AFTER_UNPIN_SECONDS;
+		}
+
+		private bool TryRemovePinned(List<string> keys)
+		{
+			if (keys.IsNullOrEmpty())
+				return false;
+
+			var changed = false;
+			for (int i = 0; i < keys.Count; i++)
+			{
+				var key = keys[i];
+				if (key.IsNullOrEmpty())
+					continue;
+
+				if (Pinned.Remove(key))
+				{
+					changed = true;
+					_lastPinnedAtByKey.Remove(key);
+				}
+			}
+
+			if (!changed)
+				return false;
+
+			EditorPrefs.SetString(PINNED_PREF_KEY, string.Join("|", Pinned));
+			_selectPinnedKeyAfterRefresh = null;
+			_selectOriginalPathAfterRefresh = Pinned.Count > 0 ? PINNED_GROUP : null;
+			_selectFirstAfterRefresh = Pinned.Count == 0;
+			ForceMenuTreeRebuild();
+			return true;
+		}
+
+		private bool TryClearPinned()
+		{
+			if (Pinned.Count == 0)
+				return false;
+
+			if (!EditorUtility.DisplayDialog(
+				"Clear Pinned",
+				"Are you sure you want to clear all pinned items?",
+				"Clear",
+				"Cancel"))
+				return false;
+
+			Pinned.Clear();
+			_lastPinnedAtByKey.Clear();
+			EditorPrefs.SetString(PINNED_PREF_KEY, string.Empty);
+			_selectPinnedKeyAfterRefresh = null;
+			_selectOriginalPathAfterRefresh = null;
+			_selectFirstAfterRefresh = true;
+			ForceMenuTreeRebuild();
+			return true;
 		}
 
 		private void SelectAsset(ContentScriptableObject asset)
@@ -1111,6 +1180,32 @@ namespace Content.Editor
 			EditorGUI.EndDisabledGroup();
 		}
 
+		private static bool DrawColoredToolbarButton(SdfIconType icon, Color color)
+		{
+			var style = SirenixGUIStyles.IconButton;
+			var normalColor = style.normal.textColor;
+			var hoverColor = style.hover.textColor;
+			var activeColor = style.active.textColor;
+			var focusedColor = style.focused.textColor;
+
+			style.normal.textColor = color;
+			style.hover.textColor = color;
+			style.active.textColor = color;
+			style.focused.textColor = color;
+
+			try
+			{
+				return SirenixEditorGUI.ToolbarButton(icon);
+			}
+			finally
+			{
+				style.normal.textColor = normalColor;
+				style.hover.textColor = hoverColor;
+				style.active.textColor = activeColor;
+				style.focused.textColor = focusedColor;
+			}
+		}
+
 		private void TryDeleteAsset(ContentEntryScriptableObject asset, OdinMenuItem selectedItem)
 		{
 			TryDeleteAsset(asset, GetParentMenuPath(selectedItem));
@@ -1159,7 +1254,10 @@ namespace Content.Editor
 
 				anyDeleted = true;
 				if (!guid.IsNullOrEmpty() && Pinned.Remove(guid))
+				{
 					pinnedChanged = true;
+					_lastPinnedAtByKey.Remove(guid);
+				}
 			}
 
 			if (!anyDeleted)
@@ -1879,13 +1977,117 @@ namespace Content.Editor
 		/// </summary>
 		private class PinnedPage
 		{
+			private readonly ContentBrowserWindow _window;
+			private HashSet<string> _deleteSelection;
+
+			public bool DeleteMode { get; private set; }
+			private bool HasDeleteSelection => _deleteSelection is {Count: > 0};
+
+			public bool IsSelectedForDelete(string key)
+			{
+				return !key.IsNullOrEmpty() && _deleteSelection != null && _deleteSelection.Contains(key);
+			}
+
+			public void SetSelectedForDelete(string key, bool selected)
+			{
+				if (key.IsNullOrEmpty())
+					return;
+
+				if (selected)
+					(_deleteSelection ??= new HashSet<string>()).Add(key);
+				else
+					_deleteSelection?.Remove(key);
+
+				_window.Repaint();
+			}
+
+			private void DrawTitleBarButtons()
+			{
+				if (DeleteMode)
+				{
+					DrawDeleteModeButtons();
+					return;
+				}
+
+				EditorGUI.BeginDisabledGroup(_window._creating || Items.IsNullOrEmpty());
+				if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
+					BeginDeleteMode();
+
+				var lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, PINNED_DELETE_MODE_TOOLTIP);
+
+				if (SirenixEditorGUI.ToolbarButton("Clear All"))
+					_window.TryClearPinned();
+
+				lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, CLEAR_PINNED_TOOLTIP);
+				EditorGUI.EndDisabledGroup();
+			}
+
+			private void DrawDeleteModeButtons()
+			{
+				var canApply = !_window._creating && HasDeleteSelection;
+				EditorGUI.BeginDisabledGroup(!canApply);
+				var applyClicked = canApply
+					? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
+					: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
+
+				var lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, APPLY_PINNED_DELETE_TOOLTIP);
+				EditorGUI.EndDisabledGroup();
+
+				if (applyClicked)
+					ApplyDelete();
+
+				if (DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR))
+					CancelDeleteMode();
+
+				lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, CANCEL_PINNED_DELETE_TOOLTIP);
+			}
+
+			private void BeginDeleteMode()
+			{
+				DeleteMode = true;
+				_deleteSelection?.Clear();
+				_window.Repaint();
+			}
+
+			private void CancelDeleteMode()
+			{
+				DeleteMode = false;
+				_deleteSelection?.Clear();
+				_window.Repaint();
+			}
+
+			private void ApplyDelete()
+			{
+				if (!HasDeleteSelection)
+					return;
+
+				using (ListPool<string>.Get(out var keys))
+				{
+					if (!Items.IsNullOrEmpty())
+					{
+						for (int i = 0; i < Items.Length; i++)
+						{
+							if (IsSelectedForDelete(Items[i].PinKey))
+								keys.Add(Items[i].PinKey);
+						}
+					}
+
+					if (_window.TryRemovePinned(keys))
+						CancelDeleteMode();
+				}
+			}
+
 			[ShowInInspector]
-			[ListDrawerSettings(NumberOfItemsPerPage = 100, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+			[ListDrawerSettings(OnTitleBarGUI = nameof(DrawTitleBarButtons), NumberOfItemsPerPage = 100, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
 			public PinnedRow[] Items { get; set; }
 
-			public PinnedPage(PinnedRow[] items)
+			public PinnedPage(ContentBrowserWindow window)
 			{
-				Items = items;
+				_window = window;
 			}
 		}
 
@@ -1896,24 +2098,37 @@ namespace Content.Editor
 		private struct PinnedRow
 		{
 			private readonly ContentBrowserWindow _window;
+			private readonly PinnedPage _page;
+			private readonly string _key;
 			private readonly string _displayName;
 			private readonly string _menuPath;
 			private readonly ContentScriptableObject _asset;
 
-			public PinnedRow(ContentBrowserWindow window, string displayName, string menuPath, ContentScriptableObject asset)
+			public PinnedRow(ContentBrowserWindow window, PinnedPage page, string key, string displayName, string menuPath, ContentScriptableObject asset)
 			{
 				_window = window;
+				_page = page;
+				_key = key;
 				_displayName = displayName;
 				_menuPath = menuPath;
 				_asset = asset;
 			}
 
+			public string PinKey => _key;
+
 			[ShowInInspector, HideLabel]
 			[HorizontalGroup]
 			public string Name => _displayName;
 
+			[ShowInInspector, HideLabel]
 			[HorizontalGroup(22f)]
 			[PropertySpace(2)]
+			[ShowIf(nameof(ShowDeleteToggle))]
+			public bool Delete { get => _page != null && _page.IsSelectedForDelete(_key); set => _page?.SetSelectedForDelete(_key, value); }
+
+			[HorizontalGroup(22f)]
+			[PropertySpace(2)]
+			[HideIf(nameof(ShowDeleteToggle))]
 			[Button("→")]
 			public void Open()
 			{
@@ -1922,6 +2137,8 @@ namespace Content.Editor
 				if (_menuPath.IsNullOrEmpty() && _asset != null)
 					_window.TrySelectMenuItemWithObject(_asset);
 			}
+
+			private bool ShowDeleteToggle => _page is {DeleteMode: true};
 		}
 
 		/// <summary>
@@ -2015,32 +2232,6 @@ namespace Content.Editor
 
 				lastRect = GUILayoutUtility.GetLastRect();
 				GUI.Label(lastRect, CANCEL_CATEGORY_DELETE_TOOLTIP);
-			}
-
-			private static bool DrawColoredToolbarButton(SdfIconType icon, Color color)
-			{
-				var style = SirenixGUIStyles.IconButton;
-				var normalColor = style.normal.textColor;
-				var hoverColor = style.hover.textColor;
-				var activeColor = style.active.textColor;
-				var focusedColor = style.focused.textColor;
-
-				style.normal.textColor = color;
-				style.hover.textColor = color;
-				style.active.textColor = color;
-				style.focused.textColor = color;
-
-				try
-				{
-					return SirenixEditorGUI.ToolbarButton(icon);
-				}
-				finally
-				{
-					style.normal.textColor = normalColor;
-					style.hover.textColor = hoverColor;
-					style.active.textColor = activeColor;
-					style.focused.textColor = focusedColor;
-				}
 			}
 
 			private void BeginDeleteMode()
@@ -2297,7 +2488,7 @@ namespace Content.Editor
 			if (!ReferenceEquals(_overlayIconSource, source))
 			{
 				_overlayIconSource = source;
-				_overlayIconSprite = ContentEntryIconUtility.GetPreviewIcon(source);
+				_overlayIconSprite = ContentPreviewUtility.GetPreviewIcon(source);
 			}
 
 			var sprite = _overlayIconSprite;
@@ -2326,7 +2517,7 @@ namespace Content.Editor
 
 			var prevColor = GUI.color;
 			GUI.color = new Color(1f, 1f, 1f, 0.5f);
-			FusumityGUIEditorLayout.DrawObjectFieldIconSprite(iconRect, sprite);
+			FusumityEditorGUILayout.DrawObjectFieldIconSprite(iconRect, sprite);
 			GUI.color = prevColor;
 		}
 

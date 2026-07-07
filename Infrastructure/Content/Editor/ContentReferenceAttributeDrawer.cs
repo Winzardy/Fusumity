@@ -611,7 +611,6 @@ namespace Content.Editor
 
 				EditorGUI.ObjectField(rect, label, _targetObject, GetObjectFieldType(source), false);
 
-				// Хак: поверх дефолтной иконки SO рисуем IPreviewIcon (с IContentEntrySource или Value)
 				DrawSourceIconOverlay(rect, label, source);
 			}
 
@@ -626,7 +625,7 @@ namespace Content.Editor
 			if (!ReferenceEquals(_overlayIconSource, source))
 			{
 				_overlayIconSource = source;
-				_overlayIconSprite = ContentEntryIconUtility.GetPreviewIcon(source);
+				_overlayIconSprite = ContentPreviewUtility.GetPreviewIcon(source);
 			}
 
 			var sprite = _overlayIconSprite;
@@ -653,7 +652,7 @@ namespace Content.Editor
 			// Фон, чтобы скрыть дефолтную иконку (у спрайтов прозрачный фон)
 			EditorGUI.DrawRect(iconRect, _iconOverlayBackground);
 
-			FusumityGUIEditorLayout.DrawObjectFieldIconSprite(iconRect, sprite);
+			FusumityEditorGUILayout.DrawObjectFieldIconSprite(iconRect, sprite);
 		}
 
 		// Открывает кастомный селектор, не переоткрывая его тем же кликом, что его закрыл (потеря фокуса popup'а)
@@ -693,7 +692,7 @@ namespace Content.Editor
 					HandleSelectorItemSelected,
 					pathEvaluator: static item => item?.Path ?? NONE_LABEL);
 
-				_selector.SetIconEvaluator(static item => ContentEntryIconUtility.GetPreviewIcon(item?.Source));
+				_selector.SetIconEvaluator(static item => ContentPreviewUtility.GetPreviewIcon(item?.Source));
 				_selector.SetSecondaryLabelEvaluator(GetSelectorSecondaryLabel);
 
 				// Кнопка "+" в тулбаре popup'а — создать новый config
