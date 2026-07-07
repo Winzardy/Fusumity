@@ -50,6 +50,7 @@ namespace Content.Editor
 		private const string SCRIPTABLE_OBJECT_SUFFIX = "ScriptableObject";
 		private const string CONFIG_SUFFIX = "Config";
 		private const string DATABASE_SUFFIX = "Database";
+		private const string CATEGORY_SUFFIX = "'s";
 		private const string BREADCRUMB_LINK_COLOR = "FFFFFF";
 
 		private const int MAX_NAVIGATION_HISTORY_COUNT = 64;
@@ -206,8 +207,13 @@ namespace Content.Editor
 
 				// Категория верхнего уровня — база контента (по клику открывается сама база)
 				var dbName = Nicify(module.Name);
-				tree.Add(dbName, module.Db, IconFor(module.Db));
-				RegisterAssetMenuItem(module.Db, tree.GetMenuItem(dbName));
+				var dbItem = new ContentMenuItem(tree, dbName, module.Db)
+				{
+					SdfIcon = IconFor(module.Db)
+				};
+
+				tree.AddMenuItemAtPath(string.Empty, dbItem);
+				RegisterAssetMenuItem(module.Db, dbItem);
 
 				// Группировка по типам внутри базы
 				using (ListPool<Type>.Get(out var configTypes))
@@ -242,22 +248,26 @@ namespace Content.Editor
 						if (!CanCreateContentEntry(type))
 							continue;
 
-						var displayTypeName = GetConfigDisplayName(type);
-						var typeName = CategoryNameFor(displayTypeName);
+						var typeName = GetConfigDisplayName(type);
 						var typePath = $"{dbName}/{typeName}";
 
 						// Страница категории — список конфигов этого типа (рисуется при клике на категорию)
 						using (ListPool<CategoryRow>.Get(out var items))
 						{
-							var page = new CategoryPage(this, module.Db, type, typePath, CategoryPinKey(module.Db, type), displayTypeName);
+							var page = new CategoryPage(this, module.Db, type, typePath, CategoryPinKey(module.Db, type), typeName);
 
 							if (hasConfigs)
 								for (int j = 0; j < configs.Count; j++)
 									items.Add(new CategoryRow(this, page, configs[j]));
 
 							page.Items = items.ToArray();
-							tree.Add(typePath, page, SdfIconType.Folder2Open);
-							RegisterCategoryMenuItem(page, tree.GetMenuItem(typePath));
+							var categoryItem = new CategoryMenuItem(tree, typeName, page)
+							{
+								SdfIcon = SdfIconType.Folder2Open
+							};
+
+							tree.AddMenuItemAtPath(dbName, categoryItem);
+							RegisterCategoryMenuItem(page, categoryItem);
 							AddCreateConfigLeaf(tree, typePath, page);
 						}
 
@@ -491,11 +501,6 @@ namespace Content.Editor
 		private static string DisplayNameFor(ContentScriptableObject so)
 		{
 			return so is ContentDatabaseScriptableObject ? Nicify(so.name) : so.name;
-		}
-
-		private static string CategoryNameFor(string typeName)
-		{
-			return typeName.IsNullOrEmpty() ? typeName : $"{typeName}'s";
 		}
 
 		private static string CategoryPinKey(ContentDatabaseScriptableObject db, Type type)
@@ -1714,6 +1719,70 @@ namespace Content.Editor
 			return item?.GetFullPath();
 		}
 
+		private static void DrawDatabaseSuffix(OdinMenuItem item)
+		{
+			DrawNavigationSuffix(item, DATABASE_SUFFIX, addWhenMissing: true, separatedBySpace: true);
+		}
+
+		private static void DrawCategorySuffix(OdinMenuItem item)
+		{
+			DrawNavigationSuffix(item, CATEGORY_SUFFIX, addWhenMissing: true, separatedBySpace: false);
+		}
+
+		private static void DrawNavigationSuffix(OdinMenuItem item, string suffix, bool addWhenMissing, bool separatedBySpace)
+		{
+			if (item == null || suffix.IsNullOrEmpty() || Event.current.type != EventType.Repaint)
+				return;
+
+			var menuStyle = item.Style;
+			if (menuStyle == null)
+				return;
+
+			var style = item.IsSelected ? menuStyle.SelectedLabelStyle : menuStyle.DefaultLabelStyle;
+			var name = item.SmartName;
+			var labelRect = item.LabelRect;
+			if (style == null || name.IsNullOrEmpty() || labelRect.width <= 0f)
+				return;
+
+			var hasSuffix = name.EndsWith(suffix, StringComparison.Ordinal);
+			if (!hasSuffix && !addWhenMissing)
+				return;
+
+			var prefix = hasSuffix ? name[..^suffix.Length].TrimEnd() : name;
+			var prefixWidth = style.CalcSize(new GUIContent(prefix)).x;
+			var suffixX = labelRect.x + prefixWidth;
+			var suffixContent = suffix;
+
+			if (hasSuffix && separatedBySpace)
+				suffixX += style.CalcSize(new GUIContent(" ")).x;
+			else if (!hasSuffix && separatedBySpace)
+				suffixContent = $" {suffix}";
+
+			if (suffixX >= labelRect.xMax)
+				return;
+
+			var suffixRect = new Rect(suffixX, labelRect.y, labelRect.xMax - suffixX, labelRect.height);
+			var suffixStyle = new GUIStyle(style);
+			suffixStyle.fontSize = style.fontSize > 0 ? Mathf.Max(1, style.fontSize - 1) : 11;
+			var suffixColor = GetNavigationSuffixColor();
+			suffixStyle.normal.textColor = suffixColor;
+			suffixStyle.hover.textColor = suffixColor;
+			suffixStyle.active.textColor = suffixColor;
+			suffixStyle.focused.textColor = suffixColor;
+			suffixStyle.onNormal.textColor = suffixColor;
+			suffixStyle.onHover.textColor = suffixColor;
+			suffixStyle.onActive.textColor = suffixColor;
+			suffixStyle.onFocused.textColor = suffixColor;
+			GUI.Label(suffixRect, suffixContent, suffixStyle);
+		}
+
+		private static Color GetNavigationSuffixColor()
+		{
+			return EditorGUIUtility.isProSkin
+				? new Color(0.55f, 0.55f, 0.55f, 0.5f)
+				: new Color(0.45f, 0.45f, 0.45f, 0.5f);
+		}
+
 		// Строка поиска конфига: имя + Id + Guid + Guid'ы вложенных Entry
 		private static string BuildSearchString(string name, IUniqueContentEntrySource source)
 		{
@@ -1760,6 +1829,14 @@ namespace Content.Editor
 				base.DrawMenuItem(indentLevel);
 				GUI.color = prev;
 			}
+
+			protected override void OnDrawMenuItem(Rect rect, Rect triangleRect)
+			{
+				base.OnDrawMenuItem(rect, triangleRect);
+
+				if (_config is ContentDatabaseScriptableObject)
+					DrawDatabaseSuffix(this);
+			}
 		}
 
 		/// <summary>
@@ -1778,10 +1855,24 @@ namespace Content.Editor
 			}
 		}
 
+		private class CategoryMenuItem : OdinMenuItem
+		{
+			public CategoryMenuItem(OdinMenuTree tree, string name, CategoryPage page)
+				: base(tree, name, page)
+			{
+			}
+
+			protected override void OnDrawMenuItem(Rect rect, Rect triangleRect)
+			{
+				base.OnDrawMenuItem(rect, triangleRect);
+				DrawCategorySuffix(this);
+			}
+		}
+
 		/// <summary>
 		/// Закреплённая копия категории — помечена отдельным типом, чтобы пропускать её в поиске
 		/// </summary>
-		private class PinnedCategoryMenuItem : OdinMenuItem
+		private class PinnedCategoryMenuItem : CategoryMenuItem
 		{
 			public string OriginalMenuPath { get; }
 			public string PinKey { get; }
