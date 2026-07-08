@@ -1,12 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Fusumity.Utility;
 using Sapientia.Extensions.Reflection;
 using Sapientia.Reflection;
-using Sapientia.ServiceManagement;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -21,7 +19,9 @@ namespace UI.Editor
 	[Serializable]
 	public struct UIWidgetArgsInspector
 	{
-		public static UIWidgetArgsInspector Empty = default;
+		public static readonly UIWidgetArgsInspector Empty = default;
+
+		private static readonly GUIContent _noneLabel = new("None");
 
 		private object _args;
 
@@ -30,7 +30,10 @@ namespace UI.Editor
 		private Type _argsType;
 		private Type _concreteArgsType;
 		private Type[] _concreteArgsTypes;
+		private GUIContent _concreteArgsTypeLabel;
 		private ConstructorInfo _constructor;
+		private Type _constructorOwnerType;
+		private GUIContent _constructorLabel;
 		private ConstructorParameterInspector[] _constructorParameterInspectors;
 		private (Type type, PropertyTree tree) _typeArgsToTree;
 
@@ -52,13 +55,16 @@ namespace UI.Editor
 
 		public void Clear()
 		{
-			_args = null;
+			TryClearTree();
+			DisposeConstructorParameterInspectors();
+
 			_argsType = null;
 			_concreteArgsType = null;
 			_concreteArgsTypes = null;
+			_concreteArgsTypeLabel = null;
 			_constructor = null;
-			_constructorParameterInspectors = null;
-			_typeArgsToTree = default;
+			_constructorOwnerType = null;
+			_constructorLabel = null;
 			_useLabel = false;
 			_shouldTryCreateFirstArgs = true;
 		}
@@ -125,7 +131,7 @@ namespace UI.Editor
 				if (!ReferenceEquals(newObj, _args))
 				{
 					_args = newObj;
-					_typeArgsToTree.tree = null;
+					DisposeTree();
 					_typeArgsToTree.type = _argsType;
 				}
 
@@ -158,7 +164,7 @@ namespace UI.Editor
 
 			var selected = GenericSelector<Type>.DrawSelectorDropdown(
 				GUIContent.none,
-				new GUIContent(concreteArgsType != null ? GetTypeName(concreteArgsType) : "None"),
+				_concreteArgsTypeLabel ?? _noneLabel,
 				rect =>
 				{
 					var selector = new GenericSelector<Type>(
@@ -208,9 +214,12 @@ namespace UI.Editor
 		{
 			_args = null;
 			_concreteArgsType = type;
+			_concreteArgsTypeLabel = new GUIContent(GetTypeName(type));
 			_constructor = null;
-			_constructorParameterInspectors = null;
-			_typeArgsToTree.tree = null;
+			_constructorOwnerType = null;
+			_constructorLabel = null;
+			DisposeConstructorParameterInspectors();
+			DisposeTree();
 			_typeArgsToTree.type = type;
 			_shouldTryCreateFirstArgs = true;
 		}
@@ -222,9 +231,10 @@ namespace UI.Editor
 			if (type == null || !CanUseConstructor(type))
 				return;
 
-			if (_constructor?.DeclaringType == type)
+			if (_constructorOwnerType == type)
 				return;
 
+			_constructorOwnerType = type;
 			SetConstructor(SelectDefaultConstructor(type));
 		}
 
@@ -236,13 +246,13 @@ namespace UI.Editor
 
 			DrawConstructorSelector(type);
 
-			if (!ShouldCreateByConstructor(type))
+			var inspectors = _constructorParameterInspectors;
+			if (inspectors == null)
 				return false;
 
-			var parameters = _constructor.GetParameters();
-			for (int i = 0; i < parameters.Length; i++)
+			for (int i = 0; i < inspectors.Length; i++)
 			{
-				_constructorParameterInspectors[i].Draw();
+				inspectors[i].Draw();
 			}
 
 			return true;
@@ -257,7 +267,7 @@ namespace UI.Editor
 			var constructor = _constructor;
 			var selected = GenericSelector<ConstructorInfo>.DrawSelectorDropdown(
 				GUIContent.none,
-				new GUIContent(GetConstructorName(constructor)),
+				_constructorLabel ??= new GUIContent(GetConstructorName(constructor)),
 				rect =>
 				{
 					var selector = new GenericSelector<ConstructorInfo>(
@@ -287,21 +297,19 @@ namespace UI.Editor
 		private void SetConstructor(ConstructorInfo constructor)
 		{
 			_constructor = constructor;
+			_constructorLabel = new GUIContent(GetConstructorName(constructor));
 			_args = null;
-			_typeArgsToTree.tree = null;
+			DisposeTree();
+			DisposeConstructorParameterInspectors();
 
-			var parameters = _constructor?.GetParameters();
+			var parameters = constructor?.GetParameters();
 			if (parameters == null || parameters.Length == 0)
-			{
-				_constructorParameterInspectors = null;
 				return;
-			}
 
 			_constructorParameterInspectors = new ConstructorParameterInspector[parameters.Length];
 			for (int i = 0; i < parameters.Length; i++)
 			{
-				var parameter = parameters[i];
-				_constructorParameterInspectors[i] = new ConstructorParameterInspector(parameter);
+				_constructorParameterInspectors[i] = new ConstructorParameterInspector(parameters[i]);
 			}
 		}
 
@@ -315,13 +323,13 @@ namespace UI.Editor
 			{
 				_args = null;
 				TryCreateArgs(editableType);
-				_typeArgsToTree.tree = null;
+				DisposeTree();
 				_typeArgsToTree.type = editableType;
 			}
 
 			if (_args == null)
 			{
-				GUILayout.Label($"{GetTypeName(editableType)} не удалось создать", EditorStyles.miniLabel);
+				GUILayout.Label($"Failed to create {GetTypeName(editableType)}", EditorStyles.miniLabel);
 				return true;
 			}
 
@@ -355,7 +363,7 @@ namespace UI.Editor
 				if (_args == null || _args.GetType() != type)
 				{
 					TryCreateArgs(type);
-					_typeArgsToTree.tree = null;
+					DisposeTree();
 				}
 			}
 
@@ -375,7 +383,7 @@ namespace UI.Editor
 
 			_args = newValue;
 			if (newValue != null && newValue.GetType() != _argsType && !_argsType.IsAssignableFrom(newValue.GetType()))
-				_typeArgsToTree.tree = null;
+				DisposeTree();
 		}
 
 		private bool TryDrawSimpleField(Type type)
@@ -387,60 +395,93 @@ namespace UI.Editor
 			if (nullableType != null)
 			{
 				_args = null;
-				GUILayout.Label($"Nullable<{GetTypeName(nullableType)}> аргумент будет передан как null", EditorStyles.miniLabel);
+				GUILayout.Label($"Nullable<{GetTypeName(nullableType)}> argument will be passed as null", EditorStyles.miniLabel);
 				return true;
 			}
 
 			if (typeof(Delegate).IsAssignableFrom(type))
 			{
 				_args = null;
-				GUILayout.Label("Delegate аргумент будет передан как null", EditorStyles.miniLabel);
+				GUILayout.Label("Delegate argument will be passed as null", EditorStyles.miniLabel);
 				return true;
 			}
 
+			if (!TryDrawSimpleValue(GUIContent.none, type, _args, out var newValue))
+				return false;
+
+			_args = newValue;
+			return true;
+		}
+
+		private static bool TryDrawSimpleValue(GUIContent label, Type type, object value, out object newValue)
+		{
 			if (type == typeof(string))
 			{
-				_args = EditorGUILayout.TextField(_args as string ?? string.Empty);
+				newValue = EditorGUILayout.TextField(label, value as string ?? string.Empty);
 				return true;
 			}
 
 			if (type == typeof(bool))
 			{
-				_args = EditorGUILayout.Toggle(_args is bool value && value);
+				newValue = EditorGUILayout.Toggle(label, value is bool boolValue && boolValue);
 				return true;
 			}
 
 			if (type.IsEnum)
 			{
-				_args ??= Activator.CreateInstance(type);
-				_args = EditorGUILayout.EnumPopup((Enum) _args);
+				newValue = EditorGUILayout.EnumPopup(label, (Enum) (value ?? Activator.CreateInstance(type)));
 				return true;
 			}
 
 			if (type == typeof(int))
 			{
-				_args = EditorGUILayout.IntField(_args is int value ? value : 0);
+				newValue = EditorGUILayout.IntField(label, value is int intValue ? intValue : 0);
 				return true;
 			}
 
 			if (type == typeof(long))
 			{
-				_args = EditorGUILayout.LongField(_args is long value ? value : 0L);
+				newValue = EditorGUILayout.LongField(label, value is long longValue ? longValue : 0L);
 				return true;
 			}
 
 			if (type == typeof(float))
 			{
-				_args = EditorGUILayout.FloatField(_args is float value ? value : 0f);
+				newValue = EditorGUILayout.FloatField(label, value is float floatValue ? floatValue : 0f);
 				return true;
 			}
 
 			if (type == typeof(double))
 			{
-				_args = EditorGUILayout.DoubleField(_args is double value ? value : 0d);
+				newValue = EditorGUILayout.DoubleField(label, value is double doubleValue ? doubleValue : 0d);
 				return true;
 			}
 
+			if (type == typeof(Vector2))
+			{
+				newValue = EditorGUILayout.Vector2Field(label.text, value is Vector2 vector2Value ? vector2Value : default);
+				return true;
+			}
+
+			if (type == typeof(Vector3))
+			{
+				newValue = EditorGUILayout.Vector3Field(label.text, value is Vector3 vector3Value ? vector3Value : default);
+				return true;
+			}
+
+			if (type == typeof(Vector4))
+			{
+				newValue = EditorGUILayout.Vector4Field(label.text, value is Vector4 vector4Value ? vector4Value : default);
+				return true;
+			}
+
+			if (type == typeof(Color))
+			{
+				newValue = EditorGUILayout.ColorField(label, value is Color colorValue ? colorValue : default);
+				return true;
+			}
+
+			newValue = value;
 			return false;
 		}
 
@@ -466,11 +507,11 @@ namespace UI.Editor
 			if (_constructor == null)
 				return;
 
-			var parameters = _constructor.GetParameters();
-			var args = new object[parameters.Length];
-			for (int i = 0; i < parameters.Length; i++)
+			var inspectors = _constructorParameterInspectors;
+			var args = new object[inspectors?.Length ?? 0];
+			for (int i = 0; i < args.Length; i++)
 			{
-				args[i] = _constructorParameterInspectors[i].GetValue();
+				args[i] = inspectors[i].GetValue();
 			}
 
 			_args = null;
@@ -497,7 +538,7 @@ namespace UI.Editor
 		{
 			return CanUseConstructor(type) &&
 				_constructor != null &&
-				_constructor.GetParameters().Length > 0;
+				_constructorParameterInspectors != null;
 		}
 
 		private static ConstructorInfo SelectDefaultConstructor(Type type)
@@ -509,11 +550,19 @@ namespace UI.Editor
 				.FirstOrDefault();
 		}
 
+		private static readonly Dictionary<Type, ConstructorInfo[]> _constructorsByType = new();
+
 		private static ConstructorInfo[] GetConstructors(Type type)
 		{
-			return type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			if (_constructorsByType.TryGetValue(type, out var constructors))
+				return constructors;
+
+			constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 				.Where(x => !x.IsPrivate)
 				.ToArray();
+
+			_constructorsByType[type] = constructors;
+			return constructors;
 		}
 
 		private static Type GetParameterType(ParameterInfo parameter)
@@ -572,20 +621,34 @@ namespace UI.Editor
 		private static string GetParameterName(ParameterInfo parameter)
 			=> $"{GetTypeName(GetParameterType(parameter))} {parameter.Name}";
 
-		private static string GetTypeName(Type type)
+		private static readonly Dictionary<Type, string> _typeNameByType = new();
+
+		// internal: переиспользуется резолверами параметров конструктора (см. IUIConstructorParameterResolver)
+		public static string GetTypeName(Type type)
 		{
 			if (type == null)
 				return "null";
 
+			if (_typeNameByType.TryGetValue(type, out var cachedName))
+				return cachedName;
+
+			string typeName;
 			if (!type.IsGenericType)
-				return type.Name;
+			{
+				typeName = type.Name;
+			}
+			else
+			{
+				var name = type.Name;
+				var index = name.IndexOf('`');
+				if (index >= 0)
+					name = name[..index];
 
-			var name = type.Name;
-			var index = name.IndexOf('`');
-			if (index >= 0)
-				name = name[..index];
+				typeName = $"{name}<{string.Join(", ", type.GetGenericArguments().Select(GetTypeName))}>";
+			}
 
-			return $"{name}<{string.Join(", ", type.GetGenericArguments().Select(GetTypeName))}>";
+			_typeNameByType[type] = typeName;
+			return typeName;
 		}
 
 		private static Type ResolveEditableViewModelType(Type type)
@@ -613,8 +676,7 @@ namespace UI.Editor
 				return false;
 			}
 
-			return type.Name.Contains("Animic", StringComparison.OrdinalIgnoreCase) ||
-				type.Name.Contains("Anemic", StringComparison.OrdinalIgnoreCase);
+			return type.Name.Contains("Anemic", StringComparison.OrdinalIgnoreCase);
 		}
 
 		private static readonly Dictionary<Type, EditableMember[]> _editableViewModelMembersByType = new();
@@ -624,7 +686,7 @@ namespace UI.Editor
 			var members = GetEditableViewModelMembers(type);
 			if (members.Length == 0)
 			{
-				GUILayout.Label("Нет редактируемых полей", EditorStyles.miniLabel);
+				GUILayout.Label("No editable fields", EditorStyles.miniLabel);
 				return;
 			}
 
@@ -677,33 +739,9 @@ namespace UI.Editor
 		private static void DrawEditableViewModelMember(object target, EditableMember member)
 		{
 			var value = member.GetValue(target);
-			var type = member.Type;
-			object newValue;
 
-			if (type == typeof(string))
-				newValue = EditorGUILayout.TextField(member.Label, value as string ?? string.Empty);
-			else if (type == typeof(bool))
-				newValue = EditorGUILayout.Toggle(member.Label, value is bool boolValue && boolValue);
-			else if (type.IsEnum)
-				newValue = EditorGUILayout.EnumPopup(member.Label, (Enum) (value ?? Activator.CreateInstance(type)));
-			else if (type == typeof(int))
-				newValue = EditorGUILayout.IntField(member.Label, value is int intValue ? intValue : 0);
-			else if (type == typeof(long))
-				newValue = EditorGUILayout.LongField(member.Label, value is long longValue ? longValue : 0L);
-			else if (type == typeof(float))
-				newValue = EditorGUILayout.FloatField(member.Label, value is float floatValue ? floatValue : 0f);
-			else if (type == typeof(double))
-				newValue = EditorGUILayout.DoubleField(member.Label, value is double doubleValue ? doubleValue : 0d);
-			else if (type == typeof(Vector2))
-				newValue = EditorGUILayout.Vector2Field(member.Label.text, value is Vector2 vector2Value ? vector2Value : default);
-			else if (type == typeof(Vector3))
-				newValue = EditorGUILayout.Vector3Field(member.Label.text, value is Vector3 vector3Value ? vector3Value : default);
-			else if (type == typeof(Vector4))
-				newValue = EditorGUILayout.Vector4Field(member.Label.text, value is Vector4 vector4Value ? vector4Value : default);
-			else if (type == typeof(Color))
-				newValue = EditorGUILayout.ColorField(member.Label, value is Color colorValue ? colorValue : default);
-			else
-				newValue = EditorGUILayout.ObjectField(member.Label, value as UnityObject, type, true);
+			if (!TryDrawSimpleValue(member.Label, member.Type, value, out var newValue))
+				newValue = EditorGUILayout.ObjectField(member.Label, value as UnityObject, member.Type, true);
 
 			if (!Equals(value, newValue))
 				member.SetValue(target, newValue);
@@ -750,24 +788,25 @@ namespace UI.Editor
 
 		private class ConstructorParameterInspector
 		{
-			private static readonly MethodInfo _tryGetServiceMethod = typeof(ServiceLocator)
-				.GetMethods(BindingFlags.Public | BindingFlags.Static)
-				.First(x =>
-					x.Name == nameof(ServiceLocator.TryGet) &&
-					x.IsGenericMethodDefinition &&
-					x.GetParameters().Length == 1);
-
-			private static readonly Dictionary<Type, Type[]> _parameterTypeToEnumerableServiceTypes = new();
+			// Реализации ищутся рефлексией — сам инспектор не знает о конкретных источниках значений
+			private static IUIConstructorParameterResolver[] _resolvers;
 
 			private readonly ParameterInfo _parameter;
 			private readonly Type _parameterType;
 			private readonly Type _editableViewModelType;
 			private readonly GUIContent _label;
 
-				private object _value;
-				private bool _editableViewModelCreationFailed;
-				private object[] _serviceItems;
-				private GUIContent[] _serviceItemNames;
+			private object _value;
+			private bool _editableViewModelCreationFailed;
+			private GUIContent _readOnlyLabelContent;
+
+			private bool _resolverResolved;
+			private IUIConstructorParameterResolver _resolver;
+			private object _resolverState;
+
+			private object _box;
+			private FieldInfo _boxValueField;
+			private PropertyTree _boxTree;
 
 			public ConstructorParameterInspector(ParameterInfo parameter)
 			{
@@ -780,54 +819,67 @@ namespace UI.Editor
 					_value = defaultValue;
 			}
 
+			public void Dispose()
+			{
+				_resolver?.Dispose(_resolverState);
+				_resolverState = null;
+
+				_boxTree?.Dispose();
+				_boxTree = null;
+			}
+
 			public void Draw()
 			{
-				var rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
-
 				if (_parameterType == null)
 				{
-					EditorGUI.LabelField(rect, _label, new GUIContent("null"));
+					DrawReadOnlyLabel("null");
 					return;
 				}
 
 				if (typeof(Delegate).IsAssignableFrom(_parameterType))
 				{
 					_value = null;
-					EditorGUI.LabelField(rect, _label, new GUIContent($"{GetTypeName(_parameterType)} будет передан как null"));
+					DrawReadOnlyLabel($"{GetTypeName(_parameterType)} will be passed as null");
 					return;
 				}
 
-				if (TryDrawEditableViewModel(rect))
+				if (TryDrawEditableViewModel())
 					return;
 
-				if (TryDrawServiceParameter(rect))
+				if (TryDrawSimpleValue(_label, _parameterType, _value, out var newValue))
+				{
+					_value = newValue;
 					return;
-
-				if (Event.current.type == EventType.Layout || _serviceItems == null)
-					RefreshEnumerableServiceItems();
-
-				if (TryDrawEnumerableServiceDropdown(rect))
-					return;
-
-				if (TryDrawSimpleField(rect))
-					return;
+				}
 
 				if (typeof(UnityObject).IsAssignableFrom(_parameterType))
 				{
-					_value = EditorGUI.ObjectField(rect, _label, _value as UnityObject, _parameterType, false);
+					_value = EditorGUILayout.ObjectField(_label, _value as UnityObject, _parameterType, false);
 					return;
 				}
 
-				var nullableType = Nullable.GetUnderlyingType(_parameterType);
-				if (nullableType != null)
-				{
-					_value = null;
-					EditorGUI.LabelField(rect, _label, new GUIContent($"Nullable<{GetTypeName(nullableType)}> будет передан как null"));
+				if (TryDrawViaResolver())
 					return;
-				}
+
+				// Последний резерв: любой сложный тип отдаём на откуп Odin — его attribute-процессоры
+				// сами знают, как нарисовать конкретные типы (ContentReference и т.п.)
+				if (TryDrawOdinBoxedValue())
+					return;
 
 				_value = null;
-				EditorGUI.LabelField(rect, _label, new GUIContent($"{GetTypeName(_parameterType)} будет передан как null"));
+
+				var nullableType = Nullable.GetUnderlyingType(_parameterType);
+				DrawReadOnlyLabel(nullableType != null
+					? $"Nullable<{GetTypeName(nullableType)}> will be passed as null"
+					: $"{GetTypeName(_parameterType)} will be passed as null");
+			}
+
+			private void DrawReadOnlyLabel(string value)
+			{
+				if (_readOnlyLabelContent == null || _readOnlyLabelContent.text != value)
+					_readOnlyLabelContent = new GUIContent(value);
+
+				EditorGUILayout.LabelField(_label, _readOnlyLabelContent);
 			}
 
 			public object GetValue()
@@ -838,7 +890,7 @@ namespace UI.Editor
 				return _value;
 			}
 
-			private bool TryDrawEditableViewModel(Rect rect)
+			private bool TryDrawEditableViewModel()
 			{
 				if (_editableViewModelType == null)
 					return false;
@@ -846,14 +898,76 @@ namespace UI.Editor
 				EnsureEditableViewModelValue();
 				if (_value == null)
 				{
-					EditorGUI.LabelField(rect, _label, new GUIContent($"{GetTypeName(_editableViewModelType)} не удалось создать"));
-					return true;
-					}
-
-					EditorGUI.LabelField(rect, _label, new GUIContent(GetTypeName(_editableViewModelType)));
-					DrawEditableViewModelMembers(_value, _editableViewModelType);
+					DrawReadOnlyLabel($"Failed to create {GetTypeName(_editableViewModelType)}");
 					return true;
 				}
+
+				DrawReadOnlyLabel(GetTypeName(_editableViewModelType));
+				DrawEditableViewModelMembers(_value, _editableViewModelType);
+				return true;
+			}
+
+			private bool TryDrawViaResolver()
+			{
+				if (!_resolverResolved)
+				{
+					_resolverResolved = true;
+
+					var resolvers = GetResolvers();
+					for (int i = 0; i < resolvers.Length; i++)
+					{
+						var state = resolvers[i].CreateState(_parameterType);
+						if (state == null)
+							continue;
+
+						_resolver = resolvers[i];
+						_resolverState = state;
+						break;
+					}
+				}
+
+				return _resolver != null && _resolver.TryDraw(_resolverState, _label, ref _value);
+			}
+
+			private static IUIConstructorParameterResolver[] GetResolvers()
+			{
+				if (_resolvers != null)
+					return _resolvers;
+
+				var types = ReflectionUtility.GetAllTypes<IUIConstructorParameterResolver>(editor: true);
+				var resolvers = new List<IUIConstructorParameterResolver>(types.Count);
+				for (int i = 0; i < types.Count; i++)
+				{
+					if (types[i].TryCreateInstance(out IUIConstructorParameterResolver resolver))
+						resolvers.Add(resolver);
+				}
+
+				_resolvers = resolvers.ToArray();
+				return _resolvers;
+			}
+
+			private bool TryDrawOdinBoxedValue()
+			{
+				EnsureBoxedValue();
+
+				_boxTree ??= PropertyTree.Create(_box, SerializationBackend.Odin);
+				_boxTree.RootProperty.Children[nameof(ConstructorParameterBox<object>.value)]
+					.Draw(GUIContent.none);
+				_boxTree.ApplyChanges();
+				_value = _boxValueField.GetValue(_box);
+				return true;
+			}
+
+			private void EnsureBoxedValue()
+			{
+				if (_box != null)
+					return;
+
+				var boxType = typeof(ConstructorParameterBox<>).MakeGenericType(_parameterType);
+				_box = Activator.CreateInstance(boxType);
+				_boxValueField = boxType.GetField(nameof(ConstructorParameterBox<object>.value));
+				_boxValueField.SetValue(_box, GetValue());
+			}
 
 			private void EnsureEditableViewModelValue()
 			{
@@ -870,156 +984,38 @@ namespace UI.Editor
 				_editableViewModelCreationFailed = true;
 				GUIDebug.LogException(exception);
 			}
+		}
 
-			private bool TryDrawServiceParameter(Rect rect)
+		[Serializable]
+		private class ConstructorParameterBox<T>
+		{
+			[HideLabel]
+			public T value;
+		}
+
+		private void DisposeTree()
+		{
+			_typeArgsToTree.tree?.Dispose();
+			_typeArgsToTree.tree = null;
+		}
+
+		private void DisposeConstructorParameterInspectors()
+		{
+			var inspectors = _constructorParameterInspectors;
+			if (inspectors == null)
+				return;
+
+			_constructorParameterInspectors = null;
+			for (int i = 0; i < inspectors.Length; i++)
 			{
-				if (!TryGetService(_parameterType, out var service))
-					return false;
-
-				_value = service;
-				EditorGUI.LabelField(rect, _label, new GUIContent($"ServiceLocator: {GetTypeName(service.GetType())}"));
-				return true;
-			}
-
-			private bool TryDrawEnumerableServiceDropdown(Rect rect)
-			{
-				var items = _serviceItems;
-				if (items == null || items.Length == 0)
-					return false;
-
-				var current = GetValue();
-				var index = Array.IndexOf(items, current);
-				if (index < 0)
-					index = 0;
-
-				_value = items[index];
-
-				var selected = EditorGUI.Popup(rect, _label, index, _serviceItemNames);
-				if (selected != index)
-					_value = items[selected];
-
-				return true;
-			}
-
-			private bool TryDrawSimpleField(Rect rect)
-			{
-				if (_parameterType == typeof(string))
-				{
-					_value = EditorGUI.TextField(rect, _label, _value as string ?? string.Empty);
-					return true;
-				}
-
-				if (_parameterType == typeof(bool))
-				{
-					_value = EditorGUI.Toggle(rect, _label, _value is bool value && value);
-					return true;
-				}
-
-				if (_parameterType.IsEnum)
-				{
-					_value ??= Activator.CreateInstance(_parameterType);
-					_value = EditorGUI.EnumPopup(rect, _label, (Enum) _value);
-					return true;
-				}
-
-				if (_parameterType == typeof(int))
-				{
-					_value = EditorGUI.IntField(rect, _label, _value is int value ? value : 0);
-					return true;
-				}
-
-				if (_parameterType == typeof(long))
-				{
-					_value = EditorGUI.LongField(rect, _label, _value is long value ? value : 0L);
-					return true;
-				}
-
-				if (_parameterType == typeof(float))
-				{
-					_value = EditorGUI.FloatField(rect, _label, _value is float value ? value : 0f);
-					return true;
-				}
-
-				if (_parameterType == typeof(double))
-				{
-					_value = EditorGUI.DoubleField(rect, _label, _value is double value ? value : 0d);
-					return true;
-				}
-
-				return false;
-			}
-
-			private void RefreshEnumerableServiceItems()
-			{
-				_serviceItems = TryGetEnumerableServiceItems(_parameterType);
-				if (_serviceItems == null || _serviceItems.Length == 0)
-				{
-					_serviceItemNames = null;
-					return;
-				}
-
-				_serviceItemNames = new GUIContent[_serviceItems.Length];
-				for (int i = 0; i < _serviceItems.Length; i++)
-					_serviceItemNames[i] = new GUIContent(_serviceItems[i]?.ToString() ?? "null");
-			}
-
-			private static object[] TryGetEnumerableServiceItems(Type itemType)
-			{
-				var serviceTypes = GetEnumerableServiceTypes(itemType);
-				for (int i = 0; i < serviceTypes.Length; i++)
-				{
-					var serviceType = serviceTypes[i];
-					if (!TryGetService(serviceType, out var service))
-						continue;
-
-					if (service is not IEnumerable enumerable)
-						continue;
-
-					return enumerable.Cast<object>()
-						.Where(x => x != null)
-						.ToArray();
-				}
-
-				return null;
-			}
-
-			private static Type[] GetEnumerableServiceTypes(Type itemType)
-			{
-				if (_parameterTypeToEnumerableServiceTypes.TryGetValue(itemType, out var serviceTypes))
-					return serviceTypes;
-
-				var enumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
-				serviceTypes = enumerableType.GetAllTypes()
-					.Where(x => !x.IsGenericTypeDefinition)
-					.Prepend(enumerableType)
-					.Distinct()
-					.OrderBy(x => x.Name)
-					.ToArray();
-
-				_parameterTypeToEnumerableServiceTypes[itemType] = serviceTypes;
-				return serviceTypes;
-			}
-
-			private static bool TryGetService(Type serviceType, out object service)
-			{
-				var args = new object[] {null};
-				var method = _tryGetServiceMethod.MakeGenericMethod(serviceType);
-				if (method.Invoke(null, args) is bool success && success)
-				{
-					service = args[0];
-					return service != null;
-				}
-
-				service = null;
-				return false;
+				inspectors[i]?.Dispose();
 			}
 		}
 
 		private void TryClearTree()
 		{
 			_args = null;
-			_typeArgsToTree.tree?.Dispose();
-			_typeArgsToTree.tree = null;
+			DisposeTree();
 			_typeArgsToTree.type = null;
 		}
 	}

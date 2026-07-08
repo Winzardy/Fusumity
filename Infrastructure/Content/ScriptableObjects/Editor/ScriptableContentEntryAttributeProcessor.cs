@@ -126,7 +126,8 @@ namespace Content.ScriptableObjects.Editor
 			base.ProcessSelfAttributes(property, attributes);
 
 			var guiContent = new GUIContent(property.Label);
-			ContentEntryAttributeProcessor.propertyToGUIContent[property] = guiContent;
+			ContentEntryAttributeProcessor.propertyToGUIContent.Remove(property);
+			ContentEntryAttributeProcessor.propertyToGUIContent.Add(property, guiContent);
 			var valueType = property.ValueEntry.TypeOfValue.GetGenericArguments()[0];
 			attributes.Add(new HideReferenceObjectPickerAttribute());
 

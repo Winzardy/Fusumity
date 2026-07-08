@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Fusumity.Attributes.Specific;
 using Fusumity.Utility;
 using Sapientia.Extensions;
@@ -35,7 +36,7 @@ namespace Content.Editor
 
 		public static readonly string TOOLTIP_PREFIX_GUID = $"{LABEL_GUID}:\n".ColorText(Color.gray).SizeText(12);
 
-		public static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
+		public static readonly ConditionalWeakTable<InspectorProperty, GUIContent> propertyToGUIContent = new();
 
 		public override bool CanProcessSelfAttributes(InspectorProperty property)
 		{
@@ -137,7 +138,8 @@ namespace Content.Editor
 			base.ProcessSelfAttributes(property, attributes);
 
 			var guiContent = new GUIContent(property.Label);
-			propertyToGUIContent[property] = guiContent;
+			propertyToGUIContent.Remove(property);
+			propertyToGUIContent.Add(property, guiContent);
 			var valueType = property.ValueEntry.TypeOfValue.GetGenericArguments()[0];
 			attributes.Add(new HideReferenceObjectPickerAttribute());
 
