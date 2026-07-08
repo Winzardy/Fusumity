@@ -149,6 +149,8 @@ namespace UI
 		/// <returns>Получилось ли закрыть?</returns>
 		public bool TryHideLast() => _manager.TryHideLast();
 
+		public bool TryHide(IPopover popover) => _manager.TryHide(popover);
+
 		private void OnShown(UIWidget _, IPopover popover)
 		{
 			Shown?.Invoke(popover);

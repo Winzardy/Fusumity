@@ -180,6 +180,15 @@ namespace UI.Popovers
 			return true;
 		}
 
+		internal bool TryHide(IPopover popover)
+		{
+			if (popover == null || !_active.Contains(popover))
+				return false;
+
+			popover.SetActive(false);
+			return true;
+		}
+
 		internal void ClearAll()
 		{
 			foreach (var active in _active)

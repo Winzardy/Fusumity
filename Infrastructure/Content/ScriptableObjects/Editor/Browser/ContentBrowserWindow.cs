@@ -289,6 +289,7 @@ namespace Content.Editor
 
 			tree.SortMenuItemsByName();
 			MoveCreateConfigItemsToBottom(tree.RootMenuItem);
+			MoveMiscDatabaseToBottom(tree);
 
 			// Группа "Pinned" всегда сверху (в поиске её копии скрываются — см. SearchItem)
 			MovePinnedToTop(tree);
@@ -534,6 +535,21 @@ namespace Content.Editor
 			}
 		}
 
+		private static void MoveMiscDatabaseToBottom(OdinMenuTree tree)
+		{
+			var root = tree.RootMenuItem.ChildMenuItems;
+			for (int i = 0; i < root.Count; i++)
+			{
+				if (root[i].Value is not MiscDatabaseScriptableObject)
+					continue;
+
+				var item = root[i];
+				root.RemoveAt(i);
+				root.Add(item);
+				return;
+			}
+		}
+
 		private static void BuildPinnedSeparator(OdinMenuTree tree)
 		{
 			var root = tree.RootMenuItem.ChildMenuItems;
@@ -634,9 +650,11 @@ namespace Content.Editor
 		{
 			return so switch
 			{
-				ContentDatabaseScriptableObject database => IsSingleEntryDatabase(database)
-					? SdfIconType.JournalText
-					: SdfIconType.Journal,
+				ContentDatabaseScriptableObject database => database is MiscDatabaseScriptableObject
+					? SdfIconType.JournalX
+					: IsSingleEntryDatabase(database)
+						? SdfIconType.JournalText
+						: SdfIconType.Journal,
 				SingleContentEntryScriptableObject => SdfIconType.FileEarmarkTextFill,
 				_ => SdfIconType.FileEarmarkText
 			};
