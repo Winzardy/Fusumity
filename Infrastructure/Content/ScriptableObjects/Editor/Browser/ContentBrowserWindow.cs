@@ -45,6 +45,7 @@ namespace Content.Editor
 		private const string PINNED_GROUP = "Pinned";
 		private const string PINNED_PREF_KEY = "ContentBrowser.Pinned";
 		private const string AUTO_SYNC_PREF_KEY = "ContentBrowser.AutoSyncProjectSelection";
+		private const string GROUP_CONFIGS_BY_ID_PATH_PREF_KEY = "ContentBrowser.GroupConfigsByIdPath";
 		private const string PINNED_CATEGORY_PREFIX = "category:";
 		private const string NEW_CONFIG_MENU_ITEM_PREFIX = "New";
 		private const string SCRIPTABLE_OBJECT_SUFFIX = "ScriptableObject";
@@ -91,6 +92,7 @@ namespace Content.Editor
 		private static Type[] _creatableConfigTypes;
 
 		private static bool? _autoSyncProjectSelection;
+		private static bool? _groupConfigsByIdPath;
 
 		private enum NavigationScrollTarget
 		{
@@ -112,6 +114,22 @@ namespace Content.Editor
 			{
 				_autoSyncProjectSelection = value;
 				EditorPrefs.SetBool(AUTO_SYNC_PREF_KEY, value);
+			}
+		}
+
+		private static bool GroupByIdPath
+		{
+			get
+			{
+				if (!_groupConfigsByIdPath.HasValue)
+					_groupConfigsByIdPath = EditorPrefs.GetBool(GROUP_CONFIGS_BY_ID_PATH_PREF_KEY, false);
+
+				return _groupConfigsByIdPath.Value;
+			}
+			set
+			{
+				_groupConfigsByIdPath = value;
+				EditorPrefs.SetBool(GROUP_CONFIGS_BY_ID_PATH_PREF_KEY, value);
 			}
 		}
 
@@ -272,7 +290,7 @@ namespace Content.Editor
 							page.Items = items.ToArray();
 							var categoryItem = new CategoryMenuItem(tree, typeName, page)
 							{
-								SdfIcon = SdfIconType.Folder2Open
+								SdfIcon = SdfIconType.FolderFill
 							};
 
 							tree.AddMenuItemAtPath(dbName, categoryItem);
@@ -284,8 +302,18 @@ namespace Content.Editor
 							continue;
 
 						// Листья — конкретные конфиги (выключенные рисуются серым), при выборе открывается inline-редактор
-						for (int j = 0; j < configs.Count; j++)
-							AddConfigLeaf(tree, typePath, configs[j], single: false);
+						using (DictionaryPool<string, int>.Get(out var idPathGroupCounts))
+						{
+							if (GroupByIdPath)
+								BuildIdPathGroupCounts(configs, idPathGroupCounts);
+
+							for (int j = 0; j < configs.Count; j++)
+							{
+								var leafPath = GetConfigLeafPath(typePath, configs[j], idPathGroupCounts);
+								AddConfigLeaf(tree, leafPath, configs[j], single: false);
+								SetIdGroupIcons(tree, typePath, leafPath);
+							}
+						}
 					}
 				}
 			}
@@ -853,6 +881,102 @@ namespace Content.Editor
 			RegisterAssetMenuItem(so, leaf);
 		}
 
+		private static void SetIdGroupIcons(OdinMenuTree tree, string typePath, string leafPath)
+		{
+			if (tree == null ||
+				typePath.IsNullOrEmpty() ||
+				leafPath.IsNullOrEmpty() ||
+				leafPath == typePath ||
+				!leafPath.StartsWith(typePath + "/", StringComparison.Ordinal))
+			{
+				return;
+			}
+
+			var groupPath = typePath;
+			var relativePath = leafPath[(typePath.Length + 1)..];
+			foreach (var segment in relativePath.Split('/'))
+			{
+				if (segment.IsNullOrEmpty())
+					continue;
+
+				groupPath += "/" + segment;
+				var item = tree.GetMenuItem(groupPath);
+				if (item is {Value: null})
+					item.SdfIcon = SdfIconType.Folder2Open;
+			}
+		}
+
+		private static void BuildIdPathGroupCounts(List<ContentScriptableObject> configs, Dictionary<string, int> groupCounts)
+		{
+			if (configs.IsNullOrEmpty())
+				return;
+
+			for (int i = 0; i < configs.Count; i++)
+			{
+				if (!TryGetConfigId(configs[i], out var id))
+					continue;
+
+				var lastSeparator = id.LastIndexOf('/');
+				if (lastSeparator <= 0)
+					continue;
+
+				for (var separator = id.IndexOf('/'); separator >= 0; separator = id.IndexOf('/', separator + 1))
+				{
+					if (separator <= 0)
+						continue;
+
+					AddIdPathGroupCount(groupCounts, id[..separator]);
+
+					if (separator == lastSeparator)
+						break;
+				}
+			}
+		}
+
+		private static void AddIdPathGroupCount(Dictionary<string, int> groupCounts, string groupPath)
+		{
+			if (groupPath.IsNullOrEmpty())
+				return;
+
+			groupCounts.TryGetValue(groupPath, out var count);
+			groupCounts[groupPath] = count + 1;
+		}
+
+		private static string GetConfigLeafPath(string typePath, ContentScriptableObject config, Dictionary<string, int> groupCounts)
+		{
+			if (groupCounts == null || groupCounts.Count == 0 || !TryGetConfigId(config, out var id))
+				return typePath;
+
+			var lastSeparator = id.LastIndexOf('/');
+			if (lastSeparator <= 0)
+				return typePath;
+
+			var path = typePath;
+			var segmentStart = 0;
+			for (var separator = id.IndexOf('/'); separator >= 0; separator = id.IndexOf('/', separator + 1))
+			{
+				if (separator > segmentStart &&
+					groupCounts.TryGetValue(id[..separator], out var count) &&
+					count > 1)
+				{
+					path += "/" + id[segmentStart..separator];
+				}
+
+				if (separator == lastSeparator)
+					break;
+
+				segmentStart = separator + 1;
+			}
+
+			return path;
+		}
+
+		private static bool TryGetConfigId(ContentScriptableObject config, out string id)
+		{
+			id = config is IUniqueContentEntrySource source ? source.Id : null;
+			return !id.IsNullOrEmpty() && id.IndexOf('/') >= 0;
+		}
+
 		private static void AddCreateConfigLeaf(OdinMenuTree tree, string path, CategoryPage page)
 		{
 			tree.Add($"{path}/{page.CreateMenuItemName}", new CreateConfigAction(page), SdfIconType.Plus);
@@ -935,6 +1059,12 @@ namespace Content.Editor
 			var y = config.DrawSearchToolbar ? config.SearchToolbarHeight : 0f;
 			var x = Mathf.Max(0f, MenuWidth - width);
 			return new Rect(x, y, MenuWidth - x, Mathf.Max(0f, position.height - y));
+		}
+
+		private void SetGroupByIdPath(bool value)
+		{
+			GroupByIdPath = value;
+			ForceMenuTreeRebuild();
 		}
 
 		private void ScrollNavigation(NavigationScrollTarget target)
@@ -1197,6 +1327,8 @@ namespace Content.Editor
 			var menu = new GenericMenu();
 			menu.AddItem(new GUIContent("Sync Project Selection"), AutoSyncProjectSelection,
 				() => AutoSyncProjectSelection = !AutoSyncProjectSelection);
+			menu.AddItem(new GUIContent("Group by Id"), GroupByIdPath,
+				() => SetGroupByIdPath(!GroupByIdPath));
 			menu.AddItem(new GUIContent("Force Rebuild Browser"), false, ForceRebuild);
 			menu.ShowAsContext();
 		}
