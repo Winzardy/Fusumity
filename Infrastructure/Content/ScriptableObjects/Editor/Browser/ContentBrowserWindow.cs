@@ -311,7 +311,7 @@ namespace Content.Editor
 							{
 								var leafPath = GetConfigLeafPath(typePath, configs[j], idPathGroupCounts);
 								AddConfigLeaf(tree, leafPath, configs[j], single: false);
-								SetIdGroupIcons(tree, typePath, leafPath);
+								AddConfigToIdGroupPages(tree, typePath, leafPath, configs[j]);
 							}
 						}
 					}
@@ -881,11 +881,12 @@ namespace Content.Editor
 			RegisterAssetMenuItem(so, leaf);
 		}
 
-		private static void SetIdGroupIcons(OdinMenuTree tree, string typePath, string leafPath)
+		private void AddConfigToIdGroupPages(OdinMenuTree tree, string typePath, string leafPath, ContentScriptableObject config)
 		{
 			if (tree == null ||
 				typePath.IsNullOrEmpty() ||
 				leafPath.IsNullOrEmpty() ||
+				config == null ||
 				leafPath == typePath ||
 				!leafPath.StartsWith(typePath + "/", StringComparison.Ordinal))
 			{
@@ -901,8 +902,23 @@ namespace Content.Editor
 
 				groupPath += "/" + segment;
 				var item = tree.GetMenuItem(groupPath);
-				if (item is {Value: null})
-					item.SdfIcon = SdfIconType.Folder2Open;
+				if (item == null)
+					continue;
+
+				item.SdfIcon = SdfIconType.Folder2Open;
+
+				if (item.Value is IdGroupPage page)
+				{
+					page.AddItem(config);
+					continue;
+				}
+
+				if (item.Value != null)
+					continue;
+
+				page = new IdGroupPage(this, groupPath, config.GetType());
+				page.AddItem(config);
+				item.Value = page;
 			}
 		}
 
@@ -1213,7 +1229,7 @@ namespace Content.Editor
 			return item.Value switch
 			{
 				ContentDatabaseScriptableObject => 0,
-				CategoryPage => 1,
+				CategoryPage or IdGroupPage => 1,
 				_ => 2
 			};
 		}
@@ -2526,10 +2542,143 @@ namespace Content.Editor
 			private bool ShowDeleteToggle => _page is {DeleteMode: true};
 		}
 
+		private interface IConfigRowDeletePage
+		{
+			bool DeleteMode { get; }
+			bool IsSelectedForDelete(ContentScriptableObject asset);
+			void SetSelectedForDelete(ContentScriptableObject asset, bool selected);
+		}
+
+		/// <summary>
+		/// Страница Id-группы — плоский список всех конфигов внутри ветки
+		/// </summary>
+		private class IdGroupPage : IConfigRowDeletePage
+		{
+			private readonly ContentBrowserWindow _window;
+			private readonly List<CategoryRow> _items = new();
+			private HashSet<ContentEntryScriptableObject> _deleteSelection;
+
+			public string MenuPath { get; }
+			public Type ConfigType { get; }
+			public bool DeleteMode { get; private set; }
+			private bool HasDeleteSelection => _deleteSelection is {Count: > 0};
+
+			public bool IsSelectedForDelete(ContentScriptableObject asset)
+			{
+				return asset is ContentEntryScriptableObject entry && _deleteSelection != null && _deleteSelection.Contains(entry);
+			}
+
+			public void SetSelectedForDelete(ContentScriptableObject asset, bool selected)
+			{
+				if (asset is not ContentEntryScriptableObject entry)
+					return;
+
+				if (selected)
+					(_deleteSelection ??= new HashSet<ContentEntryScriptableObject>()).Add(entry);
+				else
+					_deleteSelection?.Remove(entry);
+
+				_window.Repaint();
+			}
+
+			private void DrawTitleBarButtons()
+			{
+				if (DeleteMode)
+				{
+					DrawDeleteModeButtons();
+					return;
+				}
+
+				EditorGUI.BeginDisabledGroup(_window._creating);
+				if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
+					BeginDeleteMode();
+
+				var lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, CATEGORY_DELETE_MODE_TOOLTIP);
+				EditorGUI.EndDisabledGroup();
+			}
+
+			private void DrawDeleteModeButtons()
+			{
+				var canApply = !_window._creating && HasDeleteSelection;
+				EditorGUI.BeginDisabledGroup(!canApply);
+				var applyClicked = canApply
+					? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
+					: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
+
+				var lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, APPLY_CATEGORY_DELETE_TOOLTIP);
+				EditorGUI.EndDisabledGroup();
+
+				if (applyClicked)
+					ApplyDelete();
+
+				if (DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR))
+					CancelDeleteMode();
+
+				lastRect = GUILayoutUtility.GetLastRect();
+				GUI.Label(lastRect, CANCEL_CATEGORY_DELETE_TOOLTIP);
+			}
+
+			private void BeginDeleteMode()
+			{
+				DeleteMode = true;
+				_deleteSelection?.Clear();
+				_window.Repaint();
+			}
+
+			private void CancelDeleteMode()
+			{
+				DeleteMode = false;
+				_deleteSelection?.Clear();
+				_window.Repaint();
+			}
+
+			private void ApplyDelete()
+			{
+				if (!HasDeleteSelection)
+					return;
+
+				using (ListPool<ContentEntryScriptableObject>.Get(out var assets))
+				{
+					if (!Items.IsNullOrEmpty())
+					{
+						for (int i = 0; i < Items.Length; i++)
+						{
+							if (Items[i].Asset is ContentEntryScriptableObject asset && IsSelectedForDelete(asset))
+								assets.Add(asset);
+						}
+					}
+
+					if (_window.TryDeleteAssets(assets, MenuPath, ConfigType))
+						CancelDeleteMode();
+				}
+			}
+
+			[ShowInInspector]
+			[Searchable]
+			[ContentBrowserToggleInlineEditorsOnAltFoldout]
+			[ListDrawerSettings(OnTitleBarGUI = nameof(DrawTitleBarButtons), NumberOfItemsPerPage = 100, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
+			public CategoryRow[] Items { get; private set; } = Array.Empty<CategoryRow>();
+
+			public IdGroupPage(ContentBrowserWindow window, string menuPath, Type configType)
+			{
+				_window = window;
+				MenuPath = menuPath;
+				ConfigType = configType;
+			}
+
+			public void AddItem(ContentScriptableObject asset)
+			{
+				_items.Add(new CategoryRow(_window, this, asset));
+				Items = _items.ToArray();
+			}
+		}
+
 		/// <summary>
 		/// Страница категории — таблица со списком конфигов выбранного типа
 		/// </summary>
-		private class CategoryPage
+		private class CategoryPage : IConfigRowDeletePage
 		{
 			private readonly ContentBrowserWindow _window;
 			private HashSet<ContentEntryScriptableObject> _deleteSelection;
@@ -2685,10 +2834,10 @@ namespace Content.Editor
 		private struct CategoryRow : IContentBrowserInlineButtonHandler, IContentBrowserInlineToggleHandler
 		{
 			private readonly ContentBrowserWindow _window;
-			private readonly CategoryPage _page;
+			private readonly IConfigRowDeletePage _page;
 			private readonly ContentScriptableObject _asset;
 
-			public CategoryRow(ContentBrowserWindow window, CategoryPage page, ContentScriptableObject asset)
+			public CategoryRow(ContentBrowserWindow window, IConfigRowDeletePage page, ContentScriptableObject asset)
 			{
 				_window = window;
 				_page = page;
