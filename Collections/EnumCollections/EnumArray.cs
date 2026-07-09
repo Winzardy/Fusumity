@@ -152,14 +152,30 @@ namespace Fusumity.Collections
 			LazyInitialize();
 			if (values.Length == EnumValues<TEnum>.ENUM_LENGHT)
 			{
+				var isSorted = true;
+				var previousIndex = -1;
 				for (var i = 0; i < values.Length; i++)
 				{
 					var enumName = values[i].EnumValueName;
-					if (!Enum.TryParse<TEnum>(enumName, out var enumValue) || !values[i].EnumValue.Equals(enumValue))
+					// Сравниваем через ToInt() (reinterpret cast без боксинга), а имя резолвим через
+					// кэш EnumNameToValue вместо медленного рефлексивного Enum.TryParse.
+					if (!EnumNameToValue<TEnum>.TryGetValue(enumName, out var enumValue) ||
+					    values[i].EnumValue.ToInt() != enumValue.ToInt())
 						goto update;
+
+					// Заодно проверяем, отсортирован ли уже массив, чтобы не сортировать впустую на каждую сериализацию.
+					if (!IsReorderable)
+					{
+						var index = GetIndexOf(values[i].EnumValue);
+						if (index < previousIndex)
+							isSorted = false;
+						previousIndex = index;
+					}
 				}
-				if (!IsReorderable)
+
+				if (!IsReorderable && !isSorted)
 					Array.Sort(values);
+				
 				return;
 			}
 			update:
