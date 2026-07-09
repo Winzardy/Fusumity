@@ -37,6 +37,6 @@ namespace Analytics
 
 		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
 
-		public static Color COLOR = Color.Lerp(Color.green, Color.blue, 0.75f);
+		public static Color COLOR = Color.Lerp(Color.green, Color.blue, 0.6f);
 	}
 }
