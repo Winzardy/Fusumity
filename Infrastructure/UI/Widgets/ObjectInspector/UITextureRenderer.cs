@@ -120,7 +120,9 @@ namespace UI
 					_args.renderTexture.format
 				)
 				{
-					antiAliasing = 2,
+					//Кол-во семплов должно совпадать с MSAA пайплайна, иначе на Android/Vulkan
+					//падает финальный blit-пасс (несовпадение семплов аттачмента)
+					antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing),
 					name = "[UI] Rendered Texture"
 				};
 
