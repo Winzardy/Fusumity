@@ -19,13 +19,13 @@ namespace UI.Editor
 		{
 			if (!Application.isPlaying)
 			{
-				FusumityEditorGUILayout.DrawWarning("Только в Play Mode", iconSize: 60);
+				FusumityEditorGUILayout.DrawWarning("Play Mode Only", iconSize: 60);
 				return;
 			}
 
 			if (!UIDispatcher.IsInitialized)
 			{
-				FusumityEditorGUILayout.DrawWarning("Инициализация...", iconSize: 60);
+				FusumityEditorGUILayout.DrawWarning("Initializing...", iconSize: 60);
 				return;
 			}
 

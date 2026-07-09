@@ -115,6 +115,7 @@ namespace Content.Editor
 		private (string key, IContentEntrySource source, int contentVersion) _found;
 
 		private Type _valueType;
+		private Type _objectFieldType;
 
 		private static readonly Dictionary<Type, SelectorItemsCache> _selectorItemsByValueType = new();
 		private static readonly Dictionary<Type, Type[]> _creatableConfigTypesByValueType = new();
@@ -154,6 +155,8 @@ namespace Content.Editor
 					return;
 				}
 			}
+
+			_objectFieldType = typeof(IUniqueContentEntrySource<>).MakeGenericType(_valueType);
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
@@ -609,9 +612,23 @@ namespace Content.Editor
 					e.Use();
 				}
 
-				EditorGUI.ObjectField(rect, label, _targetObject, GetObjectFieldType(source), false);
+				// Плейсхолдер "None (Type)" рисуется Unity только для пустого поля из objType.Name — у закрытого дженерик-интерфейса
+				// оно нечитаемое, поэтому для пустого показываем общий UnityObject, а интерфейс — только когда объект уже назначен
+				var fieldType = _targetObject ? _objectFieldType : typeof(UnityObject);
+				var droppedObject = EditorGUI.ObjectField(rect, label, _targetObject, fieldType, false);
 
 				DrawSourceIconOverlay(rect, label, source);
+
+				// ObjectField меняет значение только через drag&drop — кружок-пикер выше перехвачен под кастомный селектор
+				if (droppedObject != _targetObject)
+				{
+					if (!droppedObject)
+						source = null;
+					else if (droppedObject is ScriptableObject droppedAsset && TryGetCreatedSource(droppedAsset, out var droppedSource))
+						source = droppedSource;
+					else
+						ContentDebug.LogError($"Dropped object [ {droppedObject.name} ] is not a valid content entry for type [ {_valueType.Name} ]", droppedObject);
+				}
 			}
 
 			return source;
@@ -745,11 +762,6 @@ namespace Content.Editor
 				ApplySource(null);
 			else
 				ApplySource(selected.Source);
-		}
-
-		private static Type GetObjectFieldType(IContentEntrySource source)
-		{
-			return TryGetSourceObject(source, out var obj) && obj ? obj.GetType() : typeof(UnityObject);
 		}
 
 		private void ApplySource(IContentEntrySource source)

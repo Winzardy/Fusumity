@@ -56,6 +56,8 @@ namespace Content.Editor
 		private const int MAX_NAVIGATION_HISTORY_COUNT = 64;
 		private const double SELECT_ORIGINAL_AFTER_UNPIN_SECONDS = 5d;
 
+		private const float NAVIGATION_SCROLLBAR_HIT_WIDTH = 18f;
+		private const float NAVIGATION_SCROLLBAR_RESIZE_GAP = 4f;
 		private const float INSPECTOR_BOTTOM_PADDING = 10f;
 		private const string DOCUMENTATION_TOOLTIP_FORMAT = "Открыть документацию для типа: {0}";
 		private const string GENERATE_CONSTANTS_TOOLTIP_FORMAT = "Сгенерировать константы для типа: {0}";
@@ -89,6 +91,13 @@ namespace Content.Editor
 		private static Type[] _creatableConfigTypes;
 
 		private static bool? _autoSyncProjectSelection;
+
+		private enum NavigationScrollTarget
+		{
+			None,
+			Top,
+			Bottom
+		}
 
 		private static bool AutoSyncProjectSelection
 		{
@@ -884,10 +893,145 @@ namespace Content.Editor
 		protected override void DrawMenu()
 		{
 			SortSearchResults();
+			var scrollTarget = GetNavigationScrollTarget(Event.current);
+			if (scrollTarget != NavigationScrollTarget.None)
+				Event.current.Use();
+
 			base.DrawMenu();
+
+			if (scrollTarget != NavigationScrollTarget.None)
+				ScrollNavigation(scrollTarget);
 
 			if (SortSearchResults())
 				Repaint();
+		}
+
+		private NavigationScrollTarget GetNavigationScrollTarget(Event currentEvent)
+		{
+			if (currentEvent == null ||
+				currentEvent.type != EventType.MouseDown ||
+				currentEvent.button != 0 ||
+				currentEvent.clickCount < 2 ||
+				MenuTree == null ||
+				!MenuTree.Config.DrawScrollView)
+			{
+				return NavigationScrollTarget.None;
+			}
+
+			var rect = GetNavigationScrollbarHitRect();
+			if (!rect.Contains(currentEvent.mousePosition))
+				return NavigationScrollTarget.None;
+
+			return currentEvent.mousePosition.y < rect.y + rect.height * 0.5f
+				? NavigationScrollTarget.Top
+				: NavigationScrollTarget.Bottom;
+		}
+
+		private Rect GetNavigationScrollbarHitRect()
+		{
+			var config = MenuTree.Config;
+			var width = Mathf.Max(NAVIGATION_SCROLLBAR_HIT_WIDTH,
+				GUI.skin.verticalScrollbar.fixedWidth + NAVIGATION_SCROLLBAR_RESIZE_GAP);
+			var y = config.DrawSearchToolbar ? config.SearchToolbarHeight : 0f;
+			var x = Mathf.Max(0f, MenuWidth - width);
+			return new Rect(x, y, MenuWidth - x, Mathf.Max(0f, position.height - y));
+		}
+
+		private void ScrollNavigation(NavigationScrollTarget target)
+		{
+			var tree = MenuTree;
+			if (tree == null)
+				return;
+
+			if (target == NavigationScrollTarget.Top)
+			{
+				var scrollPos = tree.Config.ScrollPos;
+				scrollPos.y = 0f;
+				tree.Config.ScrollPos = scrollPos;
+			}
+			else
+			{
+				tree.ScrollToMenuItem(GetNavigationScrollEdgeItem(tree, target));
+			}
+
+			Repaint();
+		}
+
+		private static OdinMenuItem GetNavigationScrollEdgeItem(OdinMenuTree tree, NavigationScrollTarget target)
+		{
+			if (tree == null)
+				return null;
+
+			if (tree.DrawInSearchMode)
+				return GetFlatNavigationScrollEdgeItem(tree, target);
+
+			var root = tree.RootMenuItem.ChildMenuItems;
+			if (root == null || root.Count == 0)
+				return null;
+
+			if (target == NavigationScrollTarget.Top)
+			{
+				for (int i = 0; i < root.Count; i++)
+					if (IsNavigationScrollItem(root[i]))
+						return root[i];
+
+				return null;
+			}
+
+			for (int i = root.Count - 1; i >= 0; i--)
+			{
+				var item = GetLastVisibleNavigationItem(root[i]);
+				if (IsNavigationScrollItem(item))
+					return item;
+			}
+
+			return null;
+		}
+
+		private static OdinMenuItem GetFlatNavigationScrollEdgeItem(OdinMenuTree tree, NavigationScrollTarget target)
+		{
+			var flat = tree.FlatMenuTree;
+			if (flat == null || flat.Count == 0)
+				return null;
+
+			if (target == NavigationScrollTarget.Top)
+			{
+				for (int i = 0; i < flat.Count; i++)
+					if (IsNavigationScrollItem(flat[i]))
+						return flat[i];
+
+				return null;
+			}
+
+			for (int i = flat.Count - 1; i >= 0; i--)
+				if (IsNavigationScrollItem(flat[i]))
+					return flat[i];
+
+			return null;
+		}
+
+		private static OdinMenuItem GetLastVisibleNavigationItem(OdinMenuItem item)
+		{
+			if (item == null || !item.IsVisible)
+				return null;
+
+			var children = item.ChildMenuItems;
+			if (item.Toggled && children != null)
+			{
+				for (int i = children.Count - 1; i >= 0; i--)
+				{
+					var child = GetLastVisibleNavigationItem(children[i]);
+					if (child != null)
+						return child;
+				}
+			}
+
+			return item;
+		}
+
+		private static bool IsNavigationScrollItem(OdinMenuItem item)
+		{
+			return item != null && item.Value is not SeparatorMenuAction;
 		}
 
 		// Стабильная корзинная сортировка результатов поиска: база(0) -> категория(1) -> конфиг(2)
