@@ -1,12 +1,10 @@
 ﻿using System;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
+using UnityObject = UnityEngine.Object;
 
 namespace AssetManagement
 {
-	using UnityObject = UnityEngine.Object;
-	using UnityAssetReference =  UnityEngine.AddressableAssets.AssetReference;
-
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
 	public sealed class AssetReferenceRequiredComponentAttribute : Attribute
 	{
@@ -22,7 +20,7 @@ namespace AssetManagement
 
 		public AssetReferenceRequiredComponentAttribute(Type componentType, bool includeChildren = true)
 		{
-			ComponentType   = componentType;
+			ComponentType = componentType;
 			IncludeChildren = includeChildren;
 		}
 	}
@@ -37,14 +35,18 @@ namespace AssetManagement
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		UnityAssetReference IAssetReference.AssetReference => assetReference;
+		AssetReference IAssetReference.AssetReference => assetReference;
 		int IAssetReference.ReleaseDelayMs => releaseDelayMs;
 
 		public T editorAsset
 		{
 #if UNITY_EDITOR
 			get => assetReference?.editorAsset;
-			set { this.SetEditorAsset(value); }
+			set
+			{
+				assetReference ??= new AssetReferenceT<T>(string.Empty);
+				this.SetEditorAsset(value);
+			}
 #else
 			get => null;
 #endif
@@ -68,12 +70,12 @@ namespace AssetManagement
 	public class AnyAssetReference : IAssetReference
 	{
 		[FormerlySerializedAs("_assetReference")]
-		public UnityAssetReference assetReference;
+		public AssetReference assetReference;
 
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		UnityAssetReference IAssetReference.AssetReference => assetReference;
+		AssetReference IAssetReference.AssetReference => assetReference;
 		int IAssetReference.ReleaseDelayMs => releaseDelayMs;
 
 		public UnityObject editorAsset
@@ -103,7 +105,7 @@ namespace AssetManagement
 		/// </summary>
 		const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif
-		UnityAssetReference AssetReference { get; }
+		AssetReference AssetReference { get; }
 		string AssetGuid { get => AssetReference.AssetGUID; }
 
 		int ReleaseDelayMs => 0;
@@ -118,21 +120,5 @@ namespace AssetManagement
 
 	public interface IAssetReference<T> : IAssetReference where T : UnityObject
 	{
-	}
-
-	public static class AssetReferenceExtensions
-	{
-		public static bool SameAsset(this IAssetReference a, IAssetReference b)
-		{
-			if (ReferenceEquals(a, b))
-				return true;
-
-			if (a is null || b is null)
-				return false;
-
-			var aKey = a.AssetReference.RuntimeKey as string;
-			var bKey = b.AssetReference.RuntimeKey as string;
-			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
-		}
 	}
 }

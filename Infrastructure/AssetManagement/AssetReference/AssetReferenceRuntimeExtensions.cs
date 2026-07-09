@@ -9,8 +9,21 @@ namespace AssetManagement
 {
 	using UnityObject = UnityEngine.Object;
 
-	public static partial class AssetReferenceUtility
+	public static class AssetReferenceRuntimeExtensions
 	{
+		public static bool SameAsset(this IAssetReference a, IAssetReference b)
+		{
+			if (ReferenceEquals(a, b))
+				return true;
+
+			if (a is null || b is null)
+				return false;
+
+			var aKey = a.AssetReference.RuntimeKey as string;
+			var bKey = b.AssetReference.RuntimeKey as string;
+			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
+		}
+
 		public static void Preload(this IEnumerable<IAssetReference> references,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
 		{
