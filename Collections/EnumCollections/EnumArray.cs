@@ -160,7 +160,7 @@ namespace Fusumity.Collections
 					// Сравниваем через ToInt() (reinterpret cast без боксинга), а имя резолвим через
 					// кэш EnumNameToValue вместо медленного рефлексивного Enum.TryParse.
 					if (!EnumNameToValue<TEnum>.TryGetValue(enumName, out var enumValue) ||
-						values[i].EnumValue.ToInt() != enumValue.ToInt())
+					    values[i].EnumValue.ToInt() != enumValue.ToInt())
 						goto update;
 
 					// Заодно проверяем, отсортирован ли уже массив, чтобы не сортировать впустую на каждую сериализацию.
@@ -172,8 +172,10 @@ namespace Fusumity.Collections
 						previousIndex = index;
 					}
 				}
+
 				if (!IsReorderable && !isSorted)
 					Array.Sort(values);
+				
 				return;
 			}
 			update:
