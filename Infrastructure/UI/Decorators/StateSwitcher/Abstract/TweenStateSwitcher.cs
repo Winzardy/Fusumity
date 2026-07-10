@@ -13,6 +13,8 @@ namespace UI
 {
 	public abstract class TweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
+		private bool _inactiveWarningLogged = true;
+
 		[NonSerialized]
 		private Tween _tween;
 
@@ -37,9 +39,13 @@ namespace UI
 			// Точное поведение не исследовалось, поэтому сразу применяем конечное состояние
 			if (!gameObject.IsActive())
 			{
-				Debug.LogWarning(
-					"Cannot play DOTween because GameObject is inactive. " +
-					"Applying final tween state immediately");
+				if (_inactiveWarningLogged)
+				{
+					Debug.LogWarning(
+						"Cannot play DOTween because GameObject is inactive. " +
+						"Applying final tween state immediately");
+					_inactiveWarningLogged = false;
+				}
 
 				animationSequence = _dictionary.GetValueOrDefaultSafe(state, _default);
 				if (animationSequence.IsNullOrEmpty())

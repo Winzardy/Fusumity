@@ -246,8 +246,8 @@ namespace InAppPurchasing
 				try
 				{
 					integration.PurchaseCompleted += OnCompleted;
-					integration.PurchaseFailed    += OnFailed;
-					integration.PurchaseCanceled  += OnCanceled;
+					integration.PurchaseFailed += OnFailed;
+					integration.PurchaseCanceled += OnCanceled;
 
 					var success = entry.Type switch
 					{
@@ -270,8 +270,8 @@ namespace InAppPurchasing
 				finally
 				{
 					integration.PurchaseCompleted -= OnCompleted;
-					integration.PurchaseFailed    -= OnFailed;
-					integration.PurchaseCanceled  -= OnCanceled;
+					integration.PurchaseFailed -= OnFailed;
+					integration.PurchaseCanceled -= OnCanceled;
 				}
 
 				void OnCompleted(in PurchaseReceipt receipt, bool processing, object rawData)
@@ -386,7 +386,8 @@ namespace InAppPurchasing
 #if IAP_DEBUG
 			if (_integration?.GetType() == integration?.GetType())
 			{
-				IAPDebug.LogWarning($"Same integration: {_integration?.Name}");
+				if (_integration != null)
+					IAPDebug.LogWarning($"Same integration: {_integration?.Name}");
 				return prev;
 			}
 #endif
