@@ -60,6 +60,8 @@ namespace Content.Editor
 		private const string NONE_LABEL = "None";
 		private const string SCRIPTABLE_OBJECT_SUFFIX = "ScriptableObject";
 		private const string CONFIG_SUFFIX = "Config";
+		
+		private const float MISSING_SOURCE_LABEL_RIGHT_OFFSET = 4f;
 
 		private bool _guidRawMode;
 		private bool _creating;
@@ -92,6 +94,9 @@ namespace Content.Editor
 			: new Color(209f / 255f, 209f / 255f, 209f / 255f);
 
 		private readonly GUIContent _dropdownContent = new();
+		private readonly GUIContent _missingSourceContent = new();
+		private string _noneSourceLabel;
+		private static GUIStyle _objectFieldTextStyle;
 
 		// Защита от переоткрытия: popup Odin закрывается по потере фокуса раньше, чем инспектор обработает клик по кружку
 		private const double SELECTOR_REOPEN_GUARD = 0.2;
@@ -157,6 +162,9 @@ namespace Content.Editor
 			}
 
 			_objectFieldType = typeof(IUniqueContentEntrySource<>).MakeGenericType(_valueType);
+
+			var valueTypeName = _valueType.GetNiceName();
+			_noneSourceLabel = $"{NONE_LABEL} ({valueTypeName})";
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
@@ -186,6 +194,7 @@ namespace Content.Editor
 			if (targetLabel.text.Contains("[") && targetLabel.text.Contains("]"))
 				targetLabel.text = string.Empty;
 
+			string invalidLabel = null;
 			var isEmpty = true;
 			var isSingle = false;
 			IContentEntrySource source = null;
@@ -197,6 +206,7 @@ namespace Content.Editor
 					{
 						isEmpty = guid == SerializableGuid.Empty;
 						source = !isEmpty ? FindSelectedSource(_valueType, in guid) : null;
+						invalidLabel = guid.ToString();
 					}
 
 					break;
@@ -204,6 +214,7 @@ namespace Content.Editor
 					var id = (string) Property.ValueEntry.WeakSmartValue;
 					isEmpty = id.IsNullOrEmpty();
 					source = !isEmpty ? FindSelectedSource(_valueType, id) : null;
+					invalidLabel = id;
 					break;
 				case ContentDrawerMode.Reference:
 					if (Property.Parent.ValueEntry.WeakSmartValue is IContentReference reference)
@@ -211,6 +222,9 @@ namespace Content.Editor
 						isSingle = reference.IsSingle;
 						isEmpty = !isSingle && reference.Guid == SerializableGuid.Empty;
 						source = !isEmpty ? FindSelectedSource(reference) : null;
+						invalidLabel = isSingle
+							? $"{reference.ValueType.GetNiceName()} (not found single entry by type)"
+							: reference.Guid.ToString();
 					}
 
 					break;
@@ -344,7 +358,7 @@ namespace Content.Editor
 					GUI.color = errorColor;
 				}
 
-				source = DrawSourceSelector(targetLabel, source, useDropdown);
+				source = DrawSourceSelector(targetLabel, source, useDropdown, invalid, invalidLabel);
 
 				if (!useDropdown && source is INestedContentEntrySource)
 					forceDisableInlineEditor = true;
@@ -576,7 +590,8 @@ namespace Content.Editor
 			};
 		}
 
-		private IContentEntrySource DrawSourceSelector(GUIContent label, IContentEntrySource source, bool asDropdown)
+		private IContentEntrySource DrawSourceSelector(GUIContent label, IContentEntrySource source, bool asDropdown,
+			bool invalid, string invalidLabel)
 		{
 			TryCreateSelector(source);
 
@@ -587,19 +602,15 @@ namespace Content.Editor
 				var fieldRect = label.text.IsNullOrEmpty() ? rect : EditorGUI.PrefixLabel(rect, label);
 
 				var id = source is {ContentEntry: IIdentifiable identifiable} ? identifiable.Id : null;
-				_dropdownContent.text = id.IsNullOrEmpty() ? NONE_LABEL : id;
+				_dropdownContent.text = id.IsNullOrEmpty() ? GetMissingSourceLabel(invalid, invalidLabel) : id;
+				_dropdownContent.tooltip = invalid ? invalidLabel : null;
 
 				if (_selector != null && EditorGUI.DropdownButton(fieldRect, _dropdownContent, FocusType.Keyboard))
 					OpenSelector(fieldRect);
 			}
 			else
 			{
-				var popupRect = rect;
-				if (!label.text.IsNullOrEmpty())
-				{
-					popupRect.width -= EditorGUIUtility.labelWidth;
-					popupRect.x += EditorGUIUtility.labelWidth;
-				}
+				var popupRect = GetObjectFieldRect(rect, label);
 
 				var pickerRect = rect.AlignRight(18f);
 				EditorGUIUtility.AddCursorRect(pickerRect, MouseCursor.Arrow);
@@ -612,11 +623,47 @@ namespace Content.Editor
 					e.Use();
 				}
 
-				// Плейсхолдер "None (Type)" рисуется Unity только для пустого поля из objType.Name — у закрытого дженерик-интерфейса
-				// оно нечитаемое, поэтому для пустого показываем общий UnityObject, а интерфейс — только когда объект уже назначен
+				// Для пустого поля оставляем общий UnityObject, а читаемый ValueType рисуем отдельным лейблом ниже
+				// У закрытого дженерик-интерфейса нативный плейсхолдер Unity нечитаемый
 				var fieldType = _targetObject ? _objectFieldType : typeof(UnityObject);
-				var droppedObject = EditorGUI.ObjectField(rect, label, _targetObject, fieldType, false);
+				var valueRect = popupRect;
+				valueRect.xMax = Mathf.Max(valueRect.xMin, pickerRect.xMin - MISSING_SOURCE_LABEL_RIGHT_OFFSET);
 
+				var objectFieldStyle = EditorStyles.objectField;
+				var normalTextColor = objectFieldStyle.normal.textColor;
+				var hoverTextColor = objectFieldStyle.hover.textColor;
+				var activeTextColor = objectFieldStyle.active.textColor;
+				var focusedTextColor = objectFieldStyle.focused.textColor;
+				if (source == null)
+				{
+					objectFieldStyle.normal.textColor = Color.clear;
+					objectFieldStyle.hover.textColor = Color.clear;
+					objectFieldStyle.active.textColor = Color.clear;
+					objectFieldStyle.focused.textColor = Color.clear;
+				}
+
+				var objectFieldEventType = e.type;
+				var suppressObjectFieldMouseEvent = invalid && e.isMouse && valueRect.Contains(e.mousePosition);
+				if (suppressObjectFieldMouseEvent)
+					e.type = EventType.Ignore;
+
+				UnityObject droppedObject;
+				try
+				{
+					droppedObject = EditorGUI.ObjectField(rect, label, _targetObject, fieldType, false);
+				}
+				finally
+				{
+					if (suppressObjectFieldMouseEvent)
+						e.type = objectFieldEventType;
+
+					objectFieldStyle.normal.textColor = normalTextColor;
+					objectFieldStyle.hover.textColor = hoverTextColor;
+					objectFieldStyle.active.textColor = activeTextColor;
+					objectFieldStyle.focused.textColor = focusedTextColor;
+				}
+
+				DrawMissingSourceLabel(valueRect, source, invalid, invalidLabel);
 				DrawSourceIconOverlay(rect, label, source);
 
 				// ObjectField меняет значение только через drag&drop — кружок-пикер выше перехвачен под кастомный селектор
@@ -634,6 +681,59 @@ namespace Content.Editor
 			return source;
 		}
 
+		private string GetMissingSourceLabel(bool invalid, string invalidLabel) => invalid ? invalidLabel : _noneSourceLabel;
+
+		private void DrawMissingSourceLabel(Rect rect, IContentEntrySource source, bool invalid, string invalidLabel)
+		{
+			if (source != null)
+				return;
+
+			if (invalid)
+			{
+				EditorGUI.SelectableLabel(rect, invalidLabel, GetObjectFieldTextStyle());
+				return;
+			}
+
+			if (Event.current.type != EventType.Repaint)
+				return;
+
+			_missingSourceContent.text = GetMissingSourceLabel(invalid, invalidLabel);
+			_missingSourceContent.tooltip = null;
+			GUI.Label(rect, _missingSourceContent, GetObjectFieldTextStyle());
+		}
+
+		private static Rect GetObjectFieldRect(Rect rect, GUIContent label)
+		{
+			if (label != null && (!label.text.IsNullOrEmpty() || label.image != null))
+			{
+				rect.xMin += EditorGUIUtility.labelWidth + 2f;
+				return rect;
+			}
+
+			return EditorGUI.IndentedRect(rect);
+		}
+
+		private static GUIStyle GetObjectFieldTextStyle()
+		{
+			if (_objectFieldTextStyle != null)
+				return _objectFieldTextStyle;
+
+			var sourceStyle = EditorStyles.objectField;
+			_objectFieldTextStyle = new GUIStyle(EditorStyles.label)
+			{
+				alignment = sourceStyle.alignment,
+				clipping = sourceStyle.clipping,
+				contentOffset = sourceStyle.contentOffset,
+				padding = new RectOffset(sourceStyle.padding.left, sourceStyle.padding.right,
+					sourceStyle.padding.top, sourceStyle.padding.bottom),
+				border = new RectOffset(),
+				margin = new RectOffset(),
+				overflow = new RectOffset()
+			};
+
+			return _objectFieldTextStyle;
+		}
+
 		private void DrawSourceIconOverlay(Rect rect, GUIContent label, IContentEntrySource source)
 		{
 			if (Event.current.type != EventType.Repaint || !_targetObject)
@@ -649,18 +749,7 @@ namespace Content.Editor
 			if (!sprite || !sprite.texture)
 				return;
 
-			// Повторяем математику EditorGUI.ObjectField -> PrefixLabel (без аллокации control id):
-			// пустой лейбл -> IndentedRect (учёт indent), иначе -> x + labelWidth + 2
-			Rect fieldRect;
-			if (label != null && (!label.text.IsNullOrEmpty() || label.image != null))
-			{
-				fieldRect = rect;
-				fieldRect.xMin += EditorGUIUtility.labelWidth + 2f;
-			}
-			else
-			{
-				fieldRect = EditorGUI.IndentedRect(rect);
-			}
+			var fieldRect = GetObjectFieldRect(rect, label);
 
 			// Иконка объекта — 12px у левого края поля, по центру по вертикали. Рисуем чуть крупнее для перекрытия
 			const float iconSize = 13f;
@@ -948,7 +1037,21 @@ namespace Content.Editor
 			if (left.Kind != right.Kind)
 				return left.Kind.CompareTo(right.Kind);
 
-			return string.Compare(left.Path, right.Path, StringComparison.OrdinalIgnoreCase);
+			var segmentsCount = Math.Min(left.PathSegments.Length, right.PathSegments.Length);
+			for (int i = 0; i < segmentsCount; i++)
+			{
+				var leftIsGroup = i < left.PathSegments.Length - 1;
+				var rightIsGroup = i < right.PathSegments.Length - 1;
+				if (leftIsGroup != rightIsGroup)
+					return leftIsGroup ? -1 : 1;
+
+				var segmentComparison = string.Compare(left.PathSegments[i], right.PathSegments[i],
+					StringComparison.OrdinalIgnoreCase);
+				if (segmentComparison != 0)
+					return segmentComparison;
+			}
+
+			return left.PathSegments.Length.CompareTo(right.PathSegments.Length);
 		}
 
 		private static ContentReferenceSelectorItem FindSelectorItem(
@@ -1235,12 +1338,14 @@ namespace Content.Editor
 			public SelectorItemKind Kind { get; }
 			public IContentEntrySource Source { get; }
 			public string Path { get; }
+			public string[] PathSegments { get; }
 
 			private ContentReferenceSelectorItem(SelectorItemKind kind, IContentEntrySource source, string path)
 			{
 				Kind = kind;
 				Source = source;
 				Path = path;
+				PathSegments = path.Split('/');
 			}
 
 			public static ContentReferenceSelectorItem Create(IContentEntrySource source, string path) => new(SelectorItemKind.Source, source, path);

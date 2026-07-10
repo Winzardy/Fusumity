@@ -22,9 +22,26 @@ namespace Content.Editor
 				return null;
 
 			var fromSource = ResolveIcon(source);
+			var contentEntry = source.ContentEntry;
+			var valueAccessor = GetAccessor(contentEntry?.ValueType);
+			if (valueAccessor == null)
+				return fromSource;
 
-			var rawValue = source.ContentEntry?.RawValue;
-			var fromValue = ResolveIcon(rawValue);
+			object rawValue;
+			Sprite fromValue;
+			try
+			{
+				rawValue = contentEntry.RawValue;
+				fromValue = rawValue != null ? valueAccessor.Invoke(rawValue) : null;
+			}
+			catch (NullReferenceException)
+			{
+				return fromSource;
+			}
+			catch (TargetInvocationException exception) when (exception.InnerException is NullReferenceException)
+			{
+				return fromSource;
+			}
 
 			if (fromSource != null && fromValue != null)
 				WarnConflict(source, rawValue);
@@ -37,7 +54,13 @@ namespace Content.Editor
 			if (target == null)
 				return null;
 
-			var type = target.GetType();
+			return GetAccessor(target.GetType())?.Invoke(target);
+		}
+
+		private static Func<object, Sprite> GetAccessor(Type type)
+		{
+			if (type == null)
+				return null;
 
 			if (!_accessors.TryGetValue(type, out var accessor))
 			{
@@ -45,7 +68,7 @@ namespace Content.Editor
 				_accessors[type] = accessor;
 			}
 
-			return accessor?.Invoke(target);
+			return accessor;
 		}
 
 		// Строим доступ к иконке рефлексией по имени члена из ContentPreviewAttribute (кешируется на тип)

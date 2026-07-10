@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Fusumity.Attributes;
@@ -81,6 +80,8 @@ namespace Content.Editor
 		private static readonly GUIContent CANCEL_PINNED_DELETE_TOOLTIP = new(string.Empty, "Отменить удаление");
 		private static readonly GUIContent CLEAR_PINNED_TOOLTIP = new(string.Empty, "Очистить все закрепления");
 		private static readonly GUIContent BREADCRUMB_SEPARATOR = new(" / ");
+		private static readonly GUIContent NAVIGATION_SUFFIX_MEASURE_CONTENT = new();
+		private static readonly Dictionary<GUIStyle, GUIStyle> _navigationSuffixStyles = new();
 
 		private OdinMenuItem _breadcrumbLeaf;
 		private readonly List<OdinMenuItem> _breadcrumbNodes = new();
@@ -90,6 +91,7 @@ namespace Content.Editor
 		private static readonly Color CANCEL_DELETE_COLOR = new(1f, 0.05f, 0.05f, 1f);
 
 		private static Type[] _creatableConfigTypes;
+		private static readonly Dictionary<Type, Type> _contentEntryValueTypes = new();
 
 		private static bool? _autoSyncProjectSelection;
 		private static bool? _groupConfigsByIdPath;
@@ -213,6 +215,7 @@ namespace Content.Editor
 		protected override OdinMenuTree BuildMenuTree()
 		{
 			var tree = new OdinMenuTree(supportsMultiSelect: false);
+			_navigationSuffixStyles.Clear();
 
 			// Встроенный поиск Odin по дереву (точный Contains вместо fuzzy — иначе guid даёт кучу ложных совпадений)
 			tree.Config.DrawSearchToolbar = true;
@@ -277,26 +280,21 @@ namespace Content.Editor
 
 						var typeName = GetConfigDisplayName(type);
 						var typePath = $"{dbName}/{typeName}";
+						var page = new CategoryPage(this, module.Db, type, typePath, CategoryPinKey(module.Db, type), typeName);
 
 						// Страница категории — список конфигов этого типа (рисуется при клике на категорию)
-						using (ListPool<CategoryRow>.Get(out var items))
+						if (hasConfigs)
+							for (int j = 0; j < configs.Count; j++)
+								page.AddItem(configs[j]);
+
+						var categoryItem = new CategoryMenuItem(tree, typeName, page)
 						{
-							var page = new CategoryPage(this, module.Db, type, typePath, CategoryPinKey(module.Db, type), typeName);
+							SdfIcon = SdfIconType.FolderFill
+						};
 
-							if (hasConfigs)
-								for (int j = 0; j < configs.Count; j++)
-									items.Add(new CategoryRow(this, page, configs[j]));
-
-							page.Items = items.ToArray();
-							var categoryItem = new CategoryMenuItem(tree, typeName, page)
-							{
-								SdfIcon = SdfIconType.FolderFill
-							};
-
-							tree.AddMenuItemAtPath(dbName, categoryItem);
-							RegisterCategoryMenuItem(page, categoryItem);
-							AddCreateConfigLeaf(tree, typePath, page);
-						}
+						tree.AddMenuItemAtPath(dbName, categoryItem);
+						RegisterCategoryMenuItem(page, categoryItem);
+						AddCreateConfigLeaf(tree, typePath, page);
 
 						if (!hasConfigs)
 							continue;
@@ -311,7 +309,7 @@ namespace Content.Editor
 							{
 								var leafPath = GetConfigLeafPath(typePath, configs[j], idPathGroupCounts);
 								AddConfigLeaf(tree, leafPath, configs[j], single: false);
-								AddConfigToIdGroupPages(tree, typePath, leafPath, configs[j]);
+								AddConfigToIdGroupPages(tree, page, leafPath, configs[j]);
 							}
 						}
 					}
@@ -418,16 +416,21 @@ namespace Content.Editor
 			if (type == null)
 				return null;
 
+			if (_contentEntryValueTypes.TryGetValue(type, out var valueType))
+				return valueType;
+
 			foreach (var interfaceType in type.GetInterfaces())
 			{
 				if (interfaceType.IsGenericType &&
 					interfaceType.GetGenericTypeDefinition() == typeof(IContentEntryScriptableObject<>))
 				{
-					return interfaceType.GetGenericArguments()[0];
+					valueType = interfaceType.GetGenericArguments()[0];
+					break;
 				}
 			}
 
-			return null;
+			_contentEntryValueTypes[type] = valueType;
+			return valueType;
 		}
 
 		// Группа "Pinned" сверху — закреплённые базы/конфиги/категории
@@ -881,8 +884,9 @@ namespace Content.Editor
 			RegisterAssetMenuItem(so, leaf);
 		}
 
-		private void AddConfigToIdGroupPages(OdinMenuTree tree, string typePath, string leafPath, ContentScriptableObject config)
+		private void AddConfigToIdGroupPages(OdinMenuTree tree, CategoryPage categoryPage, string leafPath, ContentScriptableObject config)
 		{
+			var typePath = categoryPage?.MenuPath;
 			if (tree == null ||
 				typePath.IsNullOrEmpty() ||
 				leafPath.IsNullOrEmpty() ||
@@ -894,6 +898,7 @@ namespace Content.Editor
 			}
 
 			var groupPath = typePath;
+			var groupIdPath = string.Empty;
 			var relativePath = leafPath[(typePath.Length + 1)..];
 			foreach (var segment in relativePath.Split('/'))
 			{
@@ -901,6 +906,7 @@ namespace Content.Editor
 					continue;
 
 				groupPath += "/" + segment;
+				groupIdPath = groupIdPath.IsNullOrEmpty() ? segment : groupIdPath + "/" + segment;
 				var item = tree.GetMenuItem(groupPath);
 				if (item == null)
 					continue;
@@ -916,9 +922,15 @@ namespace Content.Editor
 				if (item.Value != null)
 					continue;
 
-				page = new IdGroupPage(this, groupPath, config.GetType());
+				page = new IdGroupPage(this,
+					categoryPage.Database,
+					groupPath,
+					groupIdPath,
+					config.GetType(),
+					categoryPage.CreateMenuItemName);
 				page.AddItem(config);
 				item.Value = page;
+				AddCreateConfigLeaf(tree, groupPath, page);
 			}
 		}
 
@@ -967,24 +979,29 @@ namespace Content.Editor
 			if (lastSeparator <= 0)
 				return typePath;
 
-			var path = typePath;
-			var segmentStart = 0;
-			for (var separator = id.IndexOf('/'); separator >= 0; separator = id.IndexOf('/', separator + 1))
+			using (StringBuilderPool.Get(out var pathBuilder))
 			{
-				if (separator > segmentStart &&
-					groupCounts.TryGetValue(id[..separator], out var count) &&
-					count > 1)
+				pathBuilder.EnsureCapacity(typePath.Length + id.Length);
+				pathBuilder.Append(typePath);
+
+				var segmentStart = 0;
+				for (var separator = id.IndexOf('/'); separator >= 0; separator = id.IndexOf('/', separator + 1))
 				{
-					path += "/" + id[segmentStart..separator];
+					if (separator > segmentStart &&
+						groupCounts.TryGetValue(id[..separator], out var count) &&
+						count > 1)
+					{
+						pathBuilder.Append('/').Append(id, segmentStart, separator - segmentStart);
+					}
+
+					if (separator == lastSeparator)
+						break;
+
+					segmentStart = separator + 1;
 				}
 
-				if (separator == lastSeparator)
-					break;
-
-				segmentStart = separator + 1;
+				return pathBuilder.ToString();
 			}
-
-			return path;
 		}
 
 		private static bool TryGetConfigId(ContentScriptableObject config, out string id)
@@ -993,7 +1010,7 @@ namespace Content.Editor
 			return !id.IsNullOrEmpty() && id.IndexOf('/') >= 0;
 		}
 
-		private static void AddCreateConfigLeaf(OdinMenuTree tree, string path, CategoryPage page)
+		private static void AddCreateConfigLeaf(OdinMenuTree tree, string path, ConfigRowsPage page)
 		{
 			tree.Add($"{path}/{page.CreateMenuItemName}", new CreateConfigAction(page), SdfIconType.Plus);
 		}
@@ -1126,7 +1143,7 @@ namespace Content.Editor
 
 			for (int i = root.Count - 1; i >= 0; i--)
 			{
-				var item = GetLastVisibleNavigationItem(root[i]);
+				var item = GetLastExpandedNavigationItem(root[i]);
 				if (IsNavigationScrollItem(item))
 					return item;
 			}
@@ -1156,9 +1173,9 @@ namespace Content.Editor
 			return null;
 		}
 
-		private static OdinMenuItem GetLastVisibleNavigationItem(OdinMenuItem item)
+		private static OdinMenuItem GetLastExpandedNavigationItem(OdinMenuItem item)
 		{
-			if (item == null || !item.IsVisible)
+			if (item == null)
 				return null;
 
 			var children = item.ChildMenuItems;
@@ -1166,7 +1183,7 @@ namespace Content.Editor
 			{
 				for (int i = children.Count - 1; i >= 0; i--)
 				{
-					var child = GetLastVisibleNavigationItem(children[i]);
+					var child = GetLastExpandedNavigationItem(children[i]);
 					if (child != null)
 						return child;
 				}
@@ -1229,7 +1246,7 @@ namespace Content.Editor
 			return item.Value switch
 			{
 				ContentDatabaseScriptableObject => 0,
-				CategoryPage or IdGroupPage => 1,
+				ConfigRowsPage => 1,
 				_ => 2
 			};
 		}
@@ -1269,19 +1286,13 @@ namespace Content.Editor
 
 			if (TryGetOriginalMenuPath(selectedItem, out var originalMenuPath))
 			{
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.BoxArrowInLeft))
+				if (DrawToolbarButton(SdfIconType.BoxArrowInLeft, OPEN_ORIGINAL_PAGE_TOOLTIP))
 					TrySelectMenuItem(originalMenuPath);
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, OPEN_ORIGINAL_PAGE_TOOLTIP);
 			}
 			else if (TryGetPinnedKey(selectedValue, out var pinnedKey))
 			{
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.BoxArrowInRight))
+				if (DrawToolbarButton(SdfIconType.BoxArrowInRight, OPEN_PINNED_PAGE_TOOLTIP))
 					TrySelectPinnedMenuItem(pinnedKey);
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, OPEN_PINNED_PAGE_TOOLTIP);
 			}
 
 			GUILayout.Space(3);
@@ -1294,15 +1305,15 @@ namespace Content.Editor
 
 			if (selectedValue is ContentEntryScriptableObject selectedAsset)
 			{
-				DrawGenerateConstantsButton(selectedAsset);
-				DrawDocumentationButton(selectedAsset);
+				DrawGenerateConstantsButton(selectedAsset.GetType(), selectedAsset.ValueType);
+				DrawDocumentationButton(selectedAsset.GetType(), selectedAsset.ValueType);
 				DrawReferenceSearchButton(selectedAsset);
 				DrawDeleteButton(selectedAsset, selectedItem);
 			}
 			else if (selectedValue is CategoryPage selectedCategoryPage)
 			{
-				DrawGenerateConstantsButton(selectedCategoryPage);
-				DrawDocumentationButton(selectedCategoryPage);
+				DrawGenerateConstantsButton(selectedCategoryPage.ConfigType, selectedCategoryPage.ValueType);
+				DrawDocumentationButton(selectedCategoryPage.ConfigType, selectedCategoryPage.ValueType);
 			}
 
 			DrawSettingsDropdown();
@@ -1333,11 +1344,7 @@ namespace Content.Editor
 
 		private void DrawSettingsDropdown()
 		{
-			var clicked = SirenixEditorGUI.ToolbarButton(SdfIconType.GearFill);
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, SETTINGS_TOOLTIP);
-
-			if (!clicked)
+			if (!DrawToolbarButton(SdfIconType.GearFill, SETTINGS_TOOLTIP))
 				return;
 
 			var menu = new GenericMenu();
@@ -1354,53 +1361,18 @@ namespace Content.Editor
 			if (asset == null)
 				return;
 
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.FileEarmarkBreakFill))
+			var tooltip = new GUIContent(string.Empty, ContentSearchProvider.GetFindReferencesTooltip(asset));
+			if (DrawToolbarButton(SdfIconType.FileEarmarkBreakFill, tooltip))
 				ContentSearchProvider.OpenReferenceSearch(asset);
-
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, new GUIContent(string.Empty, ContentSearchProvider.GetFindReferencesTooltip(asset)));
 		}
 
-		private void DrawDocumentationButton(ContentEntryScriptableObject asset)
+		private static void DrawDocumentationButton(Type configType, Type valueType)
 		{
-			if (!TryGetDocumentationUrl(asset, out var url))
+			if (!TryGetDocumentationUrl(configType, valueType, out var url))
 				return;
 
-			DrawDocumentationButton(url, asset.ValueType);
-		}
-
-		private void DrawDocumentationButton(CategoryPage page)
-		{
-			if (!TryGetDocumentationUrl(page, out var url))
-				return;
-
-			DrawDocumentationButton(url, page.ValueType);
-		}
-
-		private static void DrawDocumentationButton(string url, Type type)
-		{
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.JournalBookmarkFill))
+			if (DrawToolbarButton(SdfIconType.JournalBookmarkFill, GetDocumentationTooltip(valueType)))
 				Help.BrowseURL(url);
-
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, GetDocumentationTooltip(type));
-		}
-
-		private static bool TryGetDocumentationUrl(ContentEntryScriptableObject asset, out string url)
-		{
-			url = string.Empty;
-
-			if (asset == null)
-				return false;
-
-			return TryGetDocumentationUrl(asset.GetType(), asset.ValueType, out url);
-		}
-
-		private static bool TryGetDocumentationUrl(CategoryPage page, out string url)
-		{
-			url = string.Empty;
-
-			return page != null && TryGetDocumentationUrl(page.ConfigType, page.ValueType, out url);
 		}
 
 		private static bool TryGetDocumentationUrl(Type configType, Type valueType, out string url)
@@ -1426,36 +1398,15 @@ namespace Content.Editor
 			return !url.IsNullOrEmpty();
 		}
 
-		private void DrawGenerateConstantsButton(ContentEntryScriptableObject asset)
+		private void DrawGenerateConstantsButton(Type configType, Type valueType)
 		{
-			if (asset == null || !HasContentGeneration(asset.GetType(), asset.ValueType))
+			if (!HasContentGeneration(configType, valueType))
 				return;
 
-			var type = asset.ValueType;
 			EditorGUI.BeginDisabledGroup(_creating);
 
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.Magic))
-				GenerateConstants(type);
-
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, GetGenerateConstantsTooltip(type));
-
-			EditorGUI.EndDisabledGroup();
-		}
-
-		private void DrawGenerateConstantsButton(CategoryPage page)
-		{
-			if (page == null || !HasContentGeneration(page.ConfigType, page.ValueType))
-				return;
-
-			var type = page.ValueType;
-			EditorGUI.BeginDisabledGroup(_creating);
-
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.Magic))
-				GenerateConstants(type);
-
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, GetGenerateConstantsTooltip(type));
+			if (DrawToolbarButton(SdfIconType.Magic, GetGenerateConstantsTooltip(valueType)))
+				GenerateConstants(valueType);
 
 			EditorGUI.EndDisabledGroup();
 		}
@@ -1486,13 +1437,24 @@ namespace Content.Editor
 		{
 			EditorGUI.BeginDisabledGroup(_creating || asset == null);
 
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
+			if (DrawToolbarButton(SdfIconType.TrashFill, DELETE_ASSET_TOOLTIP))
 				TryDeleteAsset(asset, selectedItem);
 
-			var rect = GUILayoutUtility.GetLastRect();
-			GUI.Label(rect, DELETE_ASSET_TOOLTIP);
-
 			EditorGUI.EndDisabledGroup();
+		}
+
+		private static bool DrawToolbarButton(SdfIconType icon, GUIContent tooltip)
+		{
+			var clicked = SirenixEditorGUI.ToolbarButton(icon);
+			GUI.Label(GUILayoutUtility.GetLastRect(), tooltip);
+			return clicked;
+		}
+
+		private static bool DrawToolbarButton(string label, GUIContent tooltip)
+		{
+			var clicked = SirenixEditorGUI.ToolbarButton(label);
+			GUI.Label(GUILayoutUtility.GetLastRect(), tooltip);
+			return clicked;
 		}
 
 		private static bool DrawColoredToolbarButton(SdfIconType icon, Color color)
@@ -1519,6 +1481,24 @@ namespace Content.Editor
 				style.active.textColor = activeColor;
 				style.focused.textColor = focusedColor;
 			}
+		}
+
+		private static bool DrawApplyDeleteButton(bool enabled, GUIContent tooltip)
+		{
+			EditorGUI.BeginDisabledGroup(!enabled);
+			var clicked = enabled
+				? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
+				: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
+			GUI.Label(GUILayoutUtility.GetLastRect(), tooltip);
+			EditorGUI.EndDisabledGroup();
+			return clicked;
+		}
+
+		private static bool DrawCancelDeleteButton(GUIContent tooltip)
+		{
+			var clicked = DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR);
+			GUI.Label(GUILayoutUtility.GetLastRect(), tooltip);
+			return clicked;
 		}
 
 		private void TryDeleteAsset(ContentEntryScriptableObject asset, OdinMenuItem selectedItem)
@@ -1617,21 +1597,24 @@ namespace Content.Editor
 			ForceMenuTreeRebuild();
 		}
 
-		private void PromptCreateContentEntry(ContentDatabaseScriptableObject database, Type configType, ContentScriptableObject sibling)
+		private void PromptCreateContentEntry(ContentDatabaseScriptableObject database,
+			Type configType,
+			ContentScriptableObject groupAsset,
+			string idGroupPath = null)
 		{
 			if (_creating || !CanCreateContentEntry(configType))
 				return;
 
-			var folder = GetCreateFolder(database, sibling);
+			var folder = GetCreateFolder(database, groupAsset);
 			if (folder.IsNullOrEmpty())
 				return;
 
 			var defaultAssetName = GetDefaultAssetName(configType);
 			CreateConfigNameWindow.Open(GetCreateConfigMenuItemName(GetConfigDisplayName(configType)), defaultAssetName, folder,
-				(assetName, assetFolder) => CreateContentEntry(configType, assetFolder, assetName));
+				(assetName, assetFolder) => CreateContentEntry(configType, assetFolder, assetName, idGroupPath));
 		}
 
-		private void CreateContentEntry(Type configType, string folder, string assetName)
+		private void CreateContentEntry(Type configType, string folder, string assetName, string idGroupPath)
 		{
 			if (_creating || !CanCreateContentEntry(configType) || folder.IsNullOrEmpty())
 				return;
@@ -1654,13 +1637,22 @@ namespace Content.Editor
 				AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
 				AssetDatabase.SaveAssets();
 
-				var created = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(assetPath);
+				var created = AssetDatabase.LoadAssetAtPath<ContentEntryScriptableObject>(assetPath);
 				if (created != null)
 				{
 					if (created.NeedSync())
 					{
 						created.Sync(true);
 						AssetDatabase.SaveAssetIfDirty(created);
+					}
+
+					if (!idGroupPath.IsNullOrEmpty() && created is IUniqueContentEntrySource source)
+					{
+						created.SetId(CombineContentIdPath(idGroupPath, source.Id));
+						EditorUtility.SetDirty(created);
+						AssetDatabase.SaveAssetIfDirty(created);
+						ContentEditorCache.RefreshByValueType(created.ValueType);
+						ContentAutoConstantsGenerator.ForceInvokeWithDelay(created.GetType());
 					}
 
 					_selectAssetGuidAfterRefresh = created.ToGuid();
@@ -1677,9 +1669,16 @@ namespace Content.Editor
 			}
 		}
 
-		private static string GetCreateFolder(ContentDatabaseScriptableObject database, ContentScriptableObject sibling)
+		private static string CombineContentIdPath(string groupPath, string id)
 		{
-			var folder = GetAssetFolder(sibling);
+			groupPath = groupPath?.Trim('/');
+			id = id?.Trim('/');
+			return groupPath.IsNullOrEmpty() ? id : id.IsNullOrEmpty() ? groupPath : $"{groupPath}/{id}";
+		}
+
+		private static string GetCreateFolder(ContentDatabaseScriptableObject database, ContentScriptableObject groupAsset)
+		{
+			var folder = GetAssetFolder(groupAsset);
 			if (!folder.IsNullOrEmpty())
 				return folder;
 
@@ -1726,15 +1725,18 @@ namespace Content.Editor
 				return null;
 
 			var invalidChars = Path.GetInvalidFileNameChars();
-			var builder = new StringBuilder(assetName.Length);
-			for (int i = 0; i < assetName.Length; i++)
+			using (StringBuilderPool.Get(out var builder))
 			{
-				var character = assetName[i];
-				builder.Append(IsInvalidAssetNameCharacter(character, invalidChars) ? '_' : character);
-			}
+				builder.EnsureCapacity(assetName.Length);
+				for (int i = 0; i < assetName.Length; i++)
+				{
+					var character = assetName[i];
+					builder.Append(IsInvalidAssetNameCharacter(character, invalidChars) ? '_' : character);
+				}
 
-			var sanitized = builder.ToString().Trim();
-			return sanitized.IsNullOrEmpty() ? null : sanitized;
+				var sanitized = builder.ToString().Trim();
+				return sanitized.IsNullOrEmpty() ? null : sanitized;
+			}
 		}
 
 		private static bool IsInvalidAssetNameCharacter(char character, char[] invalidChars)
@@ -1783,19 +1785,13 @@ namespace Content.Editor
 		private void DrawNavigationHistoryButtons()
 		{
 			EditorGUI.BeginDisabledGroup(!CanNavigateHistory(-1));
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.ArrowLeft))
+			if (DrawToolbarButton(SdfIconType.ArrowLeft, BACK_TOOLTIP))
 				NavigateHistory(-1);
-
-			var lastRect = GUILayoutUtility.GetLastRect();
-			GUI.Label(lastRect, BACK_TOOLTIP);
 			EditorGUI.EndDisabledGroup();
 
 			EditorGUI.BeginDisabledGroup(!CanNavigateHistory(1));
-			if (SirenixEditorGUI.ToolbarButton(SdfIconType.ArrowRight))
+			if (DrawToolbarButton(SdfIconType.ArrowRight, FORWARD_TOOLTIP))
 				NavigateHistory(1);
-
-			lastRect = GUILayoutUtility.GetLastRect();
-			GUI.Label(lastRect, FORWARD_TOOLTIP);
 			EditorGUI.EndDisabledGroup();
 		}
 
@@ -2059,12 +2055,12 @@ namespace Content.Editor
 				return;
 
 			var prefix = hasSuffix ? name[..^suffix.Length].TrimEnd() : name;
-			var prefixWidth = style.CalcSize(new GUIContent(prefix)).x;
+			var prefixWidth = MeasureNavigationText(style, prefix);
 			var suffixX = labelRect.x + prefixWidth;
 			var suffixContent = suffix;
 
 			if (hasSuffix && separatedBySpace)
-				suffixX += style.CalcSize(new GUIContent(" ")).x;
+				suffixX += MeasureNavigationText(style, " ");
 			else if (!hasSuffix && separatedBySpace)
 				suffixContent = $" {suffix}";
 
@@ -2072,18 +2068,37 @@ namespace Content.Editor
 				return;
 
 			var suffixRect = new Rect(suffixX, labelRect.y, labelRect.xMax - suffixX, labelRect.height);
-			var suffixStyle = new GUIStyle(style);
-			suffixStyle.fontSize = style.fontSize > 0 ? Mathf.Max(1, style.fontSize - 1) : 11;
-			var suffixColor = GetNavigationSuffixColor();
-			suffixStyle.normal.textColor = suffixColor;
-			suffixStyle.hover.textColor = suffixColor;
-			suffixStyle.active.textColor = suffixColor;
-			suffixStyle.focused.textColor = suffixColor;
-			suffixStyle.onNormal.textColor = suffixColor;
-			suffixStyle.onHover.textColor = suffixColor;
-			suffixStyle.onActive.textColor = suffixColor;
-			suffixStyle.onFocused.textColor = suffixColor;
+			var suffixStyle = GetNavigationSuffixStyle(style);
 			GUI.Label(suffixRect, suffixContent, suffixStyle);
+		}
+
+		private static float MeasureNavigationText(GUIStyle style, string text)
+		{
+			NAVIGATION_SUFFIX_MEASURE_CONTENT.text = text;
+			return style.CalcSize(NAVIGATION_SUFFIX_MEASURE_CONTENT).x;
+		}
+
+		private static GUIStyle GetNavigationSuffixStyle(GUIStyle source)
+		{
+			if (_navigationSuffixStyles.TryGetValue(source, out var style))
+				return style;
+
+			style = new GUIStyle(source)
+			{
+				fontSize = source.fontSize > 0 ? Mathf.Max(1, source.fontSize - 1) : 11
+			};
+
+			var color = GetNavigationSuffixColor();
+			style.normal.textColor = color;
+			style.hover.textColor = color;
+			style.active.textColor = color;
+			style.focused.textColor = color;
+			style.onNormal.textColor = color;
+			style.onHover.textColor = color;
+			style.onActive.textColor = color;
+			style.onFocused.textColor = color;
+			_navigationSuffixStyles.Add(source, style);
+			return style;
 		}
 
 		private static Color GetNavigationSuffixColor()
@@ -2096,21 +2111,24 @@ namespace Content.Editor
 		// Строка поиска конфига: имя + Id + Guid + Guid'ы вложенных Entry
 		private static string BuildSearchString(string name, IUniqueContentEntrySource source)
 		{
-			var sb = new StringBuilder(name);
-
-			if (!source.Id.IsNullOrEmpty())
-				sb.Append(' ').Append(source.Id);
-
-			sb.Append(' ').Append(source.Guid.ToString());
-
-			var entry = source.UniqueContentEntry;
-			if (entry?.Nested != null)
+			using (StringBuilderPool.Get(out var builder))
 			{
-				foreach (var nestedGuid in entry.Nested.Keys)
-					sb.Append(' ').Append(nestedGuid.ToString());
-			}
+				builder.Append(name);
 
-			return sb.ToString();
+				if (!source.Id.IsNullOrEmpty())
+					builder.Append(' ').Append(source.Id);
+
+				builder.Append(' ').Append(source.Guid.ToString());
+
+				var entry = source.UniqueContentEntry;
+				if (entry?.Nested != null)
+				{
+					foreach (var nestedGuid in entry.Nested.Keys)
+						builder.Append(' ').Append(nestedGuid.ToString());
+				}
+
+				return builder.ToString();
+			}
 		}
 
 		/// <summary>
@@ -2201,10 +2219,10 @@ namespace Content.Editor
 
 		private class CreateConfigAction
 		{
-			private readonly CategoryPage _page;
+			private readonly ConfigRowsPage _page;
 			private bool _executing;
 
-			public CreateConfigAction(CategoryPage page)
+			public CreateConfigAction(ConfigRowsPage page)
 			{
 				_page = page;
 			}
@@ -2411,40 +2429,22 @@ namespace Content.Editor
 				}
 
 				EditorGUI.BeginDisabledGroup(_window._creating || Items.IsNullOrEmpty());
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
+				if (DrawToolbarButton(SdfIconType.TrashFill, PINNED_DELETE_MODE_TOOLTIP))
 					BeginDeleteMode();
 
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, PINNED_DELETE_MODE_TOOLTIP);
-
-				if (SirenixEditorGUI.ToolbarButton("Clear All"))
+				if (DrawToolbarButton("Clear All", CLEAR_PINNED_TOOLTIP))
 					_window.TryClearPinned();
-
-				lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CLEAR_PINNED_TOOLTIP);
 				EditorGUI.EndDisabledGroup();
 			}
 
 			private void DrawDeleteModeButtons()
 			{
 				var canApply = !_window._creating && HasDeleteSelection;
-				EditorGUI.BeginDisabledGroup(!canApply);
-				var applyClicked = canApply
-					? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
-					: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, APPLY_PINNED_DELETE_TOOLTIP);
-				EditorGUI.EndDisabledGroup();
-
-				if (applyClicked)
+				if (DrawApplyDeleteButton(canApply, APPLY_PINNED_DELETE_TOOLTIP))
 					ApplyDelete();
 
-				if (DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR))
+				if (DrawCancelDeleteButton(CANCEL_PINNED_DELETE_TOOLTIP))
 					CancelDeleteMode();
-
-				lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CANCEL_PINNED_DELETE_TOOLTIP);
 			}
 
 			private void BeginDeleteMode()
@@ -2542,162 +2542,26 @@ namespace Content.Editor
 			private bool ShowDeleteToggle => _page is {DeleteMode: true};
 		}
 
-		private interface IConfigRowDeletePage
-		{
-			bool DeleteMode { get; }
-			bool IsSelectedForDelete(ContentScriptableObject asset);
-			void SetSelectedForDelete(ContentScriptableObject asset, bool selected);
-		}
-
-		/// <summary>
-		/// Страница Id-группы — плоский список всех конфигов внутри ветки
-		/// </summary>
-		private class IdGroupPage : IConfigRowDeletePage
-		{
-			private readonly ContentBrowserWindow _window;
-			private readonly List<CategoryRow> _items = new();
-			private HashSet<ContentEntryScriptableObject> _deleteSelection;
-
-			public string MenuPath { get; }
-			public Type ConfigType { get; }
-			public bool DeleteMode { get; private set; }
-			private bool HasDeleteSelection => _deleteSelection is {Count: > 0};
-
-			public bool IsSelectedForDelete(ContentScriptableObject asset)
-			{
-				return asset is ContentEntryScriptableObject entry && _deleteSelection != null && _deleteSelection.Contains(entry);
-			}
-
-			public void SetSelectedForDelete(ContentScriptableObject asset, bool selected)
-			{
-				if (asset is not ContentEntryScriptableObject entry)
-					return;
-
-				if (selected)
-					(_deleteSelection ??= new HashSet<ContentEntryScriptableObject>()).Add(entry);
-				else
-					_deleteSelection?.Remove(entry);
-
-				_window.Repaint();
-			}
-
-			private void DrawTitleBarButtons()
-			{
-				if (DeleteMode)
-				{
-					DrawDeleteModeButtons();
-					return;
-				}
-
-				EditorGUI.BeginDisabledGroup(_window._creating);
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
-					BeginDeleteMode();
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CATEGORY_DELETE_MODE_TOOLTIP);
-				EditorGUI.EndDisabledGroup();
-			}
-
-			private void DrawDeleteModeButtons()
-			{
-				var canApply = !_window._creating && HasDeleteSelection;
-				EditorGUI.BeginDisabledGroup(!canApply);
-				var applyClicked = canApply
-					? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
-					: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, APPLY_CATEGORY_DELETE_TOOLTIP);
-				EditorGUI.EndDisabledGroup();
-
-				if (applyClicked)
-					ApplyDelete();
-
-				if (DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR))
-					CancelDeleteMode();
-
-				lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CANCEL_CATEGORY_DELETE_TOOLTIP);
-			}
-
-			private void BeginDeleteMode()
-			{
-				DeleteMode = true;
-				_deleteSelection?.Clear();
-				_window.Repaint();
-			}
-
-			private void CancelDeleteMode()
-			{
-				DeleteMode = false;
-				_deleteSelection?.Clear();
-				_window.Repaint();
-			}
-
-			private void ApplyDelete()
-			{
-				if (!HasDeleteSelection)
-					return;
-
-				using (ListPool<ContentEntryScriptableObject>.Get(out var assets))
-				{
-					if (!Items.IsNullOrEmpty())
-					{
-						for (int i = 0; i < Items.Length; i++)
-						{
-							if (Items[i].Asset is ContentEntryScriptableObject asset && IsSelectedForDelete(asset))
-								assets.Add(asset);
-						}
-					}
-
-					if (_window.TryDeleteAssets(assets, MenuPath, ConfigType))
-						CancelDeleteMode();
-				}
-			}
-
-			[ShowInInspector]
-			[Searchable]
-			[ContentBrowserToggleInlineEditorsOnAltFoldout]
-			[ListDrawerSettings(OnTitleBarGUI = nameof(DrawTitleBarButtons), NumberOfItemsPerPage = 100, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
-			public CategoryRow[] Items { get; private set; } = Array.Empty<CategoryRow>();
-
-			public IdGroupPage(ContentBrowserWindow window, string menuPath, Type configType)
-			{
-				_window = window;
-				MenuPath = menuPath;
-				ConfigType = configType;
-			}
-
-			public void AddItem(ContentScriptableObject asset)
-			{
-				_items.Add(new CategoryRow(_window, this, asset));
-				Items = _items.ToArray();
-			}
-		}
-
-		/// <summary>
-		/// Страница категории — таблица со списком конфигов выбранного типа
-		/// </summary>
-		private class CategoryPage : IConfigRowDeletePage
+		private abstract class ConfigRowsPage
 		{
 			private readonly ContentBrowserWindow _window;
 			private HashSet<ContentEntryScriptableObject> _deleteSelection;
+			private readonly GUIContent _createTooltip;
+			private readonly string _idGroupPath;
 
-			// Заголовок таблицы (резолвится через "$Header" в LabelText, отдельно не рисуется)
 			public string MenuPath { get; }
-			public string PinKey { get; }
 			public string CreateMenuItemName { get; }
 			public ContentDatabaseScriptableObject Database { get; }
 			public Type ConfigType { get; }
 			public Type ValueType { get; }
-			public ContentScriptableObject FirstAsset => Items.IsNullOrEmpty() ? null : Items[0].Asset;
 			public bool DeleteMode { get; private set; }
+			private ContentScriptableObject GroupAsset =>
+				_idGroupPath.IsNullOrEmpty() || Items.Count == 0 ? null : Items[0].Asset;
 			private bool HasDeleteSelection => _deleteSelection is {Count: > 0};
-			private readonly GUIContent _createTooltip;
 
 			public void CreateNew()
 			{
-				_window.PromptCreateContentEntry(Database, ConfigType, FirstAsset);
+				_window.PromptCreateContentEntry(Database, ConfigType, GroupAsset, _idGroupPath);
 			}
 
 			public void Select()
@@ -2723,7 +2587,7 @@ namespace Content.Editor
 				_window.Repaint();
 			}
 
-			private void DrawTitleBarButtons()
+			protected void DrawTitleBarButtons()
 			{
 				if (DeleteMode)
 				{
@@ -2732,40 +2596,22 @@ namespace Content.Editor
 				}
 
 				EditorGUI.BeginDisabledGroup(_window._creating);
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.Plus))
+				if (DrawToolbarButton(SdfIconType.Plus, _createTooltip))
 					CreateNew();
 
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, _createTooltip);
-
-				if (SirenixEditorGUI.ToolbarButton(SdfIconType.TrashFill))
+				if (DrawToolbarButton(SdfIconType.TrashFill, CATEGORY_DELETE_MODE_TOOLTIP))
 					BeginDeleteMode();
-
-				lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CATEGORY_DELETE_MODE_TOOLTIP);
 				EditorGUI.EndDisabledGroup();
 			}
 
 			private void DrawDeleteModeButtons()
 			{
 				var canApply = !_window._creating && HasDeleteSelection;
-				EditorGUI.BeginDisabledGroup(!canApply);
-				var applyClicked = canApply
-					? DrawColoredToolbarButton(SdfIconType.Check, APPLY_DELETE_ENABLED_COLOR)
-					: SirenixEditorGUI.ToolbarButton(SdfIconType.Check);
-
-				var lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, APPLY_CATEGORY_DELETE_TOOLTIP);
-				EditorGUI.EndDisabledGroup();
-
-				if (applyClicked)
+				if (DrawApplyDeleteButton(canApply, APPLY_CATEGORY_DELETE_TOOLTIP))
 					ApplyDelete();
 
-				if (DrawColoredToolbarButton(SdfIconType.X, CANCEL_DELETE_COLOR))
+				if (DrawCancelDeleteButton(CANCEL_CATEGORY_DELETE_TOOLTIP))
 					CancelDeleteMode();
-
-				lastRect = GUILayoutUtility.GetLastRect();
-				GUI.Label(lastRect, CANCEL_CATEGORY_DELETE_TOOLTIP);
 			}
 
 			private void BeginDeleteMode()
@@ -2789,9 +2635,9 @@ namespace Content.Editor
 
 				using (ListPool<ContentEntryScriptableObject>.Get(out var assets))
 				{
-					if (!Items.IsNullOrEmpty())
+					if (Items.Count > 0)
 					{
-						for (int i = 0; i < Items.Length; i++)
+						for (int i = 0; i < Items.Count; i++)
 						{
 							if (Items[i].Asset is ContentEntryScriptableObject asset && IsSelectedForDelete(asset))
 								assets.Add(asset);
@@ -2803,11 +2649,61 @@ namespace Content.Editor
 				}
 			}
 
-			[ShowInInspector]
-			[Searchable]
+			[ShowInInspector, Searchable]
 			[ContentBrowserToggleInlineEditorsOnAltFoldout]
 			[ListDrawerSettings(OnTitleBarGUI = nameof(DrawTitleBarButtons), NumberOfItemsPerPage = 100, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
-			public CategoryRow[] Items { get; set; }
+			// Setter нужен Odin, иначе getter-only свойство блокирует toolbar и кнопки строк
+			public List<CategoryRow> Items { get; set; } = new();
+
+			protected ConfigRowsPage(ContentBrowserWindow window,
+				ContentDatabaseScriptableObject database,
+				Type configType,
+				string menuPath,
+				string createMenuItemName,
+				string idGroupPath = null)
+			{
+				_window = window;
+				Database = database;
+				ConfigType = configType;
+				ValueType = GetContentEntryValueType(configType);
+				MenuPath = menuPath;
+				CreateMenuItemName = createMenuItemName;
+				_idGroupPath = idGroupPath;
+
+				var tooltip = idGroupPath.IsNullOrEmpty()
+					? createMenuItemName
+					: $"{createMenuItemName} ({idGroupPath}/...)";
+				_createTooltip = new GUIContent(string.Empty, tooltip);
+			}
+
+			public void AddItem(ContentScriptableObject asset)
+			{
+				Items.Add(new CategoryRow(_window, this, asset));
+			}
+		}
+
+		/// <summary>
+		/// Страница Id-группы — плоский список всех конфигов внутри ветки
+		/// </summary>
+		private sealed class IdGroupPage : ConfigRowsPage
+		{
+			public IdGroupPage(ContentBrowserWindow window,
+				ContentDatabaseScriptableObject database,
+				string menuPath,
+				string idGroupPath,
+				Type configType,
+				string createMenuItemName)
+				: base(window, database, configType, menuPath, createMenuItemName, idGroupPath)
+			{
+			}
+		}
+
+		/// <summary>
+		/// Страница категории — таблица со списком конфигов выбранного типа
+		/// </summary>
+		private sealed class CategoryPage : ConfigRowsPage
+		{
+			public string PinKey { get; }
 
 			public CategoryPage(ContentBrowserWindow window,
 				ContentDatabaseScriptableObject database,
@@ -2815,15 +2711,9 @@ namespace Content.Editor
 				string menuPath,
 				string pinKey,
 				string displayTypeName)
+				: base(window, database, configType, menuPath, GetCreateConfigMenuItemName(displayTypeName))
 			{
-				_window = window;
-				Database = database;
-				ConfigType = configType;
-				ValueType = GetContentEntryValueType(configType);
-				MenuPath = menuPath;
 				PinKey = pinKey;
-				CreateMenuItemName = GetCreateConfigMenuItemName(displayTypeName);
-				_createTooltip = new GUIContent(string.Empty, CreateMenuItemName);
 			}
 		}
 
@@ -2834,10 +2724,10 @@ namespace Content.Editor
 		private struct CategoryRow : IContentBrowserInlineButtonHandler, IContentBrowserInlineToggleHandler
 		{
 			private readonly ContentBrowserWindow _window;
-			private readonly IConfigRowDeletePage _page;
+			private readonly ConfigRowsPage _page;
 			private readonly ContentScriptableObject _asset;
 
-			public CategoryRow(ContentBrowserWindow window, IConfigRowDeletePage page, ContentScriptableObject asset)
+			public CategoryRow(ContentBrowserWindow window, ConfigRowsPage page, ContentScriptableObject asset)
 			{
 				_window = window;
 				_page = page;
@@ -3174,25 +3064,17 @@ namespace Content.Editor
 
 		private void TryCreateEditor(ContentScriptableObject asset)
 		{
-			if (asset != null)
-			{
-				if (_inlineEditor == null)
-				{
-					_inlineEditor = (OdinEditor) OdinEditor.CreateEditor(asset);
-				}
-				else if (_inlineEditor.target != asset)
-				{
-					OdinEditor.DestroyImmediate(_inlineEditor);
-					_inlineEditor = null;
+			if (asset != null && _inlineEditor != null && _inlineEditor.target == asset)
+				return;
 
-					_inlineEditor = (OdinEditor) OdinEditor.CreateEditor(asset);
-				}
-			}
-			else if (_inlineEditor != null)
+			if (_inlineEditor != null)
 			{
 				OdinEditor.DestroyImmediate(_inlineEditor);
 				_inlineEditor = null;
 			}
+
+			if (asset != null)
+				_inlineEditor = (OdinEditor) OdinEditor.CreateEditor(asset);
 		}
 	}
 }

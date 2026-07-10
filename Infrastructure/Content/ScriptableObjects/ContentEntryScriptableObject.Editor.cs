@@ -85,7 +85,7 @@ namespace Content.ScriptableObjects
 			return true;
 		}
 
-		public void SetId(string id)
+		public override void SetId(string id)
 		{
 			useCustomId = !id.IsNullOrEmpty();
 			_entry.id = id;
@@ -94,6 +94,8 @@ namespace Content.ScriptableObjects
 
 	public abstract partial class ContentEntryScriptableObject
 	{
+		public abstract void SetId(string id);
+
 		/// <summary>
 		/// <see cref="ContentEntryScriptableObject{T}._customId"/>
 		/// </summary>
