@@ -1977,8 +1977,8 @@ namespace Content.Editor
 		// Точный поиск (подстрока, без учёта регистра) по заранее собранной строке
 		private static bool SearchItem(OdinMenuItem item)
 		{
-			// Закреплённые копии и сама страница "Pinned" в поиске не участвуют (есть оригиналы)
-			if (item is PinnedMenuItem || item is PinnedCategoryMenuItem || item.Value is PinnedPage or SeparatorMenuAction)
+			// Закреплённые копии, страница "Pinned" и пункты "New ..." в поиске не участвуют (мусорят выдачу)
+			if (item is PinnedMenuItem || item is PinnedCategoryMenuItem || item.Value is PinnedPage or SeparatorMenuAction or CreateConfigAction)
 				return false;
 
 			var term = item.MenuTree?.Config.SearchTerm;
