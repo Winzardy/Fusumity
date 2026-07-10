@@ -123,7 +123,6 @@ namespace AssetManagement
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadAsset{T}(IAssetReference)"/>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadOrNull<T>(this AssetReference<T> reference)
 			where T : UnityObject
 		{
@@ -134,7 +133,6 @@ namespace AssetManagement
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadOrNull<T>(this ComponentReference reference)
 			where T : Component
 		{
@@ -145,7 +143,6 @@ namespace AssetManagement
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadAsset{T}(IAssetReference)"/>
-		[Obsolete("Блокирует основной поток")]
 		public static T Load<T>(this AssetReference<T> reference)
 			where T : UnityObject
 		{
@@ -153,7 +150,6 @@ namespace AssetManagement
 		}
 
 		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		[Obsolete("Блокирует основной поток")]
 		public static T Load<T>(this ComponentReference reference)
 			where T : Component
 		{

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using UnityEngine;
 
 namespace AssetManagement
 {
-	using UnityObject = UnityEngine.Object;
-	using UnityComponent = UnityEngine.Component;
+	using UnityObject = Object;
+	using UnityComponent = Component;
 
 	public partial class AssetLoader
 	{
@@ -14,21 +14,18 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования <see cref="Release(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadAsset<T>(IAssetReference reference) => provider.LoadAsset<T>(reference);
 
 		/// <summary>
 		/// Синхронно загрузить ассет по пути. См. <see cref="LoadAsset{T}(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadAsset<T>(string path) where T : UnityObject => provider.LoadAsset<T>(path);
 
 		/// <summary>
 		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadComponent<T>(ComponentReference reference)
 			where T : UnityComponent => provider.LoadComponent<T>(reference);
 
@@ -36,7 +33,6 @@ namespace AssetManagement
 		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadComponent<T>(IAssetReference reference)
 			where T : UnityComponent => provider.LoadComponent<T>(reference);
 
@@ -44,7 +40,6 @@ namespace AssetManagement
 		/// Синхронно загрузить GameObject и получить у него выбранный компонент по пути. См. <see cref="LoadAsset{T}(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		[Obsolete("Блокирует основной поток")]
 		public static T LoadComponent<T>(string path)
 			where T : UnityComponent => provider.LoadComponent<T>(path);
 	}
