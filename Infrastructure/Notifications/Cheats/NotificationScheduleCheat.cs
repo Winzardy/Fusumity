@@ -19,12 +19,20 @@ namespace Notifications.Cheats
 		[Dropdown(methodName: nameof(GetSpeedOptions)), Variable(OnValueChanged = nameof(SetSpeed))]
 		public string deliverySpeed = "x1";
 
+		[Variable(OnValueChanged = nameof(SetForceForegroundAll))]
+		public bool forceForegroundAll = false;
+
 		public override void InitDefaultVariableValue()
 		{
-			deliverySpeed = $"x{NotificationsDebug.DeliverySpeed}";
+			deliverySpeed = $"x{NotificationsDebug.Settings.deliverySpeed}";
+			forceForegroundAll = NotificationsDebug.Settings.forceForegroundAll;
 		}
 
-		public override void OnVariableValueLoaded() => SetSpeed();
+		public override void OnVariableValueLoaded()
+		{
+			SetSpeed();
+			SetForceForegroundAll();
+		}
 
 		private void SetSpeed()
 		{
@@ -38,8 +46,13 @@ namespace Notifications.Cheats
 				_ => 1
 			};
 
-			NotificationsDebug.SetDeliverySpeed(speed);
+			NotificationsDebug.Settings.deliverySpeed = Math.Max(
+				NotificationsDebug.Settings.DEFAULT_DELIVERY_SPEED,
+				speed);
 		}
+
+		private void SetForceForegroundAll()
+			=> NotificationsDebug.Settings.forceForegroundAll = forceForegroundAll;
 
 		private string[] GetSpeedOptions() => new[]
 		{

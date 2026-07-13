@@ -118,8 +118,8 @@ namespace Notifications
 				return;
 			}
 
-#if DebugLog
-			NotificationsDebug.ApplySpeed(ref request, now);
+#if DEV
+			NotificationsDebug.ApplySettings(ref request, now);
 #endif
 
 			if (_platform.Schedule(in request))

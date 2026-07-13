@@ -40,26 +40,29 @@ namespace Notifications
 		public static Color COLOR = new(0.1f, 0.5f, 0.5f);
 
 #if DEV
-		private const int DEFAULT_SPEED = 1;
-
-		private static int _deliverySpeed = DEFAULT_SPEED;
-
-		public static int DeliverySpeed { get => _deliverySpeed; }
-
-		public static void SetDeliverySpeed(int speed) => _deliverySpeed = Math.Max(DEFAULT_SPEED, speed);
-
-		internal static void ApplySpeed(ref NotificationRequest request, DateTime now)
+		public static class Settings
 		{
-			if (_deliverySpeed <= DEFAULT_SPEED)
+			public const int DEFAULT_DELIVERY_SPEED = 1;
+
+			public static int deliverySpeed = DEFAULT_DELIVERY_SPEED;
+			public static bool forceForegroundAll = false;
+		}
+
+		internal static void ApplySettings(ref NotificationRequest request, DateTime now)
+		{
+			if (Settings.forceForegroundAll)
+				request.config.showInForeground = true;
+
+			if (Settings.deliverySpeed <= Settings.DEFAULT_DELIVERY_SPEED)
 				return;
 
 			var originalDeliveryTime = request.deliveryTime!.Value;
-			request.deliveryTime = now + TimeSpan.FromTicks((originalDeliveryTime - now).Ticks / _deliverySpeed);
+			request.deliveryTime = now + TimeSpan.FromTicks((originalDeliveryTime - now).Ticks / Settings.deliverySpeed);
 
 			var localDeliveryTime = originalDeliveryTime.Kind == DateTimeKind.Utc
 				? originalDeliveryTime.ToLocalTime()
 				: originalDeliveryTime;
-			request.message += $"\n[Debug x{_deliverySpeed}] Original delivery time: {localDeliveryTime:G}";
+			request.message += $"\n[Debug x{Settings.deliverySpeed}] Original delivery time: {localDeliveryTime:G}";
 		}
 #endif
 	}
