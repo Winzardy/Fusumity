@@ -2705,6 +2705,12 @@ namespace Content.Editor
 		{
 			public string PinKey { get; }
 
+			[ShowInInspector, ReadOnly, PropertyOrder(-99), PropertySpace(0, 3)]
+			[ShowIf(nameof(ShowScript))]
+			public MonoScript Script => ConfigType.FindMonoScript();
+
+			private static bool ShowScript => ContentEntryMonoScriptVisibilityMenu.IsEnable;
+
 			public CategoryPage(ContentBrowserWindow window,
 				ContentDatabaseScriptableObject database,
 				Type configType,
