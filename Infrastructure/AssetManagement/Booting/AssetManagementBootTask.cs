@@ -16,7 +16,9 @@ namespace Booting.AssetManagement
 	{
 		public override int Priority => HIGH_PRIORITY - 10;
 
+#if UNITY_EDITOR
 		protected override bool ShouldSkipDispose { get => false; }
+#endif
 
 		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
