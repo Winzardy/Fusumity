@@ -12,6 +12,7 @@ namespace Notifications.Cheats
 		public const string COMMAND_PATH = "App/Notifications";
 	}
 
+#if DEV
 	[SettingCommand(name = "System/Notifications")]
 	public class NotificationsSettingsCheat : Command
 	{
@@ -50,6 +51,7 @@ namespace Notifications.Cheats
 			"x36000"
 		};
 	}
+#endif
 
 	//TODO: без аргументов пока
 	[ExecutableCommand(name = NotificationsCheatUtility.COMMAND_PATH + "/Schedule")]

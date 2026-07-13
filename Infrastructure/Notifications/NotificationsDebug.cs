@@ -39,7 +39,7 @@ namespace Notifications
 
 		public static Color COLOR = new(0.1f, 0.5f, 0.5f);
 
-#if DebugLog
+#if DEV
 		private const int DEFAULT_SPEED = 1;
 
 		private static int _deliverySpeed = DEFAULT_SPEED;
