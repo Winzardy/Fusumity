@@ -39,19 +39,24 @@ namespace Notifications.Android
 		{
 			_ids = new();
 			InitializeChannels();
+			var userPermission = AndroidNotificationCenter.UserPermissionToPost;
+			_ = GetScheduledNotifications();
 			AndroidNotificationCenter.OnNotificationReceived += OnNotificationReceived;
 
-			NotificationsDebug.Log($"[Android] User Permission: {AndroidNotificationCenter.UserPermissionToPost}");
+			NotificationsDebug.Log($"[Android] User Permission: {userPermission}");
 		}
 
 		public void Dispose()
 		{
-			_ids = null;
 			AndroidNotificationCenter.OnNotificationReceived -= OnNotificationReceived;
+			_ids?.Dispose();
+			_ids = null;
 		}
 
 		private void OnNotificationReceived(AndroidNotificationIntentData data)
 		{
+			TryRestoreId(data.Notification.IntentData, data.Id);
+
 			if (_ids.TryGetValue(data.Id, out var id))
 				NotificationReceived?.Invoke(id, data.Notification.IntentData);
 			else
@@ -65,7 +70,6 @@ namespace Notifications.Android
 
 			var notification = new AndroidNotification(request.title, request.message, request.deliveryTime!.Value);
 
-			//TODO: Важно отметить что IntentData используется как контейнер для хранения айди, возможно надо будет это убрать
 			notification.IntentData = request.id;
 
 			var notificationEntry = request.config;
@@ -143,12 +147,20 @@ namespace Notifications.Android
 		}
 
 		public void OpenApplicationSettings() => AndroidNotificationCenter.OpenNotificationSettings();
-		public string GetLastIntentNotificationId() => AndroidNotificationCenter.GetLastNotificationIntent()?.Notification.IntentData;
+		public string GetLastIntentNotificationId()
+		{
+			var data = AndroidNotificationCenter.GetLastNotificationIntent();
+			if (data == null)
+				return null;
+
+			var id = data.Notification.IntentData;
+			TryRestoreId(id, data.Id);
+			return id;
+		}
 
 		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
 		{
 			var result = new List<NotificationRequest>();
-
 			using var managerClass = new AndroidJavaClass(NOTIFICATION_MANAGER_CLASS);
 			using var manager = managerClass.GetStatic<AndroidJavaObject>("mUnityNotificationManager");
 			if (manager == null)
@@ -167,6 +179,8 @@ namespace Notifications.Android
 
 				var systemId = extras.Call<int>("getInt", EXTRA_ID, -1);
 				var id = extras.Call<string>("getString", EXTRA_DATA) ?? systemId.ToString();
+				TryRestoreId(id, systemId);
+
 				var fireTime = extras.Call<long>("getLong", EXTRA_FIRE_TIME, -1L);
 				var repeatInterval = extras.Call<long>("getLong", EXTRA_REPEAT_INTERVAL, -1L);
 
@@ -180,6 +194,15 @@ namespace Notifications.Android
 			}
 
 			return result;
+		}
+
+		private void TryRestoreId(string id, int systemId)
+		{
+			if (id.IsNullOrEmpty() || systemId < 0 ||
+				_ids.TryGetValue(id, out _) || _ids.TryGetValue(systemId, out _))
+				return;
+
+			_ids.Add(id, systemId);
 		}
 
 		private static DateTime? ToDateTime(long milliseconds)

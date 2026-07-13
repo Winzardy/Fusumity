@@ -1,17 +1,17 @@
 {
-    "name": "Notifications.iOS.Config",
+    "name": "Content.ScriptableObjects.Notification.iOS",
     "rootNamespace": "",
     "references": [
-        "Notifications",
-        "Unity.Notifications.iOS",
+        "Content.ScriptableObjects.Notifications",
+        "Content.ScriptableObjects",
+        "Notifications.iOS",
         "Generic",
-        "Sapientia",
-        "AssetManagement",
-        "Content",
-        "GUID:dc8e8e524b04497ab575e558b7649abb",
-        "Localization"
+        "Notifications.iOS.Config"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "iOS",
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
