@@ -14,6 +14,8 @@ namespace UI
 	// cus serialized dictionary is broken af in combination with these switchers.
 	public abstract class ReliableTweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
+		private bool _inactiveWarningLogged;
+
 		[NonSerialized]
 		private Tween _tween;
 
@@ -54,6 +56,7 @@ namespace UI
 		protected override bool UseEquals { get => true; }
 
 		private void Awake() => ClearTweens();
+		private void OnEnable() => _inactiveWarningLogged = false;
 		private void OnDisable() => ClearTweens();
 		private void OnDestroy() => ClearTweens();
 
@@ -66,9 +69,14 @@ namespace UI
 			// Твин ломается если его создавать при неактивном объекте
 			if (!gameObject.IsActive())
 			{
-				Debug.LogWarning(
-					"Cannot play DOTween because GameObject is inactive. " +
-					"Applying final tween state immediately");
+				if (!_inactiveWarningLogged)
+				{
+					Debug.LogWarning(
+						"Cannot play DOTween because GameObject is inactive. " +
+						"Applying final tween state immediately");
+					_inactiveWarningLogged = true;
+				}
+
 				var animationSequence = mappedSequences.GetValueOrDefaultSafe(state, _default);
 				if (animationSequence.IsNullOrEmpty())
 					return;

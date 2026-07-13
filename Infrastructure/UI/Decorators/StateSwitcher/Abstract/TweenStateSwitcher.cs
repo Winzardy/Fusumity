@@ -13,7 +13,7 @@ namespace UI
 {
 	public abstract class TweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
-		private bool _inactiveWarningLogged = true;
+		private bool _inactiveWarningLogged;
 
 		[NonSerialized]
 		private Tween _tween;
@@ -28,6 +28,7 @@ namespace UI
 		protected override bool UseEquals { get => true; }
 
 		private void Awake() => ClearTweens();
+		private void OnEnable() => _inactiveWarningLogged = false;
 		private void OnDestroy() => ClearTweens();
 
 		protected override void OnStateSwitched(TState state)
@@ -39,12 +40,12 @@ namespace UI
 			// Точное поведение не исследовалось, поэтому сразу применяем конечное состояние
 			if (!gameObject.IsActive())
 			{
-				if (_inactiveWarningLogged)
+				if (!_inactiveWarningLogged)
 				{
 					Debug.LogWarning(
 						"Cannot play DOTween because GameObject is inactive. " +
 						"Applying final tween state immediately");
-					_inactiveWarningLogged = false;
+					_inactiveWarningLogged = true;
 				}
 
 				animationSequence = _dictionary.GetValueOrDefaultSafe(state, _default);

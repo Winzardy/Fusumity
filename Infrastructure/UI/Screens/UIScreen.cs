@@ -117,7 +117,7 @@ namespace UI.Screens
 			DisableSuppress();
 		}
 
-		protected void UpdateArgs(in TArgs args)
+		protected virtual void UpdateArgs(in TArgs args)
 		{
 			_args = args;
 		}

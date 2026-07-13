@@ -9,8 +9,8 @@ namespace UI.Windows
 		where TLayout : UIBaseWindowLayout
 	{
 		/// <summary>
-		/// Dispose current view model every time the view is updated
-		/// and upon window opening/closing.
+		/// Dispose the owned view model when it is replaced
+		/// or when the window is reset
 		/// <br></br>
 		/// Don't do it if you're using view model as cache elsewhere.
 		/// </summary>
@@ -19,7 +19,7 @@ namespace UI.Windows
 		protected TView _view;
 		protected Action _onClose;
 
-		public TViewModel ViewModel { get => _view != null ? _view.ViewModel : default; }
+		public TViewModel ViewModel { get => _args; }
 
 		protected abstract TView CreateView(TLayout layout);
 
@@ -55,7 +55,7 @@ namespace UI.Windows
 			}
 
 			BeforeViewDisposed();
-			TryСlearViewAndAutoDisposeViewModel();
+			ClearBoundViewModel();
 
 			if (_view is IDisposable disposable)
 				disposable.Dispose();
@@ -73,27 +73,25 @@ namespace UI.Windows
 			if (!Active)
 				return;
 
-			if (Equals(ViewModel, viewModel))
+			if (ReferenceEquals(_args, viewModel))
 				return;
 
-			UpdateArgs(viewModel);
-
-			TryСlearViewAndAutoDisposeViewModel();
-			_view?.Update(viewModel);
+			UpdateArgs(in viewModel);
+			BindCurrentViewModel();
 
 			OnViewUpdated();
 		}
 
-		protected override sealed void OnShow(in TViewModel viewModel)
+		protected override sealed void OnShow(in TViewModel _)
 		{
-			TryСlearViewAndAutoDisposeViewModel();
-			_view.Update(viewModel);
+			BindCurrentViewModel();
 
 			OnViewShow();
 		}
 
 		protected override void OnHide(in TViewModel _)
 		{
+			ClearBoundViewModel();
 			OnViewHide();
 		}
 
@@ -109,12 +107,22 @@ namespace UI.Windows
 
 		protected override void OnReset(bool deactivate)
 		{
-			TryСlearViewAndAutoDisposeViewModel(true);
+			UpdateArgs(default);
 
-			_onClose?.Invoke();
+			var onClose = _onClose;
+			_onClose = null;
+			onClose?.Invoke();
 			OnViewHidden();
 
 			base.OnReset(deactivate);
+		}
+
+		protected override void OnDispose()
+		{
+			UpdateArgs(default);
+			_onClose = null;
+
+			base.OnDispose();
 		}
 
 		protected virtual void OnViewCreated()
@@ -149,9 +157,30 @@ namespace UI.Windows
 		{
 		}
 
-		protected void TryСlearViewAndAutoDisposeViewModel(bool dispose = false)
+		protected override void UpdateArgs(in TViewModel viewModel)
 		{
-			_view?.ClearViewModel(AutoDisposeViewModel && dispose);
+			if (ReferenceEquals(_args, viewModel))
+				return;
+
+			ClearBoundViewModel();
+			AutoDisposeViewModelIfNeeded(_args);
+			base.UpdateArgs(in viewModel);
+		}
+
+		private void BindCurrentViewModel()
+		{
+			_view?.Update(_args);
+		}
+
+		private void ClearBoundViewModel()
+		{
+			_view?.ClearViewModel();
+		}
+
+		private void AutoDisposeViewModelIfNeeded(TViewModel viewModel)
+		{
+			if (AutoDisposeViewModel && viewModel is IDisposable disposable)
+				disposable.Dispose();
 		}
 	}
 }
