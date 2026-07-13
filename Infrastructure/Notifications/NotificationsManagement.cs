@@ -109,13 +109,18 @@ namespace Notifications
 
 			var date = request.deliveryTime!.Value;
 			var isUtc = date.Kind == DateTimeKind.Utc;
-			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
+			var now = isUtc ? DateTime.UtcNow : DateTime.Now;
+			if (date <= now)
 			{
 				NotificationsDebug.LogError(
 					$"Trying to schedule notification by id [ {request.id} ] in the past, " +
 					$"date: {date.ToShortTimeString()}, {date.ToShortDateString()} (kind:{date.Kind})");
 				return;
 			}
+
+#if DebugLog
+			NotificationsDebug.ApplySpeed(ref request, now);
+#endif
 
 			if (_platform.Schedule(in request))
 				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));

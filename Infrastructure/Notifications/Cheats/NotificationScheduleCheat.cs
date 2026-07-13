@@ -12,6 +12,45 @@ namespace Notifications.Cheats
 		public const string COMMAND_PATH = "App/Notifications";
 	}
 
+	[SettingCommand(name = "System/Notifications")]
+	public class NotificationsSettingsCheat : Command
+	{
+		[Dropdown(methodName: nameof(GetSpeedOptions)), Variable(OnValueChanged = nameof(SetSpeed))]
+		public string deliverySpeed = "x1";
+
+		public override void InitDefaultVariableValue()
+		{
+			deliverySpeed = $"x{NotificationsDebug.DeliverySpeed}";
+		}
+
+		public override void OnVariableValueLoaded() => SetSpeed();
+
+		private void SetSpeed()
+		{
+			var speed = deliverySpeed switch
+			{
+				"x10" => 10,
+				"x60" => 60,
+				"x360" => 360,
+				"x3600" => 3600,
+				"x36000" => 360000,
+				_ => 1
+			};
+
+			NotificationsDebug.SetDeliverySpeed(speed);
+		}
+
+		private string[] GetSpeedOptions() => new[]
+		{
+			"x1",
+			"x10",
+			"x60",
+			"x360",
+			"x3600",
+			"x36000"
+		};
+	}
+
 	//TODO: без аргументов пока
 	[ExecutableCommand(name = NotificationsCheatUtility.COMMAND_PATH + "/Schedule")]
 	public class NotificationScheduleCheat : Command
@@ -70,7 +109,7 @@ namespace Notifications.Cheats
 				.ToArray();
 
 			NotificationsDebug.Log($"Scheduled notifications: {notifications.Length}" +
-				$"{notifications.GetCompositeString(vertical: false, separator:"\n————————")}");
+				$"{notifications.GetCompositeString(vertical: false, separator: "\n————————")}");
 		}
 	}
 }
