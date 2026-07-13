@@ -41,7 +41,6 @@ namespace Notifications
 
 			_platform.NotificationReceived += OnNotificationReceived;
 
-			//Очищаем все уведомления при запуске и пересоздаем. Это решаем вопросы с призрачными уведомлениями
 			if (!_settings.disableClearAllOnStart)
 			{
 				CancelAll();
@@ -133,6 +132,9 @@ namespace Notifications
 		internal void OpenApplicationSettings() => _platform?.OpenApplicationSettings();
 
 		internal string GetLastIntentNotificationId() => _platform?.GetLastIntentNotificationId();
+
+		internal IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+			=> _platform?.GetScheduledNotifications() ?? Array.Empty<NotificationRequest>();
 
 		private void OnNotificationReceived(string id, string data)
 		{

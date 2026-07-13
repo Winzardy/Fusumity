@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia;
 
@@ -30,6 +31,9 @@ namespace Notifications
 		public static void Schedule(ref NotificationRequest request) => management.Schedule(ref request);
 
 		public static string GetLastIntentNotificationId() => management.GetLastIntentNotificationId();
+
+		public static IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+			=> management.GetScheduledNotifications();
 
 		public static void OpenApplicationSettings() => management.OpenApplicationSettings();
 	}

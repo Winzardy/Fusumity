@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Content;
 using Localization;
 using Notifications.Android.Config;
@@ -22,6 +23,13 @@ namespace Notifications.Android
 	public class AndroidNotificationPlatform : INotificationPlatform
 	{
 		private const string PERMISSION = "android.permission.POST_NOTIFICATIONS";
+		private const string NOTIFICATION_MANAGER_CLASS = "com.unity.androidnotifications.UnityNotificationManager";
+		private const string EXTRA_TITLE = "android.title";
+		private const string EXTRA_TEXT = "android.text";
+		private const string EXTRA_ID = "id";
+		private const string EXTRA_DATA = "data";
+		private const string EXTRA_FIRE_TIME = "fireTime";
+		private const string EXTRA_REPEAT_INTERVAL = "repeatInterval";
 
 		private BidirectionalMap<string, int> _ids;
 
@@ -136,6 +144,53 @@ namespace Notifications.Android
 
 		public void OpenApplicationSettings() => AndroidNotificationCenter.OpenNotificationSettings();
 		public string GetLastIntentNotificationId() => AndroidNotificationCenter.GetLastNotificationIntent()?.Notification.IntentData;
+
+		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+		{
+			var result = new List<NotificationRequest>();
+
+			using var managerClass = new AndroidJavaClass(NOTIFICATION_MANAGER_CLASS);
+			using var manager = managerClass.GetStatic<AndroidJavaObject>("mUnityNotificationManager");
+			if (manager == null)
+				return result;
+
+			using var scheduledNotifications = manager.Get<AndroidJavaObject>("mScheduledNotifications");
+			if (scheduledNotifications == null)
+				return result;
+
+			using var values = scheduledNotifications.Call<AndroidJavaObject>("values");
+			using var iterator = values.Call<AndroidJavaObject>("iterator");
+			while (iterator.Call<bool>("hasNext"))
+			{
+				using var builder = iterator.Call<AndroidJavaObject>("next");
+				using var extras = builder.Call<AndroidJavaObject>("getExtras");
+
+				var systemId = extras.Call<int>("getInt", EXTRA_ID, -1);
+				var id = extras.Call<string>("getString", EXTRA_DATA) ?? systemId.ToString();
+				var fireTime = extras.Call<long>("getLong", EXTRA_FIRE_TIME, -1L);
+				var repeatInterval = extras.Call<long>("getLong", EXTRA_REPEAT_INTERVAL, -1L);
+
+				result.Add(new NotificationRequest(id, default)
+				{
+					title = extras.Call<string>("getString", EXTRA_TITLE),
+					message = extras.Call<string>("getString", EXTRA_TEXT),
+					deliveryTime = ToDateTime(fireTime),
+					repeatInterval = repeatInterval > 0 ? TimeSpan.FromMilliseconds(repeatInterval) : null
+				});
+			}
+
+			return result;
+		}
+
+		private static DateTime? ToDateTime(long milliseconds)
+		{
+			if (milliseconds < 0)
+				return null;
+
+			return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+				.AddMilliseconds(milliseconds)
+				.ToLocalTime();
+		}
 
 		private void InitializeChannels()
 		{

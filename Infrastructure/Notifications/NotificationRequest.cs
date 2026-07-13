@@ -42,7 +42,8 @@ namespace Notifications
 			return $"\nId: {id}" +
 				$"\nTitle: {title} " +
 				$"\nBody: {message} " +
-				$"\nDelivery Time: {deliveryTime}";
+				$"\nDelivery Time: {deliveryTime}" +
+				$"\nRepeat Interval: {repeatInterval}";
 		}
 	}
 }

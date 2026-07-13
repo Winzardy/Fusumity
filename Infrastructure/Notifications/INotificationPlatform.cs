@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Notifications
 {
@@ -39,5 +40,7 @@ namespace Notifications
 		public event Action<string, string> NotificationReceived;
 
 		public string GetLastIntentNotificationId();
+
+		public IReadOnlyList<NotificationRequest> GetScheduledNotifications();
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Unity.Notifications.iOS;
 using UnityEngine.Scripting;
@@ -112,6 +113,47 @@ namespace Notifications.iOS
 
 		public string GetLastIntentNotificationId() => iOSNotificationCenter.QueryLastRespondedNotification()
 			.Notification?.Identifier;
+
+		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+		{
+			var notifications = iOSNotificationCenter.GetScheduledNotifications();
+			var result = new NotificationRequest[notifications.Length];
+
+			for (var i = 0; i < notifications.Length; i++)
+			{
+				var notification = notifications[i];
+				result[i] = new NotificationRequest(notification.Identifier, default)
+				{
+					title = notification.Title,
+					message = notification.Body,
+					deliveryTime = GetDeliveryTime(notification.Trigger)
+				};
+			}
+
+			return result;
+		}
+
+		private static DateTime? GetDeliveryTime(iOSNotificationTrigger trigger)
+		{
+			if (trigger is not iOSNotificationCalendarTrigger calendar ||
+				!calendar.Year.HasValue ||
+				!calendar.Month.HasValue ||
+				!calendar.Day.HasValue ||
+				!calendar.Hour.HasValue ||
+				!calendar.Minute.HasValue ||
+				!calendar.Second.HasValue)
+				return null;
+
+			var kind = calendar.UtcTime ? DateTimeKind.Utc : DateTimeKind.Local;
+			return new DateTime(
+				calendar.Year.Value,
+				calendar.Month.Value,
+				calendar.Day.Value,
+				calendar.Hour.Value,
+				calendar.Minute.Value,
+				calendar.Second.Value,
+				kind);
+		}
 
 		private void SetBadge(int amount) => iOSNotificationCenter.ApplicationBadge = amount;
 	}
