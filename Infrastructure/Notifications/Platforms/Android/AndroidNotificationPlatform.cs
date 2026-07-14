@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Content;
 using Localization;
 using Notifications.Android.Config;
@@ -40,7 +41,9 @@ namespace Notifications.Android
 			_ids = new();
 			InitializeChannels();
 			var userPermission = AndroidNotificationCenter.UserPermissionToPost;
-			_ = GetScheduledNotifications();
+			foreach (var (systemId, notif) in EnumerateScheduledNotificationsInternal())
+				TryRestoreId(notif.id, systemId);
+
 			AndroidNotificationCenter.OnNotificationReceived += OnNotificationReceived;
 
 			NotificationsDebug.Log($"[Android] User Permission: {userPermission}");
@@ -147,6 +150,7 @@ namespace Notifications.Android
 		}
 
 		public void OpenApplicationSettings() => AndroidNotificationCenter.OpenNotificationSettings();
+
 		public string GetLastIntentNotificationId()
 		{
 			var data = AndroidNotificationCenter.GetLastNotificationIntent();
@@ -158,17 +162,22 @@ namespace Notifications.Android
 			return id;
 		}
 
-		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+		public IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
 		{
-			var result = new List<NotificationRequest>();
+			return EnumerateScheduledNotificationsInternal()
+				.Select(x => x.notif);
+		}
+
+		private IEnumerable<(int systemId, NotificationRequest notif)> EnumerateScheduledNotificationsInternal()
+		{
 			using var managerClass = new AndroidJavaClass(NOTIFICATION_MANAGER_CLASS);
 			using var manager = managerClass.GetStatic<AndroidJavaObject>("mUnityNotificationManager");
 			if (manager == null)
-				return result;
+				yield break;
 
 			using var scheduledNotifications = manager.Get<AndroidJavaObject>("mScheduledNotifications");
 			if (scheduledNotifications == null)
-				return result;
+				yield break;
 
 			using var values = scheduledNotifications.Call<AndroidJavaObject>("values");
 			using var iterator = values.Call<AndroidJavaObject>("iterator");
@@ -179,12 +188,11 @@ namespace Notifications.Android
 
 				var systemId = extras.Call<int>("getInt", EXTRA_ID, -1);
 				var id = extras.Call<string>("getString", EXTRA_DATA) ?? systemId.ToString();
-				TryRestoreId(id, systemId);
 
 				var fireTime = extras.Call<long>("getLong", EXTRA_FIRE_TIME, -1L);
 				var repeatInterval = extras.Call<long>("getLong", EXTRA_REPEAT_INTERVAL, -1L);
 
-				result.Add(new NotificationRequest(id, default)
+				yield return (systemId, new NotificationRequest(id, default)
 				{
 					title = extras.Call<string>("getString", EXTRA_TITLE),
 					message = extras.Call<string>("getString", EXTRA_TEXT),
@@ -192,8 +200,6 @@ namespace Notifications.Android
 					repeatInterval = repeatInterval > 0 ? TimeSpan.FromMilliseconds(repeatInterval) : null
 				});
 			}
-
-			return result;
 		}
 
 		private void TryRestoreId(string id, int systemId)

@@ -32,8 +32,8 @@ namespace Notifications
 
 		public static string GetLastIntentNotificationId() => management.GetLastIntentNotificationId();
 
-		public static IReadOnlyList<NotificationRequest> GetScheduledNotifications()
-			=> management.GetScheduledNotifications();
+		public static IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
+			=> management.EnumerateScheduledNotifications();
 
 		public static void OpenApplicationSettings() => management.OpenApplicationSettings();
 	}

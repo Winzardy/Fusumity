@@ -2,6 +2,7 @@
 using Content;
 using Localization;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Notifications
 {
@@ -25,8 +26,9 @@ namespace Notifications
 		[Tooltip("Показывать ли уведомление при открытом приложении")]
 		public bool showInForeground;
 
+		[FormerlySerializedAs("platformEntries")]
 		[Space]
 		[SerializeReference]
-		public IPlatformNotificationConfig[] platformEntries;
+		public IPlatformNotificationConfig[] platformConfigs;
 	}
 }

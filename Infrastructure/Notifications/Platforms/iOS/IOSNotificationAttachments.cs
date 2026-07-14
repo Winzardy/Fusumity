@@ -6,6 +6,7 @@ using System.Threading;
 using AssetManagement;
 using Content;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Unity.Notifications.iOS;
 using UnityEngine;
 
@@ -13,49 +14,106 @@ namespace Notifications.iOS
 {
 	using UnityObject = UnityEngine.Object;
 
-	internal static class IOSNotificationAttachmentCache
+	internal static class IOSNotificationAttachments
 	{
-		public static void Apply(iOSNotification notification, AssetReference<Sprite> attachment)
+		private const string ROOT_DIRECTORY = "Notifications/Attachments";
+		private const string STAGING_DIRECTORY = "Staging";
+
+		public static void Initialize()
+		{
+			try
+			{
+				Cleanup();
+			}
+			catch (Exception exception)
+			{
+				NotificationsDebug.LogException(exception);
+			}
+		}
+
+		public static async UniTask<string> ApplyAsync(
+			iOSNotification notification,
+			AssetReference<Sprite> attachment,
+			CancellationToken ct)
 		{
 			if (attachment.IsEmptyOrInvalid())
-				return;
+				return null;
 
-			var path = GetOrCreatePath(attachment);
+			var path = await GetOrCreatePathAsync(attachment, ct);
 			if (path.IsNullOrEmpty())
-				return;
+				return null;
+
+			var stagingPath = CreateStagingCopy(path);
+			if (stagingPath.IsNullOrEmpty())
+				return null;
 
 			notification.Attachments = new List<iOSNotificationAttachment>
 			{
-				new() { Url = new Uri(path).AbsoluteUri }
+				new() {Url = new Uri(stagingPath).AbsoluteUri}
 			};
+
+			return stagingPath;
+		}
+
+		public static void DeleteStaging(string path)
+		{
+			if (path.IsNullOrEmpty())
+				return;
+
+			try
+			{
+				if (File.Exists(path))
+					File.Delete(path);
+			}
+			catch (Exception exception)
+			{
+				NotificationsDebug.LogException(exception);
+			}
+		}
+
+		private static void Cleanup()
+		{
+			var rootPath = GetRootPath();
+			if (!Directory.Exists(rootPath))
+				return;
+
+			var currentBuildPath = GetBuildPath();
+			foreach (var directory in Directory.GetDirectories(rootPath))
+			{
+				if (directory.Equals(currentBuildPath, StringComparison.OrdinalIgnoreCase))
+					continue;
+
+				Directory.Delete(directory, true);
+			}
 		}
 
 		public static async UniTask PrepareConfiguredAsync(CancellationToken ct)
 		{
-			var preparedKeys = new HashSet<string>();
-
-			foreach (var (_, contentEntry) in ContentManager.GetAllEntries<NotificationConfig>())
+			using (HashSetPool<string>.Get(out var preparedKeys))
 			{
-				NotificationConfig config = contentEntry;
-				if (!config.TryGet<IOSPlatformNotificationConfig>(out var platformConfig) ||
-					platformConfig.attachment.IsEmptyOrInvalid())
-					continue;
+				foreach (var reference in ContentManager.GetAll<NotificationConfig>())
+				{
+					var config = reference.Read();
+					if (!config.TryGet<IOSPlatformNotificationConfig>(out var platformConfig) ||
+						platformConfig.attachment.IsEmptyOrInvalid())
+						continue;
 
-				var key = GetKey(platformConfig.attachment);
-				if (!preparedKeys.Add(key))
-					continue;
+					var key = GetKey(platformConfig.attachment);
+					if (!preparedKeys.Add(key))
+						continue;
 
-				try
-				{
-					await PrepareAsync(platformConfig.attachment, ct);
-				}
-				catch (OperationCanceledException)
-				{
-					throw;
-				}
-				catch (Exception exception)
-				{
-					NotificationsDebug.LogException(exception);
+					try
+					{
+						await PrepareAsync(platformConfig.attachment, ct);
+					}
+					catch (OperationCanceledException)
+					{
+						throw;
+					}
+					catch (Exception exception)
+					{
+						NotificationsDebug.LogException(exception);
+					}
 				}
 			}
 		}
@@ -77,7 +135,9 @@ namespace Notifications.iOS
 			}
 		}
 
-		private static string GetOrCreatePath(AssetReference<Sprite> attachment)
+		private static async UniTask<string> GetOrCreatePathAsync(
+			AssetReference<Sprite> attachment,
+			CancellationToken ct)
 		{
 			var path = GetPath(attachment);
 			if (File.Exists(path))
@@ -85,19 +145,37 @@ namespace Notifications.iOS
 
 			try
 			{
-				var sprite = attachment.Load();
-				try
-				{
-					Write(sprite, path);
-					return path;
-				}
-				finally
-				{
-					attachment.Release();
-				}
+				await PrepareAsync(attachment, ct);
+				return path;
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
 			}
 			catch (Exception exception)
 			{
+				NotificationsDebug.LogException(exception);
+				return null;
+			}
+		}
+
+		private static string CreateStagingCopy(string sourcePath)
+		{
+			var stagingPath = default(string);
+			try
+			{
+				var stagingDirectory = Path.Combine(GetRootPath(), STAGING_DIRECTORY);
+				Directory.CreateDirectory(stagingDirectory);
+				stagingPath = Path.Combine(stagingDirectory, $"{Guid.NewGuid():N}.png");
+				File.Copy(sourcePath, stagingPath);
+				SetNoBackupFlag(stagingPath);
+				return stagingPath;
+			}
+			catch (Exception exception)
+			{
+				if (!stagingPath.IsNullOrEmpty() && File.Exists(stagingPath))
+					File.Delete(stagingPath);
+
 				NotificationsDebug.LogException(exception);
 				return null;
 			}
@@ -118,9 +196,7 @@ namespace Notifications.iOS
 				if (!File.Exists(path))
 					File.Move(temporaryPath, path);
 
-#if UNITY_IOS || UNITY_EDITOR
-				UnityEngine.iOS.Device.SetNoBackupFlag(path);
-#endif
+				SetNoBackupFlag(path);
 			}
 			finally
 			{
@@ -239,10 +315,23 @@ namespace Notifications.iOS
 
 		private static string GetPath(AssetReference<Sprite> attachment)
 		{
-			var buildKey = Application.buildGUID.IsNullOrEmpty() ? Application.version : Application.buildGUID;
-			var buildDirectory = Hash128.Compute(buildKey).ToString();
 			var fileName = $"{Hash128.Compute(GetKey(attachment))}.png";
-			return Path.Combine(Application.persistentDataPath, "Notifications", "Attachments", buildDirectory, fileName);
+			return Path.Combine(GetBuildPath(), fileName);
+		}
+
+		private static string GetBuildPath()
+		{
+			var buildKey = Application.buildGUID.IsNullOrEmpty() ? Application.version : Application.buildGUID;
+			return Path.Combine(GetRootPath(), Hash128.Compute(buildKey).ToString());
+		}
+
+		private static string GetRootPath() => Path.Combine(Application.persistentDataPath, ROOT_DIRECTORY);
+
+		private static void SetNoBackupFlag(string path)
+		{
+#if UNITY_IOS || UNITY_EDITOR
+			UnityEngine.iOS.Device.SetNoBackupFlag(path);
+#endif
 		}
 
 		private static string GetKey(AssetReference<Sprite> attachment) =>

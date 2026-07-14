@@ -49,4 +49,17 @@ namespace Notifications.iOS
 		public string icon;
 #endif
 	}
+
+	public enum IOSNotificationActionType
+	{
+		Default,
+		TextInput
+	}
+
+	public enum IOSNotificationActionIconType
+	{
+		None,
+		SystemSymbol,
+		AppTemplate
+	}
 }

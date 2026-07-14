@@ -12,7 +12,7 @@ namespace Notifications.Android.Config
 #if UNITY_ANDROID || UNITY_EDITOR
 	[TypeRegistryItem("Android", icon: SdfIconType.Robot)]
 #endif
-	public class AndroidPlatformNotificationConfig : IPlatformNotificationConfig
+	public struct AndroidPlatformNotificationConfig : IPlatformNotificationConfig
 	{
 #if UNITY_ANDROID || UNITY_EDITOR
 		[InfoBox("Если не выбран, выбирается канал по дефолту")]

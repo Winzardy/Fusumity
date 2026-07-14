@@ -138,8 +138,8 @@ namespace Notifications
 
 		internal string GetLastIntentNotificationId() => _platform?.GetLastIntentNotificationId();
 
-		internal IReadOnlyList<NotificationRequest> GetScheduledNotifications()
-			=> _platform?.GetScheduledNotifications() ?? Array.Empty<NotificationRequest>();
+		internal IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
+			=> _platform?.EnumerateScheduledNotifications() ?? Array.Empty<NotificationRequest>();
 
 		private void OnNotificationReceived(string id, string data)
 		{

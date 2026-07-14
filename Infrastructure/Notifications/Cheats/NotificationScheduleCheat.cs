@@ -119,7 +119,7 @@ namespace Notifications.Cheats
 				return;
 			}
 
-			var notifications = NotificationsCenter.GetScheduledNotifications()
+			var notifications = NotificationsCenter.EnumerateScheduledNotifications()
 				.OrderBy(x => x.deliveryTime)
 				.ToArray();
 

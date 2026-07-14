@@ -1,6 +1,5 @@
-
-using JetBrains.Annotations;
 #if UNITY_IOS || UNITY_EDITOR
+using JetBrains.Annotations;
 using AssetManagement;
 using Content;
 using Localization;
@@ -11,24 +10,11 @@ using UnityEngine;
 
 namespace Notifications.iOS
 {
-	public enum IOSNotificationActionType
-	{
-		Default,
-		TextInput
-	}
-
-	public enum IOSNotificationActionIconType
-	{
-		None,
-		SystemSymbol,
-		AppTemplate
-	}
-
 	[System.Serializable]
 #if UNITY_IOS || UNITY_EDITOR
 	[TypeRegistryItem("iOS", icon: SdfIconType.Apple)]
 #endif
-	public class IOSPlatformNotificationConfig : IPlatformNotificationConfig
+	public struct IOSPlatformNotificationConfig : IPlatformNotificationConfig
 	{
 #if UNITY_IOS || UNITY_EDITOR
 		[InfoBox("Категория задаёт кнопки и отображение уведомления, но не управляет важностью как Android-канал\nЕсли не выбрана, уведомление отправляется без категории")]

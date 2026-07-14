@@ -51,7 +51,7 @@ namespace Notifications
 
 		public string GetLastIntentNotificationId() => string.Empty;
 
-		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
-			=> _scheduledNotifications.Values.ToArray();
+		public IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
+			=> _scheduledNotifications.Values;
 	}
 }

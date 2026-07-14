@@ -22,12 +22,15 @@ namespace Notifications.iOS
 	[Preserve]
 	public class iOSNotificationPlatform : INotificationPlatform
 	{
+		private static readonly TimeSpan MIN_REPEAT_INTERVAL = TimeSpan.FromMinutes(1);
+
 		private bool _accessGranted;
 
 		public event Action<string, string> NotificationReceived;
 
 		public iOSNotificationPlatform()
 		{
+			IOSNotificationAttachments.Initialize();
 			InitializeCategories();
 			iOSNotificationCenter.OnNotificationReceived += OnNotificationReceived;
 		}
@@ -43,7 +46,7 @@ namespace Notifications.iOS
 			}
 
 			if (_accessGranted)
-				await IOSNotificationAttachmentCache.PrepareConfiguredAsync(ct);
+				await IOSNotificationAttachments.PrepareConfiguredAsync(ct);
 		}
 
 		public void Dispose()
@@ -60,12 +63,6 @@ namespace Notifications.iOS
 		{
 			if (!_accessGranted)
 				return false;
-			if (request.repeatInterval.HasValue)
-			{
-				NotificationsDebug.LogError(
-					$"iOS does not support notification [ {request.id} ] with separate delivery time and repeat interval");
-				return false;
-			}
 
 			var notification = new iOSNotification(request.id)
 			{
@@ -73,55 +70,91 @@ namespace Notifications.iOS
 				Body = request.message
 			};
 
-			var date = request.deliveryTime!.Value;
-			var isUtc = date.Kind == DateTimeKind.Utc;
-			notification.Trigger = new iOSNotificationCalendarTrigger
+			if (request.repeatInterval.HasValue)
 			{
-				Year = date.Year,
-				Month = date.Month,
-				Day = date.Day,
-				Hour = date.Hour,
-				Minute = date.Minute,
-				Second = date.Second,
-				Repeats = false,
-				UtcTime = isUtc
-			};
+				var repeatInterval = request.repeatInterval.Value;
+				if (repeatInterval < MIN_REPEAT_INTERVAL)
+				{
+					NotificationsDebug.LogError(
+						$"iOS notification [ {request.id} ] repeat interval must be at least one minute");
+					return false;
+				}
+
+				notification.Trigger = new iOSNotificationTimeIntervalTrigger
+				{
+					TimeInterval = repeatInterval,
+					Repeats = true
+				};
+			}
+			else
+			{
+				var date = request.deliveryTime!.Value;
+				var isUtc = date.Kind == DateTimeKind.Utc;
+				notification.Trigger = new iOSNotificationCalendarTrigger
+				{
+					Year = date.Year,
+					Month = date.Month,
+					Day = date.Day,
+					Hour = date.Hour,
+					Minute = date.Minute,
+					Second = date.Second,
+					Repeats = false,
+					UtcTime = isUtc
+				};
+			}
 
 			notification.Badge = 1;
 			var attachment = default(AssetReference<Sprite>);
 			var category = default(string);
 
-			var notificationEntry = request.config;
-			notification.ShowInForeground = notificationEntry.showInForeground;
+			var config = request.config;
+			notification.ShowInForeground = config.showInForeground;
 			if (notification.ShowInForeground)
 				notification.ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Sound | PresentationOption.Badge;
 
-			if (notificationEntry.TryGet<IOSPlatformNotificationConfig>(out var platformEntry))
+			if (config.TryGet<IOSPlatformNotificationConfig>(out var platformConfig))
 			{
-				attachment = platformEntry.attachment;
-				notification.Subtitle = GetLocalized(platformEntry.subtitleLocKey);
+				attachment = platformConfig.attachment;
+				notification.Subtitle = GetLocalized(platformConfig.subtitleLocKey);
 
-				if (!platformEntry.category.IsEmpty())
-					category = platformEntry.category.ToId();
+				if (!platformConfig.category.IsEmpty())
+					category = platformConfig.category.ToId();
 			}
 
-			if (request.TryGet<IOSPlatformNotificationRequest>(out var platformArgs))
+			if (request.TryGet<IOSPlatformNotificationRequest>(out var platformRequest))
 			{
-				if (!platformArgs.subtitle.IsNullOrEmpty())
-					notification.Subtitle = platformArgs.subtitle;
+				if (!platformRequest.subtitle.IsNullOrEmpty())
+					notification.Subtitle = platformRequest.subtitle;
 
-				if (!platformArgs.attachment.IsEmptyOrInvalid())
-					attachment = platformArgs.attachment;
+				if (!platformRequest.attachment.IsEmptyOrInvalid())
+					attachment = platformRequest.attachment;
 
-				if (!platformArgs.category.IsNullOrEmpty())
-					category = platformArgs.category;
+				if (!platformRequest.category.IsNullOrEmpty())
+					category = platformRequest.category;
 			}
 
 			notification.CategoryIdentifier = category;
-			IOSNotificationAttachmentCache.Apply(notification, attachment);
-
-			iOSNotificationCenter.ScheduleNotification(notification);
+			ScheduleAsync(notification, attachment)
+				.Forget(NotificationsDebug.LogException);
 			return true;
+		}
+
+		private static async UniTask ScheduleAsync(
+			iOSNotification notification,
+			AssetReference<Sprite> attachment)
+		{
+			var stagingPath = await IOSNotificationAttachments.ApplyAsync(
+				notification,
+				attachment,
+				CancellationToken.None);
+			try
+			{
+				iOSNotificationCenter.ScheduleNotification(notification);
+			}
+			finally
+			{
+				IOSNotificationAttachments.DeleteStaging(stagingPath);
+			}
 		}
 
 		public void Cancel(string id) => iOSNotificationCenter.RemoveScheduledNotification(id);
@@ -148,15 +181,14 @@ namespace Notifications.iOS
 			return operation.keepWaiting ? null : operation.Notification?.Identifier;
 		}
 
-		public IReadOnlyList<NotificationRequest> GetScheduledNotifications()
+		public IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
 		{
 			var notifications = iOSNotificationCenter.GetScheduledNotifications();
-			var result = new NotificationRequest[notifications.Length];
 
 			for (var i = 0; i < notifications.Length; i++)
 			{
 				var notification = notifications[i];
-				result[i] = new NotificationRequest(notification.Identifier, default)
+				yield return new NotificationRequest(notification.Identifier, default)
 				{
 					title = notification.Title,
 					message = notification.Body,
@@ -164,8 +196,6 @@ namespace Notifications.iOS
 					repeatInterval = GetRepeatInterval(notification.Trigger)
 				};
 			}
-
-			return result;
 		}
 
 		private static DateTime? GetDeliveryTime(iOSNotificationTrigger trigger)
@@ -192,7 +222,7 @@ namespace Notifications.iOS
 
 		private static TimeSpan? GetRepeatInterval(iOSNotificationTrigger trigger)
 		{
-			if (trigger is iOSNotificationTimeIntervalTrigger { Repeats: true } interval)
+			if (trigger is iOSNotificationTimeIntervalTrigger {Repeats: true} interval)
 				return interval.TimeInterval;
 
 			return null;
