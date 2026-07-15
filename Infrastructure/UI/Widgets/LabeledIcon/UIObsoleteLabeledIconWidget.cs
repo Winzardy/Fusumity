@@ -19,11 +19,13 @@ namespace UI
 			public string state;
 
 			public Action onClick;
+			public Action<RectTransform> onClickRT;
 		}
 
 		private Sprite _defaultIconSprite;
 		private string _defaultLabelText;
 		private Action _onClick;
+		private Action<RectTransform> _onClickRT;
 
 		private UITextLocalizationAssigner _localizationAssigner;
 		private UISpriteAssigner _spriteAssigner;
@@ -52,6 +54,7 @@ namespace UI
 			_localizationAssigner.Dispose();
 
 			_onClick = null;
+			_onClickRT = null;
 			if (_layout.button != null)
 			{
 				_layout.button.Unsubscribe(HandleClicked);
@@ -77,11 +80,13 @@ namespace UI
 
 			_layout.stateSwitcher?.Switch(args.state);
 			_onClick = args.onClick;
+			_onClickRT = args.onClickRT;
 		}
 
 		private void HandleClicked()
 		{
 			_onClick?.Invoke();
+			_onClickRT?.Invoke(RectTransform);
 		}
 	}
 }
