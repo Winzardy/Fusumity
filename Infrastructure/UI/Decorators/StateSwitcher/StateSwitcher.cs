@@ -41,6 +41,7 @@ namespace UI
 	{
 		protected bool _immediate;
 
+
 		[NonSerialized]
 		[PropertyOrder(-2), ReadOnly, ShowInInspector, ShowIf(nameof(_parent), null)]
 		private StateSwitcher<TState> _parent;
@@ -57,6 +58,8 @@ namespace UI
 		public IStateSwitcher Parent { get => _parent; }
 		protected virtual bool UseEquals { get => false; }
 
+		public event Action<TState, bool> StateSwitched;
+
 		protected abstract void OnStateSwitched(TState state);
 
 		public void Switch(TState value, bool immediate = false)
@@ -69,6 +72,7 @@ namespace UI
 
 			current = value;
 			OnStateSwitched(current);
+			StateSwitched?.Invoke(current, _immediate);
 		}
 
 		public virtual IEnumerable<object> GetVariants() => null;

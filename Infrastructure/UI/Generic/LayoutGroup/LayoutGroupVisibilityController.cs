@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace UI
 {
 	[DisallowMultipleComponent]
-	public class LayoutGroupVisibilityController : Updatable, ILayoutIgnorer
+	public class LayoutGroupVisibilityController : ReactiveBehaviour, ILayoutIgnorer
 	{
 		[NotNull]
 		[SerializeField]

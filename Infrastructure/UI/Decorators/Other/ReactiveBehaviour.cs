@@ -8,7 +8,7 @@ namespace UI
 #if UNITY_EDITOR
 	[ExecuteAlways]
 #endif
-	public abstract class Updatable : MonoBehaviour
+	public abstract class ReactiveBehaviour : ActivationBehaviour
 	{
 		[System.Flags]
 		protected internal enum UpdateMode
@@ -19,23 +19,10 @@ namespace UI
 			All = Update | LateUpdate
 		}
 
-		private bool _subscribed;
-
-		private void OnEnable() => TrySubscribe();
-
-		private void OnDisable() => TryUnsubscribe();
-
-		private void OnDestroy() => TryUnsubscribe();
-
 		protected virtual UpdateMode Mode { get => UpdateMode.Update; }
 
-		private void TrySubscribe()
+		protected override void OnEnabledInternal()
 		{
-			if (_subscribed)
-				return;
-
-			_subscribed = true;
-
 			if (Mode.HasFlags(UpdateMode.Update))
 				UnityLifecycle.UpdateEvent.Subscribe(OnUpdate);
 			if (Mode.HasFlags(UpdateMode.LateUpdate))
@@ -44,13 +31,8 @@ namespace UI
 			OnEnabled();
 		}
 
-		private void TryUnsubscribe()
+		protected override void OnDisabledInternal()
 		{
-			if (!_subscribed)
-				return;
-
-			_subscribed = false;
-
 			if (Mode.HasFlags(UpdateMode.Update))
 				UnityLifecycle.UpdateEvent.UnSubscribe(OnUpdate);
 			if (Mode.HasFlags(UpdateMode.LateUpdate))
@@ -67,13 +49,6 @@ namespace UI
 		{
 		}
 
-		protected virtual void OnEnabled()
-		{
-		}
-
-		protected virtual void OnDisabled()
-		{
-		}
 
 		[Space]
 		[PropertyOrder(10)]
