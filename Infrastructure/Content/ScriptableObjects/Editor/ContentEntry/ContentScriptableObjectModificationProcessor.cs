@@ -71,6 +71,8 @@ namespace Content.ScriptableObjects.Editor
 			string[] movedAssets,
 			string[] movedFromAssetPaths)
 		{
+			var touchedAny = false;
+
 			foreach (var path in importedAssets)
 			{
 				var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(path);
@@ -85,9 +87,11 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				if (asset.Enabled)
-					ContentDatabaseEditorUtility.AddToDatabase(asset);
+					ContentDatabaseEditorUtility.AddToDatabase(asset, save: false);
 				else
-					ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+					ContentDatabaseEditorUtility.RemoveToDatabase(asset, save: false);
+
+				touchedAny = true;
 			}
 
 			foreach (var path in deletedAssets)
@@ -97,8 +101,16 @@ namespace Content.ScriptableObjects.Editor
 				if (!asset)
 					continue;
 
-				ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+				ContentDatabaseEditorUtility.RemoveToDatabase(asset, save: false);
+				touchedAny = true;
 			}
+
+#if LIGHT_EDITOR_MODE
+			// Databases were only marked dirty above (save: false) to avoid re-serializing
+			// and writing a shared, potentially large database asset once per touched entry.
+			if (touchedAny)
+				AssetDatabase.SaveAssets();
+#endif
 		}
 	}
 }
