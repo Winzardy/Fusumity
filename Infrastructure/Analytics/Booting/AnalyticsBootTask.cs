@@ -74,7 +74,7 @@ namespace Booting.Analytics
 		{
 			using (DictionaryPool<string, object>.Get(out var parameters))
 			{
-				parameters["name"] = task.GetType().Name;
+				parameters["name"] = task.Name;
 				parameters["Duration"] = time;
 				parameters["Time"] = Time.realtimeSinceStartup;
 

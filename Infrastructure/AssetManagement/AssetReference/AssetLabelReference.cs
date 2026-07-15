@@ -14,5 +14,7 @@ namespace AssetManagement
 		private UnityAssetLabelReference _reference;
 
 		public UnityAssetLabelReference Reference { get => _reference; }
+
+		public override string ToString() => _reference.labelString;
 	}
 }

@@ -14,7 +14,7 @@ namespace Booting.Localization
 	[Serializable]
 	public class LocalizationBootTask : BaseBootTask
 	{
-		public override int Priority => HIGH_PRIORITY - 200;
+		public override int Priority => HIGH_PRIORITY - 70;
 
 		public LocTableReference tableReference;
 

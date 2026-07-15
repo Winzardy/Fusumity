@@ -14,7 +14,7 @@ namespace Booting.Localization
 	[Serializable]
 	public class LocalizationReadyBootTask : BaseBootTask
 	{
-		public override int Priority => HIGH_PRIORITY;
+		public override int Priority => HIGH_PRIORITY - 150;
 
 		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{

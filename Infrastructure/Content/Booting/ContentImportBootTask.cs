@@ -19,6 +19,10 @@ namespace Booting.Content
 		public override int Priority => HIGH_PRIORITY - 110;
 
 		public AssetLabelReference label;
+		public bool waitForPreviousTasks;
+
+		public override string Name { get => $"{base.Name} ({label})"; }
+		public override bool WaitForPreviousTasks { get => waitForPreviousTasks; }
 
 		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{

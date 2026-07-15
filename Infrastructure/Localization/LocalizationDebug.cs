@@ -27,6 +27,9 @@ namespace Localization
 			=> logger?.LogError(msg, context, memberName, sourceLineNumber);
 
 		[HideInCallstack]
+		public static void LogException(Exception exception) => LogException(exception, null, null);
+
+		[HideInCallstack]
 		public static void LogException(Exception exception, object context = null,
 			[CallerMemberName] string memberName = "",
 			[CallerLineNumber] int sourceLineNumber = 0)

@@ -13,9 +13,13 @@ namespace Booting
 	/// </summary>
 	public interface IBootTask : IDisposable
 	{
+		string Name { get; }
 		bool Active { get; }
 		int Priority { get; }
+		bool WaitForPreviousTasks { get; }
+
 		UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
 		void OnBootCompleted();
+		bool IsReady();
 	}
 }

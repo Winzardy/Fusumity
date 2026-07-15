@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using AssetManagement;
 using Cysharp.Threading.Tasks;
 using Sapientia;
@@ -20,16 +21,43 @@ namespace Booting.AssetManagement
 		protected override bool ShouldSkipDispose { get => false; }
 #endif
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		public bool @await;
+		public AssetLabelReference[] dependencyLabels;
+
+		private Exception _initializationException;
+
+		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
 		{
+			_initializationException = null;
+
 			var provider = new AssetProvider();
 			AssetLoader.Set(provider);
-			return UniTask.CompletedTask;
+
+			if (@await)
+				await InitializeAsync(provider, token);
+			else
+				InitializeAsync(provider, token)
+					.Forget(exception => AssetManagementDebug.LogException(exception));
+		}
+
+		private async UniTask InitializeAsync(AssetProvider provider, CancellationToken token)
+		{
+			try
+			{
+				await provider.InitializeAsync(dependencyLabels, token);
+			}
+			catch (Exception exception)
+			{
+				_initializationException = exception;
+				throw;
+			}
 		}
 
 		protected override void OnDispose()
 		{
 			AssetLoader.Clear();
 		}
+
+		public override bool IsReady() => _initializationException != null || AssetLoader.IsInitialized;
 	}
 }

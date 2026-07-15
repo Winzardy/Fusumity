@@ -23,7 +23,7 @@ namespace AssetManagement
 		public static bool IsInitialized
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _instance != null;
+			get => _instance is {IsInitialized: true};
 		}
 
 		/// <summary>

@@ -5,17 +5,17 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
 using Sapientia;
+using Sapientia.Collections;
+using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Sapientia.Reflection;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using Sapientia.Utility;
-
-
-
 
 #if UNITY_EDITOR
-using Sapientia.Pooling;
 using Sirenix.Utilities.Editor;
+using Fusumity.Editor.Utility;
 #endif
 
 namespace Booting
@@ -37,7 +37,7 @@ namespace Booting
 		private void Start()
 		{
 			RunTasksAsync(destroyCancellationToken)
-			   .Forget();
+				.Forget();
 		}
 
 		private void OnDestroy()
@@ -45,7 +45,7 @@ namespace Booting
 			DisposeTask();
 		}
 
-		private async UniTaskVoid RunTasksAsync(CancellationToken token)
+		private async UniTaskVoid RunTasksAsync(CancellationToken cancellationToken)
 		{
 			_bootedTasks = new();
 
@@ -58,34 +58,82 @@ namespace Booting
 				if (!task.Active)
 					continue;
 
+				if (task.WaitForPreviousTasks)
+					await WaitForTasksReadyAsync(cancellationToken);
+
 				var sinceStartup = Time.realtimeSinceStartup;
 
-				await task.RunAsync(blackboard,token);
+				await task.RunAsync(blackboard, cancellationToken);
 
 				var passedTime = Time.realtimeSinceStartup - sinceStartup;
 				passedTimeStr = passedTime
-				   .ToString(CultureInfo.InvariantCulture)
-				   .BoldText();
+					.ToString(CultureInfo.InvariantCulture)
+					.BoldText();
 
-				var taskName = task.GetType().Name
-				   .UnderlineText();
+				var taskName = task.Name
+					.UnderlineText();
 
 				TaskBooted?.Invoke(task, passedTime);
 
-				Log($"Launched the task [ {taskName} ] in {passedTimeStr} seconds");
+				Log($"Launched the task [ {taskName} ] in {passedTimeStr} seconds"
+#if UNITY_EDITOR
+					, task.GetType().FindMonoScript()
+#endif
+				);
 
 				_bootedTasks.Add(task);
-				token.ThrowIfCancellationRequested();
+				cancellationToken.ThrowIfCancellationRequested();
 			}
 
+			await WaitForTasksReadyAsync(cancellationToken);
+
 			passedTimeStr = (Time.realtimeSinceStartup - loadingTime)
-			   .ToString(CultureInfo.InvariantCulture)
-			   .BoldText();
+				.ToString(CultureInfo.InvariantCulture)
+				.BoldText();
 
 			Log($"Completed in {passedTimeStr} seconds");
 
 			foreach (var task in _bootedTasks)
 				task.OnBootCompleted();
+		}
+
+		private async UniTask WaitForTasksReadyAsync(CancellationToken cancellationToken)
+		{
+			using (ListPool<IBootTask>.Get(out var waitingTasks))
+			{
+				foreach (var task in _bootedTasks)
+				{
+					if (task.IsReady())
+						continue;
+
+					waitingTasks.Add(task);
+				}
+
+				if (waitingTasks.IsEmpty())
+					return;
+
+				var str = waitingTasks.GetCompositeString(false, numerate: false, separator: ", ");
+				var sinceStartup = Time.realtimeSinceStartup;
+				Log($"Waiting for the tasks [ {str} ]");
+
+				await UniTask.WaitUntil(AreTasksReady, cancellationToken: cancellationToken);
+
+				var passedTime = (Time.realtimeSinceStartup - sinceStartup)
+					.ToString(CultureInfo.InvariantCulture)
+					.BoldText();
+				Log($"Tasks [ {str} ] became ready in {passedTime} seconds");
+
+				bool AreTasksReady()
+				{
+					foreach (var task in waitingTasks)
+					{
+						if (!task.IsReady())
+							return false;
+					}
+
+					return true;
+				}
+			}
 		}
 
 		private void DisposeTask()

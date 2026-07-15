@@ -4,6 +4,8 @@ using WLog;
 
 namespace Booting
 {
+	using UnityObject = UnityEngine.Object;
+
 	public partial class Bootstrap
 	{
 		private const string CHANNEL_NAME = "Bootstrap";
@@ -15,9 +17,9 @@ namespace Booting
 
 		private static readonly WLogContext _log = WLogContext.Create(CHANNEL_NAME, miniStackTracePosition: MiniStackTracePosition.End);
 
-		private static void Log(string msg)
+		private static void Log(string msg, UnityObject context = null)
 		{
-			_log.Log($"{PREFIX} {msg}");
+			_log.Log($"{PREFIX} {msg}", context);
 		}
 
 		public static void LogException(Exception exception)

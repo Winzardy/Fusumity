@@ -95,6 +95,7 @@ namespace Booting.UI
 		private void InitializeWindows()
 		{
 			var manager = new UIWindowManager();
+			_initializables.Add(manager);
 			AddDisposable(manager);
 
 			_windows = new UIWindowDispatcher(manager);

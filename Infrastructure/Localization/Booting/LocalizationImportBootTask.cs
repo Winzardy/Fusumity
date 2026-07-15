@@ -14,19 +14,38 @@ namespace Booting.Localization
 	[Serializable]
 	public class LocalizationImportBootTask : BaseBootTask
 	{
-		public override int Priority => HIGH_PRIORITY - 80;
+		public override int Priority { get => HIGH_PRIORITY - 80; }
+		public override string Name { get => $"{base.Name} ({tableReference})"; }
 
 		public LocTableReference tableReference;
 
 		public bool await;
 
+		private bool _ready = true;
+
 		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
 		{
+			_ready = false;
+
 			if (@await)
-				await ImportAsync(blackboard, token);
+				await ImportAndMarkReadyAsync(blackboard, token);
 			else
-				ImportAsync(blackboard, token)
-					.Forget();
+				ImportAndMarkReadyAsync(blackboard, token)
+					.Forget(LocalizationDebug.LogException);
+		}
+
+		public override bool IsReady() => _ready;
+
+		private async UniTask ImportAndMarkReadyAsync(Blackboard blackboard, CancellationToken token)
+		{
+			try
+			{
+				await ImportAsync(blackboard, token);
+			}
+			finally
+			{
+				_ready = true;
+			}
 		}
 
 		private async UniTask ImportAsync(Blackboard blackboard, CancellationToken token)

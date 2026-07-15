@@ -6,6 +6,7 @@ using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace AssetManagement
@@ -47,6 +48,8 @@ namespace AssetManagement
 	/// </summary>
 	public partial class AssetProvider
 	{
+		private AsyncOperationHandle<IResourceLocator> _addressableInitializationHandle;
+
 		//Активные ассеты
 		//object в виде ключя из-за Addressables...
 		private Dictionary<object, AssetContainer> _keyToAssetContainer = new(16);
@@ -55,9 +58,45 @@ namespace AssetManagement
 		private void DisposeAddressable()
 		{
 			ReleaseAllAddressable();
+			_addressableInitializationHandle.ReleaseSafe();
+			_addressableInitializationHandle = default;
 
 			_keyToAssetContainer = null;
 			_keyToAssetCollectionContainer = null;
+		}
+
+		public UniTask WarmUpAddressables(CancellationToken cancellationToken = default)
+		{
+			if (_addressableInitializationHandle.IsValid())
+				return _addressableInitializationHandle.ToUniTask(cancellationToken: cancellationToken);
+
+			_addressableInitializationHandle = Addressables.InitializeAsync(false);
+			return _addressableInitializationHandle.ToUniTask(cancellationToken: cancellationToken);
+		}
+
+		public async UniTask DownloadDependenciesAsync(AssetLabelReference reference,
+			CancellationToken cancellationToken = default)
+		{
+			await WarmUpAddressables(cancellationToken);
+
+			var handle = Addressables.DownloadDependenciesAsync(reference.ToString(), false);
+			try
+			{
+				await handle.ToUniTask(cancellationToken: cancellationToken);
+
+				if (handle.Status == AsyncOperationStatus.Failed)
+					throw handle.OperationException
+					      ?? AssetManagementDebug.Exception($"Failed to download dependencies by label [ {reference} ]");
+			}
+			finally
+			{
+				handle.ReleaseSafe();
+			}
+		}
+
+		private async UniTask EnsureAddressableInitializedAsync(CancellationToken cancellationToken)
+		{
+			await WarmUpAddressables(cancellationToken);
 		}
 
 		private void ReleaseAllAddressable()
@@ -97,6 +136,8 @@ namespace AssetManagement
 			if (assetReference == null)
 				ThrowInvalidAssetReference<T>();
 
+			await EnsureAddressableInitializedAsync(cancellationToken);
+
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
 			{
@@ -112,6 +153,8 @@ namespace AssetManagement
 		{
 			if (assetReference == null)
 				ThrowInvalidComponentReference<T>();
+
+			await EnsureAddressableInitializedAsync(cancellationToken);
 
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
@@ -149,6 +192,8 @@ namespace AssetManagement
 		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken,
 			UnityObject context = null, IProgress<float> progress = null)
 		{
+			await EnsureAddressableInitializedAsync(cancellationToken);
+
 			var usedAsset = await FindOrWaitUsedAssetByKeyAsync<T>(key, cancellationToken, progress);
 
 			if (!ReferenceEquals(usedAsset, null))
@@ -213,6 +258,8 @@ namespace AssetManagement
 		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(object key, CancellationToken cancellationToken,
 			IProgress<float> progress = null)
 		{
+			await EnsureAddressableInitializedAsync(cancellationToken);
+
 			var usedAssets = await FindUsedAssetsByKeyAsync<T>(key, cancellationToken, progress);
 
 			if (usedAssets != null)
@@ -237,6 +284,8 @@ namespace AssetManagement
 		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(IEnumerable keys, CancellationToken cancellationToken,
 			IProgress<float> progress = null)
 		{
+			await EnsureAddressableInitializedAsync(cancellationToken);
+
 			var usedAssets = await FindUsedAssetsByKeyAsync<T>(keys, cancellationToken, progress);
 
 			if (usedAssets != null)

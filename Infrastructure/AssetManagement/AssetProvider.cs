@@ -12,7 +12,7 @@ namespace AssetManagement
 	{
 		private bool _initialized;
 
-		public AssetProvider() => _initialized = true;
+		public bool IsInitialized { get => _initialized; }
 
 		public void Dispose()
 		{
@@ -20,6 +20,23 @@ namespace AssetManagement
 
 			DisposeAddressable();
 			DisposeResources();
+		}
+
+		public UniTask InitializeAsync(CancellationToken cancellationToken)
+			=> InitializeAsync(null, cancellationToken);
+
+		public async UniTask InitializeAsync(IEnumerable<AssetLabelReference> dependencyLabels,
+			CancellationToken cancellationToken)
+		{
+			await WarmUpAddressables(cancellationToken);
+
+			if (dependencyLabels != null)
+			{
+				foreach (var label in dependencyLabels)
+					await DownloadDependenciesAsync(label, cancellationToken);
+			}
+
+			_initialized = true;
 		}
 
 		private static void ThrowIfReferenceIsEmpty(IAssetReference reference)

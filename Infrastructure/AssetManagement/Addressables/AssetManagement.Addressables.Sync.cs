@@ -10,10 +10,22 @@ namespace AssetManagement
 
 	public partial class AssetProvider
 	{
+		private void EnsureAddressablesInitialized()
+		{
+			WarmUpAddressables();
+			_addressableInitializationHandle.WaitForCompletion();
+
+			if (_addressableInitializationHandle.Status == AsyncOperationStatus.Failed)
+				throw _addressableInitializationHandle.OperationException
+				      ?? AssetManagementDebug.Exception("Failed to initialize Addressables");
+		}
+
 		private T LoadAsset<T>(UnityAssetReference assetReference)
 		{
 			if (assetReference == null)
 				ThrowInvalidAssetReference<T>();
+
+			EnsureAddressablesInitialized();
 
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
@@ -29,6 +41,8 @@ namespace AssetManagement
 		{
 			if (assetReference == null)
 				ThrowInvalidComponentReference<T>();
+
+			EnsureAddressablesInitialized();
 
 			var context = assetReference.GetEditorAssetSafe();
 			if (!assetReference.IsRuntimeValid())
@@ -55,6 +69,8 @@ namespace AssetManagement
 
 		private T LoadAssetByKey<T>(object key, UnityObject context = null)
 		{
+			EnsureAddressablesInitialized();
+
 			// Уже загружен/грузится — форсим завершение синхронно и переиспользуем контейнер
 
 			if (_keyToAssetContainer.TryGetValue(key, out var used))
