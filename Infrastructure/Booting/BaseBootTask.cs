@@ -1,9 +1,10 @@
-﻿using System.Threading;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Extensions;
+using System;
+using System.Threading;
 
 namespace Booting
 {
@@ -43,5 +44,26 @@ namespace Booting
 		public virtual bool IsReady() => true;
 
 		public override string ToString() => Name;
+	}
+
+	public abstract class ProgressiveBootTask : BaseBootTask, IProgressNotifier
+	{
+		public float Progress { get; protected set; }
+		public event Action<float> ProgressChanged;
+
+		public sealed override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
+		{
+			ReportProgress(0);
+			await RunTaskAsync(blackboard, token);
+			ReportProgress(1);
+		}
+
+		protected abstract UniTask RunTaskAsync(Blackboard blackboard, CancellationToken token);
+
+		protected void ReportProgress(float progress)
+		{
+			Progress = progress;
+			ProgressChanged?.Invoke(Progress);
+		}
 	}
 }
