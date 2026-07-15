@@ -90,7 +90,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
-		public static void AddToDatabase(ContentScriptableObject scriptableObject)
+		public static void AddToDatabase(ContentScriptableObject scriptableObject, bool save = true)
 		{
 			if (scriptableObject is ContentDatabaseScriptableObject)
 				return;
@@ -108,7 +108,11 @@ namespace Content.ScriptableObjects.Editor
 
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
-				AssetDatabase.SaveAssetIfDirty(database);
+
+#if LIGHT_EDITOR_MODE
+				if (save)
+#endif
+					AssetDatabase.SaveAssetIfDirty(database);
 
 				RequestCleanup(database);
 			}
@@ -126,7 +130,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
-		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
+		public static void RemoveToDatabase(ContentScriptableObject scriptableObject, bool save = true)
 		{
 			if (scriptableObject is ContentDatabaseScriptableObject)
 				return;
@@ -143,7 +147,10 @@ namespace Content.ScriptableObjects.Editor
 
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
-				AssetDatabase.SaveAssetIfDirty(database);
+#if LIGHT_EDITOR_MODE
+				if (save)
+#endif
+					AssetDatabase.SaveAssetIfDirty(database);
 			}
 		}
 
