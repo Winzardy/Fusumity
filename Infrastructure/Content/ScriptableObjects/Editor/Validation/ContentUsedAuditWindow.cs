@@ -34,17 +34,6 @@ namespace Content.Editor
 			window.Show();
 		}
 
-		private void OnEnable()
-		{
-			EditorApplication.delayCall += RunAuditIfWindowIsAlive;
-		}
-
-		private void RunAuditIfWindowIsAlive()
-		{
-			if (this)
-				RunAudit();
-		}
-
 		private void OnGUI()
 		{
 			DrawToolbar();
@@ -219,7 +208,8 @@ namespace Content.Editor
 			ContentEditorCache.ClearAndRefreshScrObjs();
 			Undo.CollapseUndoOperations(undoGroup);
 			_selected.Clear();
-			RunAudit();
+			_result = null;
+			Repaint();
 		}
 	}
 
