@@ -64,13 +64,21 @@ namespace UI.Editor
 			LoadToolEnabled();
 			ApplyOverlaySizeBounds();
 			Selection.selectionChanged += OnSelectionChanged;
+			EditorApplication.hierarchyChanged += OnHierarchyChanged;
 			OnSelectionChanged();
 		}
 
 		public override void OnWillBeDestroyed()
 		{
 			Selection.selectionChanged -= OnSelectionChanged;
+			EditorApplication.hierarchyChanged -= OnHierarchyChanged;
 			ClearTargets(true);
+		}
+
+		private void OnHierarchyChanged()
+		{
+			OnSelectionChanged();
+			SceneView.RepaintAll();
 		}
 
 		private void OnSelectionChanged()
@@ -774,7 +782,7 @@ namespace UI.Editor
 
 		private void DrawSwitcherTreeNode(SwitcherTreeNode node, int depth, HashSet<SwitcherTreeNode> visited)
 		{
-			if (node == null || !visited.Add(node))
+			if (node == null || !node.IsAlive || !visited.Add(node))
 				return;
 
 			DrawSwitcherTreeRow(node, depth);
@@ -1077,6 +1085,9 @@ namespace UI.Editor
 			public readonly int Key;
 			public bool HasFoldoutState;
 			public bool IsExpanded;
+			public bool IsAlive => Switcher is Component component
+				? component != null
+				: Switcher == null && Transform != null;
 
 			public SwitcherTreeNode(Transform transform)
 			{
