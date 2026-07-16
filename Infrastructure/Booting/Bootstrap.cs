@@ -50,6 +50,7 @@ namespace Booting
 			_bootedTasks = new();
 
 			var loadingTime = Time.realtimeSinceStartup;
+			Log($"Started loading tasks at {loadingTime.ToString(CultureInfo.InvariantCulture).BoldText(true)} seconds");
 			string passedTimeStr;
 			using var blackboard = new Blackboard();
 			blackboard.Register(this);
@@ -68,10 +69,10 @@ namespace Booting
 				var passedTime = Time.realtimeSinceStartup - sinceStartup;
 				passedTimeStr = passedTime
 					.ToString(CultureInfo.InvariantCulture)
-					.BoldText();
+					.BoldText(true);
 
 				var taskName = task.Name
-					.UnderlineText();
+					.UnderlineText(true);
 
 				TaskBooted?.Invoke(task, passedTime);
 
@@ -89,7 +90,7 @@ namespace Booting
 
 			passedTimeStr = (Time.realtimeSinceStartup - loadingTime)
 				.ToString(CultureInfo.InvariantCulture)
-				.BoldText();
+				.BoldText(true);
 
 			Log($"Completed in {passedTimeStr} seconds");
 
@@ -112,7 +113,10 @@ namespace Booting
 				if (waitingTasks.IsEmpty())
 					return;
 
-				var str = waitingTasks.GetCompositeString(false, numerate: false, separator: ", ");
+				var str = waitingTasks.GetCompositeString(false,
+					task => task.Name.UnderlineText(true),
+					numerate: false,
+					separator: ", ");
 				var sinceStartup = Time.realtimeSinceStartup;
 				Log($"Waiting for the tasks [ {str} ]");
 

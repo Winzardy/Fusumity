@@ -13,7 +13,7 @@ namespace Booting
 		private static readonly UnityEngine.Color COLOR = new(0.4f, 0.4f, 0.8f);
 
 		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT,
-			CHANNEL_NAME.ColorTextInEditorOnly(COLOR));
+			CHANNEL_NAME.ColorTextInEditor(COLOR));
 
 		private static readonly WLogContext _log = WLogContext.Create(CHANNEL_NAME, miniStackTracePosition: MiniStackTracePosition.End);
 

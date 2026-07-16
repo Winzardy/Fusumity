@@ -7,7 +7,7 @@ namespace Logging.Trading
 	public class TradingClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Trading";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(TradingDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(TradingDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

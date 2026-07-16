@@ -385,7 +385,7 @@ namespace WLog
 				var miniStackTrace = $"{logContext.name}.{memberName}:{sourceLineNumber}";
 				var isAtStart = logContext.miniStackTracePosition == MiniStackTracePosition.Start;
 				prefix = isAtStart ? $"[{miniStackTrace}] " : string.Empty;
-				postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditorOnly(Color.gray);
+				postfix = isAtStart ? string.Empty : "\n" + miniStackTrace.ColorTextInEditor(Color.gray);
 			}
 		}
 	}

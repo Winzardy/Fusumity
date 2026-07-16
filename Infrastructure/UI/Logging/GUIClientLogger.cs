@@ -7,7 +7,7 @@ namespace Logging.UI
 	public class GUIClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "UI";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(GUIDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(GUIDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

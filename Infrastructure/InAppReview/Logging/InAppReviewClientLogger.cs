@@ -7,7 +7,7 @@ namespace Logging.InAppReview
 	public class InAppReviewClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "InAppReview";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(InAppReviewDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(InAppReviewDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

@@ -10,7 +10,7 @@ namespace Logging.SharedLogic
 		private const string CHANNEL = "SharedLogic";
 
 		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL
-		   .ColorTextInEditorOnly(SLDebug.COLOR));
+		   .ColorTextInEditor(SLDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

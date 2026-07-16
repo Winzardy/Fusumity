@@ -12,7 +12,7 @@ namespace Fusumity.Utility
 		private const string CHANNEL_NAME = "Clipboard";
 
 		private static readonly string PREFIX = string.Format(CHANNEL_FORMAT,
-			CHANNEL_NAME.ColorTextInEditorOnly(DEBUG_COLOR));
+			CHANNEL_NAME.ColorTextInEditor(DEBUG_COLOR));
 
 		public static void Copy(string text)
 		{
