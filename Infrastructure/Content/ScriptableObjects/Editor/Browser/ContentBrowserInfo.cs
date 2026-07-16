@@ -13,7 +13,7 @@ namespace Content.Editor
 		public static IEnumerable<ContentDatabaseScriptableObject> Databases
 			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
 
-		public static ModuleInfo[] GetModules(bool refresh = false)
+		public static ModuleInfo[] GetModules(bool refresh = false, bool sortDisabledLast = false)
 		{
 			if (refresh)
 				ContentEditorCache.ClearAndRefreshScrObjs();
@@ -40,7 +40,7 @@ namespace Content.Editor
 			modulesByDatabase.Values.CopyTo(modules, 0);
 
 			for (int i = 0; i < modules.Length; i++)
-				modules[i].Sort();
+				modules[i].Sort(sortDisabledLast);
 
 			Array.Sort(modules, (x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
 
@@ -74,11 +74,22 @@ namespace Content.Editor
 				configs.Add(config);
 			}
 
-			public void Sort()
+			public void Sort(bool disabledLast)
 			{
 				foreach (var configs in ConfigsByType.Values)
-					configs.Sort((x, y) => x.CreationTime.CompareTo(y.CreationTime));
+					configs.Sort(disabledLast
+						? CompareDisabledLast
+						: CompareByCreationTime);
 			}
+
+			private static int CompareDisabledLast(ContentScriptableObject x, ContentScriptableObject y)
+			{
+				var enabledComparison = y.Enabled.CompareTo(x.Enabled);
+				return enabledComparison != 0 ? enabledComparison : CompareByCreationTime(x, y);
+			}
+
+			private static int CompareByCreationTime(ContentScriptableObject x, ContentScriptableObject y)
+				=> x.CreationTime.CompareTo(y.CreationTime);
 		}
 	}
 }

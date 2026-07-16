@@ -45,6 +45,7 @@ namespace Content.Editor
 		private const string PINNED_PREF_KEY = "ContentBrowser.Pinned";
 		private const string AUTO_SYNC_PREF_KEY = "ContentBrowser.AutoSyncProjectSelection";
 		private const string GROUP_CONFIGS_BY_ID_PATH_PREF_KEY = "ContentBrowser.GroupConfigsByIdPath";
+		private const string SORT_DISABLED_CONFIGS_LAST_PREF_KEY = "ContentBrowser.SortDisabledConfigsLast";
 		private const string PINNED_CATEGORY_PREFIX = "category:";
 		private const string NEW_CONFIG_MENU_ITEM_PREFIX = "New";
 		private const string SCRIPTABLE_OBJECT_SUFFIX = "ScriptableObject";
@@ -95,6 +96,7 @@ namespace Content.Editor
 
 		private static bool? _autoSyncProjectSelection;
 		private static bool? _groupConfigsByIdPath;
+		private static bool? _sortDisabledConfigsLast;
 
 		private enum NavigationScrollTarget
 		{
@@ -132,6 +134,22 @@ namespace Content.Editor
 			{
 				_groupConfigsByIdPath = value;
 				EditorPrefs.SetBool(GROUP_CONFIGS_BY_ID_PATH_PREF_KEY, value);
+			}
+		}
+
+		private static bool SortByEnabled
+		{
+			get
+			{
+				if (!_sortDisabledConfigsLast.HasValue)
+					_sortDisabledConfigsLast = EditorPrefs.GetBool(SORT_DISABLED_CONFIGS_LAST_PREF_KEY, true);
+
+				return _sortDisabledConfigsLast.Value;
+			}
+			set
+			{
+				_sortDisabledConfigsLast = value;
+				EditorPrefs.SetBool(SORT_DISABLED_CONFIGS_LAST_PREF_KEY, value);
 			}
 		}
 
@@ -226,7 +244,7 @@ namespace Content.Editor
 			_categoryMenuItems.Clear();
 			_pinnedMenuItems.Clear();
 
-			var modules = ContentBrowserInfo.GetModules(_forceRefresh);
+			var modules = ContentBrowserInfo.GetModules(_forceRefresh, SortByEnabled);
 			_forceRefresh = false;
 
 			for (int i = 0; i < modules.Length; i++)
@@ -323,6 +341,8 @@ namespace Content.Editor
 			BuildPinnedSection(tree);
 
 			tree.SortMenuItemsByName();
+			if (SortByEnabled)
+				MoveDisabledConfigsToBottom(tree.RootMenuItem);
 			MoveCreateConfigItemsToBottom(tree.RootMenuItem);
 			MoveMiscDatabaseToBottom(tree);
 
@@ -450,7 +470,7 @@ namespace Content.Editor
 				if (items.Count == 0)
 					return;
 
-				items.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
+				items.Sort(ComparePinnedEntries);
 
 				var page = new PinnedPage(this);
 				var rows = new PinnedRow[items.Count];
@@ -480,6 +500,18 @@ namespace Content.Editor
 					_pinnedMenuItems[pinned.Key] = item;
 				}
 			}
+		}
+
+		private static int ComparePinnedEntries(PinnedEntry x, PinnedEntry y)
+		{
+			if (SortByEnabled)
+			{
+				var disabledComparison = IsDisabledConfig(x.Asset).CompareTo(IsDisabledConfig(y.Asset));
+				if (disabledComparison != 0)
+					return disabledComparison;
+			}
+
+			return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
 		}
 
 		private void BuildSearchStrings(OdinMenuTree tree)
@@ -1040,6 +1072,34 @@ namespace Content.Editor
 			}
 		}
 
+		private static void MoveDisabledConfigsToBottom(OdinMenuItem item)
+		{
+			var children = item?.ChildMenuItems;
+			if (children == null || children.Count == 0)
+				return;
+
+			for (int i = 0; i < children.Count; i++)
+				MoveDisabledConfigsToBottom(children[i]);
+
+			using (ListPool<OdinMenuItem>.Get(out var disabledConfigs))
+			{
+				for (int i = children.Count - 1; i >= 0; i--)
+				{
+					if (!IsDisabledConfig(children[i].Value as ContentScriptableObject))
+						continue;
+
+					disabledConfigs.Add(children[i]);
+					children.RemoveAt(i);
+				}
+
+				for (int i = disabledConfigs.Count - 1; i >= 0; i--)
+					children.Add(disabledConfigs[i]);
+			}
+		}
+
+		private static bool IsDisabledConfig(ContentScriptableObject config)
+			=> config != null && config is not ContentDatabaseScriptableObject && !config.Enabled;
+
 		private static string GetCreateConfigMenuItemName(string typeName)
 		{
 			return typeName.IsNullOrEmpty() ? NEW_CONFIG_MENU_ITEM_PREFIX : $"{NEW_CONFIG_MENU_ITEM_PREFIX} {typeName}";
@@ -1097,6 +1157,12 @@ namespace Content.Editor
 		private void SetGroupByIdPath(bool value)
 		{
 			GroupByIdPath = value;
+			ForceMenuTreeRebuild();
+		}
+
+		private void SetSortByEnabled(bool value)
+		{
+			SortByEnabled = value;
 			ForceMenuTreeRebuild();
 		}
 
@@ -1352,6 +1418,8 @@ namespace Content.Editor
 				() => AutoSyncProjectSelection = !AutoSyncProjectSelection);
 			menu.AddItem(new GUIContent("Group by Id"), GroupByIdPath,
 				() => SetGroupByIdPath(!GroupByIdPath));
+			menu.AddItem(new GUIContent("Sort By Enabled"), SortByEnabled,
+				() => SetSortByEnabled(!SortByEnabled));
 			menu.AddItem(new GUIContent("Force Rebuild Browser"), false, ForceRebuild);
 			menu.ShowAsContext();
 		}
