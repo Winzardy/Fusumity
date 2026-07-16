@@ -2,12 +2,9 @@ using Content;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Sapientia.Extensions;
@@ -18,12 +15,14 @@ namespace Content.Editor
 {
 	public sealed class ContentUsedAuditWindow : EditorWindow
 	{
-		private const string WINDOW_NAME = "Сontent Used Audit";
+		internal const string WINDOW_NAME = "Сontent Used Audit";
 		private const string NAME = "Used Audit";
 
 		private readonly HashSet<ContentEntryScriptableObject> _selected = new();
+		private readonly HashSet<ContentEntryScriptableObject> _selectedDisabled = new();
 		private ContentUsageAuditResult _result;
 		private Vector2 _scrollPosition;
+		private bool _showDisabledReferences = true;
 		private bool _showWarnings;
 
 		[MenuItem(ContentMenuConstants.VALIDATION_MENU + NAME, priority = 12)]
@@ -39,7 +38,7 @@ namespace Content.Editor
 			DrawToolbar();
 
 			EditorGUILayout.HelpBox(
-				"Аудит считает используемыми конфиги, достижимые из singleton/database настроек, внешних Unity assets и прямых вызовов ContentManager. Runtime-ссылки из сервера, save-data и строк требуют ручной проверки",
+				"Аудит считает используемыми конфиги, достижимые из singleton/database настроек, prefab-ов, которые обходит Content Validation, и прямых вызовов ContentManager. Runtime-ссылки из сервера, save-data и строк требуют ручной проверки",
 				MessageType.Info);
 
 			if (_result == null)
@@ -49,8 +48,11 @@ namespace Content.Editor
 			}
 
 			DrawSummary();
+			_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+			DrawDisabledReferences();
 			DrawWarnings();
 			DrawUnusedAssets();
+			EditorGUILayout.EndScrollView();
 		}
 
 		private void DrawToolbar()
@@ -70,14 +72,22 @@ namespace Content.Editor
 
 					if (GUILayout.Button("Clear Selection", EditorStyles.toolbarButton, GUILayout.Width(100)))
 						_selected.Clear();
+				}
 
-					if (GUILayout.Button("Copy List", EditorStyles.toolbarButton, GUILayout.Width(140)))
+				using (new EditorGUI.DisabledScope(_result == null))
+				{
+					if (GUILayout.Button("Copy Report", EditorStyles.toolbarButton, GUILayout.Width(140)))
 						CopyReport();
 				}
 
 				GUILayout.FlexibleSpace();
 
-				using (new EditorGUI.DisabledScope(_result == null || !_result.IsComplete || _selected.Count == 0))
+				using (new EditorGUI.DisabledScope(
+					_result == null ||
+					!_result.IsComplete ||
+					_result.DisabledReferences.Count > 0 ||
+					EditorApplication.isPlayingOrWillChangePlaymode ||
+					_selected.Count == 0))
 				{
 					if (GUILayout.Button("Disable Selected", EditorStyles.toolbarButton, GUILayout.Width(160)))
 						DisableSelected();
@@ -87,11 +97,112 @@ namespace Content.Editor
 
 		private void DrawSummary()
 		{
-			var message = _result.IsComplete
-				? $"Enabled unique configs: {_result.CandidateCount}    Used: {_result.UsedCount}    Unused: {_result.Unused.Count}    Roots: {_result.RootCount}"
-				: "The audit is incomplete or contains warnings, disabling is blocked";
+			var message = !_result.IsComplete
+				? "The audit is incomplete or contains warnings, disabling is blocked"
+				: $"Enabled unique configs: {_result.CandidateCount}    Used: {_result.UsedCount}    Unused: {_result.Unused.Count}    Disabled but referenced: {_result.DisabledReferences.Count}    Roots: {_result.RootCount}";
+			var messageType = !_result.IsComplete
+				? MessageType.Warning
+				: _result.DisabledReferences.Count > 0
+					? MessageType.Error
+					: MessageType.None;
 
-			EditorGUILayout.HelpBox(message, _result.IsComplete ? MessageType.None : MessageType.Warning);
+			EditorGUILayout.HelpBox(message, messageType);
+		}
+
+		private void DrawDisabledReferences()
+		{
+			if (_result.DisabledReferences.Count == 0)
+				return;
+
+			EditorGUILayout.HelpBox(
+				"Enabled Content configs or their validated prefabs reference disabled Content, disabling is blocked",
+				MessageType.Error);
+			if (EditorApplication.isPlayingOrWillChangePlaymode)
+				EditorGUILayout.HelpBox("Exit Play Mode to apply fixes", MessageType.Warning);
+			_showDisabledReferences = EditorGUILayout.Foldout(
+				_showDisabledReferences,
+				$"Disabled but Referenced: {_result.DisabledReferences.Count}",
+				true);
+			if (!_showDisabledReferences)
+				return;
+
+			using (new EditorGUILayout.HorizontalScope())
+			{
+				if (GUILayout.Button("Select All", GUILayout.Width(100)))
+				{
+					_selectedDisabled.Clear();
+					_selectedDisabled.UnionWith(_result.DisabledReferences.Select(reference => reference.Target));
+				}
+
+				if (GUILayout.Button("Clear", GUILayout.Width(100)))
+					_selectedDisabled.Clear();
+
+				GUILayout.FlexibleSpace();
+				using (new EditorGUI.DisabledScope(
+					_selectedDisabled.Count == 0 ||
+					EditorApplication.isPlayingOrWillChangePlaymode))
+				{
+					if (GUILayout.Button("Fix Selected", GUILayout.Width(140)))
+					{
+						FixSelectedDisabled();
+						GUIUtility.ExitGUI();
+					}
+				}
+			}
+
+			foreach (var reference in _result.DisabledReferences)
+			{
+				if (!reference.Target)
+					continue;
+
+				var selected = _selectedDisabled.Contains(reference.Target);
+				var nextSelected = selected;
+				var originalColor = GUI.color;
+				var cardColor = selected
+					? originalColor
+					: Color.Lerp(originalColor, Color.gray, 0.22f);
+				GUI.color = cardColor;
+				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+				{
+					using (new EditorGUILayout.HorizontalScope())
+					{
+						EditorGUILayout.ObjectField(
+							reference.Target,
+							typeof(ContentEntryScriptableObject),
+							false);
+						GUILayout.Label(
+							reference.Target.ValueType?.Name ?? "Unknown",
+							EditorStyles.miniLabel,
+							GUILayout.Width(220));
+						GUI.color = originalColor;
+						nextSelected = EditorGUILayout.Toggle(selected, GUILayout.Width(18));
+						GUI.color = cardColor;
+					}
+
+					EditorGUILayout.LabelField(AssetDatabase.GetAssetPath(reference.Target), EditorStyles.miniLabel);
+					EditorGUILayout.LabelField("Referenced by", EditorStyles.boldLabel);
+					using (new EditorGUI.IndentLevelScope())
+					{
+						foreach (var source in reference.Sources)
+						{
+							if (!source)
+								continue;
+
+							EditorGUILayout.ObjectField(source, typeof(UnityEngine.Object), false);
+							EditorGUILayout.LabelField(AssetDatabase.GetAssetPath(source), EditorStyles.miniLabel);
+						}
+					}
+				}
+				GUI.color = originalColor;
+
+				if (nextSelected != selected)
+				{
+					if (nextSelected)
+						_selectedDisabled.Add(reference.Target);
+					else
+						_selectedDisabled.Remove(reference.Target);
+				}
+			}
 		}
 
 		private void DrawWarnings()
@@ -121,7 +232,6 @@ namespace Content.Editor
 				return;
 			}
 
-			_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 			foreach (var asset in _result.Unused)
 			{
 				if (!asset)
@@ -148,13 +258,15 @@ namespace Content.Editor
 					EditorGUILayout.LabelField(AssetDatabase.GetAssetPath(asset), EditorStyles.miniLabel);
 				}
 			}
-			EditorGUILayout.EndScrollView();
 		}
 
 		private void RunAudit()
 		{
 			_result = ContentUsageAudit.Run();
 			_selected.RemoveWhere(asset => !asset || !_result.Unused.Contains(asset));
+			var disabledTargets = new HashSet<ContentEntryScriptableObject>(
+				_result.DisabledReferences.Select(reference => reference.Target));
+			_selectedDisabled.RemoveWhere(asset => !asset || !disabledTargets.Contains(asset));
 			Repaint();
 		}
 
@@ -164,6 +276,22 @@ namespace Content.Editor
 				return;
 
 			var builder = new StringBuilder();
+			if (_result.DisabledReferences.Count > 0)
+			{
+				builder.AppendLine("Disabled but Referenced");
+				foreach (var reference in _result.DisabledReferences)
+				{
+					builder.AppendLine(AssetDatabase.GetAssetPath(reference.Target));
+					foreach (var source in reference.Sources)
+					{
+						builder.Append("\t<- ");
+						builder.AppendLine(AssetDatabase.GetAssetPath(source));
+					}
+				}
+				builder.AppendLine();
+			}
+
+			builder.AppendLine("Unused Enabled Content");
 			foreach (var asset in _result.Unused)
 			{
 				builder.Append(asset.ValueType?.Name ?? "Unknown");
@@ -174,8 +302,59 @@ namespace Content.Editor
 			EditorGUIUtility.systemCopyBuffer = builder.ToString();
 		}
 
+		private void FixSelectedDisabled()
+		{
+			if (_result == null ||
+				!_result.IsComplete ||
+				EditorApplication.isPlayingOrWillChangePlaymode)
+				return;
+
+			var disabledTargets = new HashSet<ContentEntryScriptableObject>(
+				_result.DisabledReferences.Select(reference => reference.Target));
+			var assets = _selectedDisabled
+				.Where(asset => asset && !asset.Enabled && disabledTargets.Contains(asset))
+				.ToArray();
+			if (assets.Length == 0)
+				return;
+
+			if (!EditorUtility.DisplayDialog(
+				"Fix Disabled Content",
+				$"Enabled will be restored for {assets.Length} referenced configs and they will be registered in their Content databases\n\nContinue",
+				"Fix",
+				"Cancel"))
+				return;
+
+			Undo.IncrementCurrentGroup();
+			var undoGroup = Undo.GetCurrentGroup();
+			Undo.SetCurrentGroupName("Enable referenced Content configs");
+
+			foreach (var asset in assets)
+			{
+				var database = ContentDatabaseEditorUtility.GetDatabase(asset);
+				Undo.RecordObject(asset, "Enable referenced Content config");
+				Undo.RecordObject(database, "Register referenced Content config");
+				asset.enabled = true;
+				ContentDatabaseEditorUtility.AddToDatabase(asset, false);
+				EditorUtility.SetDirty(asset);
+			}
+
+			AssetDatabase.SaveAssets();
+			ContentEditorCache.ClearAndRefreshScrObjs();
+			Undo.CollapseUndoOperations(undoGroup);
+			_selected.Clear();
+			_selectedDisabled.Clear();
+			_result = null;
+			Repaint();
+		}
+
 		private void DisableSelected()
 		{
+			if (_result == null ||
+				!_result.IsComplete ||
+				_result.DisabledReferences.Count > 0 ||
+				EditorApplication.isPlayingOrWillChangePlaymode)
+				return;
+
 			var assets = _selected
 				.Where(asset => asset &&
 					asset.Enabled &&
@@ -220,6 +399,7 @@ namespace Content.Editor
 		public int UsedCount { get; }
 		public int RootCount { get; }
 		public IReadOnlyList<ContentEntryScriptableObject> Unused { get; }
+		public IReadOnlyList<DisabledContentReference> DisabledReferences { get; }
 		public IReadOnlyList<string> Warnings { get; }
 
 		public ContentUsageAuditResult(
@@ -228,6 +408,7 @@ namespace Content.Editor
 			int usedCount,
 			int rootCount,
 			IReadOnlyList<ContentEntryScriptableObject> unused,
+			IReadOnlyList<DisabledContentReference> disabledReferences,
 			IReadOnlyList<string> warnings)
 		{
 			IsComplete = isComplete;
@@ -235,34 +416,30 @@ namespace Content.Editor
 			UsedCount = usedCount;
 			RootCount = rootCount;
 			Unused = unused;
+			DisabledReferences = disabledReferences;
 			Warnings = warnings;
+		}
+	}
+
+	internal sealed class DisabledContentReference
+	{
+		public ContentEntryScriptableObject Target { get; }
+		public IReadOnlyList<UnityEngine.Object> Sources { get; }
+
+		public DisabledContentReference(
+			ContentEntryScriptableObject target,
+			IReadOnlyList<UnityEngine.Object> sources)
+		{
+			Target = target;
+			Sources = sources;
 		}
 	}
 
 	internal static class ContentUsageAudit
 	{
-		private static readonly Regex SerializableGuidRegex = new(
-			@"low:[ \t]*(-?\d+)[ \t]*\r?\n[ \t]*high:[ \t]*(-?\d+)",
-			RegexOptions.Compiled);
-
-		private static readonly Regex UnityGuidRegex = new(
-			@"guid:[ \t]*([a-fA-F0-9]{32})",
-			RegexOptions.Compiled);
-
 		private static readonly Regex ContentManagerTypeRegex = new(
 			@"ContentManager\s*\.\s*[A-Za-z_][A-Za-z0-9_]*\s*<\s*(?:global::)?(?<type>[A-Za-z_][A-Za-z0-9_.]*)\s*>",
 			RegexOptions.Compiled);
-
-		private static readonly HashSet<string> SerializedAssetExtensions = new(StringComparer.OrdinalIgnoreCase)
-		{
-			".asset",
-			".prefab",
-			".unity",
-			".controller",
-			".overrideController",
-			".playable",
-			".anim"
-		};
 
 		public static ContentUsageAuditResult Run()
 		{
@@ -274,9 +451,11 @@ namespace Content.Editor
 				.Distinct()
 				.ToArray();
 			var registeredContent = CollectRegisteredContent(allContent, warnings);
-
-			var candidates = allContent
+			var allEntries = allContent
 				.OfType<ContentEntryScriptableObject>()
+				.ToArray();
+
+			var candidates = allEntries
 				.Where(asset => asset.Enabled &&
 					registeredContent.Contains(asset) &&
 					!asset.HasContentGeneration())
@@ -286,9 +465,9 @@ namespace Content.Editor
 				asset => asset,
 				_ => new HashSet<ContentEntryScriptableObject>());
 			var roots = new HashSet<ContentEntryScriptableObject>();
+			var disabledReferences = new Dictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>>();
 
-			var guidToCandidate = BuildGuidMap(candidates, warnings);
-			var unityGuidToCandidate = BuildUnityGuidMap(candidates, warnings);
+			var guidToContent = BuildGuidMap(allEntries, warnings);
 
 			foreach (var asset in allContent)
 			{
@@ -304,26 +483,11 @@ namespace Content.Editor
 				var scanner = new ContentReferenceScanner(
 					asset,
 					owner,
-					guidToCandidate,
+					guidToContent,
 					edges,
 					roots,
-					warnings);
+					disabledReferences);
 				scanner.Scan(asset);
-			}
-
-			var contentPaths = new HashSet<string>(
-				allContent.Select(AssetDatabase.GetAssetPath),
-				StringComparer.OrdinalIgnoreCase);
-
-			if (!ScanSerializedRoots(contentPaths, guidToCandidate, unityGuidToCandidate, roots, warnings))
-			{
-				return new ContentUsageAuditResult(
-					false,
-					candidates.Length,
-					0,
-					roots.Count,
-					Array.Empty<ContentEntryScriptableObject>(),
-					warnings);
 			}
 
 			ScanContentManagerRoots(candidates, roots, warnings);
@@ -340,7 +504,37 @@ namespace Content.Editor
 				reachable.Count,
 				roots.Count,
 				unused,
+				BuildDisabledReferences(disabledReferences),
 				warnings);
+		}
+
+		private static IReadOnlyList<DisabledContentReference> BuildDisabledReferences(
+			IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> references)
+		{
+			return references
+				.OrderBy(pair => AssetDatabase.GetAssetPath(pair.Key), StringComparer.OrdinalIgnoreCase)
+				.Select(pair => new DisabledContentReference(
+					pair.Key,
+					pair.Value
+						.OrderBy(AssetDatabase.GetAssetPath, StringComparer.OrdinalIgnoreCase)
+						.ToArray()))
+				.ToArray();
+		}
+
+		private static void AddDisabledReference(
+			IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> references,
+			ContentEntryScriptableObject target,
+			UnityEngine.Object source)
+		{
+			if (!target || target.Enabled || !source)
+				return;
+			if (!references.TryGetValue(target, out var sources))
+			{
+				sources = new HashSet<UnityEngine.Object>();
+				references[target] = sources;
+			}
+
+			sources.Add(source);
 		}
 
 		private static HashSet<ContentScriptableObject> CollectRegisteredContent(
@@ -409,103 +603,6 @@ namespace Content.Editor
 				warnings.Add(
 					$"Duplicate Content GUID {guid}: {AssetDatabase.GetAssetPath(previous)} and {AssetDatabase.GetAssetPath(candidate)}");
 			}
-		}
-
-		private static Dictionary<string, ContentEntryScriptableObject> BuildUnityGuidMap(
-			IEnumerable<ContentEntryScriptableObject> candidates,
-			ICollection<string> warnings)
-		{
-			var result = new Dictionary<string, ContentEntryScriptableObject>(StringComparer.OrdinalIgnoreCase);
-			var ambiguous = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-			foreach (var candidate in candidates)
-			{
-				var path = AssetDatabase.GetAssetPath(candidate);
-				var guid = AssetDatabase.AssetPathToGUID(path);
-				if (guid.IsNullOrEmpty())
-				{
-					warnings.Add($"Unity GUID was not found for {path}");
-					continue;
-				}
-
-				if (ambiguous.Contains(guid))
-					continue;
-
-				if (result.TryGetValue(guid, out var previous) && previous != candidate)
-				{
-					warnings.Add($"Duplicate Unity GUID {guid}: {AssetDatabase.GetAssetPath(previous)} and {path}");
-					result.Remove(guid);
-					ambiguous.Add(guid);
-					continue;
-				}
-
-				result[guid] = candidate;
-			}
-
-			return result;
-		}
-
-		private static bool ScanSerializedRoots(
-			HashSet<string> contentPaths,
-			IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> guidToCandidate,
-			IReadOnlyDictionary<string, ContentEntryScriptableObject> unityGuidToCandidate,
-			ISet<ContentEntryScriptableObject> roots,
-			ICollection<string> warnings)
-		{
-			var paths = AssetDatabase.GetAllAssetPaths()
-				.Where(path => path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
-				.Where(path => SerializedAssetExtensions.Contains(Path.GetExtension(path)))
-				.Where(path => !contentPaths.Contains(path))
-				.ToArray();
-
-			try
-			{
-				for (var i = 0; i < paths.Length; i++)
-				{
-					var path = paths[i];
-					if (EditorUtility.DisplayCancelableProgressBar(
-						"Usability Audit",
-						path,
-						paths.Length == 0 ? 1 : i / (float) paths.Length))
-					{
-						warnings.Add("The audit was canceled by the user");
-						return false;
-					}
-
-					string text;
-					try
-					{
-						text = File.ReadAllText(path);
-					}
-					catch (Exception exception)
-					{
-						warnings.Add($"Failed to read {path}: {exception.Message}");
-						continue;
-					}
-
-					foreach (Match match in SerializableGuidRegex.Matches(text))
-					{
-						if (!long.TryParse(match.Groups[1].Value, out var low) ||
-							!long.TryParse(match.Groups[2].Value, out var high))
-							continue;
-
-						if (guidToCandidate.TryGetValue(new SerializableGuid(low, high), out var target))
-							roots.Add(target);
-					}
-
-					foreach (Match match in UnityGuidRegex.Matches(text))
-					{
-						if (unityGuidToCandidate.TryGetValue(match.Groups[1].Value, out var target))
-							roots.Add(target);
-					}
-				}
-			}
-			finally
-			{
-				EditorUtility.ClearProgressBar();
-			}
-
-			return true;
 		}
 
 		private static void ScanContentManagerRoots(
@@ -588,118 +685,84 @@ namespace Content.Editor
 			return reachable;
 		}
 
-		private sealed class ContentReferenceScanner
+		private sealed class ContentReferenceScanner : IContentValueValidator
 		{
 			private readonly ContentScriptableObject _context;
 			private readonly ContentEntryScriptableObject _owner;
-			private readonly IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> _guidToCandidate;
+			private readonly IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> _guidToContent;
 			private readonly IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<ContentEntryScriptableObject>> _edges;
 			private readonly ISet<ContentEntryScriptableObject> _roots;
-			private readonly ICollection<string> _warnings;
-			private readonly HashSet<object> _visited = new(ReferenceEqualityComparer.Instance);
+			private readonly IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> _disabledReferences;
 
 			public ContentReferenceScanner(
 				ContentScriptableObject context,
 				ContentEntryScriptableObject owner,
-				IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> guidToCandidate,
+				IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> guidToContent,
 				IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<ContentEntryScriptableObject>> edges,
 				ISet<ContentEntryScriptableObject> roots,
-				ICollection<string> warnings)
+				IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> disabledReferences)
 			{
 				_context = context;
 				_owner = owner;
-				_guidToCandidate = guidToCandidate;
+				_guidToContent = guidToContent;
 				_edges = edges;
 				_roots = roots;
-				_warnings = warnings;
+				_disabledReferences = disabledReferences;
 			}
 
-			public void Scan(object target)
+			public void Scan(ContentScriptableObject target)
 			{
-				Scan(target, target?.GetType(), _context.name);
+				var warningCount = 0;
+				ContentValidator.ValidateContentObject(
+					target,
+					target.GetType(),
+					target.name,
+					target,
+					target,
+					ContentValidator.GetEnabledValidators(),
+					ref warningCount,
+					additionalValidator: this);
 			}
 
-			private void Scan(object target, Type targetType, string path)
+			public bool Validate(in ContentValidationContext context, out string message)
 			{
-				if (target == null || targetType == null)
-					return;
-
-				if (target is IContentReference reference)
+				message = null;
+				if (context.value is IContentReference reference)
 				{
 					if (!reference.IsEmpty() && !reference.IsSingle)
 						Register(reference.Guid);
-					return;
+					return true;
 				}
 
-				if (target is SerializableGuid guid)
+				if (context.value is SerializableGuid guid)
 				{
 					Register(guid);
-					return;
+					return true;
 				}
 
-				if (target is ContentEntryScriptableObject contentAsset && !ReferenceEquals(target, _context))
-				{
+				if (context.value is ContentEntryScriptableObject contentAsset &&
+					!ReferenceEquals(contentAsset, _context))
 					Register(contentAsset);
-					return;
-				}
 
-				if (IsTerminal(targetType))
-					return;
-
-				if (target is UnityEngine.Object && !ReferenceEquals(target, _context))
-					return;
-
-				if (targetType.IsClass && !_visited.Add(target))
-					return;
-
-				if (target is IDictionary dictionary)
-				{
-					foreach (DictionaryEntry entry in dictionary)
-					{
-						Scan(entry.Key, entry.Key?.GetType(), $"{path}[key]");
-						Scan(entry.Value, entry.Value?.GetType(), $"{path}[{entry.Key}]");
-					}
-					return;
-				}
-
-				if (target is IEnumerable enumerable && target is not string)
-				{
-					var index = 0;
-					foreach (var item in enumerable)
-					{
-						Scan(item, item?.GetType(), $"{path}[{index}]");
-						index++;
-					}
-					return;
-				}
-
-				foreach (var field in GetSerializableFields(targetType))
-				{
-					if (field.Name == nameof(ContentDatabaseScriptableObject.scriptableObjects))
-						continue;
-
-					try
-					{
-						var value = field.GetValue(target);
-						Scan(value, value?.GetType() ?? field.FieldType, $"{path}.{field.Name}");
-					}
-					catch (Exception exception)
-					{
-						_warnings.Add(
-							$"Failed to read {AssetDatabase.GetAssetPath(_context)}::{path}.{field.Name}: {exception.Message}");
-					}
-				}
+				return true;
 			}
 
 			private void Register(SerializableGuid guid)
 			{
-				if (_guidToCandidate.TryGetValue(guid, out var target))
+				if (_guidToContent.TryGetValue(guid, out var target))
 					Register(target);
 			}
 
 			private void Register(ContentEntryScriptableObject target)
 			{
 				if (!target)
+					return;
+				if (!target.Enabled)
+				{
+					AddDisabledReference(_disabledReferences, target, _context);
+					return;
+				}
+				if (!_edges.ContainsKey(target))
 					return;
 
 				if (_owner == null)
@@ -713,53 +776,5 @@ namespace Content.Editor
 			}
 		}
 
-		private static IEnumerable<FieldInfo> GetSerializableFields(Type type)
-		{
-			while (type != null && type != typeof(object))
-			{
-				foreach (var field in type.GetFields(
-					BindingFlags.Instance |
-					BindingFlags.Public |
-					BindingFlags.NonPublic |
-					BindingFlags.DeclaredOnly))
-				{
-					if (IsSerializableField(field))
-						yield return field;
-				}
-
-				type = type.BaseType;
-			}
-		}
-
-		private static bool IsSerializableField(FieldInfo field)
-		{
-			if (field.IsStatic || field.IsInitOnly || field.IsLiteral || field.IsNotSerialized)
-				return false;
-
-			return field.IsPublic ||
-				field.GetCustomAttribute<SerializeField>() != null ||
-				field.GetCustomAttribute<SerializeReference>() != null;
-		}
-
-		private static bool IsTerminal(Type type)
-		{
-			type = Nullable.GetUnderlyingType(type) ?? type;
-
-			return type.IsPrimitive ||
-				type.IsEnum ||
-				type == typeof(string) ||
-				type == typeof(decimal) ||
-				type == typeof(DateTime) ||
-				type == typeof(TimeSpan) ||
-				type == typeof(Guid);
-		}
-
-		private sealed class ReferenceEqualityComparer : IEqualityComparer<object>
-		{
-			public static readonly ReferenceEqualityComparer Instance = new();
-
-			public new bool Equals(object x, object y) => ReferenceEquals(x, y);
-			public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
-		}
 	}
 }

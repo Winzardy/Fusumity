@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Content.ScriptableObjects;
-using Fusumity.Editor.Utility;
-using Sapientia.Collections;
+using Content.ScriptableObjects.Editor;
 
 namespace Content.Editor
 {
@@ -11,27 +10,37 @@ namespace Content.Editor
 	/// </summary>
 	public static class ContentBrowserInfo
 	{
-		private static ContentDatabaseScriptableObject[] _databases;
-
-		public static ContentDatabaseScriptableObject[] Databases
-		{
-			get
-			{
-				_databases ??= AssetDatabaseUtility.GetAssets<ContentDatabaseScriptableObject>();
-				return _databases;
-			}
-		}
+		public static IEnumerable<ContentDatabaseScriptableObject> Databases
+			=> ContentEditorCache.GetAssets<ContentDatabaseScriptableObject>();
 
 		public static ModuleInfo[] GetModules(bool refresh = false)
 		{
 			if (refresh)
-				_databases = null;
+				ContentEditorCache.ClearAndRefreshScrObjs();
 
-			var databases = Databases;
-			var modules = new ModuleInfo[databases.Length];
+			var modulesByDatabase = new Dictionary<ContentDatabaseScriptableObject, ModuleInfo>();
 
-			for (int i = 0; i < databases.Length; i++)
-				modules[i] = new ModuleInfo(databases[i]);
+			foreach (var database in Databases)
+			{
+				if (database != null)
+					modulesByDatabase.Add(database, new ModuleInfo(database));
+			}
+
+			foreach (var config in ContentEditorCache.GetAssets<ContentScriptableObject>())
+			{
+				if (config == null || config is ContentDatabaseScriptableObject)
+					continue;
+
+				var database = ContentDatabaseEditorUtility.GetDatabase(config);
+				if (database != null && modulesByDatabase.TryGetValue(database, out var module))
+					module.Add(config);
+			}
+
+			var modules = new ModuleInfo[modulesByDatabase.Count];
+			modulesByDatabase.Values.CopyTo(modules, 0);
+
+			for (int i = 0; i < modules.Length; i++)
+				modules[i].Sort();
 
 			Array.Sort(modules, (x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
 
@@ -50,33 +59,25 @@ namespace Content.Editor
 			public ModuleInfo(ContentDatabaseScriptableObject db)
 			{
 				Db = db;
-				ConfigsByType = GroupByType(db);
+				ConfigsByType = new Dictionary<Type, List<ContentScriptableObject>>();
 			}
 
-			private static Dictionary<Type, List<ContentScriptableObject>> GroupByType(ContentDatabaseScriptableObject db)
+			public void Add(ContentScriptableObject config)
 			{
-				if (db.scriptableObjects.IsNullOrEmpty())
-					return null;
-
-				var dict = new Dictionary<Type, List<ContentScriptableObject>>();
-
-				for (int i = 0; i < db.scriptableObjects.Count; i++)
+				var type = config.GetType();
+				if (!ConfigsByType.TryGetValue(type, out var configs))
 				{
-					var so = db.scriptableObjects[i];
-					if (so == null)
-						continue;
-
-					var type = so.GetType();
-					if (!dict.TryGetValue(type, out var list))
-					{
-						list = new List<ContentScriptableObject>();
-						dict.Add(type, list);
-					}
-
-					list.Add(so);
+					configs = new List<ContentScriptableObject>();
+					ConfigsByType.Add(type, configs);
 				}
 
-				return dict;
+				configs.Add(config);
+			}
+
+			public void Sort()
+			{
+				foreach (var configs in ConfigsByType.Values)
+					configs.Sort((x, y) => x.CreationTime.CompareTo(y.CreationTime));
 			}
 		}
 	}

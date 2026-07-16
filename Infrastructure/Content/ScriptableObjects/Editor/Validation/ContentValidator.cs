@@ -28,6 +28,7 @@ namespace Content.Editor
 
 		private static StringBuilder _activeErrorMessageBuilder;
 		private static int _activeErrorMessageNumber;
+		private static IContentValueValidator _activeAdditionalValidator;
 		private static bool _cancelRequested;
 
 		static ContentValidator()
@@ -206,7 +207,9 @@ namespace Content.Editor
 
 		public static IReadOnlyList<IContentValueValidator> GetEnabledValidators()
 		{
-			return ContentValidationSettings.Settings.GetEnabledCustomValidators();
+			return AddValidator(
+				ContentValidationSettings.Settings.GetEnabledCustomValidators(),
+				_activeAdditionalValidator);
 		}
 
 		public static int ValidateContentObject(object target,
@@ -218,24 +221,59 @@ namespace Content.Editor
 			ref int warningCount,
 			bool inspectUnityObject = false,
 			Func<string, string> logMessageFormatter = null,
-			StringBuilder errorMessageBuilder = null)
+			StringBuilder errorMessageBuilder = null,
+			IContentValueValidator additionalValidator = null)
 		{
 			errorMessageBuilder ??= _activeErrorMessageBuilder;
 
-			var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-			return ValidateContentReferences(target,
-				targetType,
-				path,
-				source,
-				logContext ?? source,
-				visited,
-				false,
-				false,
-				valueValidators,
-				ref warningCount,
-				inspectUnityObject,
-				logMessageFormatter,
-				errorMessageBuilder);
+			var previousAdditionalValidator = _activeAdditionalValidator;
+			if (additionalValidator != null)
+				_activeAdditionalValidator = additionalValidator;
+
+			try
+			{
+				var validators = AddValidator(valueValidators, additionalValidator);
+				var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+				return ValidateContentReferences(target,
+					targetType,
+					path,
+					source,
+					logContext ?? source,
+					visited,
+					false,
+					false,
+					validators,
+					ref warningCount,
+					inspectUnityObject,
+					logMessageFormatter,
+					errorMessageBuilder);
+			}
+			finally
+			{
+				if (additionalValidator != null)
+					_activeAdditionalValidator = previousAdditionalValidator;
+			}
+		}
+
+		private static IReadOnlyList<IContentValueValidator> AddValidator(
+			IReadOnlyList<IContentValueValidator> validators,
+			IContentValueValidator additionalValidator)
+		{
+			if (additionalValidator == null)
+				return validators;
+
+			var count = validators?.Count ?? 0;
+			for (var i = 0; i < count; i++)
+			{
+				if (ReferenceEquals(validators[i], additionalValidator))
+					return validators;
+			}
+
+			var result = new IContentValueValidator[count + 1];
+			for (var i = 0; i < count; i++)
+				result[i] = validators[i];
+			result[count] = additionalValidator;
+			return result;
 		}
 
 		private static bool IsValidationCancellationRequested()
