@@ -19,7 +19,7 @@ namespace Content.Editor
 	public sealed class ContentUsedAuditWindow : EditorWindow
 	{
 		private const string WINDOW_NAME = "Сontent Used Audit";
-		private const string NAME = "Usability Audit";
+		private const string NAME = "Used Audit";
 
 		private readonly HashSet<ContentEntryScriptableObject> _selected = new();
 		private ContentUsageAuditResult _result;
