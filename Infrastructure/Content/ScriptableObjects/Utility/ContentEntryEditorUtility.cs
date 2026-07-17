@@ -274,6 +274,13 @@ namespace Content.Editor
 			var map = HashMapPool<MemberReflectionReference<IUniqueContentEntry>, SerializableGuid>.Get();
 
 			serializedObject ??= new SerializedObject(asset);
+
+			// Разрезаем алиасинг нативных [SerializeReference]: если один объект с вложенными
+			// ContentEntry достижим по нескольким путям (несколько полей ссылаются на один rid),
+			// клонируем его для лишних ссылок — иначе guid'ы конфликтуют и регенерятся на каждый Refresh
+			if (DeAliasSharedContentReferences(asset, serializedObject))
+				serializedObject.Update();
+
 			var iterator = serializedObject.GetIterator();
 			if (!iterator.Next(true))
 				return;
@@ -301,6 +308,12 @@ namespace Content.Editor
 				ref var guid = ref map[reference];
 				if (!scriptableObject.ScriptableContentEntry!.RegisterNestedEntry(guid, reference))
 				{
+					if (IsAlias(scriptableObject.ScriptableContentEntry, in guid, in reference))
+					{
+						Track((asset, reference), in guid);
+						continue;
+					}
+
 					var entry = reference.Resolve(scriptableObject.ScriptableContentEntry);
 					guid = RegenerateGuid(entry, reference.Path, asset, false);
 					scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference);
@@ -335,6 +348,151 @@ namespace Content.Editor
 			}
 
 			entry.ClearNestedCollection();
+		}
+
+		/// <summary>
+		/// Проверяет, что <paramref name="reference"/> и уже зарегистрированный под тем же
+		/// <paramref name="guid"/> путь резолвятся в один и тот же объект (алиасинг общего
+		/// SerializeReference rid), а не в две разные сущности с совпавшим guid
+		/// </summary>
+		private static bool IsAlias(IScriptableContentEntry scriptableEntry, in SerializableGuid guid,
+			in MemberReflectionReference<IUniqueContentEntry> reference)
+		{
+			if (!scriptableEntry.TryGetNestedEntryReference(in guid, out var registeredReference))
+				return false;
+
+			// Сбрасываем кэш: ResolveSafe иначе вернёт прогретый _cache, игнорируя scriptableEntry
+			registeredReference.CacheClear();
+			var registeredEntry = registeredReference.ResolveSafe(scriptableEntry);
+
+			var localReference = reference;
+			localReference.CacheClear();
+			var entry = localReference.ResolveSafe(scriptableEntry);
+
+			return registeredEntry != null && ReferenceEquals(registeredEntry, entry);
+		}
+
+		/// <summary>
+		/// Разрезает алиасинг нативных [SerializeReference]: если один managed-reference объект,
+		/// содержащий вложенные ContentEntry, достижим по нескольким путям (несколько полей
+		/// ссылаются на один rid), клонирует его для всех «лишних» ссылок. Так у каждого пути
+		/// появляется свой экземпляр, и guid'ы вложенных записей перестают конфликтовать
+		/// </summary>
+		private static bool DeAliasSharedContentReferences(ContentScriptableObject asset, SerializedObject serializedObject)
+		{
+			const int safetyLimit = 4096;
+
+			var changedAny = false;
+
+			for (var iteration = 0; iteration < safetyLimit; iteration++)
+			{
+				serializedObject.Update();
+
+				// rid -> пути полей, которые на него ссылаются (>1 = алиасинг)
+				var ridToFieldPaths = new Dictionary<long, List<string>>();
+				var contentEntryPaths = new List<string>();
+
+				var iterator = serializedObject.GetIterator();
+				if (iterator.Next(true))
+				{
+					do
+					{
+						if (iterator.propertyType == SerializedPropertyType.ManagedReference)
+						{
+							var id = iterator.managedReferenceId;
+							if (id >= 0)
+							{
+								if (!ridToFieldPaths.TryGetValue(id, out var paths))
+									ridToFieldPaths[id] = paths = new List<string>();
+
+								paths.Add(iterator.propertyPath);
+							}
+						}
+
+						if (iterator.TryStartModificationNestedContentEntry(out _))
+							contentEntryPaths.Add(iterator.propertyPath);
+					} while (iterator.Next(true));
+				}
+
+				// Берём самый внешний общий ref, под которым есть ContentEntry
+				List<string> targetPaths = null;
+				var bestDepth = int.MaxValue;
+
+				foreach (var paths in ridToFieldPaths.Values)
+				{
+					if (paths.Count < 2)
+						continue;
+
+					if (!SubtreeHasContentEntry(paths[0], contentEntryPaths))
+						continue;
+
+					var depth = PathDepth(paths[0]);
+					if (depth < bestDepth)
+					{
+						bestDepth = depth;
+						targetPaths = paths;
+					}
+				}
+
+				if (targetPaths == null)
+					break;
+
+				// Первую ссылку оставляем, остальные клонируем в независимые экземпляры
+				var clonedThisIteration = false;
+				for (var i = 1; i < targetPaths.Count; i++)
+				{
+					var prop = serializedObject.FindProperty(targetPaths[i]);
+					if (prop == null || prop.propertyType != SerializedPropertyType.ManagedReference)
+						continue;
+
+					var original = prop.managedReferenceValue;
+					if (original == null)
+						continue;
+
+					prop.managedReferenceValue = Sirenix.Serialization.SerializationUtility.CreateCopy(original);
+					serializedObject.ApplyModifiedProperties();
+					clonedThisIteration = true;
+					changedAny = true;
+
+					if (ContentDebug.Logging.Nested.regenerate)
+						ContentDebug.LogWarning(
+							$"<b>De-aliased</b> shared [SerializeReference] at path: <u>{targetPaths[i]}</u>", asset);
+				}
+
+				// Если разрезать не удалось — выходим, чтобы не зациклиться
+				if (!clonedThisIteration)
+					break;
+			}
+
+			if (changedAny)
+				EditorUtility.SetDirty(asset);
+
+			return changedAny;
+		}
+
+		private static bool SubtreeHasContentEntry(string head, List<string> contentEntryPaths)
+		{
+			foreach (var path in contentEntryPaths)
+			{
+				if (path.Length > head.Length
+					&& path[head.Length] == '.'
+					&& path.StartsWith(head, StringComparison.Ordinal))
+					return true;
+			}
+
+			return false;
+		}
+
+		private static int PathDepth(string path)
+		{
+			var depth = 0;
+			foreach (var symbol in path)
+			{
+				if (symbol == '.')
+					depth++;
+			}
+
+			return depth;
 		}
 
 		public static SerializableGuid RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject source, bool refreshAndSave = true)

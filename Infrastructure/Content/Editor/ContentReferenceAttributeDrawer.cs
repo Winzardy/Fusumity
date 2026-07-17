@@ -60,7 +60,7 @@ namespace Content.Editor
 		private const string NONE_LABEL = "None";
 		private const string SCRIPTABLE_OBJECT_SUFFIX = "ScriptableObject";
 		private const string CONFIG_SUFFIX = "Config";
-		
+
 		private const float MISSING_SOURCE_LABEL_RIGHT_OFFSET = 4f;
 
 		private bool _guidRawMode;
@@ -240,7 +240,7 @@ namespace Content.Editor
 					targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 				targetLabel.tooltip += invalidLabel;
 			}
-			var invalid = (source == null && !isEmpty) || disabled;
+			var invalid = GUI.enabled && ((source == null && !isEmpty) || disabled);
 
 			var originalIndent = EditorGUI.indentLevel;
 
