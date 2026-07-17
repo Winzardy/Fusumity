@@ -31,6 +31,8 @@ namespace Content.Editor
 		private static IContentValueValidator _activeAdditionalValidator;
 		private static bool _cancelRequested;
 
+		private static bool ShouldLog => !Application.isBatchMode;
+
 		static ContentValidator()
 		{
 			AssemblyReloadEvents.beforeAssemblyReload += CancelBeforeAssemblyReload;
@@ -119,7 +121,8 @@ namespace Content.Editor
 								var errorMessage = $"Null scriptable objects list in database [ {database.name} ]";
 								errorCount++;
 								AppendErrorMessage(errStringBuilder, errorMessage);
-								ContentDebug.LogError(errorMessage, database);
+								if (ShouldLog)
+									ContentDebug.LogError(errorMessage, database);
 								continue;
 							}
 
@@ -152,11 +155,12 @@ namespace Content.Editor
 									var errorMessage = $"Null scriptable object in database [ {database.name} ]";
 									errorCount++;
 									AppendErrorMessage(errStringBuilder, errorMessage);
-									ContentDebug.LogError(errorMessage, database);
+									if (ShouldLog)
+										ContentDebug.LogError(errorMessage, database);
 									continue;
 								}
 
-								if (scriptableObject.SkipValidation())
+								if (!scriptableObject.Enabled || scriptableObject.SkipValidation())
 									continue;
 
 								if (scriptableObject is IValidatable validatable)
@@ -165,7 +169,8 @@ namespace Content.Editor
 									{
 										errorCount++;
 										AppendErrorMessage(errStringBuilder, soMessage);
-										ContentDebug.LogError(soMessage, scriptableObject);
+										if (ShouldLog)
+											ContentDebug.LogError(soMessage, scriptableObject);
 									}
 								}
 
@@ -179,7 +184,8 @@ namespace Content.Editor
 								+ (errStringBuilder.Length > 0
 									? ", errors:\n" + errStringBuilder
 									: string.Empty);
-							ContentDebug.LogError("Validation " + str);
+							if (ShouldLog)
+								ContentDebug.LogError("Validation " + str);
 							errorOrMessage = "Content validation " + str;
 							return false;
 						}
@@ -187,7 +193,8 @@ namespace Content.Editor
 						errorOrMessage = warningCount > 0
 							? $"Validation passed (warnings️: {warningCount})"
 							: "Validation passed";
-						ContentDebug.Log(errorOrMessage);
+						if (ShouldLog)
+							ContentDebug.Log(errorOrMessage);
 					}
 					finally
 					{
@@ -286,7 +293,8 @@ namespace Content.Editor
 			reason ??= _cancelRequested
 				? "domain reload"
 				: "editor compilation";
-			ContentDebug.LogWarning($"Validation canceled ({reason})");
+			if (ShouldLog)
+				ContentDebug.LogWarning($"Validation canceled ({reason})");
 			return false;
 		}
 
@@ -403,7 +411,8 @@ namespace Content.Editor
 					var errorMessage = FormatLogMessage($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					ContentDebug.LogError(errorMessage, logContext);
+					if (ShouldLog)
+						ContentDebug.LogError(errorMessage, logContext);
 					errorCount++;
 					continue;
 				}
@@ -458,7 +467,8 @@ namespace Content.Editor
 						$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					ContentDebug.LogError(errorMessage, logContext);
+					if (ShouldLog)
+						ContentDebug.LogError(errorMessage, logContext);
 					errorCount++;
 					continue;
 				}
@@ -474,7 +484,8 @@ namespace Content.Editor
 
 				var formattedMessage = FormatLogMessage(message, logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, formattedMessage);
-				ContentDebug.LogError(formattedMessage, logContext);
+				if (ShouldLog)
+					ContentDebug.LogError(formattedMessage, logContext);
 				errorCount++;
 			}
 
@@ -579,17 +590,21 @@ namespace Content.Editor
 					var errorMessage = FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					ContentDebug.LogError(errorMessage, logContext);
+					if (ShouldLog)
+						ContentDebug.LogError(errorMessage, logContext);
 					return 1;
 				}
 
 				if (!canBeEmpty)
 				{
 					warningCount++;
-					ContentDebug.LogWarning(
-						FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
-							logMessageFormatter),
-						logContext);
+					if (ShouldLog)
+					{
+						ContentDebug.LogWarning(
+							FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
+								logMessageFormatter),
+							logContext);
+					}
 				}
 
 				return 0;
@@ -613,7 +628,8 @@ namespace Content.Editor
 					$"by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
 					logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, disabledReferenceMessage);
-				ContentDebug.LogError(disabledReferenceMessage, logContext);
+				if (ShouldLog)
+					ContentDebug.LogError(disabledReferenceMessage, logContext);
 				return 1;
 			}
 
@@ -623,7 +639,8 @@ namespace Content.Editor
 			var invalidReferenceMessage = FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
 				logMessageFormatter);
 			AppendErrorMessage(errorMessageBuilder, invalidReferenceMessage);
-			ContentDebug.LogError(invalidReferenceMessage, logContext);
+			if (ShouldLog)
+				ContentDebug.LogError(invalidReferenceMessage, logContext);
 			return 1;
 		}
 
