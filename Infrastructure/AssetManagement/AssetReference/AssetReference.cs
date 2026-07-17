@@ -52,7 +52,7 @@ namespace AssetManagement
 #endif
 		}
 
-		public string AssetGuid { get => assetReference.AssetGUID; }
+		public string AssetGuid { get => assetReference?.AssetGUID; }
 
 		public static implicit operator bool(AssetReference<T> value) => !value.IsEmptyOrInvalid();
 
