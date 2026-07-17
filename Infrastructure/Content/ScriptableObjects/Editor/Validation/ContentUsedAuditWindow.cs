@@ -1,4 +1,3 @@
-using Content;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using System;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Fusumity.Editor;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -16,9 +16,11 @@ using UnityEngine;
 
 namespace Content.Editor
 {
+	using UnityObject = UnityEngine.Object;
+
 	public sealed class ContentUsedAuditWindow : OdinEditorWindow
 	{
-		internal const string WINDOW_NAME = "Сontent Used Audit";
+		internal const string WINDOW_NAME = "Content Used Audit";
 		private const string NAME = "Used Audit";
 
 		private const string AUDIT_DESCRIPTION =
@@ -26,7 +28,6 @@ namespace Content.Editor
 			"prefab-ов, которые обходит Content Validation, и прямых вызовов ContentManager.\n\n" +
 			"Runtime-ссылки из сервера, save-data и строк требуют ручной проверки";
 
-		private static readonly Color RUN_COLOR = new(0.30f, 0.55f, 0.95f, 1f);
 		private static readonly Color DANGER_COLOR = new(0.90f, 0.40f, 0.40f, 1f);
 		private static readonly Color APPLY_COLOR = new(0.40f, 0.85f, 0.45f, 1f);
 
@@ -55,7 +56,7 @@ namespace Content.Editor
 		private List<DisabledRow> _disabledRows = new();
 
 		// Основной список неиспользуемого контента с чекбоксами выделения
-		[ShowInInspector, Searchable, PropertyOrder(1), PropertySpace(6)]
+		[ShowInInspector, Searchable, PropertyOrder(1), PropertySpace(1)]
 		[LabelText("@UnusedLabel")]
 		[ShowIf(nameof(HasResult))]
 		[ListDrawerSettings(
@@ -117,17 +118,17 @@ namespace Content.Editor
 		{
 			if (_result == null)
 			{
-				FusumityEditorGUILayout.DrawWarning("Нажмите Run Audit", iconSize: 60);
+				FusumityEditorGUILayout.DrawWarning("Press [Run Audit] in the top-left to start the audit", iconSize: 60, icon: EditorGUIUtility.IconContent("console.infoicon"));
 				return;
 			}
 
 			if (!_result.IsComplete)
-				SirenixEditorGUI.WarningMessageBox("Аудит неполный или содержит предупреждения — отключение заблокировано");
+				SirenixEditorGUI.WarningMessageBox("Audit is incomplete or has warnings — disabling is blocked");
 			else if (_result.DisabledReferences.Count > 0)
-				SirenixEditorGUI.ErrorMessageBox("Включённый контент ссылается на отключённый — отключение заблокировано");
+				SirenixEditorGUI.ErrorMessageBox("Enabled content references disabled content — disabling is blocked");
 
 			if (EditorApplication.isPlayingOrWillChangePlaymode && _result.DisabledReferences.Count > 0)
-				SirenixEditorGUI.WarningMessageBox("Выйдите из Play Mode, чтобы применить исправления");
+				SirenixEditorGUI.WarningMessageBox("Exit Play Mode to apply fixes");
 		}
 
 		// Кнопки выделения и основное действие в заголовке списка неиспользуемого контента
@@ -153,15 +154,11 @@ namespace Content.Editor
 				_result.DisabledReferences.Count > 0 ||
 				EditorApplication.isPlayingOrWillChangePlaymode))
 			{
-				var prev = GUI.backgroundColor;
-				GUI.backgroundColor = DANGER_COLOR;
-				if (SirenixEditorGUI.ToolbarButton($"Disable ({_selected.Count})"))
+				if (ColoredToolbarButton($"Disable ({_selected.Count})", DANGER_COLOR))
 				{
 					DisableSelected();
 					GUIUtility.ExitGUI();
 				}
-
-				GUI.backgroundColor = prev;
 			}
 		}
 
@@ -172,10 +169,7 @@ namespace Content.Editor
 				return;
 
 			if (SirenixEditorGUI.ToolbarButton("All"))
-			{
-				_selectedDisabled.Clear();
-				_selectedDisabled.UnionWith(_result.DisabledReferences.Select(reference => reference.Target));
-			}
+				CollectDisabledTargets(_selectedDisabled);
 
 			if (SirenixEditorGUI.ToolbarButton("None"))
 				_selectedDisabled.Clear();
@@ -184,15 +178,11 @@ namespace Content.Editor
 				_selectedDisabled.Count == 0 ||
 				EditorApplication.isPlayingOrWillChangePlaymode))
 			{
-				var prev = GUI.backgroundColor;
-				GUI.backgroundColor = APPLY_COLOR;
-				if (SirenixEditorGUI.ToolbarButton($"Fix ({_selectedDisabled.Count})"))
+				if (ColoredToolbarButton($"Fix ({_selectedDisabled.Count})", APPLY_COLOR))
 				{
 					FixSelectedDisabled();
 					GUIUtility.ExitGUI();
 				}
-
-				GUI.backgroundColor = prev;
 			}
 		}
 
@@ -221,6 +211,82 @@ namespace Content.Editor
 			}
 		}
 
+		private static bool RowSelected(HashSet<ContentEntryScriptableObject> selection, ContentEntryScriptableObject asset)
+			=> asset && selection != null && selection.Contains(asset);
+
+		private static void RowSetSelected(
+			ContentUsedAuditWindow window,
+			HashSet<ContentEntryScriptableObject> selection,
+			ContentEntryScriptableObject asset,
+			bool value)
+		{
+			if (!asset || selection == null)
+				return;
+
+			if (value)
+				selection.Add(asset);
+			else
+				selection.Remove(asset);
+
+			if (window)
+				window.Repaint();
+		}
+
+		private static bool ColoredToolbarButton(string label, Color color)
+		{
+			var prev = GUI.backgroundColor;
+			GUI.backgroundColor = color;
+			var clicked = SirenixEditorGUI.ToolbarButton(label);
+			GUI.backgroundColor = prev;
+			return clicked;
+		}
+
+		// Цели сломанных ссылок — выключенные конфиги, на которые ещё ссылаются
+		private void CollectDisabledTargets(HashSet<ContentEntryScriptableObject> into)
+		{
+			into.Clear();
+			if (_result == null)
+				return;
+
+			foreach (var reference in _result.DisabledReferences)
+			{
+				if (reference.Target)
+					into.Add(reference.Target);
+			}
+		}
+
+		// Общий пайплайн массового применения: диалог -> Undo-группа -> действие по каждому -> сохранение и сброс
+		private void ApplyBatch(
+			IReadOnlyList<ContentEntryScriptableObject> assets,
+			string title,
+			string message,
+			string confirm,
+			string undoName,
+			Action<ContentEntryScriptableObject> apply)
+		{
+			if (assets.Count == 0)
+				return;
+
+			if (!EditorUtility.DisplayDialog(title, message, confirm, "Cancel"))
+				return;
+
+			Undo.IncrementCurrentGroup();
+			var undoGroup = Undo.GetCurrentGroup();
+			Undo.SetCurrentGroupName(undoName);
+
+			for (int i = 0; i < assets.Count; i++)
+				apply(assets[i]);
+
+			AssetDatabase.SaveAssets();
+			ContentEditorCache.ClearAndRefreshScrObjs();
+			Undo.CollapseUndoOperations(undoGroup);
+			_selected.Clear();
+			_selectedDisabled.Clear();
+			_result = null;
+			RebuildRows();
+			Repaint();
+		}
+
 		// Строка неиспользуемого конфига: ObjectField с inline-редактором + чекбокс выделения (как в Content Browser)
 		[Serializable]
 		private struct AuditRow : IContentBrowserInlineToggleHandler
@@ -244,19 +310,8 @@ namespace Content.Editor
 
 			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle
 			{
-				get => _asset && _selection != null && _selection.Contains(_asset);
-				set
-				{
-					if (!_asset || _selection == null)
-						return;
-
-					if (value)
-						_selection.Add(_asset);
-					else
-						_selection.Remove(_asset);
-
-					_window?.Repaint();
-				}
+				get => RowSelected(_selection, _asset);
+				set => RowSetSelected(_window, _selection, _asset, value);
 			}
 		}
 
@@ -267,14 +322,14 @@ namespace Content.Editor
 			private readonly ContentUsedAuditWindow _window;
 			private readonly HashSet<ContentEntryScriptableObject> _selection;
 			private readonly ContentEntryScriptableObject _asset;
-			private readonly UnityEngine.Object[] _sources;
+			private readonly UnityObject[] _sources;
 
 			public DisabledRow(ContentUsedAuditWindow window, HashSet<ContentEntryScriptableObject> selection, DisabledContentReference reference)
 			{
 				_window = window;
 				_selection = selection;
 				_asset = reference.Target;
-				_sources = reference.Sources?.Where(source => source).ToArray() ?? Array.Empty<UnityEngine.Object>();
+				_sources = reference.Sources?.Where(source => source).ToArray() ?? Array.Empty<UnityObject>();
 			}
 
 			[ShowInInspector, HideLabel, PropertyOrder(0)]
@@ -284,37 +339,43 @@ namespace Content.Editor
 			[ShowInInspector, PropertyOrder(1), PropertySpace(2), ReadOnly]
 			[LabelText("Referenced by")]
 			[ListDrawerSettings(ShowItemCount = false, HideAddButton = true, HideRemoveButton = true, DraggableItems = false)]
-			private UnityEngine.Object[] Sources => _sources;
+			private UnityObject[] Sources => _sources;
 
 			bool IContentBrowserInlineToggleHandler.ShowContentBrowserInlineToggle => true;
 
 			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle
 			{
-				get => _asset && _selection != null && _selection.Contains(_asset);
-				set
-				{
-					if (!_asset || _selection == null)
-						return;
-
-					if (value)
-						_selection.Add(_asset);
-					else
-						_selection.Remove(_asset);
-
-					_window?.Repaint();
-				}
+				get => RowSelected(_selection, _asset);
+				set => RowSetSelected(_window, _selection, _asset, value);
 			}
 		}
 
 		private void RunAudit()
 		{
-			_result = ContentUsageAudit.Run();
+			try
+			{
+				_result = ContentUsageAudit.Run(ReportProgress);
+			}
+			finally
+			{
+				EditorUtility.ClearProgressBar();
+			}
+
 			_selected.RemoveWhere(asset => !asset || !_result.Unused.Contains(asset));
-			var disabledTargets = new HashSet<ContentEntryScriptableObject>(
-				_result.DisabledReferences.Select(reference => reference.Target));
-			_selectedDisabled.RemoveWhere(asset => !asset || !disabledTargets.Contains(asset));
+
+			using (HashSetPool<ContentEntryScriptableObject>.Get(out var disabledTargets))
+			{
+				CollectDisabledTargets(disabledTargets);
+				_selectedDisabled.RemoveWhere(asset => !asset || !disabledTargets.Contains(asset));
+			}
+
 			RebuildRows();
 			Repaint();
+		}
+
+		private static void ReportProgress(float progress, string info)
+		{
+			EditorUtility.DisplayProgressBar(WINDOW_NAME, info, progress);
 		}
 
 		private void FixSelectedDisabled()
@@ -324,43 +385,32 @@ namespace Content.Editor
 				EditorApplication.isPlayingOrWillChangePlaymode)
 				return;
 
-			var disabledTargets = new HashSet<ContentEntryScriptableObject>(
-				_result.DisabledReferences.Select(reference => reference.Target));
-			var assets = _selectedDisabled
-				.Where(asset => asset && !asset.Enabled && disabledTargets.Contains(asset))
-				.ToArray();
-			if (assets.Length == 0)
-				return;
-
-			if (!EditorUtility.DisplayDialog(
-				"Fix Disabled Content",
-				$"Enabled will be restored for {assets.Length} referenced configs and they will be registered in their Content databases\n\nContinue",
-				"Fix",
-				"Cancel"))
-				return;
-
-			Undo.IncrementCurrentGroup();
-			var undoGroup = Undo.GetCurrentGroup();
-			Undo.SetCurrentGroupName("Enable referenced Content configs");
-
-			foreach (var asset in assets)
+			using (HashSetPool<ContentEntryScriptableObject>.Get(out var targets))
+			using (ListPool<ContentEntryScriptableObject>.Get(out var assets))
 			{
-				var database = ContentDatabaseEditorUtility.GetDatabase(asset);
-				Undo.RecordObject(asset, "Enable referenced Content config");
-				Undo.RecordObject(database, "Register referenced Content config");
-				asset.enabled = true;
-				ContentDatabaseEditorUtility.AddToDatabase(asset, false);
-				EditorUtility.SetDirty(asset);
-			}
+				CollectDisabledTargets(targets);
+				foreach (var asset in _selectedDisabled)
+				{
+					if (asset && !asset.Enabled && targets.Contains(asset))
+						assets.Add(asset);
+				}
 
-			AssetDatabase.SaveAssets();
-			ContentEditorCache.ClearAndRefreshScrObjs();
-			Undo.CollapseUndoOperations(undoGroup);
-			_selected.Clear();
-			_selectedDisabled.Clear();
-			_result = null;
-			RebuildRows();
-			Repaint();
+				ApplyBatch(
+					assets,
+					"Fix Disabled Content",
+					$"Enabled will be restored for {assets.Count} referenced configs and they will be registered in their Content databases\n\nContinue",
+					"Fix",
+					"Enable referenced Content configs",
+					asset =>
+					{
+						var database = ContentDatabaseEditorUtility.GetDatabase(asset);
+						Undo.RecordObject(asset, "Enable referenced Content config");
+						Undo.RecordObject(database, "Register referenced Content config");
+						asset.enabled = true;
+						ContentDatabaseEditorUtility.AddToDatabase(asset, false);
+						EditorUtility.SetDirty(asset);
+					});
+			}
 		}
 
 		private void DisableSelected()
@@ -371,41 +421,28 @@ namespace Content.Editor
 				EditorApplication.isPlayingOrWillChangePlaymode)
 				return;
 
-			var assets = _selected
-				.Where(asset => asset &&
-					asset.Enabled &&
-					!asset.HasContentGeneration() &&
-					_result.Unused.Contains(asset))
-				.ToArray();
-			if (assets.Length == 0)
-				return;
-
-			if (!EditorUtility.DisplayDialog(
-				"Disable Unused Content",
-				$"Enabled will be cleared for {assets.Length} configs and they will be removed from their Content databases\n\nContinue",
-				"Disable",
-				"Cancel"))
-				return;
-
-			Undo.IncrementCurrentGroup();
-			var undoGroup = Undo.GetCurrentGroup();
-			Undo.SetCurrentGroupName("Disable unused Content configs");
-
-			foreach (var asset in assets)
+			using (ListPool<ContentEntryScriptableObject>.Get(out var assets))
 			{
-				Undo.RecordObject(asset, "Disable unused Content config");
-				asset.enabled = false;
-				EditorUtility.SetDirty(asset);
-				ContentDatabaseEditorUtility.RemoveToDatabase(asset, false);
-			}
+				foreach (var asset in _selected)
+				{
+					if (asset && asset.Enabled && !asset.HasContentGeneration() && _result.Unused.Contains(asset))
+						assets.Add(asset);
+				}
 
-			AssetDatabase.SaveAssets();
-			ContentEditorCache.ClearAndRefreshScrObjs();
-			Undo.CollapseUndoOperations(undoGroup);
-			_selected.Clear();
-			_result = null;
-			RebuildRows();
-			Repaint();
+				ApplyBatch(
+					assets,
+					"Disable Unused Content",
+					$"Enabled will be cleared for {assets.Count} configs and they will be removed from their Content databases\n\nContinue",
+					"Disable",
+					"Disable unused Content configs",
+					asset =>
+					{
+						Undo.RecordObject(asset, "Disable unused Content config");
+						asset.enabled = false;
+						EditorUtility.SetDirty(asset);
+						ContentDatabaseEditorUtility.RemoveToDatabase(asset, false);
+					});
+			}
 		}
 	}
 
@@ -441,11 +478,11 @@ namespace Content.Editor
 	internal sealed class DisabledContentReference
 	{
 		public ContentEntryScriptableObject Target { get; }
-		public IReadOnlyList<UnityEngine.Object> Sources { get; }
+		public IReadOnlyList<UnityObject> Sources { get; }
 
 		public DisabledContentReference(
 			ContentEntryScriptableObject target,
-			IReadOnlyList<UnityEngine.Object> sources)
+			IReadOnlyList<UnityObject> sources)
 		{
 			Target = target;
 			Sources = sources;
@@ -460,7 +497,7 @@ namespace Content.Editor
 
 		public static ContentUsageAuditResult Run(Action<float, string> onProgress = null)
 		{
-			onProgress?.Invoke(0f, "Обновление кэша контента");
+			onProgress?.Invoke(0f, "Refreshing content cache");
 			ContentEditorCache.ClearAndRefreshScrObjs();
 
 			var warnings = new List<string>();
@@ -468,7 +505,7 @@ namespace Content.Editor
 				.Where(asset => asset)
 				.Distinct()
 				.ToArray();
-			onProgress?.Invoke(0.1f, "Сбор зарегистрированного контента");
+			onProgress?.Invoke(0.1f, "Collecting registered content");
 			var registeredContent = CollectRegisteredContent(allContent, warnings);
 			var allEntries = allContent
 				.OfType<ContentEntryScriptableObject>()
@@ -484,16 +521,16 @@ namespace Content.Editor
 				asset => asset,
 				_ => new HashSet<ContentEntryScriptableObject>());
 			var roots = new HashSet<ContentEntryScriptableObject>();
-			var disabledReferences = new Dictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>>();
+			var disabledReferences = new Dictionary<ContentEntryScriptableObject, HashSet<UnityObject>>();
 
-			onProgress?.Invoke(0.15f, "Построение карты GUID");
+			onProgress?.Invoke(0.15f, "Building GUID map");
 			var guidToContent = BuildGuidMap(allEntries, warnings);
 
 			// Сканирование ссылок — 0.2..0.6
 			for (int i = 0; i < allContent.Length; i++)
 			{
 				if (onProgress != null && (i & 31) == 0)
-					onProgress(0.2f + 0.2f * i / allContent.Length, $"Сканирование ссылок ({i + 1}/{allContent.Length})");
+					onProgress(0.2f + 0.4f * i / allContent.Length, $"Scanning references ({i + 1}/{allContent.Length})");
 
 				var asset = allContent[i];
 				if (!asset.Enabled)
@@ -517,13 +554,7 @@ namespace Content.Editor
 
 			ScanContentManagerRoots(candidates, roots, warnings, onProgress);
 
-			// Выключенные конфиги, на которые ещё есть ссылки в проекте (включая префабы и сцены)
-			var disabledEntries = allEntries
-				.Where(entry => entry && !entry.Enabled)
-				.ToArray();
-			ScanDisabledReferencesInAssets(disabledEntries, disabledReferences, warnings, onProgress);
-
-			onProgress?.Invoke(0.98f, "Вычисление достижимости");
+			onProgress?.Invoke(0.98f, "Computing reachability");
 			var reachable = CollectReachable(roots, edges);
 			var unused = candidates
 				.Where(asset => !reachable.Contains(asset))
@@ -541,7 +572,7 @@ namespace Content.Editor
 		}
 
 		private static IReadOnlyList<DisabledContentReference> BuildDisabledReferences(
-			IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> references)
+			IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<UnityObject>> references)
 		{
 			return references
 				.OrderBy(pair => AssetDatabase.GetAssetPath(pair.Key), StringComparer.OrdinalIgnoreCase)
@@ -554,15 +585,15 @@ namespace Content.Editor
 		}
 
 		private static void AddDisabledReference(
-			IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> references,
+			IDictionary<ContentEntryScriptableObject, HashSet<UnityObject>> references,
 			ContentEntryScriptableObject target,
-			UnityEngine.Object source)
+			UnityObject source)
 		{
 			if (!target || target.Enabled || !source)
 				return;
 			if (!references.TryGetValue(target, out var sources))
 			{
-				sources = new HashSet<UnityEngine.Object>();
+				sources = new HashSet<UnityObject>();
 				references[target] = sources;
 			}
 
@@ -660,7 +691,7 @@ namespace Content.Editor
 			for (int i = 0; i < scripts.Length; i++)
 			{
 				if (onProgress != null && (i & 63) == 0)
-					onProgress(0.45f + 0.25f * i / scripts.Length, $"Сканирование кода ({i + 1}/{scripts.Length})");
+					onProgress(0.6f + 0.35f * i / scripts.Length, $"Scanning code ({i + 1}/{scripts.Length})");
 
 				var path = AssetDatabase.GUIDToAssetPath(scripts[i]);
 				string text;
@@ -691,96 +722,6 @@ namespace Content.Editor
 				}
 
 				typedCandidates.Add(candidate);
-			}
-		}
-
-		// Ищет ссылки на выключенные конфиги во всех .asset/.prefab/.unity (граф конфигов не видит префабы и сцены)
-		// Подход повторяет ContentSearchProvider: текстовый поиск по "guid: low/high" в YAML
-		private static readonly Regex ContentGuidRegex = new(
-			@"guid:\s+low:\s+(-?\d+)\s+high:\s+(-?\d+)",
-			RegexOptions.Compiled);
-
-		private static void ScanDisabledReferencesInAssets(
-			IReadOnlyList<ContentEntryScriptableObject> disabledEntries,
-			IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> disabledReferences,
-			ICollection<string> warnings,
-			Action<float, string> onProgress)
-		{
-			if (disabledEntries == null || disabledEntries.Count == 0)
-				return;
-
-			// Карта "low:high" -> выключенный конфиг (главный и вложенные guid-ы)
-			var guidToDisabled = new Dictionary<string, ContentEntryScriptableObject>();
-			foreach (var entry in disabledEntries)
-			{
-				if (entry is not IUniqueContentEntrySource source)
-					continue;
-
-				AddGuidKey(source.Guid, entry);
-
-				var nested = source.ContentEntry?.Nested;
-				if (nested == null)
-					continue;
-
-				foreach (var guid in nested.Keys)
-					AddGuidKey(guid, entry);
-			}
-
-			if (guidToDisabled.Count == 0)
-				return;
-
-			var paths = AssetDatabase.GetAllAssetPaths()
-				.Where(path => path.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) &&
-					(path.EndsWith(".asset", StringComparison.OrdinalIgnoreCase) ||
-						path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) ||
-						path.EndsWith(".unity", StringComparison.OrdinalIgnoreCase)))
-				.ToArray();
-
-			for (int i = 0; i < paths.Length; i++)
-			{
-				if (onProgress != null && (i & 63) == 0)
-					onProgress(0.7f + 0.27f * i / paths.Length, $"Поиск ссылок в ассетах ({i + 1}/{paths.Length})");
-
-				var path = paths[i];
-				string yaml;
-				try
-				{
-					yaml = File.ReadAllText(path);
-				}
-				catch (Exception exception)
-				{
-					warnings.Add($"Failed to read asset at {path}: {exception.Message}");
-					continue;
-				}
-
-				UnityEngine.Object source = null;
-				var loaded = false;
-				foreach (Match match in ContentGuidRegex.Matches(yaml))
-				{
-					var key = $"{match.Groups[1].Value}:{match.Groups[2].Value}";
-					if (!guidToDisabled.TryGetValue(key, out var target))
-						continue;
-
-					if (!loaded)
-					{
-						source = AssetDatabase.LoadMainAssetAtPath(path);
-						loaded = true;
-					}
-
-					// Пропускаем сам конфиг — его файл содержит определение guid, а не ссылку
-					if (!source || source == target)
-						continue;
-
-					AddDisabledReference(disabledReferences, target, source);
-				}
-			}
-
-			void AddGuidKey(SerializableGuid guid, ContentEntryScriptableObject entry)
-			{
-				if (guid.IsEmpty())
-					return;
-
-				guidToDisabled[$"{guid.low}:{guid.high}"] = entry;
 			}
 		}
 
@@ -820,7 +761,7 @@ namespace Content.Editor
 			private readonly IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> _guidToContent;
 			private readonly IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<ContentEntryScriptableObject>> _edges;
 			private readonly ISet<ContentEntryScriptableObject> _roots;
-			private readonly IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> _disabledReferences;
+			private readonly IDictionary<ContentEntryScriptableObject, HashSet<UnityObject>> _disabledReferences;
 
 			public ContentReferenceScanner(
 				ContentScriptableObject context,
@@ -828,7 +769,7 @@ namespace Content.Editor
 				IReadOnlyDictionary<SerializableGuid, ContentEntryScriptableObject> guidToContent,
 				IReadOnlyDictionary<ContentEntryScriptableObject, HashSet<ContentEntryScriptableObject>> edges,
 				ISet<ContentEntryScriptableObject> roots,
-				IDictionary<ContentEntryScriptableObject, HashSet<UnityEngine.Object>> disabledReferences)
+				IDictionary<ContentEntryScriptableObject, HashSet<UnityObject>> disabledReferences)
 			{
 				_context = context;
 				_owner = owner;
