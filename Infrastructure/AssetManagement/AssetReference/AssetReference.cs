@@ -88,6 +88,8 @@ namespace AssetManagement
 #endif
 		}
 
+		public string AssetGuid { get => assetReference?.AssetGUID; }
+
 		public static implicit operator bool(AnyAssetReference value) => !value.IsEmptyOrInvalid();
 
 		public static bool operator ==(AnyAssetReference a, AnyAssetReference b) => a.SameAsset(b);

@@ -233,7 +233,6 @@ namespace Content.Editor
 			}
 
 			var disabled = ContentEditorCache.IsSourceDisabled(source, out var sourceAsset);
-
 			if (disabled)
 			{
 				invalidLabel = $"Disabled config: {AssetDatabase.GetAssetPath(sourceAsset)}";
@@ -241,7 +240,6 @@ namespace Content.Editor
 					targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 				targetLabel.tooltip += invalidLabel;
 			}
-
 			var invalid = GUI.enabled && ((source == null && !isEmpty) || disabled);
 
 			var originalIndent = EditorGUI.indentLevel;

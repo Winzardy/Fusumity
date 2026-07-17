@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -49,8 +50,10 @@ namespace Booting
 		{
 			_bootedTasks = new();
 
-			var loadingTime = Time.realtimeSinceStartup;
+			var loadingTime = Time.realtimeSinceStartupAsDouble;
 			Log($"Started loading tasks at {loadingTime.ToString(CultureInfo.InvariantCulture).BoldText(true)} seconds");
+
+			var loadingTimer = Timer.Start();
 			string passedTimeStr;
 			using var blackboard = new Blackboard();
 			blackboard.Register(this);
@@ -62,11 +65,11 @@ namespace Booting
 				if (task.WaitForPreviousTasks)
 					await WaitForTasksReadyAsync(cancellationToken);
 
-				var sinceStartup = Time.realtimeSinceStartup;
+				var taskTimer = Timer.Start();
 
 				await task.RunAsync(blackboard, cancellationToken);
 
-				var passedTime = Time.realtimeSinceStartup - sinceStartup;
+				var passedTime = taskTimer.Seconds;
 				passedTimeStr = passedTime
 					.ToString(CultureInfo.InvariantCulture)
 					.BoldText(true);
@@ -74,7 +77,7 @@ namespace Booting
 				var taskName = task.Name
 					.UnderlineText(true);
 
-				TaskBooted?.Invoke(task, passedTime);
+				TaskBooted?.Invoke(task, (float) passedTime);
 
 				Log($"Launched the task [ {taskName} ] in {passedTimeStr} seconds"
 #if UNITY_EDITOR
@@ -88,7 +91,7 @@ namespace Booting
 
 			await WaitForTasksReadyAsync(cancellationToken);
 
-			passedTimeStr = (Time.realtimeSinceStartup - loadingTime)
+			passedTimeStr = loadingTimer.Seconds
 				.ToString(CultureInfo.InvariantCulture)
 				.BoldText(true);
 
@@ -117,12 +120,12 @@ namespace Booting
 					task => task.Name.UnderlineText(true),
 					numerate: false,
 					separator: ", ");
-				var sinceStartup = Time.realtimeSinceStartup;
+				var waitingTimer = Timer.Start();
 				Log($"Waiting for the tasks [ {str} ]");
 
 				await UniTask.WaitUntil(AreTasksReady, cancellationToken: cancellationToken);
 
-				var passedTime = (Time.realtimeSinceStartup - sinceStartup)
+				var passedTime = waitingTimer.Seconds
 					.ToString(CultureInfo.InvariantCulture)
 					.BoldText();
 				Log($"Tasks [ {str} ] became ready in {passedTime} seconds");
@@ -179,5 +182,31 @@ namespace Booting
 				=> b.Priority.CompareTo(a.Priority);
 		}
 #endif
+	}
+
+	public readonly struct Timer
+	{
+		// Секунд в одном тике счётчика Stopwatch
+		private static readonly double SECONDS_PER_TICK = 1d / Stopwatch.Frequency;
+
+		private readonly long _startTimestamp;
+
+		/// <summary>
+		/// Прошедшее время в секундах с момента запуска
+		/// </summary>
+		public double Seconds
+		{
+			get => (Stopwatch.GetTimestamp() - _startTimestamp) * SECONDS_PER_TICK;
+		}
+
+		private Timer(long startTimestamp)
+		{
+			_startTimestamp = startTimestamp;
+		}
+
+		/// <summary>
+		/// Запускает новый таймер от текущего момента
+		/// </summary>
+		public static Timer Start() => new(Stopwatch.GetTimestamp());
 	}
 }
