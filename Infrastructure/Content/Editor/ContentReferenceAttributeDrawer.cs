@@ -232,7 +232,15 @@ namespace Content.Editor
 					return;
 			}
 
-			var invalid = source == null && !isEmpty;
+			var disabled = ContentEditorCache.IsSourceDisabled(source, out var sourceAsset);
+			if (disabled)
+			{
+				invalidLabel = $"Disabled config: {AssetDatabase.GetAssetPath(sourceAsset)}";
+				if (!targetLabel.tooltip.IsNullOrEmpty())
+					targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
+				targetLabel.tooltip += invalidLabel;
+			}
+			var invalid = (source == null && !isEmpty) || disabled;
 
 			var originalIndent = EditorGUI.indentLevel;
 
@@ -643,7 +651,7 @@ namespace Content.Editor
 				}
 
 				var objectFieldEventType = e.type;
-				var suppressObjectFieldMouseEvent = invalid && e.isMouse && valueRect.Contains(e.mousePosition);
+				var suppressObjectFieldMouseEvent = source == null && invalid && e.isMouse && valueRect.Contains(e.mousePosition);
 				if (suppressObjectFieldMouseEvent)
 					e.type = EventType.Ignore;
 

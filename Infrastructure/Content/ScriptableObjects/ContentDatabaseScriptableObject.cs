@@ -16,6 +16,7 @@ namespace Content.ScriptableObjects
 
 		public override Type ValueType => typeof(T);
 
+
 		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry => _entry;
 
 		public override IContentEntry Import(bool clone)
@@ -34,6 +35,7 @@ namespace Content.ScriptableObjects
 
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 		IContentEntry IContentEntrySource.ContentEntry => _entry;
+		bool IContentEntrySource.enabled { get => enabled; }
 
 		protected override IScriptableContentEntry BaseScriptableContentEntry => _entry;
 

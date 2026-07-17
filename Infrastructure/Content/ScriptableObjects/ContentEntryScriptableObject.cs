@@ -76,6 +76,8 @@ namespace Content.ScriptableObjects
 
 		public ref readonly SerializableGuid Guid => ref _entry.Guid;
 
+		bool IContentEntrySource.enabled { get => enabled; }
+
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry => _entry;
 
 		IUniqueContentEntry<T> IUniqueContentEntrySource<T>.UniqueContentEntry => _entry;
@@ -86,8 +88,7 @@ namespace Content.ScriptableObjects
 
 		private bool IsExternallyIdentifiable => typeof(IExternallyIdentifiable).IsAssignableFrom(typeof(T));
 
-
-		bool IContentEntrySource.Validate()
+		protected override bool OnValidated()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
@@ -219,7 +220,16 @@ namespace Content.ScriptableObjects
 
 		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
 
-		bool IContentEntryScriptableObject.enabled { get => enabled; set => enabled = value; }
+		bool IContentEntrySource.enabled { get => enabled; }
+		IContentEntry IContentEntrySource.ContentEntry { get => BaseScriptableContentEntry; }
+		bool IContentEntrySource.Validate() => OnValidated();
+
+		void IContentEntryScriptableObject.SetEnable(bool value)
+		{
+			enabled = value;
+		}
+
+		protected virtual bool OnValidated() => true;
 	}
 
 	public interface IUniqueContentEntryScriptableObject<T> : IContentEntryScriptableObject<T>, IUniqueContentEntrySource<T>,
@@ -239,12 +249,12 @@ namespace Content.ScriptableObjects
 		bool UseCustomId { get; }
 	}
 
-	public interface IContentEntryScriptableObject : IContentScriptableObject
+	public interface IContentEntryScriptableObject : IContentScriptableObject, IContentEntrySource
 	{
 		[CanBeNull] IScriptableContentEntry ScriptableContentEntry { get; }
 		Type ValueType { get; }
 
-		internal bool enabled { get; set; }
+		internal void SetEnable(bool value);
 	}
 
 	public partial interface IContentScriptableObject

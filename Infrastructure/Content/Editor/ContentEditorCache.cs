@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -185,6 +184,17 @@ namespace Content.Editor
 			return TryGetSource(valueType, reference.Guid, out source);
 		}
 
+		public static bool IsSourceDisabled(
+			IContentEntrySource source,
+			out UnityObject sourceObject)
+		{
+			while (source is INestedContentEntrySource nestedSource)
+				source = nestedSource.Source;
+
+			sourceObject = source as UnityObject;
+			return source is {enabled: false};
+		}
+
 		public static bool AnyByValueType<T>()
 		{
 			if (EditorSingleContentEntryShortcut<T>.Contains())
@@ -243,6 +253,9 @@ namespace Content.Editor
 			foreach (var scriptableObject in cache.Values)
 			{
 				if (scriptableObject is not IContentEntrySource target)
+					continue;
+
+				if(target.ContentEntry == null)
 					continue;
 
 				var valueType = target.ContentEntry.ValueType;

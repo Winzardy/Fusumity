@@ -605,6 +605,18 @@ namespace Content.Editor
 				return 0;
 			}
 
+			if (ContentEditorCache.TryGetSource(reference, valueType, out var source) &&
+				ContentEditorCache.IsSourceDisabled(source, out var target))
+			{
+				var disabledReferenceMessage = FormatLogMessage(
+					$"Content reference [ {path} ] points to disabled config [ {AssetDatabase.GetAssetPath(target)} ] " +
+					$"by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
+					logMessageFormatter);
+				AppendErrorMessage(errorMessageBuilder, disabledReferenceMessage);
+				ContentDebug.LogError(disabledReferenceMessage, logContext);
+				return 1;
+			}
+
 			if (reference.IsValid())
 				return 0;
 
