@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using Cysharp.Threading.Tasks;
 using Fusumity.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -18,17 +17,12 @@ namespace Content.Editor
 		private static readonly Color HOVER_COLOR = Color.Lerp(ContentDebug.COLOR, SirenixGUIStyles.DarkEditorBackground, 0.7f);
 		private static readonly string TOOLTIP_PREFIX_GUID = $"{LABEL_GUID}:".ColorText(Color.white.WithAlpha(0.5f)).SizeText(10);
 
+		// Задержка перед сбросом buttonRect после ухода курсора (бывший async-сброс через EditorApplication.update)
+		private const double BUTTON_RECT_RESET_DELAY = 0.5d;
+
 		private Cache _cache;
 
-		private bool _resetting;
-
 		private static GUIStyle _style;
-
-		protected override void Initialize()
-		{
-			EditorApplication.update -= OnUpdate;
-			EditorApplication.update += OnUpdate;
-		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
@@ -133,6 +127,9 @@ namespace Content.Editor
 			EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 
 			_cache!.hovered = hovered;
+			if (hovered)
+				_cache!.lastHoveredTime = EditorApplication.timeSinceStartup;
+
 			var b = evt.type is EventType.Layout or EventType.Repaint;
 			if (b)
 			{
@@ -140,6 +137,9 @@ namespace Content.Editor
 				_cache!.width = width;
 
 				if (rect.height > 2 && d)
+					_cache!.buttonRect = rect;
+				// Курсор давно ушёл — возвращаем buttonRect к актуальному rect прямо при отрисовке
+				else if (!hovered && EditorApplication.timeSinceStartup - _cache!.lastHoveredTime > BUTTON_RECT_RESET_DELAY)
 					_cache!.buttonRect = rect;
 			}
 
@@ -172,32 +172,10 @@ namespace Content.Editor
 			return !property.IsAnyParentHasAttribute<DisableContentEntryDrawerAttribute>();
 		}
 
-		private void OnUpdate()
-		{
-			if (_cache == null)
-				return;
-
-			if (_resetting)
-				return;
-
-			DelayCallAsync().Forget();
-		}
-
-		private async UniTaskVoid DelayCallAsync()
-		{
-			_resetting = true;
-			await UniTask.Delay(500, DelayType.Realtime);
-
-			if (_cache is {hovered: false})
-				_cache.buttonRect = _cache.rect;
-
-			_resetting = false;
-		}
-
 		private class Cache
 		{
-			public string lastGuid;
 			public bool hovered;
+			public double lastHoveredTime;
 			public float width;
 			public Rect rect;
 			public Rect buttonRect;

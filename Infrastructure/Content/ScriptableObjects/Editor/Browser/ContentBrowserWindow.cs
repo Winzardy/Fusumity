@@ -29,6 +29,8 @@ namespace Content.Editor
 		private string _selectPinnedKeyAfterRefresh;
 		private string _selectOriginalPathAfterRefresh;
 		private string _selectAssetGuidAfterRefresh;
+		// Guid ассета, которого нет в дереве даже после полной пересборки — защита от rebuild-цикла в SelectAsset
+		private string _missingAssetGuid;
 		private bool _selectPendingMenuItemScheduled;
 		private readonly List<string> _navigationHistory = new();
 		private readonly Dictionary<ContentScriptableObject, OdinMenuItem> _assetMenuItems = new();
@@ -245,6 +247,8 @@ namespace Content.Editor
 			_pinnedMenuItems.Clear();
 
 			var modules = ContentBrowserInfo.GetModules(_forceRefresh, SortByEnabled);
+			if (_forceRefresh)
+				_missingAssetGuid = null;
 			_forceRefresh = false;
 
 			for (int i = 0; i < modules.Length; i++)
@@ -676,6 +680,10 @@ namespace Content.Editor
 				var asset = assetGuid.ToAsset<ContentScriptableObject>();
 				if (asset != null)
 					item = FindMenuItemWithAsset(asset);
+
+				// Не нашли даже после пересборки — помечаем, чтобы SelectAsset не пересобирал дерево повторно
+				if (item == null)
+					_missingAssetGuid = assetGuid;
 			}
 
 			item ??= FindPinnedMenuItem(pinnedKey);
@@ -876,12 +884,20 @@ namespace Content.Editor
 			var item = MenuTree == null ? null : FindMenuItemWithAsset(asset);
 			if (item != null)
 			{
+				_missingAssetGuid = null;
 				item.Select();
 				Repaint();
 				return;
 			}
 
-			_selectAssetGuidAfterRefresh = asset.ToGuid();
+			var guid = asset.ToGuid();
+
+			// Этот ассет уже искали полной пересборкой и в дереве его нет —
+			// не гоняем рескан AssetDatabase на каждый клик по нему в Project
+			if (!guid.IsNullOrEmpty() && guid == _missingAssetGuid)
+				return;
+
+			_selectAssetGuidAfterRefresh = guid;
 			_forceRefresh = true;
 			ForceMenuTreeRebuild();
 		}
@@ -2866,7 +2882,7 @@ namespace Content.Editor
 	}
 
 	internal sealed class ContentBrowserInlineEditorAttributeDrawer :
-		OdinAttributeDrawer<ContentBrowserInlineEditorAttribute>
+		OdinAttributeDrawer<ContentBrowserInlineEditorAttribute>, IDisposable
 	{
 		private const string CONTROL_ID = "ContentBrowserInlineEditor";
 		private const float SIDE_CONTROL_WIDTH = 22f;
@@ -2930,10 +2946,11 @@ namespace Content.Editor
 
 			GUI.SetNextControlName(CONTROL_ID);
 			var headerRect = DrawReadonlyObjectField(label, asset);
-			TryCreateEditor(asset);
 
-			if (_inlineEditor != null)
-				DrawInlineEditor(headerRect, useIndent);
+			if (asset != null)
+				DrawInlineEditor(headerRect, useIndent, asset);
+			else
+				DestroyInlineEditor();
 
 			EditorGUI.indentLevel = originalIndent;
 			GUI.enabled = originalEnabled;
@@ -3046,7 +3063,7 @@ namespace Content.Editor
 				toggleHandler.ContentBrowserInlineToggle = value;
 		}
 
-		private void DrawInlineEditor(Rect headerRect, bool useIndent)
+		private void DrawInlineEditor(Rect headerRect, bool useIndent, ContentScriptableObject asset)
 		{
 			var labelWidthInEditor = GUIHelper.BetterLabelWidth - 4f;
 
@@ -3067,34 +3084,45 @@ namespace Content.Editor
 				_showDetailed = SirenixEditorGUI.Foldout(foldoutPosition, _showDetailed, GUIContent.none);
 				GUI.enabled = originalEnabled;
 
+				// Редактор существует только пока строка раскрыта: создаём лениво, уносим при сворачивании,
+				// иначе на каждую строку каждой страницы копится PropertyTree со всем графом конфига
 				if (SirenixEditorGUI.BeginFadeGroup(this, _showDetailed))
 				{
-					var originalColor = GUI.color;
-					GUI.color = Color.black.WithAlpha(0.666f);
+					TryCreateEditor(asset);
 
-					var originalHierarchyMode = EditorGUIUtility.hierarchyMode;
-					EditorGUIUtility.hierarchyMode = false;
-
-					var originalIndent = EditorGUI.indentLevel;
-					if (useIndent)
-						EditorGUI.indentLevel -= 1;
-
-					SirenixEditorGUI.BeginIndentedVertical(_style);
+					if (_inlineEditor != null)
 					{
-						GUIHelper.PushHierarchyMode(false);
-						GUIHelper.PushLabelWidth(labelWidthInEditor);
+						var originalColor = GUI.color;
+						GUI.color = Color.black.WithAlpha(0.666f);
+
+						var originalHierarchyMode = EditorGUIUtility.hierarchyMode;
+						EditorGUIUtility.hierarchyMode = false;
+
+						var originalIndent = EditorGUI.indentLevel;
+						if (useIndent)
+							EditorGUI.indentLevel -= 1;
+
+						SirenixEditorGUI.BeginIndentedVertical(_style);
 						{
-							GUI.color = originalColor;
-							DrawEditorInspector();
+							GUIHelper.PushHierarchyMode(false);
+							GUIHelper.PushLabelWidth(labelWidthInEditor);
+							{
+								GUI.color = originalColor;
+								DrawEditorInspector();
+							}
+							GUIHelper.PopLabelWidth();
+							GUIHelper.PopHierarchyMode();
+
+							EditorGUI.indentLevel = originalIndent;
 						}
-						GUIHelper.PopLabelWidth();
-						GUIHelper.PopHierarchyMode();
 
-						EditorGUI.indentLevel = originalIndent;
+						SirenixEditorGUI.EndIndentedVertical();
+						EditorGUIUtility.hierarchyMode = originalHierarchyMode;
 					}
-
-					SirenixEditorGUI.EndIndentedVertical();
-					EditorGUIUtility.hierarchyMode = originalHierarchyMode;
+				}
+				else
+				{
+					DestroyInlineEditor();
 				}
 
 				SirenixEditorGUI.EndFadeGroup();
@@ -3141,14 +3169,21 @@ namespace Content.Editor
 			if (asset != null && _inlineEditor != null && _inlineEditor.target == asset)
 				return;
 
-			if (_inlineEditor != null)
-			{
-				OdinEditor.DestroyImmediate(_inlineEditor);
-				_inlineEditor = null;
-			}
+			DestroyInlineEditor();
 
 			if (asset != null)
 				_inlineEditor = (OdinEditor) OdinEditor.CreateEditor(asset);
 		}
+
+		private void DestroyInlineEditor()
+		{
+			if (_inlineEditor == null)
+				return;
+
+			OdinEditor.DestroyImmediate(_inlineEditor);
+			_inlineEditor = null;
+		}
+
+		public void Dispose() => DestroyInlineEditor();
 	}
 }
