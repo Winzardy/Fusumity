@@ -65,8 +65,8 @@ namespace Content.Editor
 			};
 		}
 
-		private string ErrorsLabel { get => $"❌ Errors {_errorRows.Length}"; }
-		private string WarningsLabel { get => $"⚠️ Warnings {_warningRows.Length}"; }
+		private string ErrorsLabel { get => $"✕ Errors ({_errorRows.Length})"; }
+		private string WarningsLabel { get => $"⚠ Warnings ({_warningRows.Length})"; }
 
 		internal static void ShowAfterValidation()
 		{
@@ -126,13 +126,12 @@ namespace Content.Editor
 
 			if (GUILayout.Button(SeverityFilterLabel, EditorStyles.toolbarDropDown, GUILayout.Width(170)))
 			{
-				var dropdownRect = EditorGUIUtility.GUIToScreenRect(GUILayoutUtility.GetLastRect());
 				var menu = new GenericMenu();
 				menu.AddItem(new GUIContent(nameof(SeverityFilter.Errors)), ShowErrors,
 					() => ToggleSeverity(SeverityFilter.Errors));
 				menu.AddItem(new GUIContent(nameof(SeverityFilter.Warnings)), ShowWarnings,
 					() => ToggleSeverity(SeverityFilter.Warnings));
-				menu.DropDown(dropdownRect);
+				menu.ShowAsContext();
 			}
 
 			SirenixEditorGUI.EndHorizontalToolbar();
@@ -171,13 +170,10 @@ namespace Content.Editor
 		{
 			using (new EditorGUI.DisabledScope(rows.Length == 0))
 			{
-				var rect = GUILayoutUtility.GetRect(
-					COPY_BUTTON_WIDTH,
-					EditorGUIUtility.singleLineHeight,
-					GUILayout.Width(COPY_BUTTON_WIDTH));
 				if (SirenixEditorGUI.ToolbarButton(SdfIconType.Clipboard))
 					CopyRows(rows);
 
+				var rect = GUILayoutUtility.GetLastRect();
 				GUI.Label(rect, new GUIContent(string.Empty, tooltip), GUIStyle.none);
 				EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 			}
