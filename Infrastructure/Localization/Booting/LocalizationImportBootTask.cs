@@ -23,7 +23,7 @@ namespace Booting.Localization
 
 		private bool _ready = true;
 
-		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			_ready = false;
 

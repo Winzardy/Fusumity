@@ -5,6 +5,7 @@ using Sapientia;
 using Sapientia.Extensions;
 using System;
 using System.Threading;
+using Localization;
 
 namespace Booting
 {
@@ -14,6 +15,8 @@ namespace Booting
 		private const string POSTFIX = "BootTask";
 
 		protected const int HIGH_PRIORITY = 1000;
+
+		public LocKey _loadingLocKey;
 
 		public virtual int Priority { get => 0; }
 		public virtual bool Active { get => true; }
@@ -27,7 +30,14 @@ namespace Booting
 				.NicifyText();
 		}
 
-		public abstract UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
+		public async UniTask RunAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
+		{
+			progress?.Report(new BootProgressInfo(_loadingLocKey, 0));
+			await RunTaskAsync(blackboard, progress, token);
+			progress?.Report(new BootProgressInfo(_loadingLocKey, 1));
+		}
+
+		protected abstract UniTask RunTaskAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default);
 
 		public virtual void OnBootCompleted()
 		{
@@ -44,26 +54,5 @@ namespace Booting
 		public virtual bool IsReady() => true;
 
 		public override string ToString() => Name;
-	}
-
-	public abstract class ProgressiveBootTask : BaseBootTask, IProgressNotifier
-	{
-		public float Progress { get; protected set; }
-		public event Action<float> ProgressChanged;
-
-		public sealed override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
-		{
-			ReportProgress(0);
-			await RunTaskAsync(blackboard, token);
-			ReportProgress(1);
-		}
-
-		protected abstract UniTask RunTaskAsync(Blackboard blackboard, CancellationToken token);
-
-		protected void ReportProgress(float progress)
-		{
-			Progress = progress;
-			ProgressChanged?.Invoke(Progress);
-		}
 	}
 }

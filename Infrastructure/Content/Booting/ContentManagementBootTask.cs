@@ -20,7 +20,7 @@ namespace Booting.Content
 	{
 		public override int Priority => HIGH_PRIORITY - 20;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var resolver = new ContentResolver();
 			ContentManager.Set(resolver);

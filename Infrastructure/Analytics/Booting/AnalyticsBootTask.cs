@@ -23,7 +23,7 @@ namespace Booting.Analytics
 
 		private BootTaskAnalyticsAggregator _aggregator;
 
-		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var isValidationEnabled = Application.isEditor || Debug.isDebugBuild;
 			var settings = ContentManager.Get<AnalyticsSettings>();

@@ -43,7 +43,7 @@ namespace Booting.UI
 
 		public override int Priority => HIGH_PRIORITY - 100;
 
-		public override UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			if (blackboard.TryGet<DefaultScreenAnimator>(out var loadingScreenAnimator))
 				loadingScreenAnimator.Play(AnimationType.CLOSING);

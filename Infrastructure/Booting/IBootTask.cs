@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Localization;
 using Sapientia;
+using Sapientia.Utility;
 
 namespace Booting
 {
@@ -18,8 +20,31 @@ namespace Booting
 		int Priority { get; }
 		bool WaitForPreviousTasks { get; }
 
-		UniTask RunAsync(Blackboard blackboard, CancellationToken token = default);
+		UniTask RunAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default);
 		void OnBootCompleted();
 		bool IsReady();
+	}
+
+	public struct BootProgressInfo : IProgressValue
+	{
+		public float Progress { get; set; }
+		public LocKey locKey;
+
+		public BootProgressInfo(float progress)
+		{
+			Progress = progress;
+			locKey = null;
+		}
+
+		public BootProgressInfo(LocKey locKey, float progress)
+		{
+			Progress = progress;
+			this.locKey = locKey;
+		}
+
+		public BootProgressInfo WithProgress(float progress)
+		{
+			return new BootProgressInfo(locKey, progress);
+		}
 	}
 }

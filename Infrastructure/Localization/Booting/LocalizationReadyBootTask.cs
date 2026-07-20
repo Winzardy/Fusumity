@@ -16,7 +16,7 @@ namespace Booting.Localization
 	{
 		public override int Priority => HIGH_PRIORITY - 150;
 
-		public override async UniTask RunAsync(Blackboard blackboard, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard blackboard, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			if (!LocManager.IsInitialized)
 				await UniTask.WaitUntil(() => LocManager.IsInitialized, cancellationToken: token);
