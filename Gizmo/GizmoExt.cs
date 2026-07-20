@@ -5,7 +5,6 @@ using Fusumity.Utility;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Shapes;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -198,9 +197,9 @@ namespace Game.Logic.Gizmo
 			}
 			else
 			{
-				var radius = (innerRadius + outerRadius) / 2;
 				color.a *= GIZMO_ALPHA_MULTIPLIER;
-				Draw.Ring(position.XZ(Height), Vector3.up, radius, outerRadius - innerRadius, DiscColors.Flat(color));
+				DrawCircle_TopDown(position, innerRadius, color);
+				DrawCircle_TopDown(position, outerRadius, color);
 			}
 		}
 
