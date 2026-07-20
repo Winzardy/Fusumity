@@ -20,10 +20,20 @@ namespace Content.Editor
 
 			var modulesByDatabase = new Dictionary<ContentDatabaseScriptableObject, ModuleInfo>();
 
+			var databaseByNamespace = new Dictionary<string, ContentDatabaseScriptableObject>();
+			ContentDatabaseScriptableObject miscDatabase = null;
+
 			foreach (var database in Databases)
 			{
-				if (database != null)
-					modulesByDatabase.Add(database, new ModuleInfo(database));
+				if (database == null)
+					continue;
+
+				modulesByDatabase.Add(database, new ModuleInfo(database));
+
+				if (database is MiscDatabaseScriptableObject)
+					miscDatabase = database;
+				else
+					databaseByNamespace.TryAdd(database.GetType().Namespace ?? string.Empty, database);
 			}
 
 			foreach (var config in ContentEditorCache.GetAssets<ContentScriptableObject>())
@@ -31,7 +41,9 @@ namespace Content.Editor
 				if (config == null || config is ContentDatabaseScriptableObject)
 					continue;
 
-				var database = ContentDatabaseEditorUtility.GetDatabase(config);
+				if (!databaseByNamespace.TryGetValue(config.GetType().Namespace ?? string.Empty, out var database))
+					database = miscDatabase;
+
 				if (database != null && modulesByDatabase.TryGetValue(database, out var module))
 					module.Add(config);
 			}

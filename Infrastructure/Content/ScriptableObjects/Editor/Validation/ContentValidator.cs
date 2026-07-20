@@ -10,6 +10,7 @@ using Content.ScriptableObjects.Editor;
 using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
+using Sapientia.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,9 +30,10 @@ namespace Content.Editor
 		private static StringBuilder _activeErrorMessageBuilder;
 		private static int _activeErrorMessageNumber;
 		private static IContentValueValidator _activeAdditionalValidator;
+		private static ContentValidationReport _activeReport;
 		private static bool _cancelRequested;
 
-		private static bool ShouldLog => !Application.isBatchMode;
+		internal static ContentValidationReport LastReport { get; private set; }
 
 		static ContentValidator()
 		{
@@ -80,6 +82,42 @@ namespace Content.Editor
 
 		public static bool Validate(bool sync, out string errorOrMessage)
 		{
+			if (_activeReport != null)
+				return ValidateInternal(sync, out errorOrMessage);
+
+			ClearLastReport();
+			var report = Pool<ContentValidationReport>.Get();
+			LastReport = report;
+			_activeReport = report;
+
+			var result = false;
+			try
+			{
+				result = ValidateInternal(sync, out errorOrMessage);
+				return result;
+			}
+			finally
+			{
+				report.Complete(result && !report.WasCanceled);
+				_activeReport = null;
+
+				if (!Application.isBatchMode)
+					ContentValidationReportWindow.ShowAfterValidation();
+			}
+		}
+
+		internal static void ClearLastReport()
+		{
+			if (LastReport == null || ReferenceEquals(LastReport, _activeReport))
+				return;
+
+			var report = LastReport;
+			LastReport = null;
+			Pool<ContentValidationReport>.Release(report);
+		}
+
+		private static bool ValidateInternal(bool sync, out string errorOrMessage)
+		{
 			_cancelRequested = false;
 
 			if (sync)
@@ -121,8 +159,9 @@ namespace Content.Editor
 								var errorMessage = $"Null scriptable objects list in database [ {database.name} ]";
 								errorCount++;
 								AppendErrorMessage(errStringBuilder, errorMessage);
-								if (ShouldLog)
-									ContentDebug.LogError(errorMessage, database);
+								RecordError(errorMessage,
+									database,
+									$"{database.name}.{nameof(ContentDatabaseScriptableObject.scriptableObjects)}");
 								continue;
 							}
 
@@ -155,8 +194,9 @@ namespace Content.Editor
 									var errorMessage = $"Null scriptable object in database [ {database.name} ]";
 									errorCount++;
 									AppendErrorMessage(errStringBuilder, errorMessage);
-									if (ShouldLog)
-										ContentDebug.LogError(errorMessage, database);
+									RecordError(errorMessage,
+										database,
+										$"{database.name}.{nameof(ContentDatabaseScriptableObject.scriptableObjects)}");
 									continue;
 								}
 
@@ -169,8 +209,7 @@ namespace Content.Editor
 									{
 										errorCount++;
 										AppendErrorMessage(errStringBuilder, soMessage);
-										if (ShouldLog)
-											ContentDebug.LogError(soMessage, scriptableObject);
+										RecordError(soMessage, scriptableObject, scriptableObject.name);
 									}
 								}
 
@@ -184,8 +223,6 @@ namespace Content.Editor
 								+ (errStringBuilder.Length > 0
 									? ", errors:\n" + errStringBuilder
 									: string.Empty);
-							if (ShouldLog)
-								ContentDebug.LogError("Validation " + str);
 							errorOrMessage = "Content validation " + str;
 							return false;
 						}
@@ -193,8 +230,6 @@ namespace Content.Editor
 						errorOrMessage = warningCount > 0
 							? $"Validation passed (warnings️: {warningCount})"
 							: "Validation passed";
-						if (ShouldLog)
-							ContentDebug.Log(errorOrMessage);
 					}
 					finally
 					{
@@ -293,9 +328,19 @@ namespace Content.Editor
 			reason ??= _cancelRequested
 				? "domain reload"
 				: "editor compilation";
-			if (ShouldLog)
-				ContentDebug.LogWarning($"Validation canceled ({reason})");
+			_activeReport?.Cancel();
+			RecordWarning($"Validation canceled ({reason})", path: TITLE);
 			return false;
+		}
+
+		private static void RecordError(string message, object context = null, string path = null)
+		{
+			_activeReport?.AddError(message, context as UnityObject, path);
+		}
+
+		private static void RecordWarning(string message, object context = null, string path = null)
+		{
+			_activeReport?.AddWarning(message, context as UnityObject, path);
 		}
 
 		private static int ValidateContentReferences(ContentScriptableObject scriptableObject,
@@ -334,7 +379,8 @@ namespace Content.Editor
 			ref int warningCount,
 			bool inspectUnityObject,
 			Func<string, string> logMessageFormatter,
-			StringBuilder errorMessageBuilder)
+			StringBuilder errorMessageBuilder,
+			ContentReferenceAttribute contentReferenceAttribute = null)
 		{
 			if (targetType == null)
 				return 0;
@@ -346,6 +392,13 @@ namespace Content.Editor
 				logContext,
 				canBeEmpty,
 				valueValidators,
+				logMessageFormatter,
+				errorMessageBuilder,
+				contentReferenceAttribute);
+			errorCount += ValidateContentReferenceAttribute(target,
+				path,
+				contentReferenceAttribute,
+				logContext,
 				logMessageFormatter,
 				errorMessageBuilder);
 			if (target == null)
@@ -381,7 +434,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					contentReferenceAttribute);
 
 			if (target is IEnumerable enumerable && target is not string)
 				return errorCount + ValidateEnumerable(enumerable,
@@ -394,7 +448,8 @@ namespace Content.Editor
 					valueValidators,
 					ref warningCount,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					contentReferenceAttribute);
 
 			foreach (var field in GetSerializableFields(targetType))
 			{
@@ -411,8 +466,7 @@ namespace Content.Editor
 					var errorMessage = FormatLogMessage($"Content validation: can't read field [ {path}.{field.Name} ]: {e.Message}",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					if (ShouldLog)
-						ContentDebug.LogError(errorMessage, logContext);
+					RecordError(errorMessage, logContext, $"{path}.{field.Name}");
 					errorCount++;
 					continue;
 				}
@@ -429,10 +483,107 @@ namespace Content.Editor
 					ref warningCount,
 					false,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					field.GetCustomAttribute<ContentReferenceAttribute>());
 			}
 
 			return errorCount;
+		}
+
+		private static int ValidateContentReferenceAttribute(object value,
+			string path,
+			ContentReferenceAttribute attribute,
+			object logContext,
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
+		{
+			if (attribute == null || value is IContentReference)
+				return 0;
+
+			var valueTypeForReference = attribute.Type;
+			if (valueTypeForReference == null && !attribute.TypeName.IsNullOrEmpty())
+				ReflectionUtility.TryGetType(attribute.TypeName, out valueTypeForReference);
+
+			if (valueTypeForReference == null || value == null)
+				return 0;
+
+			if (value is string id)
+			{
+				if (id.IsNullOrEmpty())
+					return 0;
+
+				if (ContentEditorCache.TryGetSource(valueTypeForReference, id, out var source))
+					return ValidateContentReferenceSource(source,
+						path,
+						valueTypeForReference,
+						$"id [ {id} ]",
+						logContext,
+						logMessageFormatter,
+						errorMessageBuilder);
+
+				return AddInvalidContentReferenceError(path,
+					valueTypeForReference,
+					$"id [ {id} ]",
+					logContext,
+					logMessageFormatter,
+					errorMessageBuilder);
+			}
+
+			if (value is SerializableGuid guid && guid != SerializableGuid.Empty)
+			{
+				if (ContentEditorCache.TryGetSource(valueTypeForReference, in guid, out var source))
+					return ValidateContentReferenceSource(source,
+						path,
+						valueTypeForReference,
+						$"guid [ {guid} ]",
+						logContext,
+						logMessageFormatter,
+						errorMessageBuilder);
+
+				return AddInvalidContentReferenceError(path,
+					valueTypeForReference,
+					$"guid [ {guid} ]",
+					logContext,
+					logMessageFormatter,
+					errorMessageBuilder);
+			}
+
+			return 0;
+		}
+
+		private static int ValidateContentReferenceSource(IContentEntrySource source,
+			string path,
+			Type valueType,
+			string identifier,
+			object logContext,
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
+		{
+			if (!ContentEditorCache.IsSourceDisabled(source, out var target))
+				return 0;
+
+			var disabledReferenceMessage = FormatLogMessage(
+				$"Content reference [ {path} ] points to disabled config [ {AssetDatabase.GetAssetPath(target)} ] " +
+				$"by type [ {valueType.Name} ] and {identifier}",
+				logMessageFormatter);
+			AppendErrorMessage(errorMessageBuilder, disabledReferenceMessage);
+			RecordError(disabledReferenceMessage, logContext, path);
+			return 1;
+		}
+
+		private static int AddInvalidContentReferenceError(string path,
+			Type valueType,
+			string identifier,
+			object logContext,
+			Func<string, string> logMessageFormatter,
+			StringBuilder errorMessageBuilder)
+		{
+			var invalidReferenceMessage = FormatLogMessage(
+				$"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and {identifier}",
+				logMessageFormatter);
+			AppendErrorMessage(errorMessageBuilder, invalidReferenceMessage);
+			RecordError(invalidReferenceMessage, logContext, path);
+			return 1;
 		}
 
 		private static int ValidateContentValue(object value,
@@ -443,13 +594,19 @@ namespace Content.Editor
 			bool canBeEmpty,
 			IReadOnlyList<IContentValueValidator> validators,
 			Func<string, string> logMessageFormatter,
-			StringBuilder errorMessageBuilder)
+			StringBuilder errorMessageBuilder,
+			ContentReferenceAttribute contentReferenceAttribute = null)
 		{
 			if (validators == null || validators.Count == 0)
 				return 0;
 
 			var errorCount = 0;
-			var validationContext = new ContentValidationContext(value, valueType, path, context, canBeEmpty);
+			var validationContext = new ContentValidationContext(value,
+				valueType,
+				path,
+				context,
+				canBeEmpty,
+				contentReferenceAttribute);
 			foreach (var validator in validators)
 			{
 				if (validator == null)
@@ -467,14 +624,16 @@ namespace Content.Editor
 						$"Content value validator [ {validator.GetType().Name} ] failed at [ {path} ]: {e.Message}",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					if (ShouldLog)
-						ContentDebug.LogError(errorMessage, logContext);
+					RecordError(errorMessage, logContext, path);
 					errorCount++;
 					continue;
 				}
 
 				if (message == null)
 				{
+					var invalidMessage = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+					AppendErrorMessage(errorMessageBuilder, invalidMessage);
+					RecordError(invalidMessage, logContext, path);
 					errorCount++;
 					continue;
 				}
@@ -484,8 +643,7 @@ namespace Content.Editor
 
 				var formattedMessage = FormatLogMessage(message, logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, formattedMessage);
-				if (ShouldLog)
-					ContentDebug.LogError(formattedMessage, logContext);
+				RecordError(formattedMessage, logContext, path);
 				errorCount++;
 			}
 
@@ -502,7 +660,8 @@ namespace Content.Editor
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
 			Func<string, string> logMessageFormatter,
-			StringBuilder errorMessageBuilder)
+			StringBuilder errorMessageBuilder,
+			ContentReferenceAttribute contentReferenceAttribute = null)
 		{
 			var errorCount = 0;
 			foreach (DictionaryEntry entry in dictionary)
@@ -519,7 +678,8 @@ namespace Content.Editor
 					ref warningCount,
 					false,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					contentReferenceAttribute);
 
 				errorCount += ValidateContentReferences(entry.Value,
 					entry.Value?.GetType(),
@@ -533,7 +693,8 @@ namespace Content.Editor
 					ref warningCount,
 					false,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					contentReferenceAttribute);
 			}
 
 			return errorCount;
@@ -549,7 +710,8 @@ namespace Content.Editor
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
 			Func<string, string> logMessageFormatter,
-			StringBuilder errorMessageBuilder)
+			StringBuilder errorMessageBuilder,
+			ContentReferenceAttribute contentReferenceAttribute = null)
 		{
 			var errorCount = 0;
 			var index = 0;
@@ -567,7 +729,8 @@ namespace Content.Editor
 					ref warningCount,
 					false,
 					logMessageFormatter,
-					errorMessageBuilder);
+					errorMessageBuilder,
+					contentReferenceAttribute);
 				index++;
 			}
 
@@ -590,21 +753,18 @@ namespace Content.Editor
 					var errorMessage = FormatLogMessage($"Empty content reference [ {path} ] with [NotEmpty] or [NotNull] attribute",
 						logMessageFormatter);
 					AppendErrorMessage(errorMessageBuilder, errorMessage);
-					if (ShouldLog)
-						ContentDebug.LogError(errorMessage, logContext);
+					RecordError(errorMessage, logContext, path);
 					return 1;
 				}
 
 				if (!canBeEmpty)
 				{
 					warningCount++;
-					if (ShouldLog)
-					{
-						ContentDebug.LogWarning(
-							FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
-								logMessageFormatter),
-							logContext);
-					}
+					RecordWarning(
+						FormatLogMessage($"Empty content reference [ {path} ] without [CanBeEmpty], [CanBeNull] or [MaybeNull] attribute",
+							logMessageFormatter),
+						logContext,
+						path);
 				}
 
 				return 0;
@@ -628,8 +788,7 @@ namespace Content.Editor
 					$"by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
 					logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, disabledReferenceMessage);
-				if (ShouldLog)
-					ContentDebug.LogError(disabledReferenceMessage, logContext);
+				RecordError(disabledReferenceMessage, logContext, path);
 				return 1;
 			}
 
@@ -639,8 +798,7 @@ namespace Content.Editor
 			var invalidReferenceMessage = FormatLogMessage($"Invalid content reference [ {path} ] by type [ {valueType.Name} ] and guid [ {reference.Guid} ]",
 				logMessageFormatter);
 			AppendErrorMessage(errorMessageBuilder, invalidReferenceMessage);
-			if (ShouldLog)
-				ContentDebug.LogError(invalidReferenceMessage, logContext);
+			RecordError(invalidReferenceMessage, logContext, path);
 			return 1;
 		}
 
@@ -743,6 +901,85 @@ namespace Content.Editor
 			public new bool Equals(object x, object y) => ReferenceEquals(x, y);
 
 			public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+		}
+	}
+
+	internal enum ContentValidationSeverity
+	{
+		Error,
+		Warning
+	}
+
+	internal readonly struct ContentValidationReportEntry
+	{
+		public ContentValidationSeverity Severity { get; }
+		public string Message { get; }
+		public UnityObject Context { get; }
+		public string Path { get; }
+
+		public ContentValidationReportEntry(
+			ContentValidationSeverity severity,
+			string message,
+			UnityObject context,
+			string path)
+		{
+			Severity = severity;
+			Message = message.IsNullOrEmpty()
+				? "Content validation failed without a message"
+				: message;
+			Context = context;
+			Path = path ?? string.Empty;
+		}
+	}
+
+	internal sealed class ContentValidationReport : IPoolable
+	{
+		private readonly List<ContentValidationReportEntry> _entries = new();
+
+		public IReadOnlyList<ContentValidationReportEntry> Entries => _entries;
+		public int ErrorCount { get; private set; }
+		public int WarningCount { get; private set; }
+		public int Generation { get; private set; }
+		public bool IsComplete { get; private set; }
+		public bool IsValid { get; private set; }
+		public bool WasCanceled { get; private set; }
+
+		internal void AddError(string message, UnityObject context, string path)
+		{
+			_entries.Add(new ContentValidationReportEntry(ContentValidationSeverity.Error, message, context, path));
+			ErrorCount++;
+		}
+
+		internal void AddWarning(string message, UnityObject context, string path)
+		{
+			_entries.Add(new ContentValidationReportEntry(ContentValidationSeverity.Warning, message, context, path));
+			WarningCount++;
+		}
+
+		internal void Cancel()
+		{
+			WasCanceled = true;
+		}
+
+		internal void Complete(bool isValid)
+		{
+			IsComplete = true;
+			IsValid = isValid;
+		}
+
+		void IPoolable.OnGet()
+		{
+			Generation++;
+		}
+
+		void IPoolable.Release()
+		{
+			_entries.Clear();
+			ErrorCount = 0;
+			WarningCount = 0;
+			IsComplete = false;
+			IsValid = false;
+			WasCanceled = false;
 		}
 	}
 }

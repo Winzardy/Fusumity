@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Fusumity.Editor;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
+using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -73,10 +74,10 @@ namespace Content.Editor
 
 		private string WarningsLabel => $"Warnings {_warnings.Count}";
 
-		// Счётчик unused/all заменяет собой стандартный заголовок "Items"
+		// Счётчик unused/all configs заменяет собой стандартный заголовок "Items"
 		private string UnusedLabel => _result == null
 			? "Unused"
-			: $"{_result.Unused.Count}/{_result.CandidateCount} (unused/all, used: {_result.UsedCount})";
+			: $"{_result.Unused.Count}/{_result.AllCount} (unused/all configs, eligible: {_result.CandidateCount}, used: {_result.UsedCount})";
 
 		private string DisabledLabel => _result == null
 			? "Disabled but Referenced"
@@ -449,6 +450,7 @@ namespace Content.Editor
 	internal sealed class ContentUsageAuditResult
 	{
 		public bool IsComplete { get; }
+		public int AllCount { get; }
 		public int CandidateCount { get; }
 		public int UsedCount { get; }
 		public int RootCount { get; }
@@ -458,6 +460,7 @@ namespace Content.Editor
 
 		public ContentUsageAuditResult(
 			bool isComplete,
+			int allCount,
 			int candidateCount,
 			int usedCount,
 			int rootCount,
@@ -466,6 +469,7 @@ namespace Content.Editor
 			IReadOnlyList<string> warnings)
 		{
 			IsComplete = isComplete;
+			AllCount = allCount;
 			CandidateCount = candidateCount;
 			UsedCount = usedCount;
 			RootCount = rootCount;
@@ -563,6 +567,7 @@ namespace Content.Editor
 
 			return new ContentUsageAuditResult(
 				warnings.Count == 0,
+				allEntries.Length,
 				candidates.Length,
 				reachable.Count,
 				roots.Count,
@@ -809,6 +814,14 @@ namespace Content.Editor
 					return true;
 				}
 
+				if (context.value is string id &&
+					!id.IsNullOrEmpty() &&
+					TryGetContentReferenceSource(context.contentReferenceAttribute, id, out var source))
+				{
+					Register(source);
+					return true;
+				}
+
 				if (context.value is ContentEntryScriptableObject contentAsset &&
 					!ReferenceEquals(contentAsset, _context))
 					Register(contentAsset);
@@ -819,6 +832,32 @@ namespace Content.Editor
 			private void Register(SerializableGuid guid)
 			{
 				if (_guidToContent.TryGetValue(guid, out var target))
+					Register(target);
+			}
+
+			private static bool TryGetContentReferenceSource(
+				ContentReferenceAttribute attribute,
+				string id,
+				out IContentEntrySource source)
+			{
+				source = null;
+				if (attribute == null)
+					return false;
+
+				var valueType = attribute.Type;
+				if (valueType == null && !attribute.TypeName.IsNullOrEmpty())
+					ReflectionUtility.TryGetType(attribute.TypeName, out valueType);
+
+				return valueType != null && ContentEditorCache.TryGetSource(valueType, id, out source);
+			}
+
+			private void Register(IContentEntrySource source)
+			{
+				if (source == null)
+					return;
+
+				ContentEditorCache.IsSourceDisabled(source, out var sourceObject);
+				if (sourceObject is ContentEntryScriptableObject target)
 					Register(target);
 			}
 

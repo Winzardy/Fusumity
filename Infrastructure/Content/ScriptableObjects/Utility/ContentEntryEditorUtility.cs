@@ -56,7 +56,7 @@ namespace Content.Editor
 			if (dictionary == null)
 				return;
 
-			var so = new SerializedObject(asset);
+			using var so = new SerializedObject(asset);
 			scriptableObject.ScriptableContentEntry.ClearNested();
 			Refresh(asset, so, refreshAndSave, false, log: true);
 		}
@@ -273,58 +273,68 @@ namespace Content.Editor
 
 			var map = HashMapPool<MemberReflectionReference<IUniqueContentEntry>, SerializableGuid>.Get();
 
+			// SerializedObject держит нативную память до Dispose — если создали сами, обязаны освободить
+			var ownsSerializedObject = serializedObject == null;
 			serializedObject ??= new SerializedObject(asset);
 
-			// Разрезаем алиасинг нативных [SerializeReference]: если один объект с вложенными
-			// ContentEntry достижим по нескольким путям (несколько полей ссылаются на один rid),
-			// клонируем его для лишних ссылок — иначе guid'ы конфликтуют и регенерятся на каждый Refresh
-			if (DeAliasSharedContentReferences(asset, serializedObject))
-				serializedObject.Update();
-
-			var iterator = serializedObject.GetIterator();
-			if (!iterator.Next(true))
-				return;
-			do
+			try
 			{
-				var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
+				// Разрезаем алиасинг нативных [SerializeReference]: если один объект с вложенными
+				// ContentEntry достижим по нескольким путям (несколько полей ссылаются на один rid),
+				// клонируем его для лишних ссылок — иначе guid'ы конфликтуют и регенерятся на каждый Refresh
+				if (DeAliasSharedContentReferences(asset, serializedObject))
+					serializedObject.Update();
 
-				if (!modification || entry is IScriptableContentEntry)
-					continue;
-
-				var reference = iterator.ToContentReference();
-				if (reference.IsEmpty())
-					continue;
-
-				if (regenerateGuid)
-					RegenerateGuid(entry, iterator.propertyPath, asset, false);
-
-				map.SetOrAdd(reference, entry.Guid);
-			} while (iterator.Next(true));
-
-			scriptableObject.ScriptableContentEntry.ClearNested();
-
-			foreach (var reference in map.Keys)
-			{
-				ref var guid = ref map[reference];
-				if (!scriptableObject.ScriptableContentEntry!.RegisterNestedEntry(guid, reference))
+				var iterator = serializedObject.GetIterator();
+				if (!iterator.Next(true))
+					return;
+				do
 				{
-					if (IsAlias(scriptableObject.ScriptableContentEntry, in guid, in reference))
-					{
-						Track((asset, reference), in guid);
+					var modification = iterator.TryStartModificationNestedContentEntry(out var entry);
+
+					if (!modification || entry is IScriptableContentEntry)
 						continue;
+
+					var reference = iterator.ToContentReference();
+					if (reference.IsEmpty())
+						continue;
+
+					if (regenerateGuid)
+						RegenerateGuid(entry, iterator.propertyPath, asset, false);
+
+					map.SetOrAdd(reference, entry.Guid);
+				} while (iterator.Next(true));
+
+				scriptableObject.ScriptableContentEntry.ClearNested();
+
+				foreach (var reference in map.Keys)
+				{
+					ref var guid = ref map[reference];
+					if (!scriptableObject.ScriptableContentEntry!.RegisterNestedEntry(guid, reference))
+					{
+						if (IsAlias(scriptableObject.ScriptableContentEntry, in guid, in reference))
+						{
+							Track((asset, reference), in guid);
+							continue;
+						}
+
+						var entry = reference.Resolve(scriptableObject.ScriptableContentEntry);
+						guid = RegenerateGuid(entry, reference.Path, asset, false);
+						scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference);
 					}
 
-					var entry = reference.Resolve(scriptableObject.ScriptableContentEntry);
-					guid = RegenerateGuid(entry, reference.Path, asset, false);
-					scriptableObject.ScriptableContentEntry.RegisterNestedEntry(guid, reference);
+					Track((asset, reference), in guid);
 				}
 
-				Track((asset, reference), in guid);
+				SetDirty(serializedObject, refreshAndSave);
 			}
+			finally
+			{
+				map.ReleaseToStaticPool();
 
-			SetDirty(serializedObject, refreshAndSave);
-
-			map.ReleaseToStaticPool();
+				if (ownsSerializedObject)
+					serializedObject.Dispose();
+			}
 
 			if (log && ContentDebug.Logging.Nested.refresh)
 			{
