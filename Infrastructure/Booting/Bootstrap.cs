@@ -222,7 +222,7 @@ namespace Booting
 				{
 					// Все буттаски из бутстрапа, которые репортят прогресс отличный от дефолтных (0 и 1) должны имплементировать интерфейс IWeightedProgress,
 					// чтобы можно было корректно отображать прогресс
-					this.LogError($"{nameof(IBootTask)} report progress, but not implement {nameof(IWeightedProgress)}"); // PTODO
+					this.LogError($"{nameof(IBootTask)} report progress, but not implement {nameof(IWeightedProgress)}");
 				}
 #endif
 			}
