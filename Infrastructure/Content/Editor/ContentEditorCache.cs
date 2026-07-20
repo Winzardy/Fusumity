@@ -65,7 +65,7 @@ namespace Content.Editor
 			{
 				_typeToCollection ??= new Dictionary<Type, HashSet<ScriptableObject>>();
 				var type = typeof(T);
-				if (!_typeToCollection.TryGetValue(type, out var hashSet))
+				if (!_typeToCollection.TryGetValue(type, out cachedCollection))
 				{
 					cachedCollection = _typeToCollection[type] = HashSetPool<ScriptableObject>.Get();
 
