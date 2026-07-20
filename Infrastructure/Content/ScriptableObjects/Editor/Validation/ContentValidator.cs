@@ -437,7 +437,7 @@ namespace Content.Editor
 					errorMessageBuilder,
 					contentReferenceAttribute);
 
-			if (target is IEnumerable enumerable and not string)
+			if (target is IList enumerable)
 				return errorCount + ValidateEnumerable(enumerable,
 					path,
 					context,
