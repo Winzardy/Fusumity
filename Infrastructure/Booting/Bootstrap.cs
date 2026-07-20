@@ -10,9 +10,11 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
+using Sapientia.ServiceManagement;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using WLog;
 
 #if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
@@ -34,6 +36,8 @@ namespace Booting
 		public event Action<IBootTask, float> TaskBooted;
 
 		private List<IBootTask> _bootedTasks;
+
+		private CompositeProgress<BootProgressInfo> _compositeProgress;
 
 		private void Start()
 		{
@@ -57,6 +61,15 @@ namespace Booting
 			string passedTimeStr;
 			using var blackboard = new Blackboard();
 			blackboard.Register(this);
+
+			var controller = new BootstrapLoadingProgress() as ILoadingProgress;
+			blackboard.Register(controller);
+			controller.RegisterAsService();
+
+			_compositeProgress = new CompositeProgress<BootProgressInfo>(GetTotalWeight(tasks), controller.Progress);
+
+			InvalidUsageProgress invalidUsageProgress = new InvalidUsageProgress();
+
 			foreach (var task in tasks)
 			{
 				if (!task.Active)
@@ -67,7 +80,9 @@ namespace Booting
 
 				var taskTimer = Timer.Start();
 
-				await task.RunAsync(blackboard, cancellationToken);
+				var progress = task is IWeightedProgress weightedProgress ? _compositeProgress.CreateChild(weightedProgress.Weight) : invalidUsageProgress;
+
+				await task.RunAsync(blackboard, progress, cancellationToken);
 
 				var passedTime = taskTimer.Seconds;
 				passedTimeStr = passedTime
@@ -99,6 +114,8 @@ namespace Booting
 
 			foreach (var task in _bootedTasks)
 				task.OnBootCompleted();
+
+			controller.UnRegisterAsService();
 		}
 
 		private async UniTask WaitForTasksReadyAsync(CancellationToken cancellationToken)
@@ -154,6 +171,19 @@ namespace Booting
 			_bootedTasks = null;
 		}
 
+		private static float GetTotalWeight(IBootTask[] tasks)
+		{
+			float weight = 0;
+			foreach (var task in tasks)
+			{
+				if (task.Active && task is IWeightedProgress weightedProgress)
+				{
+					weight += weightedProgress.Weight;
+				}
+			}
+			return weight;
+		}
+
 #if UNITY_EDITOR
 		private void DrawAutoFillTasksButton()
 		{
@@ -182,6 +212,42 @@ namespace Booting
 				=> b.Priority.CompareTo(a.Priority);
 		}
 #endif
+
+		private class InvalidUsageProgress : IProgress<BootProgressInfo>
+		{
+			public void Report(BootProgressInfo value)
+			{
+#if UNITY_EDITOR || DEV
+				if (value.Progress != 0 && !Mathf.Approximately(value.Progress, 1))
+				{
+					// Все буттаски из бутстрапа, которые репортят прогресс отличный от дефолтных (0 и 1) должны имплементировать интерфейс IWeightedProgress,
+					// чтобы можно было корректно отображать прогресс
+					this.LogError($"{nameof(IBootTask)} report progress, but not implement {nameof(IWeightedProgress)}"); // PTODO
+				}
+#endif
+			}
+		}
+	}
+
+	public interface ILoadingProgress
+	{
+		BootProgressInfo CurrentProgress { get; }
+		Progress<BootProgressInfo> Progress { get; }
+	}
+
+	public class BootstrapLoadingProgress : ILoadingProgress
+	{
+		public BootProgressInfo CurrentProgress { get; private set; }
+
+		public Progress<BootProgressInfo> Progress { get; }
+
+		public BootstrapLoadingProgress()
+		{
+			Progress = new(newProgress =>
+			{
+				CurrentProgress = new(newProgress.locKey.value ?? CurrentProgress.locKey.value, newProgress.Progress);
+			});
+		}
 	}
 
 	public readonly struct Timer

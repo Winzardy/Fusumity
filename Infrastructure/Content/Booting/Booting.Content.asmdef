@@ -10,7 +10,8 @@
         "Fusumity",
         "Sapientia",
         "Content.ScriptableObjects.Editor",
-        "AssetManagement"
+        "AssetManagement",
+        "Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -219,7 +219,7 @@ namespace Content.Editor
 				: guid.ToString();
 		}
 
-		public Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+		public Task PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token = default)
 			=> Task.CompletedTask;
 
 		public bool IsFullyLoaded() => true;

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Sapientia;
 using UnityEngine.Scripting;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace Booting.AssetManagement
 {
@@ -13,7 +14,7 @@ namespace Booting.AssetManagement
 		"",
 		SdfIconType.BoxSeam)]
 	[Preserve]
-	public class AssetManagementBootTask : BaseBootTask
+	public class AssetManagementBootTask : BaseBootTask, IWeightedProgress
 	{
 		public override int Priority => HIGH_PRIORITY - 10;
 
@@ -24,9 +25,15 @@ namespace Booting.AssetManagement
 		public bool @await;
 		public AssetLabelReference[] dependencyLabels;
 
+		[SerializeField]
+		private float _weight;
+
 		private Exception _initializationException;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		public float Weight => _weight;
+
+
+		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			_initializationException = null;
 

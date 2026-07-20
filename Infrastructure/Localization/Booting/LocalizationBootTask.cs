@@ -18,7 +18,7 @@ namespace Booting.Localization
 
 		public LocTableReference tableReference;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var resolver = new LocalizationResolver(in tableReference);
 			await resolver.InitializeAsync(token);

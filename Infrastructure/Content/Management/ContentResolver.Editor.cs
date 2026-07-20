@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -11,8 +12,8 @@ namespace Content.Management
 	{
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Task IContentEditorResolver.PopulateAsync(IContentImporter importer, CancellationToken token) =>
-			PopulateAsync(importer, token);
+		Task IContentEditorResolver.PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token) =>
+			PopulateAsync(importer, progress, token);
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -229,7 +230,7 @@ namespace Content.Management
 		public string ToLabel<T>(in SerializableGuid guid, bool verbose = false);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task PopulateAsync(IContentImporter importer, CancellationToken token = default);
+		public Task PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token = default);
 	}
 }
 #endif

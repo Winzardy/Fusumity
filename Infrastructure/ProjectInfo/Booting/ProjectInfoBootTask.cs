@@ -19,7 +19,7 @@ namespace Booting.ProjectInformation
 	{
 		public override int Priority => HIGH_PRIORITY - 30;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var options = ContentManager.Get<ProjectInfoConfig>();
 			var platform = GetTargetPlatform();
