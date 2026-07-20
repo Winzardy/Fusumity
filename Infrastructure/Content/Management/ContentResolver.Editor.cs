@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NUnit.Framework;
+using Sapientia.Utility;
 
 namespace Content.Management
 {
@@ -12,8 +14,8 @@ namespace Content.Management
 	{
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Task IContentEditorResolver.PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token) =>
-			PopulateAsync(importer, progress, token);
+		Task IContentEditorResolver.PopulateAsync(IContentImporter importer, [CanBeNull] IAsyncFlowController flowController, [CanBeNull] IProgress<float> progress, CancellationToken token) =>
+			PopulateAsync(importer, flowController, progress, token);
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -230,7 +232,7 @@ namespace Content.Management
 		public string ToLabel<T>(in SerializableGuid guid, bool verbose = false);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token = default);
+		public Task PopulateAsync(IContentImporter importer, IAsyncFlowController flowController = null, IProgress<float> progress = null, CancellationToken token = default);
 	}
 }
 #endif

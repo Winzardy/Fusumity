@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Management;
-using Fusumity.Editor.Utility;
 using Sapientia.Extensions;
+using Sapientia.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -219,7 +219,7 @@ namespace Content.Editor
 				: guid.ToString();
 		}
 
-		public Task PopulateAsync(IContentImporter importer, IProgress<float> progress, CancellationToken token = default)
+		public Task PopulateAsync(IContentImporter importer, IAsyncFlowController flowController = null, IProgress<float> progress = null, CancellationToken token = default)
 			=> Task.CompletedTask;
 
 		public bool IsFullyLoaded() => true;

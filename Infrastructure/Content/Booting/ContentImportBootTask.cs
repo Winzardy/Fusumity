@@ -4,6 +4,7 @@ using AssetManagement;
 using Content;
 using Content.ScriptableObjects;
 using Cysharp.Threading.Tasks;
+using Fusumity.Utility;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -34,7 +35,7 @@ namespace Booting.Content
 		{
 			var importer = new ClientContentImporter(label);
 			var importProgress = progress != null ? new Progress<float>(f => progress?.Report(new BootProgressInfo(_loadingLocKey, f))) : null;
-			await ContentManager.PopulateAsync(importer, importProgress, token);
+			await ContentManager.PopulateAsync(importer, new WaitFramesAsyncFlowController(100, 1), importProgress, token);
 		}
 	}
 }
