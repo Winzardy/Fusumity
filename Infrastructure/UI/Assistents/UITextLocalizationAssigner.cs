@@ -26,6 +26,7 @@ namespace UI
 	/// _assigner.Assign(tmp, locKey)
 	/// </summary>
 	/// <remarks>Важно! любые tags, tagsWithFunc (Dictionary) которые попадают в аргументы сами улетают в статический пул!</remarks>
+	[Obsolete("После миграции можно удалить")]
 	public class UITextLocalizationAssigner : IDisposable
 	{
 		//Чтобы для случаев с одиночным переводом на аллоцировать целый Dictionary
@@ -150,15 +151,20 @@ namespace UI
 
 			if (_single.tmp == tmp)
 			{
-				_single.tmp = null;
-				_single.text = null;
+				//Вернуть pooled-словари аргументов в статический пул перед сбросом (как в Dispose)
+				Release(ref _single.text);
+				_single = default;
 				return;
 			}
 
 			if (_tmpToText.IsNullOrEmpty())
 				return;
 
-			_tmpToText.Remove(tmp);
+			if (_tmpToText.Contains(tmp))
+			{
+				Release(ref _tmpToText[tmp]);
+				_tmpToText.Remove(tmp);
+			}
 		}
 
 		private void OnCurrentLocaleCodeUpdated(string _)

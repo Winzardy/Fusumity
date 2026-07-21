@@ -874,10 +874,13 @@ namespace Content.Editor
 				if (!_edges.ContainsKey(target))
 					return;
 
-				_roots.Add(target);
-
 				if (_owner != null && _edges.TryGetValue(_owner, out var targets))
+				{
 					targets.Add(target);
+					return;
+				}
+
+				_roots.Add(target);
 			}
 		}
 	}

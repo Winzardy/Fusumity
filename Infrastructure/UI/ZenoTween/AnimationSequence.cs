@@ -82,15 +82,11 @@ namespace ZenoTween
 
 			if (delay > 0 && delayOnce)
 			{
-				// not the most reliable way, but whatever.
-				sequence.Pause();
-				DOVirtual.DelayedCall(delay, () =>
-				{
-					if (sequence.IsActive())
-					{
-						sequence.Play();
-					}
-				});
+				// Одноразовый стартовый delay: asPrependedIntervalIfSequence = false — не повторяется в лупе
+				// (обычный SetDelay для Sequence прибавляется как interval и повторяется на каждом цикле).
+				// Принадлежит самому sequence и умирает вместе с ним — в отличие от внешнего DOVirtual.DelayedCall,
+				// который держал ссылку на pooled Sequence и при DOTween-recycling мог дёрнуть Play() чужого твина
+				sequence.SetDelay(delay, false);
 			}
 
 			return sequence;

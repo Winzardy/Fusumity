@@ -61,6 +61,10 @@ namespace UI.Popups
 
 			public void OnRelease(T obj)
 			{
+				//Сброс при возврате в пул: чистит _args (UIPopup.OnReset → UpdateArgs(default)).
+				//Иначе попап, закрытый пока он в очереди (Release без Hide/reset), сохранит stale-аргументы
+				//прошлого показа, и следующий Show<T>(null) откроет его с ними
+				obj.Reset();
 			}
 
 			public void OnDispose(T obj)
