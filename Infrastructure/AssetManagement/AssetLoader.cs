@@ -33,7 +33,12 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(IAssetReference reference,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			=> await provider.LoadAssetAsync<T>(reference, cancellationToken, progress);
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -43,7 +48,13 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(ComponentReference reference,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
+			where T : Component
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -53,7 +64,13 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(IAssetReference reference,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
+			where T : Component
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить ассет в память по пути (текстура, геймобж, текст и т.д).
@@ -62,7 +79,12 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken = default,
 			IProgress<float> progress = null)
-			where T : UnityObject => await provider.LoadAssetAsync<T>(path, cancellationToken, progress);
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetAsync<T>(path, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -72,7 +94,13 @@ namespace AssetManagement
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken = default,
 			IProgress<float> progress = null)
-			where T : Component => await provider.LoadComponentAsync<T>(path, cancellationToken, progress);
+			where T : Component
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadComponentAsync<T>(path, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по лейблу (Label у Addressable). <br/>
@@ -80,8 +108,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReference reference,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null) =>
-			await provider.LoadAssetsAsync<T>(reference, cancellationToken, progress);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
@@ -89,8 +122,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(string tag,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null) =>
-			await provider.LoadAssetsAsync<T>(tag, cancellationToken, progress);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(tag, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
@@ -98,8 +136,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(IEnumerable tags,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null) =>
-			await provider.LoadAssetsAsync<T>(tags, cancellationToken, progress);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(tags, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Отпустить ассет из памяти

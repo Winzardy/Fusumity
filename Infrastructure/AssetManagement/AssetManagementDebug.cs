@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 
 namespace AssetManagement
@@ -34,8 +35,10 @@ namespace AssetManagement
 
 		public static Exception NullException(object msg) =>
 			logger?.NullReferenceException(msg) ?? new NullReferenceException(msg.ToString());
-
-		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
+		public static Exception Exception(object msg)
+			=> logger?.Exception(msg) ?? new Exception(msg.ToString());
+		public static OperationCanceledException OperationCanceledException(CancellationToken cancellationToken)
+			=> new OperationCanceledException(cancellationToken);
 
 		public static readonly Color COLOR = new(102 / 255f, 171 / 255f, 202 / 255f);
 	}
