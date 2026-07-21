@@ -98,7 +98,7 @@ namespace UI.Screens
 
 				if (Active)
 				{
-					if (_args.Equals(args))
+					if (_args != null && _args.Equals(args))
 						return;
 
 					EnableSuppress();

@@ -99,6 +99,7 @@ namespace UI
 
 			if (_immediate)
 			{
+				var origin =  AnimationTweenCallback.immediate;
 				AnimationTweenCallback.immediate = true;
 				try
 				{
@@ -106,7 +107,7 @@ namespace UI
 				}
 				finally
 				{
-					AnimationTweenCallback.immediate = false;
+					AnimationTweenCallback.immediate = origin;
 					tween.KillSafe();
 				}
 			}

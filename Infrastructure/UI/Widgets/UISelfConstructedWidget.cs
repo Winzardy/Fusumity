@@ -107,13 +107,15 @@ namespace UI
 			if (_setupTemplateCts != null)
 				return;
 
-			_setupTemplateCts = new CancellationTokenSource();
-			_setupTemplateCts.Token
-				.Register(OnTriggered);
+			// Локальная ссылка: при быстром Hide→Show поле _setupTemplateCts уже может указывать на новый CTS,
+			// поэтому диспоузить/обнулять надо именно наш токен, а не текущее значение поля
+			var cts = new CancellationTokenSource();
+			_setupTemplateCts = cts;
+			cts.Token.Register(OnTriggered);
 
 			try
 			{
-				await SetupTemplateAndActivateAsync(immediate, _setupTemplateCts.Token);
+				await SetupTemplateAndActivateAsync(immediate, cts.Token);
 			}
 			catch (OperationCanceledException)
 			{
@@ -125,7 +127,11 @@ namespace UI
 			}
 			finally
 			{
-				AsyncUtility.Release(ref _setupTemplateCts);
+				// Обнуляем поле только если оно всё ещё наше — иначе затрём чужой (актуальный) CTS
+				if (ReferenceEquals(_setupTemplateCts, cts))
+					_setupTemplateCts = null;
+
+				cts.Dispose();
 			}
 
 			void OnTriggered() => GUIDebug.LogWarning($"[ {GetType()} ] template loading cancel was triggered");
@@ -175,7 +181,17 @@ namespace UI
 
 			ClearTemplateSafe();
 
-			await SetupTemplateAsync(template, cancellationToken);
+			try
+			{
+				await SetupTemplateAsync(template, cancellationToken);
+			}
+			catch
+			{
+				if (!_template)
+					LayoutReference.Release();
+				throw;
+			}
+
 			if (cancellationToken.IsCancellationRequested)
 			{
 				LayoutClearingAndReleaseTemplateSafe();

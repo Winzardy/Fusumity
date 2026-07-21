@@ -191,8 +191,13 @@ namespace UI.Popovers
 
 		internal void ClearAll()
 		{
-			foreach (var active in _active)
-				active.SetActive(false, true);
+			using (ListPool<IPopover>.Get(out var buffer))
+			{
+				buffer.AddRange(_active);
+
+				foreach (var active in buffer)
+					active.SetActive(false, true);
+			}
 
 			_pool.ClearAll();
 		}

@@ -31,6 +31,10 @@ namespace UI.Popups
 
 		private readonly UIPopupQueue<object> _queue;
 
+		//Попапы в процессе отложенного закрытия (ждут конца анимации перед Release) —
+		//защита от повторного Release в пул при втором TryHide во время анимации
+		private readonly HashSet<IPopup> _hiding = new();
+
 		private Dictionary<IPopup, object> _standalones;
 
 		private readonly CancellationTokenSource _cts = new();
@@ -149,6 +153,10 @@ namespace UI.Popups
 			//запускаем закрытие и открытие из очереди нового только в том случае если закрывается текущий активный попап
 			if (_current != popup)
 			{
+				//Уже закрывается (анимация) и запланирован на Release — второй TryHide не должен релизить повторно
+				if (_hiding.Contains(popup))
+					return;
+
 				PreRelease(popup);
 				Release(popup);
 				return;
@@ -165,6 +173,7 @@ namespace UI.Popups
 				HideInternal(popup, false);
 
 				//Нужно подождать пока отыграется анимация и только потом возвращать в пул
+				_hiding.Add(popup);
 				ReleaseWhenHiddenAsync(popup, _cts.Token)
 					.Forget();
 			}
@@ -262,8 +271,12 @@ namespace UI.Popups
 			await UniTask.WaitWhile(popup.IsVisible, cancellationToken: cancellationToken);
 
 			if (cancellationToken.IsCancellationRequested)
+			{
+				_hiding.Remove(popup);
 				return;
+			}
 
+			_hiding.Remove(popup);
 			Release(popup);
 		}
 

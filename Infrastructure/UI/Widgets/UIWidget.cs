@@ -29,6 +29,8 @@ namespace UI
 
 		private bool _active;
 
+		private bool _disposed;
+
 		/// <summary>
 		/// Флаг немедленного выполнения (анимации при OnShow) при последнем вызове
 		/// </summary>
@@ -36,6 +38,11 @@ namespace UI
 
 		/// <inheritdoc cref="IWidget{TLayout}.Active"/>
 		public bool Active => _active;
+
+		/// <summary>
+		/// Виджет уже задиспоужен (например, вычищен как ребёнок root'а) — нельзя возвращать в пул/переиспользовать
+		/// </summary>
+		public bool IsDisposed => _disposed;
 
 		/// <inheritdoc cref="IWidget{TLayout}.Visible"/>
 		public virtual bool Visible => Active;
@@ -103,7 +110,11 @@ namespace UI
 		{
 		}
 
-		protected sealed override void OnDisposeInternal() => OnDisposedInternal();
+		protected sealed override void OnDisposeInternal()
+		{
+			_disposed = true;
+			OnDisposedInternal();
+		}
 
 		private protected virtual void OnDisposedInternal()
 		{

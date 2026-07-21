@@ -329,7 +329,7 @@ namespace UI
 			var duration = 0f;
 			foreach (var layer in _layers.Values)
 			{
-				if (layer.tween == null && !layer.tween.IsActive())
+				if (layer.tween == null || !layer.tween.IsActive())
 					continue;
 
 				if (layer.tween.IsPlaying())

@@ -47,7 +47,8 @@ namespace UI
 		{
 			if (button != null)
 			{
-				ActionBus.Unregister(button.gameObject);
+				//Снимаем именно подписку с этим action, а не все бас-элементы GameObject
+				ActionBus.Unregister(button.gameObject, action);
 			}
 		}
 
