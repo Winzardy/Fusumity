@@ -5,7 +5,10 @@ using System.Runtime.CompilerServices;
 using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Sapientia.Pooling;
+using Sapientia.Utility;
+using UnityEditor;
 using UnityEngine;
 
 namespace Content.Editor
@@ -54,7 +57,7 @@ namespace Content.Editor
 			_cache ??= new();
 			_cache.Clear();
 
-			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject", null))
+			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject",null))
 				Register(scriptableObject);
 		}
 
