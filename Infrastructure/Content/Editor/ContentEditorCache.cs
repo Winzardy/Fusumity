@@ -86,7 +86,7 @@ namespace Content.Editor
 			}
 			else
 			{
-				foreach (var asset in _cache.Values)
+				foreach (var asset in cache.Values)
 				{
 					if (asset is T cast)
 						yield return cast;
