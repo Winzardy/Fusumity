@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using Sapientia;
+using Sapientia.Localization;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
-using Sapientia;
 
 namespace Localization
 {
@@ -65,5 +65,8 @@ namespace Localization
 
 		public static UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token)
 			=> resolver.AddTableAsync(tableRef, token);
+
+		public static void AddRemotelyLoadedStrings(RemoteLocalizationStrings strings)
+			=> resolver.AddRemotelyLoadedStrings(strings);
 	}
 }

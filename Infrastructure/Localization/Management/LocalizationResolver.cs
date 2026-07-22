@@ -13,6 +13,7 @@ using UnityEngine.Localization.Metadata;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Sapientia.Localization;
 
 namespace Localization
 {
@@ -23,6 +24,7 @@ namespace Localization
 	{
 		private bool _initialized;
 		private HashMap<LocTableReference, AsyncOperationHandle<StringTable>> _refToHandle;
+		private RemoteLocalizationsContainer _remoteContainer;
 
 		private Locale _currentLocale;
 
@@ -40,6 +42,7 @@ namespace Localization
 
 		public LocalizationResolver(in LocTableReference tableRef)
 		{
+			_remoteContainer = new RemoteLocalizationsContainer();
 			_refToHandle = new HashMap<LocTableReference, AsyncOperationHandle<StringTable>>();
 			_refToHandle.SetOrAdd(tableRef, default);
 		}
@@ -67,6 +70,11 @@ namespace Localization
 				return;
 
 			LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+		}
+
+		public void AddRemotelyLoadedStrings(RemoteLocalizationStrings strings)
+		{
+			_remoteContainer.AddStrings(strings);
 		}
 
 		public async UniTask AddTableAsync(LocTableReference tableRef, CancellationToken token = default)
@@ -109,6 +117,12 @@ namespace Localization
 						}
 					}
 				}
+			}
+
+			if (_remoteContainer.HasKey(key, CurrentLocaleCode))
+			{
+				value = _remoteContainer.GetString(key, CurrentLocaleCode);
+				return true;
 			}
 
 			value = null;
