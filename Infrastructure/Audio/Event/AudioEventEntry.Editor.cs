@@ -14,7 +14,7 @@ namespace Audio
 #if UNITY_EDITOR
 	public partial class AudioEventConfig
 	{
-		private static readonly HashSet<AudioEventConfig> EditorPreviews = new();
+		private static readonly HashSet<AudioEventConfig> _editorPreviews = new();
 
 		public bool EditorIsPlay => _playCts is { IsCancellationRequested: false };
 
@@ -29,7 +29,7 @@ namespace Audio
 
 			var cts = new CancellationTokenSource();
 			_playCts = cts;
-			EditorPreviews.Add(this);
+			_editorPreviews.Add(this);
 
 			var token = cts.Token;
 			AudioTrackScheme[] playlist = null;
@@ -97,7 +97,7 @@ namespace Audio
 
 				if (_playCts == null)
 				{
-					EditorPreviews.Remove(this);
+					_editorPreviews.Remove(this);
 				}
 
 				cts.Dispose();
@@ -113,7 +113,7 @@ namespace Audio
 
 		internal static void StopAllEditorPreviews()
 		{
-			foreach (var config in EditorPreviews.ToArray())
+			foreach (var config in _editorPreviews.ToArray())
 				config.StopEditor();
 		}
 	}
