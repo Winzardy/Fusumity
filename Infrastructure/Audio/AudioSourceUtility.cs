@@ -19,6 +19,11 @@ namespace Audio
 		{
 			Tween tween = null;
 
+#if UNITY_EDITOR
+			if (editor && UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+				return null;
+#endif
+
 			if (!editor && !track.clip)
 				throw new Exception("Clip is null");
 
