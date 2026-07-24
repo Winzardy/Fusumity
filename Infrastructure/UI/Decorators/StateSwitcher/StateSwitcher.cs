@@ -41,7 +41,6 @@ namespace UI
 	{
 		protected bool _immediate;
 
-
 		[NonSerialized]
 		[PropertyOrder(-2), ReadOnly, ShowInInspector, ShowIf(nameof(_parent), null)]
 		private StateSwitcher<TState> _parent;

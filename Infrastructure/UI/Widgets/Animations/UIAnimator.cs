@@ -38,6 +38,7 @@ namespace UI
 		private Dictionary<string, Func<Sequence>> _keyToSequenceCreator;
 
 		public string LastKey { get => _lastKey; }
+		protected bool _immediate;
 
 		public UIAnimator(TLayout layout) : this()
 		{
@@ -203,7 +204,17 @@ namespace UI
 			if (_layout)
 			{
 				if (TryResolveSequenceCreator(args.key, out var sequenceCreator))
-					sequence = sequenceCreator.Invoke();
+				{
+					_immediate = immediate;
+					try
+					{
+						sequence = sequenceCreator.Invoke();
+					}
+					finally
+					{
+						_immediate = false;
+					}
+				}
 				else if (GUIDebug.Logging.Widget.Animator.notFoundSequence)
 					GUIDebug.LogWarning($"Not found sequence by key [ {args.key} ]!", _layout);
 			}
