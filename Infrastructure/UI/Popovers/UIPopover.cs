@@ -105,7 +105,7 @@ namespace UI.Popovers
 		protected override string Layer => LayerType.POPOVERS;
 		string IWidget.Layer => Layer;
 
-		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
+		protected override IAssetReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
 		protected override List<AnyAssetReference> PreloadAssets => _config.layout.preloadAssets;
