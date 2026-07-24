@@ -1,3 +1,5 @@
+using Sapientia.Extensions;
+
 namespace Localization
 {
 	public partial class LocUtility
@@ -20,5 +22,14 @@ namespace Localization
 		public static string ToDescriptionLocalize(this in LocKey key) => key.ToDescriptionKey().ToLocalize();
 		public static string ToShortDescriptionLocalize(this in LocKey key) => key.ToShortDescriptionKey().ToLocalize();
 		public static string ToTooltipLocalize(this in LocKey key) => key.ToTooltipKey().ToLocalize();
+
+		public static string ToPercent(this float percent)
+		{
+			percent = percent.Abs();
+
+			return percent % 1 == 0
+				? $"{percent:0}"
+				: $"{percent:0.#}";
+		}
 	}
 }

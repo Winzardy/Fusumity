@@ -69,8 +69,7 @@ namespace UI.Screens
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
-			if (_animator == null)
-				SetAnimator<DefaultScreenAnimator>();
+			OnSetupDefaultAnimator();
 
 			base.SetupLayout(layout);
 		}
