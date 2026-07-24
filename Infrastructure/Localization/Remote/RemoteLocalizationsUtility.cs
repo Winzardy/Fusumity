@@ -4,7 +4,7 @@ using Sapientia.Localization;
 
 namespace Localization
 {
-	public static class RemoteLocalizationsExtensions
+	public static class RemoteLocalizationsUtility
 	{
 		public static bool EmbeddedKeyPresentInBuild(this RemoteLocalizationRequestResult requestResult)
 		{
