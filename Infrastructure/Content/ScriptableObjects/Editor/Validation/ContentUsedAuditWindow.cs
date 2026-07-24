@@ -242,6 +242,37 @@ namespace Content.Editor
 			return clicked;
 		}
 
+		private static void SetEnabled(ContentEntryScriptableObject asset, bool value, string undoName)
+		{
+			var database = ContentDatabaseEditorUtility.GetDatabase(asset);
+			Undo.RecordObject(database, undoName);
+
+			// У импортёрных ассетов состоянием владеет импортёр — сам SO трогать нельзя, его перезапечёт реимпорт
+			if (asset.IsImported)
+			{
+				var path = AssetDatabase.GetAssetPath(asset);
+				var assetImporter = AssetImporter.GetAtPath(path);
+				if (assetImporter is IContentScriptedImporter contentImporter)
+				{
+					Undo.RecordObject(assetImporter, undoName);
+					contentImporter.Enabled = value;
+					EditorUtility.SetDirty(assetImporter);
+					assetImporter.SaveAndReimport();
+				}
+
+				return;
+			}
+
+			Undo.RecordObject(asset, undoName);
+			asset.enabled = value;
+			EditorUtility.SetDirty(asset);
+
+			if (value)
+				ContentDatabaseEditorUtility.AddToDatabase(asset, false);
+			else
+				ContentDatabaseEditorUtility.RemoveToDatabase(asset, false);
+		}
+
 		// Цели сломанных ссылок — выключенные конфиги, на которые ещё ссылаются
 		private void CollectDisabledTargets(HashSet<ContentEntryScriptableObject> into)
 		{
@@ -309,11 +340,7 @@ namespace Content.Editor
 
 			bool IContentBrowserInlineToggleHandler.ShowContentBrowserInlineToggle => true;
 
-			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle
-			{
-				get => RowSelected(_selection, _asset);
-				set => RowSetSelected(_window, _selection, _asset, value);
-			}
+			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle { get => RowSelected(_selection, _asset); set => RowSetSelected(_window, _selection, _asset, value); }
 		}
 
 		// Строка сломанной ссылки: тот же ряд + сворачиваемый список источников "Referenced by"
@@ -344,11 +371,7 @@ namespace Content.Editor
 
 			bool IContentBrowserInlineToggleHandler.ShowContentBrowserInlineToggle => true;
 
-			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle
-			{
-				get => RowSelected(_selection, _asset);
-				set => RowSetSelected(_window, _selection, _asset, value);
-			}
+			bool IContentBrowserInlineToggleHandler.ContentBrowserInlineToggle { get => RowSelected(_selection, _asset); set => RowSetSelected(_window, _selection, _asset, value); }
 		}
 
 		private void RunAudit()
@@ -402,15 +425,7 @@ namespace Content.Editor
 					$"Enabled will be restored for {assets.Count} referenced configs and they will be registered in their Content databases\n\nContinue",
 					"Fix",
 					"Enable referenced Content configs",
-					asset =>
-					{
-						var database = ContentDatabaseEditorUtility.GetDatabase(asset);
-						Undo.RecordObject(asset, "Enable referenced Content config");
-						Undo.RecordObject(database, "Register referenced Content config");
-						asset.enabled = true;
-						ContentDatabaseEditorUtility.AddToDatabase(asset, false);
-						EditorUtility.SetDirty(asset);
-					});
+					asset => SetEnabled(asset, true, "Enable referenced Content config"));
 			}
 		}
 
@@ -436,13 +451,7 @@ namespace Content.Editor
 					$"Enabled will be cleared for {assets.Count} configs and they will be removed from their Content databases\n\nContinue",
 					"Disable",
 					"Disable unused Content configs",
-					asset =>
-					{
-						Undo.RecordObject(asset, "Disable unused Content config");
-						asset.enabled = false;
-						EditorUtility.SetDirty(asset);
-						ContentDatabaseEditorUtility.RemoveToDatabase(asset, false);
-					});
+					asset => SetEnabled(asset, false, "Disable unused Content config"));
 			}
 		}
 	}
@@ -518,7 +527,9 @@ namespace Content.Editor
 			var candidates = allEntries
 				.Where(asset => asset.Enabled &&
 					registeredContent.Contains(asset) &&
-					!asset.HasContentGeneration())
+					!asset.HasContentGeneration() &&
+					// импортёрные конфиги нельзя выключать (состоянием владеет импортёр) — не считаем их лишними
+					!asset.IsImported)
 				.ToArray();
 			var candidateSet = new HashSet<ContentEntryScriptableObject>(candidates);
 			var edges = candidates.ToDictionary(
@@ -874,10 +885,13 @@ namespace Content.Editor
 				if (!_edges.ContainsKey(target))
 					return;
 
-				_roots.Add(target);
-
 				if (_owner != null && _edges.TryGetValue(_owner, out var targets))
+				{
 					targets.Add(target);
+					return;
+				}
+
+				_roots.Add(target);
 			}
 		}
 	}

@@ -15,8 +15,13 @@ namespace AssetManagement
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
 		public static async UniTask<T> LoadResourceAsync<T>(IResourceReference reference,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Object =>
-			await _instance.LoadResourceAsync<T>(reference, cancellationToken, progress);
+			where T : Object
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await _instance.LoadResourceAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить ресурс в память по пути (текстура, геймобж, текст и т.д).
@@ -26,8 +31,13 @@ namespace AssetManagement
 		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
 		public static async UniTask<T> LoadResourceAsync<T>(string path,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Object =>
-			await _instance.LoadResourceAsync<T>(path, cancellationToken, progress);
+			where T : Object
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await _instance.LoadResourceAsync<T>(path, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Синхронно загрузить ресурс. Блокирует поток до готовности. <br/>

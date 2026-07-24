@@ -176,7 +176,7 @@ namespace Fusumity.Editor.Utility
 			return assets;
 		}
 
-		public static T[] GetAssets<T>(string typeName, string path = null) where T : UnityObject
+		public static T[] GetAssets<T>(string typeName, string path) where T : UnityObject
 		{
 			var guids = GetAssetsGuids(typeName, path);
 

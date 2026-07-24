@@ -27,7 +27,7 @@ namespace Booting.Notifications
 
 		private INotificationPlatform _platform;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			_platform = new EditorNotificationPlatform();

@@ -1,4 +1,5 @@
 using System.IO;
+using Content.Editor;
 using Fusumity.Attributes.Specific;
 using Sapientia.Extensions;
 using UnityEditor;
@@ -7,10 +8,11 @@ using UnityEngine;
 
 namespace Content.ScriptableObjects.Editor
 {
-	public abstract class ContentScriptedImporter<TScriptableObject, TValue> : ScriptedImporter
+	public abstract class ContentScriptedImporter<TScriptableObject, TValue> : ScriptedImporter, IContentScriptedImporter
 		where TScriptableObject : ContentEntryScriptableObject<TValue>
 	{
 		public bool enabled;
+		bool IContentScriptedImporter.Enabled { get => enabled; set => enabled = value; }
 
 		public bool useCustomId;
 		[ShowIf(nameof(useCustomId))]
@@ -40,6 +42,7 @@ namespace Content.ScriptableObjects.Editor
 				asset.SetId(id);
 
 			asset.enabled = enabled;
+			asset.MarkImported();
 
 			asset.SetValue(value, false);
 

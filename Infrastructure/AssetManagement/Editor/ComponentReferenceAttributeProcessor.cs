@@ -83,7 +83,7 @@ namespace AssetManagement.Editor
 							var prefab = selection.FirstOrDefault();
 							if (!prefab)
 								return;
-							reference.SetEditorAsset(prefab);
+							Property.ValueEntry.WeakSmartValue = prefab;
 						};
 						var rect = Property.LastDrawnValueRect;
 						rect.width -= EditorGUIUtility.labelWidth;

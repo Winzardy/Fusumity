@@ -417,7 +417,7 @@ namespace Content.Editor
 			if (IsTerminal(targetType))
 				return errorCount;
 
-			if (target is UnityObject && !inspectUnityObject && target != context)
+			if (target is UnityObject && !inspectUnityObject && !ReferenceEquals(target, context))
 				return errorCount;
 
 			if (targetType.IsClass && !visited.Add(target))
@@ -437,7 +437,7 @@ namespace Content.Editor
 					errorMessageBuilder,
 					contentReferenceAttribute);
 
-			if (target is IEnumerable enumerable && target is not string)
+			if (target is IList enumerable)
 				return errorCount + ValidateEnumerable(enumerable,
 					path,
 					context,

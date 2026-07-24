@@ -5,7 +5,10 @@ using System.Runtime.CompilerServices;
 using Fusumity.Editor.Utility;
 using Sapientia;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Sapientia.Pooling;
+using Sapientia.Utility;
+using UnityEditor;
 using UnityEngine;
 
 namespace Content.Editor
@@ -54,28 +57,43 @@ namespace Content.Editor
 			_cache ??= new();
 			_cache.Clear();
 
-			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject", null))
+			foreach (var scriptableObject in AssetDatabaseUtility.GetAssets<ScriptableObject>("ContentScriptableObject",null))
 				Register(scriptableObject);
 		}
 
-		public static IEnumerable<T> GetAssets<T>()
+		public static IEnumerable<T> GetAssets<T>(bool caching = true)
 		{
-			_typeToCollection ??= new Dictionary<Type, HashSet<ScriptableObject>>();
-			var type = typeof(T);
-			if (!_typeToCollection.TryGetValue(type, out var cachedCollection))
+			HashSet<ScriptableObject> cachedCollection = null;
+			if (caching)
 			{
-				cachedCollection = _typeToCollection[type] = HashSetPool<ScriptableObject>.Get();
+				_typeToCollection ??= new Dictionary<Type, HashSet<ScriptableObject>>();
+				var type = typeof(T);
+				if (!_typeToCollection.TryGetValue(type, out cachedCollection))
+				{
+					cachedCollection = _typeToCollection[type] = HashSetPool<ScriptableObject>.Get();
 
-				// Fill
-				foreach (var asset in cache.Values)
-					if (asset is T)
-						cachedCollection.Add(asset);
+					// Fill
+					foreach (var asset in cache.Values)
+						if (asset is T)
+							cachedCollection.Add(asset);
+				}
 			}
 
-			foreach (var asset in cachedCollection)
+			if (cachedCollection != null)
 			{
-				if (asset is T cast)
-					yield return cast;
+				foreach (var asset in cachedCollection)
+				{
+					if (asset is T cast)
+						yield return cast;
+				}
+			}
+			else
+			{
+				foreach (var asset in cache.Values)
+				{
+					if (asset is T cast)
+						yield return cast;
+				}
 			}
 		}
 
@@ -258,7 +276,7 @@ namespace Content.Editor
 				if (scriptableObject is not IContentEntrySource target)
 					continue;
 
-				if(target.ContentEntry == null)
+				if (target.ContentEntry == null)
 					continue;
 
 				var valueType = target.ContentEntry.ValueType;
@@ -519,7 +537,7 @@ namespace Content.Editor
 				nestedToSource[guid] = new NestedContentEntrySource
 				{
 					source = source,
-					guid   = guid
+					guid = guid
 				};
 			}
 		}

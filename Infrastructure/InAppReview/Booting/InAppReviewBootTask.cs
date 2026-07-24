@@ -22,7 +22,7 @@ namespace Booting.InAppReview
 	{
 		public override int Priority => HIGH_PRIORITY - 130;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			IInAppReviewStorePlatform platform = null;
 

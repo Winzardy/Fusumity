@@ -1,15 +1,22 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Sapientia.Utility;
 using Sapientia.Pooling;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Audio
 {
 #if UNITY_EDITOR
 	public partial class AudioEventConfig
 	{
-		public bool EditorIsPlay => _playCts != null;
+		private static readonly HashSet<AudioEventConfig> _editorPreviews = new();
+
+		public bool EditorIsPlay => _playCts is { IsCancellationRequested: false };
 
 		private int _currentTrack;
 		private CancellationTokenSource _playCts;
@@ -18,15 +25,22 @@ namespace Audio
 
 		private async UniTask PlayEditorAsync(bool loop, bool rerollOnLoop)
 		{
-			_playCts?.Trigger();
-			_playCts = new CancellationTokenSource();
-			var playlist = this.RollPlaylist();
+			StopEditor();
 
-			foreach (var track in tracks)
-				track.SelectEditor(playlist.Contains(track));
+			var cts = new CancellationTokenSource();
+			_playCts = cts;
+			_editorPreviews.Add(this);
+
+			var token = cts.Token;
+			AudioTrackScheme[] playlist = null;
 
 			try
 			{
+				playlist = this.RollPlaylist();
+
+				foreach (var track in tracks)
+					track.SelectEditor(playlist.Contains(track));
+
 				do
 				{
 					_currentTrack = 0;
@@ -39,10 +53,10 @@ namespace Audio
 							{
 								foreach (var track in playlist)
 								{
-									tasks.Add(track.PlayEditorAsync(_playCts.Token, true));
+									tasks.Add(track.PlayEditorAsync(token, true));
 								}
 
-								await UniTask.WhenAll(tasks).AttachExternalCancellation(_playCts.Token);
+								await UniTask.WhenAll(tasks).AttachExternalCancellation(token);
 							}
 
 							break;
@@ -51,7 +65,7 @@ namespace Audio
 							while (_currentTrack < playlist.Length)
 							{
 								var nextTrack = playlist[_currentTrack];
-								await nextTrack.PlayEditorAsync(_playCts.Token, true);
+								await nextTrack.PlayEditorAsync(token, true);
 								_currentTrack++;
 							}
 
@@ -67,23 +81,65 @@ namespace Audio
 					}
 				} while (loop);
 			}
+			catch (OperationCanceledException) when (token.IsCancellationRequested)
+			{
+			}
 			finally
 			{
-				if (playlist != null)
+				if (tracks != null)
 				{
 					foreach (var track in tracks)
 						track.DeselectEditor();
-
-					foreach (var track in playlist)
-						track.ClearPlayEditor();
 				}
 
-				_playCts?.Dispose();
-				_playCts = null;
+				if (ReferenceEquals(_playCts, cts))
+					_playCts = null;
+
+				if (_playCts == null)
+				{
+					_editorPreviews.Remove(this);
+				}
+
+				cts.Dispose();
 			}
 		}
 
-		public void StopEditor() => AsyncUtility.TriggerAndSetNull(ref _playCts);
+		public void StopEditor()
+		{
+			var cts = _playCts;
+			_playCts = null;
+			cts?.Cancel();
+		}
+
+		internal static void StopAllEditorPreviews()
+		{
+			foreach (var config in _editorPreviews.ToArray())
+				config.StopEditor();
+		}
+	}
+
+	[InitializeOnLoad]
+	internal static class AudioEventEditorPreviewLifecycle
+	{
+		static AudioEventEditorPreviewLifecycle()
+		{
+			EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
+			AssemblyReloadEvents.beforeAssemblyReload += StopAllEditorPreviews;
+		}
+
+		private static void HandlePlayModeStateChanged(PlayModeStateChange state)
+		{
+			if (state == PlayModeStateChange.ExitingEditMode
+				|| state == PlayModeStateChange.ExitingPlayMode
+				|| state == PlayModeStateChange.EnteredEditMode)
+				StopAllEditorPreviews();
+		}
+
+		private static void StopAllEditorPreviews()
+		{
+			AudioEventConfig.StopAllEditorPreviews();
+			AudioTrackScheme.StopAllEditorPreviews();
+		}
 	}
 #endif
 }

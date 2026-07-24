@@ -6,6 +6,12 @@ namespace Content.ScriptableObjects
 {
 	public abstract partial class ContentScriptableObject : ScriptableObject, IContentScriptableObject
 	{
+		/// <summary>
+		/// Создан ли ассет через ScriptedImporter — тогда состоянием (enabled) владеет импортёр, а не сам SO
+		/// </summary>
+		[SerializeField, HideInInspector]
+		private bool _imported;
+
 		[SerializeField]
 		protected long timeCreated;
 

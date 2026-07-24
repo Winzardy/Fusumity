@@ -174,10 +174,10 @@ namespace UI.Screens
 		}
 
 		internal bool IsCurrent<T>() where T : UIWidget, IScreen
-			=> _current.GetType() == typeof(T);
+			=> _current != null && _current.GetType() == typeof(T);
 
 		internal bool IsCurrent(string id)
-			=> _current.Id == id;
+			=> _current != null && _current.Id == id;
 
 		internal bool IsDefault<T>() where T : UIWidget, IScreen
 			=> _default.GetType() == typeof(T);

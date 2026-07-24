@@ -84,6 +84,8 @@ namespace Content.Editor
 		private OdinEditor _inlineEditor;
 		private GUIPopupSelector<ContentReferenceSelectorItem> _selector;
 		private IContentEntrySource _selectorSource;
+		private IContentEntrySource _pendingSelectorSource;
+		private bool _hasPendingSelectorSource;
 		private double _selectorClosedTime = -1;
 
 		private IContentEntrySource _overlayIconSource;
@@ -603,6 +605,15 @@ namespace Content.Editor
 		{
 			TryCreateSelector(source);
 
+			// Popup рисуется в отдельном IMGUI-проходе, поэтому значение применяем при отрисовке владельца
+			if (_hasPendingSelectorSource)
+			{
+				source = _pendingSelectorSource;
+				_pendingSelectorSource = null;
+				_hasPendingSelectorSource = false;
+				GUI.changed = true;
+			}
+
 			var rect = EditorGUILayout.GetControlRect();
 
 			if (asDropdown)
@@ -855,10 +866,9 @@ namespace Content.Editor
 			if (selected == null)
 				return;
 
-			if (selected.Kind == SelectorItemKind.None)
-				ApplySource(null);
-			else
-				ApplySource(selected.Source);
+			_pendingSelectorSource = selected.Kind == SelectorItemKind.None ? null : selected.Source;
+			_hasPendingSelectorSource = true;
+			GUIHelper.RequestRepaint();
 		}
 
 		private void ApplySource(IContentEntrySource source)

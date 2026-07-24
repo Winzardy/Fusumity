@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NUnit.Framework;
 using Sapientia.Collections;
 using UI.Popups;
 
