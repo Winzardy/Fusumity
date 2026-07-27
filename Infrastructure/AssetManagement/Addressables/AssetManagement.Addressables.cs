@@ -234,39 +234,48 @@ namespace AssetManagement
 				return default;
 			}
 
-			_keyToAssetContainer[key] = new AssetContainer(this, key, handle);
+			var container = new AssetContainer(this, key, handle);
+			_keyToAssetContainer[key] = container;
 
-			var (isCanceled, asset) = await handle
-				.ToUniTask(progress, cancellationToken: cancellationToken)
-				.SuppressCancellationThrow();
-
-			if (isCanceled)
+			container.AttachProgress(progress);
+			try
 			{
-				ReleaseAssetByKey(key);
-				AssetManagementDebug.LogWarning($"Cancelled to load asset for key [ {key} ]" +
-					"\nAddressable:" +
-					$"\n	Exception: {handle.OperationException}" +
-					$"\n	Status: {handle.Status}" +
-					$"\n	Debug: {handle.DebugName}"
-					, context);
-				cancellationToken.ThrowIfCancellationRequested();
-			}
+				var (isCanceled, asset) = await handle
+					.ToUniTask(container, cancellationToken: cancellationToken)
+					.SuppressCancellationThrow();
 
-			if (handle.Status != AsyncOperationStatus.Succeeded)
+				if (isCanceled)
+				{
+					ReleaseAssetByKey(key);
+					AssetManagementDebug.LogWarning($"Cancelled to load asset for key [ {key} ]" +
+						"\nAddressable:" +
+						$"\n	Exception: {handle.OperationException}" +
+						$"\n	Status: {handle.Status}" +
+						$"\n	Debug: {handle.DebugName}"
+						, context);
+					cancellationToken.ThrowIfCancellationRequested();
+				}
+
+				if (handle.Status != AsyncOperationStatus.Succeeded)
+				{
+					ReleaseAssetByKey(key);
+					AssetManagementDebug.LogError($"Failed to load asset for key [ {key} ]" +
+						"\nAddressable:" +
+						$"\n	Exception: {handle.OperationException}" +
+						$"\n	Status: {handle.Status}" +
+						$"\n	Debug: {handle.DebugName}"
+						, context);
+					throw AssetManagementDebug.Exception("Failed to load asset");
+				}
+
+				//Гарантируем финальный репорт: MoveNext может не успеть выдать ровно 1 до завершения хэндла
+				container.Report(1f);
+				return asset;
+			}
+			finally
 			{
-				ReleaseAssetByKey(key);
-				AssetManagementDebug.LogError($"Failed to load asset for key [ {key} ]" +
-					"\nAddressable:" +
-					$"\n	Exception: {handle.OperationException}" +
-					$"\n	Status: {handle.Status}" +
-					$"\n	Debug: {handle.DebugName}"
-					, context);
-				throw AssetManagementDebug.Exception("Failed to load asset");
+				container.DetachProgress(progress);
 			}
-
-			//Гарантируем финальный репорт: MoveNext может не успеть выдать ровно 1 до завершения хэндла
-			progress?.Report(1f);
-			return asset;
 		}
 
 		private async UniTask<IList<T>> LoadAssetsAsync<T>(UnityAssetLabelReference labelReference, CancellationToken cancellationToken,
@@ -293,19 +302,28 @@ namespace AssetManagement
 				return usedAssets;
 
 			var handle = Addressables.LoadAssetsAsync<T>(key, null);
-			_keyToAssetCollectionContainer[key] = new AssetsContainer(key, handle);
+			var container = new AssetsContainer(key, handle);
+			_keyToAssetCollectionContainer[key] = container;
 
-			var (isCanceled, assets) = await handle.ToUniTask(progress, cancellationToken: cancellationToken)
-				.SuppressCancellationThrow();
-
-			if (isCanceled)
+			container.AttachProgress(progress);
+			try
 			{
-				ReleaseAssetsByKey(key);
-				cancellationToken.ThrowIfCancellationRequested();
-			}
+				var (isCanceled, assets) = await handle.ToUniTask(container, cancellationToken: cancellationToken)
+					.SuppressCancellationThrow();
 
-			progress?.Report(1f);
-			return assets;
+				if (isCanceled)
+				{
+					ReleaseAssetsByKey(key);
+					cancellationToken.ThrowIfCancellationRequested();
+				}
+
+				container.Report(1f);
+				return assets;
+			}
+			finally
+			{
+				container.DetachProgress(progress);
+			}
 		}
 
 		private async UniTask<IList<T>> LoadAssetsAsyncByKey<T>(IEnumerable keys, CancellationToken cancellationToken,
@@ -319,19 +337,28 @@ namespace AssetManagement
 				return usedAssets;
 
 			var handle = Addressables.LoadAssetsAsync<T>(keys, null);
-			_keyToAssetCollectionContainer[keys] = new AssetsContainer(keys, handle);
+			var container = new AssetsContainer(keys, handle);
+			_keyToAssetCollectionContainer[keys] = container;
 
-			var (isCanceled, assets) = await handle.ToUniTask(progress, cancellationToken: cancellationToken)
-				.SuppressCancellationThrow();
-
-			if (isCanceled)
+			container.AttachProgress(progress);
+			try
 			{
-				ReleaseAssetsByKey(keys);
-				cancellationToken.ThrowIfCancellationRequested();
-			}
+				var (isCanceled, assets) = await handle.ToUniTask(container, cancellationToken: cancellationToken)
+					.SuppressCancellationThrow();
 
-			progress?.Report(1f);
-			return assets;
+				if (isCanceled)
+				{
+					ReleaseAssetsByKey(keys);
+					cancellationToken.ThrowIfCancellationRequested();
+				}
+
+				container.Report(1f);
+				return assets;
+			}
+			finally
+			{
+				container.DetachProgress(progress);
+			}
 		}
 
 		private async UniTask<IList<T>> FindUsedAssetsByKeyAsync<T>(object key, CancellationToken cancellationToken,
@@ -356,13 +383,19 @@ namespace AssetManagement
 			ReleaseAssetContainer(container, delayMs);
 		}
 
-		private void ReleaseAssetContainer(AssetContainer container, int delayMs = 0)
+		private void ReleaseAssetContainer(AssetContainer container, int delayMs = 0, bool full = false)
 		{
 			if (!_initialized || container == null)
 				return;
 
 			if (!IsCurrentAssetContainer(container))
 				return;
+
+			if (full)
+			{
+				ReleaseAssetContainerImmediately(container);
+				return;
+			}
 
 			if (container.ReleaseUsage(delayMs, Time.unscaledTimeAsDouble))
 			{
@@ -383,14 +416,70 @@ namespace AssetManagement
 				ReferenceEquals(current, container);
 		}
 
+		internal string ResolveAssetPath(object key)
+		{
+			var keyText = key?.ToString() ?? "<null>";
+
+#if UNITY_EDITOR
+			var editorPath = keyText.Length == 32
+				? UnityEditor.AssetDatabase.GUIDToAssetPath(keyText)
+				: null;
+			if (editorPath is {Length: > 0})
+				return editorPath;
+#endif
+
+			if (key == null)
+				return keyText;
+
+			foreach (var locator in Addressables.ResourceLocators)
+			{
+				if (!locator.Locate(key, typeof(object), out var locations) || locations is not {Count: > 0})
+					continue;
+
+				var location = locations[0];
+
+#if UNITY_EDITOR
+				editorPath = location.PrimaryKey is {Length: 32}
+					? UnityEditor.AssetDatabase.GUIDToAssetPath(location.PrimaryKey)
+					: null;
+				if (editorPath is {Length: > 0})
+					return editorPath;
+#endif
+
+				if (location.InternalId is {Length: > 0})
+					return location.InternalId;
+
+				if (location.PrimaryKey is {Length: > 0})
+					return location.PrimaryKey;
+			}
+
+			return keyText;
+		}
+
 		private void ReleaseAssetContainerImmediately(AssetContainer container)
 		{
 			if (!IsCurrentAssetContainer(container))
 				return;
 
+			UntrackDelayedRelease(container);
 			var key = container.Key;
 			_keyToAssetContainer.Remove(key);
 			container.Dispose();
+		}
+
+		private void UntrackDelayedRelease(AssetContainer container)
+		{
+			if (_delayedReleaseContainers == null)
+				return;
+
+			for (var i = _delayedReleaseContainers.Count - 1; i >= 0; i--)
+			{
+				if (!ReferenceEquals(_delayedReleaseContainers[i], container))
+					continue;
+
+				RemoveDelayedReleaseAt(i);
+				return;
+			}
 		}
 
 		private void TrackDelayedRelease(AssetContainer container)

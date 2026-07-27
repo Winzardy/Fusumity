@@ -6,11 +6,12 @@ namespace Audio
 {
 	public static class AudioSourceUtility
 	{
-		public static Tween Play(this AudioSource source, AudioTrackScheme track,
-			AudioEventDefinition definition,
-			bool editor = false) =>
-			Play(source, track, definition.fadeIn, definition.volume, definition.pitch, editor);
+		public static Tween Play(this AudioSource source, AudioTrackScheme track, AudioEventDefinition definition) =>
+			Play(source, track, definition.fadeIn, definition.volume, definition.pitch);
 
+		/// <summary>
+		/// Проигрывает клип, назначенный на источник владельцем: плеер вешает клип на source до вызова
+		/// </summary>
 		public static Tween Play(this AudioSource source, AudioTrackScheme track,
 			float? fade = null,
 			float? volume = null,
@@ -20,20 +21,24 @@ namespace Audio
 			Tween tween = null;
 
 #if UNITY_EDITOR
-			if (editor && UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-				return null;
+			if (editor)
+			{
+				if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+					return null;
+
+				// Редакторное превью: клип берётся из editorAsset референса
+				source.clip = track.clip;
+			}
 #endif
 
-			if (!editor && !track.clip)
+			if (!editor && !source.clip)
 				throw new Exception("Clip is null");
-
-			source.clip = editor ? track.clipReference.editorAsset : track.clip;
 
 			if (fade.HasValue)
 			{
 				source.volume = 0;
 				tween = source.DOFade(GetVolume(), fade.Value)
-				   .SetDelay(track.delay);
+					.SetDelay(track.delay);
 			}
 			else
 			{

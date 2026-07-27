@@ -1,12 +1,14 @@
 ﻿using System;
-using AssetManagement;
+using Content;
 using Sapientia.Extensions;
+using UnityEngine;
 
 namespace Audio
 {
 	public static partial class AudioEventUtility
 	{
-		private const int DEFAULT_RELEASE_DELAY_MS = 15000;
+		// Задержка перед выгрузкой клипа после отпускания владения (используется AudioEventPlayer)
+		internal const int DEFAULT_RELEASE_DELAY_MS = 15000;
 
 		public static AudioPlayback Play(this AudioEventDefinition definition)
 		{
@@ -14,9 +16,9 @@ namespace Audio
 				return null;
 
 #if UNITY_EDITOR
-			if (!UnityEngine.Application.isPlaying)
+			if (!Application.isPlaying)
 			{
-				Content.ContentManager.Get<AudioEventConfig>(definition.id)
+				ContentManager.Get<AudioEventConfig>(definition.id)
 					.PlayEditor();
 				return null;
 			}
@@ -30,12 +32,6 @@ namespace Audio
 				throw new Exception("Entry is null!");
 
 			definition.playlist = definition.config.RollPlaylist(definition.GetHashCode());
-		}
-
-		public static void ReleasePlaylist(this ref AudioEventDefinition definition)
-		{
-			foreach (var track in definition.playlist)
-				track.clipReference.ReleaseSafe(DEFAULT_RELEASE_DELAY_MS);
 		}
 
 		public static void PreloadSafe(this in AudioEventDefinition definition)

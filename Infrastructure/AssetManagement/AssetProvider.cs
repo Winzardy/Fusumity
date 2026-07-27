@@ -41,6 +41,52 @@ namespace AssetManagement
 			SubscribeDelayedAssetReleases();
 		}
 
+		public void CollectAssetContainers(List<IAssetContainer> containers)
+		{
+			if (containers == null)
+				throw new ArgumentNullException(nameof(containers));
+
+			containers.Clear();
+
+			if (_keyToAssetContainer != null)
+			{
+				foreach (var container in _keyToAssetContainer.Values)
+					containers.Add(container);
+			}
+
+			if (_keyToResourceContainer == null)
+				return;
+
+			foreach (var container in _keyToResourceContainer.Values)
+				containers.Add(container);
+		}
+
+		public void CollectAssetContainerStates(List<IAssetContainerState> states)
+		{
+			if (states == null)
+				throw new ArgumentNullException(nameof(states));
+
+			states.Clear();
+
+			if (_keyToAssetContainer != null)
+			{
+				foreach (var container in _keyToAssetContainer.Values)
+					states.Add(container);
+			}
+
+			if (_keyToAssetCollectionContainer != null)
+			{
+				foreach (var container in _keyToAssetCollectionContainer.Values)
+					states.Add(container);
+			}
+
+			if (_keyToResourceContainer == null)
+				return;
+
+			foreach (var container in _keyToResourceContainer.Values)
+				states.Add(container);
+		}
+
 		private static void ThrowIfReferenceIsEmpty(IAssetReference reference)
 		{
 #if UNITY_EDITOR

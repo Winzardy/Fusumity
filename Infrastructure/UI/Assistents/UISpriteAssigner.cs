@@ -150,7 +150,7 @@ namespace UI
 		private bool TryGetRetainedContainer(IAssetReference<Sprite> spriteRef, out IAssetContainer result)
 		{
 			var key = spriteRef.RuntimeKey;
-			if (_singleAssetContainer != null && Equals(_singleAssetContainer.Key, key))
+			if (_singleAssetContainer != null && Equals(_singleAssetContainer.State.Key, key))
 			{
 				result = _singleAssetContainer;
 				return true;
@@ -160,7 +160,7 @@ namespace UI
 			{
 				foreach (var container in _retainedAssetContainers)
 				{
-					if (!Equals(container.Key, key))
+					if (!Equals(container.State.Key, key))
 						continue;
 
 					result = container;
@@ -269,9 +269,9 @@ namespace UI
 
 			try
 			{
-				// Не отменяем загрузку: один Addressables handle может ожидаться несколькими UI
-				var sprite = container.IsLoaded
-					? (Sprite) container.Asset
+				var state = container.State;
+				var sprite = state.IsLoaded
+					? (Sprite) state.Asset
 					: await container.LoadAsync<Sprite>();
 
 				if (_disposed || image == null || !IsCurrentHandle(image, handle))

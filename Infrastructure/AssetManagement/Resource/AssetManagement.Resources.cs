@@ -183,7 +183,7 @@ namespace AssetManagement
 			return container;
 		}
 
-		private void ReleaseResourceContainer(ResourceContainer container)
+		private void ReleaseResourceContainer(ResourceContainer container, bool full = false)
 		{
 			if (_keyToResourceContainer == null || container == null)
 				return;
@@ -192,6 +192,13 @@ namespace AssetManagement
 				!_keyToResourceContainer.TryGetValue(path, out var current) ||
 				!ReferenceEquals(current, container))
 				return;
+
+			if (full)
+			{
+				_keyToResourceContainer.Remove(path);
+				container.Shutdown();
+				return;
+			}
 
 			container.ReleaseUsage();
 		}
@@ -206,7 +213,7 @@ namespace AssetManagement
 			_keyToResourceContainer.Remove(path);
 		}
 
-		private sealed class ResourceContainer : IAssetContainer
+		private sealed class ResourceContainer : IAssetContainer, IAssetContainerState
 		{
 			private AssetProvider _owner;
 			private string _path;
@@ -219,12 +226,15 @@ namespace AssetManagement
 
 			private CancellationTokenSource _cts;
 			private CancellationTokenSource _disposeCts;
+			private AssetProgressRelay _progress;
 
 			//Итоговый ассет из async-запроса или синхронной загрузки
+			public IAssetContainerState State => this;
 			public object Key => _path;
 			public object Asset => _request != null && _request.asset != null ? _request.asset : _syncAsset;
 			public bool IsLoaded => Asset is UnityObject asset && asset != null;
-			public int ReferenceCount => _usages;
+			public int UsageCount => _usages;
+			public float Progress => _progress.Value;
 
 			public ResourceContainer(AssetProvider owner, string path, ResourceRequest initialRequest, int usages = 1)
 			{
@@ -243,6 +253,7 @@ namespace AssetManagement
 				_usages    = usages;
 				_syncAsset = asset;
 				_cts       = new();
+				_progress.Report(1f);
 			}
 
 			public void Retain()
@@ -255,9 +266,9 @@ namespace AssetManagement
 				_cts ??= new CancellationTokenSource();
 			}
 
-			public void Release()
+			public void Release(bool full = false)
 			{
-				_owner?.ReleaseResourceContainer(this);
+				_owner?.ReleaseResourceContainer(this, full);
 			}
 
 			public void ReleaseUsage()
@@ -281,39 +292,47 @@ namespace AssetManagement
 
 				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 
-				if (Asset is T loadedAsset)
+				AttachProgress(progress);
+				try
 				{
-					progress?.Report(1f);
-					return loadedAsset;
+					if (Asset is T loadedAsset)
+					{
+						Report(1f);
+						return loadedAsset;
+					}
+
+					if (!typeof(UnityObject).IsAssignableFrom(typeof(T)))
+						throw new InvalidCastException($"Resource type [ {typeof(T)} ] must inherit UnityEngine.Object");
+
+					if (_request == null)
+					{
+						var request = Resources.LoadAsync(_path, typeof(T));
+						if (request == null)
+							throw new OperationCanceledException($"Failed to load resource by path [ {_path} ]");
+
+						SetRequestInternal(request);
+					}
+
+					using var linked = _cts.Link(cancellationToken);
+					var (isCanceled, asset) = await _request.ToUniTask(this, cancellationToken: linked.Token)
+					   .SuppressCancellationThrow();
+
+					if (isCanceled)
+						linked.Token.ThrowIfCancellationRequested();
+
+					if (ReferenceEquals(asset, null))
+					{
+						AssetManagementDebug.LogError(ASSET_IS_NULL_MESSAGE);
+						throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
+					}
+
+					Report(1f);
+					return (T) (object) asset;
 				}
-
-				if (!typeof(UnityObject).IsAssignableFrom(typeof(T)))
-					throw new InvalidCastException($"Resource type [ {typeof(T)} ] must inherit UnityEngine.Object");
-
-				if (_request == null)
+				finally
 				{
-					var request = Resources.LoadAsync(_path, typeof(T));
-					if (request == null)
-						throw new OperationCanceledException($"Failed to load resource by path [ {_path} ]");
-
-					SetRequestInternal(request);
+					DetachProgress(progress);
 				}
-
-				using var linked = _cts.Link(cancellationToken);
-				var (isCanceled, asset) = await _request.ToUniTask(progress, cancellationToken: linked.Token)
-				   .SuppressCancellationThrow();
-
-				if (isCanceled)
-					linked.Token.ThrowIfCancellationRequested();
-
-				if (ReferenceEquals(asset, null))
-				{
-					AssetManagementDebug.LogError(ASSET_IS_NULL_MESSAGE);
-					throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
-				}
-
-				progress?.Report(1f);
-				return (T) (object) asset;
 			}
 
 			//Синхронное получение: если ассета ещё нет (async-запрос в полёте) — грузим синхронно
@@ -324,14 +343,20 @@ namespace AssetManagement
 
 				var asset = Asset;
 				if (asset != null)
+				{
+					Report(1f);
 					return (T) asset;
+				}
 
 				_syncAsset = Resources.Load<T>(_path);
 				if (_syncAsset == null)
 					throw new OperationCanceledException($"Failed to load resource by path [ {_path} ]");
 
+				Report(1f);
 				return (T) _syncAsset;
 			}
+
+			public void Report(float value) => _progress.Report(value);
 
 			public void Shutdown()
 			{
@@ -401,6 +426,7 @@ namespace AssetManagement
 				var owner = _owner;
 				owner?.RemoveResourceContainer(this);
 
+				_progress.Dispose();
 				_owner = null;
 				_path = null;
 			}
@@ -409,6 +435,19 @@ namespace AssetManagement
 			{
 				_request = request;
 				_cts ??= new CancellationTokenSource();
+				_progress.Report(request?.progress ?? 0f);
+			}
+
+			private void AttachProgress(IProgress<float> progress)
+			{
+				if (!ReferenceEquals(progress, this))
+					_progress.Attach(progress);
+			}
+
+			private void DetachProgress(IProgress<float> progress)
+			{
+				if (!ReferenceEquals(progress, this))
+					_progress.Detach(progress);
 			}
 
 			private void RequestUnloadUnusedAssets()

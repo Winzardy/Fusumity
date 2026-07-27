@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia;
+using Sapientia.Pooling;
 using UnityEngine;
 
 namespace AssetManagement
@@ -24,6 +25,95 @@ namespace AssetManagement
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance is {IsInitialized: true};
+		}
+
+		public static void CollectAssetContainers(List<IAssetContainer> containers)
+		{
+			if (containers == null)
+				throw new ArgumentNullException(nameof(containers));
+
+			containers.Clear();
+
+			if (IsInitialized)
+				provider.CollectAssetContainers(containers);
+		}
+
+		public static void CollectAssetContainerStates(List<IAssetContainerState> states)
+		{
+			if (states == null)
+				throw new ArgumentNullException(nameof(states));
+
+			states.Clear();
+
+			if (IsInitialized)
+				provider.CollectAssetContainerStates(states);
+		}
+
+		public static string ResolveAssetPath(object key) =>
+			IsInitialized ? provider.ResolveAssetPath(key) : key?.ToString() ?? "<null>";
+
+		public static string BuildAssetContainersReport()
+		{
+			using (ListPool<IAssetContainerState>.Get(out var states))
+			using (StringBuilderPool.Get(out var builder))
+			{
+				CollectAssetContainerStates(states);
+
+				var totalUsages = 0;
+				foreach (var state in states)
+					totalUsages += state.UsageCount;
+
+				builder.Append("Asset containers report")
+				   .Append("\nContainers: ").Append(states.Count)
+				   .Append(" | Total usages: ").Append(totalUsages);
+
+				for (var i = 0; i < states.Count; i++)
+				{
+					var state = states[i];
+
+					builder.Append("\n\n[").Append(i + 1).Append("]")
+					   .Append(" usages=").Append(state.UsageCount)
+					   .Append(" loaded=").Append(state.IsLoaded)
+					   .Append(" progress=").Append(state.Progress.ToString("P0"));
+
+					switch (state.Asset)
+					{
+						case UnityObject asset:
+							AppendAsset(builder, asset);
+							break;
+						case IEnumerable assets:
+							foreach (var item in assets)
+							{
+								if (item is UnityObject collectionAsset)
+									AppendAsset(builder, collectionAsset);
+							}
+							break;
+						default:
+							builder.Append("\nasset: <not loaded>");
+							break;
+					}
+
+					builder
+					   .Append("\npath: ").Append(ResolveAssetPath(state.Key))
+					   .Append("\nkey: ").Append(state.Key);
+				}
+
+				return builder.ToString();
+			}
+		}
+
+		private static void AppendAsset(System.Text.StringBuilder builder, UnityObject asset)
+		{
+			builder.Append("\nasset: ").Append(asset != null ? asset.name : "<null>");
+
+#if UNITY_EDITOR
+			if (asset == null)
+				return;
+
+			var path = UnityEditor.AssetDatabase.GetAssetPath(asset);
+			if (path is {Length: > 0})
+				builder.Append(" | ").Append(path);
+#endif
 		}
 
 		/// <summary>
