@@ -188,6 +188,8 @@ namespace AssetManagement
 
 		private abstract class Container : IDisposable, IProgress<float>, IAssetContainerState
 		{
+			private const string SOURCE_NAME = "Addressables";
+
 			protected object _key;
 
 			protected int _usages;
@@ -205,9 +207,8 @@ namespace AssetManagement
 			public int UsageCount { get => _usages; }
 			public float Progress { get => _progress.Value; }
 
-			// Виртуальное свойство обязательно: маппинг IAssetContainerState фиксируется на этом классе,
-			// и объявление в наследнике без virtual/override не попадает в интерфейсную диспетчеризацию
-			public virtual double? ReleaseRemainingSeconds => null;
+			public virtual double? ReleaseRemainingSeconds { get => null; }
+			string IAssetContainerState.SourceName { get => SOURCE_NAME; }
 
 			protected Container(object key, AsyncOperationHandle handle, int usages = 1)
 			{

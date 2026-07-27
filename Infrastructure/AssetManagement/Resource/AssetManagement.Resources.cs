@@ -215,6 +215,8 @@ namespace AssetManagement
 
 		private sealed class ResourceContainer : IAssetContainer, IAssetContainerState
 		{
+			private const string SOURCE_NAME = "Resources";
+
 			private AssetProvider _owner;
 			private string _path;
 
@@ -229,12 +231,13 @@ namespace AssetManagement
 			private AssetProgressRelay _progress;
 
 			//Итоговый ассет из async-запроса или синхронной загрузки
-			public IAssetContainerState State => this;
-			public object Key => _path;
-			public object Asset => _request != null && _request.asset != null ? _request.asset : _syncAsset;
-			public bool IsLoaded => Asset is UnityObject asset && asset != null;
-			public int UsageCount => _usages;
-			public float Progress => _progress.Value;
+			public IAssetContainerState State { get => this; }
+			public object Key { get => _path; }
+			public object Asset { get => _request != null && _request.asset != null ? _request.asset : _syncAsset; }
+			public bool IsLoaded { get => Asset is UnityObject asset && asset != null; }
+			public int UsageCount { get => _usages; }
+			public float Progress { get => _progress.Value; }
+			string IAssetContainerState.SourceName { get => SOURCE_NAME; }
 
 			public ResourceContainer(AssetProvider owner, string path, ResourceRequest initialRequest, int usages = 1)
 			{
@@ -248,11 +251,11 @@ namespace AssetManagement
 			//Контейнер для синхронно загруженного ресурса
 			public ResourceContainer(AssetProvider owner, string path, UnityObject asset, int usages = 1)
 			{
-				_owner     = owner;
-				_path      = path;
-				_usages    = usages;
+				_owner = owner;
+				_path = path;
+				_usages = usages;
 				_syncAsset = asset;
-				_cts       = new();
+				_cts = new();
 				_progress.Report(1f);
 			}
 
@@ -315,7 +318,7 @@ namespace AssetManagement
 
 					using var linked = _cts.Link(cancellationToken);
 					var (isCanceled, asset) = await _request.ToUniTask(this, cancellationToken: linked.Token)
-					   .SuppressCancellationThrow();
+						.SuppressCancellationThrow();
 
 					if (isCanceled)
 						linked.Token.ThrowIfCancellationRequested();
@@ -416,7 +419,7 @@ namespace AssetManagement
 						Resources.UnloadAsset(asset);
 				}
 
-				_request   = null;
+				_request = null;
 				_syncAsset = null;
 				AsyncUtility.TriggerAndSetNull(ref _cts);
 			}

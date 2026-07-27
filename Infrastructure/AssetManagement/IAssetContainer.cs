@@ -16,10 +16,8 @@ namespace AssetManagement
 		int UsageCount { get; }
 		float Progress { get; }
 
-		/// <summary>
-		/// Сколько секунд осталось до отложенной выгрузки, либо null если выгрузка не запланирована
-		/// </summary>
 		double? ReleaseRemainingSeconds => null;
+		string SourceName { get; }
 	}
 
 	public interface IAssetContainer : IProgress<float>

@@ -27,7 +27,8 @@ namespace AssetManagement.Editor
 		private const float ROW_HEIGHT = 24f;
 		private const float DEFAULT_LABEL_WIDTH = 340f;
 		private const float MIN_LABEL_WIDTH = 200f;
-		private const float MIN_TIMELINE_WIDTH = 240f;
+		private const float MIN_TIMELINE_WIDTH = 140f;
+		private const float RULER_LABEL_GAP = 6f;
 		private const float SPLITTER_HALF_WIDTH = 2.5f;
 		private const float MIN_WINDOW_WIDTH = 720f;
 		private const float USAGES_BADGE_LEFT_PADDING = 4.5f;
@@ -37,6 +38,11 @@ namespace AssetManagement.Editor
 		private const string UNKNOWN_TYPE = "Unknown";
 		private const string TOOLTIP_LABEL_COLOR = "#808080";
 		private const string TOOLTIP_LABEL_OPEN = "<color=" + TOOLTIP_LABEL_COLOR + ">";
+
+		// Источник ассета внизу тултипа: серый с прозрачностью 0.5, размер шрифта правится в теге size
+		private const string TOOLTIP_SOURCE_COLOR = "#80808080";
+		private const string TOOLTIP_SOURCE_OPEN = "<size=9><color=" + TOOLTIP_SOURCE_COLOR + ">";
+		private const string TOOLTIP_SOURCE_CLOSE = "</color></size>";
 		private const string USAGES_LABEL = "usages:";
 		private const string HEADER_SUMMARY_FORMAT = "{0} assets   •   {1} active   •   {2} usages";
 
@@ -148,6 +154,9 @@ namespace AssetManagement.Editor
 
 		[NonSerialized]
 		private Rect _hoveredRowRect;
+
+		[NonSerialized]
+		private float _maxRulerLabelWidth;
 
 		[NonSerialized]
 		private Comparison<AssetRecord> _recordComparison;
@@ -269,6 +278,7 @@ namespace AssetManagement.Editor
 
 				record.seen = true;
 				record.releaseRemaining = state.releaseRemaining;
+				record.sourceName ??= state.source;
 				record.Sample(currentTime, state.consumers, state.isLoaded);
 			}
 
@@ -301,11 +311,11 @@ namespace AssetManagement.Editor
 					// Ключ записи — всегда ключ контейнера: он стабилен между фазами загрузки и перезагрузками,
 					// в отличие от ключей по assetPath/instanceId (для бандловых и суб-ассетов они меняются → дубли)
 					var key = containerKey ?? GetAssetKey(asset, metadata);
-					AddCurrentState(key, consumers, true, metadata, state.ReleaseRemainingSeconds);
+					AddCurrentState(key, consumers, true, metadata, state.ReleaseRemainingSeconds, state.SourceName);
 					return;
 				}
 
-				if (CollectAssetCollection(state.Asset, consumers))
+				if (CollectAssetCollection(state.Asset, consumers, state.SourceName))
 					return;
 			}
 
@@ -313,10 +323,11 @@ namespace AssetManagement.Editor
 				return;
 
 			var keyMetadata = GetKeyMetadata(containerKey);
-			AddCurrentState(containerKey, consumers, state.IsLoaded, keyMetadata, state.ReleaseRemainingSeconds);
+			AddCurrentState(containerKey, consumers, state.IsLoaded, keyMetadata, state.ReleaseRemainingSeconds,
+				state.SourceName);
 		}
 
-		private bool CollectAssetCollection(object value, int consumers)
+		private bool CollectAssetCollection(object value, int consumers, string source)
 		{
 			if (value is string)
 				return false;
@@ -325,7 +336,7 @@ namespace AssetManagement.Editor
 			if (value is IList assetList)
 			{
 				for (var i = 0; i < assetList.Count; i++)
-					collected |= CollectCollectionAsset(assetList[i], consumers);
+					collected |= CollectCollectionAsset(assetList[i], consumers, source);
 
 				return collected;
 			}
@@ -334,19 +345,19 @@ namespace AssetManagement.Editor
 				return false;
 
 			foreach (var item in assets)
-				collected |= CollectCollectionAsset(item, consumers);
+				collected |= CollectCollectionAsset(item, consumers, source);
 
 			return collected;
 		}
 
-		private bool CollectCollectionAsset(object value, int consumers)
+		private bool CollectCollectionAsset(object value, int consumers, string source)
 		{
 			if (value is not UnityObject asset || asset == null)
 				return false;
 
 			var metadata = GetAssetMetadata(asset);
 			var key = GetAssetKey(asset, metadata);
-			AddCurrentState(key, consumers, true, metadata);
+			AddCurrentState(key, consumers, true, metadata, source: source);
 			return true;
 		}
 
@@ -363,13 +374,14 @@ namespace AssetManagement.Editor
 		}
 
 		private void AddCurrentState(string key, int consumers, bool isLoaded, AssetMetadata metadata,
-			double? releaseRemaining = null)
+			double? releaseRemaining = null, string source = null)
 		{
 			if (!_currentStates.TryGetValue(key, out var state))
 				state = new CurrentAssetState(isLoaded, metadata);
 
 			state.consumers += consumers;
 			state.isLoaded |= isLoaded;
+			state.source ??= source;
 			if (metadata.IsValid)
 				state.metadata = metadata;
 
@@ -448,7 +460,7 @@ namespace AssetManagement.Editor
 				return UNKNOWN_TYPE;
 
 			if (typeof(ScriptableObject).IsAssignableFrom(assetType))
-				return "ScriptableObject";
+				return "Scriptable Object";
 
 			if (typeof(AudioClip).IsAssignableFrom(assetType) ||
 				assetType.Namespace?.StartsWith("UnityEngine.Audio", StringComparison.Ordinal) == true)
@@ -852,7 +864,8 @@ namespace AssetManagement.Editor
 			const string TITLE = "Timeline";
 			GUI.Label(new Rect(8f, 2f, _labelWidth - 16f, HEADER_HEIGHT - 4f), TITLE, EditorStyles.boldLabel);
 
-			var rulerStep = _historySeconds > 30 ? 10 : 5;
+			var rulerStep = GetRulerStep(timelineRect.width);
+			var lastLabelMinX = float.MaxValue;
 			for (var secondsAgo = 0; secondsAgo <= _historySeconds; secondsAgo += rulerStep)
 			{
 				var normalized = (float) secondsAgo / _historySeconds;
@@ -867,10 +880,44 @@ namespace AssetManagement.Editor
 					x - labelWidth * 0.5f,
 					timelineRect.x + 2f,
 					timelineRect.xMax - labelWidth - 2f);
+
+				// Клампинг у краёв сдвигает метки внутрь — пропускаем метку, если она налезает на предыдущую
+				// (линия сетки при этом остаётся)
+				if (labelX + labelWidth > lastLabelMinX - RULER_LABEL_GAP)
+					continue;
+
+				lastLabelMinX = labelX;
 				var labelRect = new Rect(labelX, 3f, labelWidth, HEADER_HEIGHT - 6f);
 				EditorGUI.DrawRect(labelRect, RULER_LABEL_BACKGROUND_COLOR);
 				GUI.Label(labelRect, label, _rulerLabelStyle);
 			}
+		}
+
+		// Адаптивный шаг линейки: на узком таймлайне метки прореживаются, чтобы не наезжать друг на друга
+		private int GetRulerStep(float timelineWidth)
+		{
+			var baseStep = _historySeconds > 30 ? 10 : 5;
+
+			// Крайние метки клампятся внутрь таймлайна, съедая по полширины метки с каждого края
+			var maxLabelWidth = GetMaxRulerLabelWidth();
+			var usableWidth = Mathf.Max(1f, timelineWidth - maxLabelWidth);
+			var minStepSeconds = (maxLabelWidth + RULER_LABEL_GAP) * _historySeconds / usableWidth;
+			var step = Mathf.CeilToInt(minStepSeconds / 5f) * 5;
+			return Mathf.Clamp(step, baseStep, 60);
+		}
+
+		private float GetMaxRulerLabelWidth()
+		{
+			if (_maxRulerLabelWidth > 0f)
+				return _maxRulerLabelWidth;
+
+			foreach (var label in RULER_LABELS)
+			{
+				var labelWidth = _rulerLabelStyle.CalcSize(GetScratchContent(label)).x + 10f;
+				_maxRulerLabelWidth = Mathf.Max(_maxRulerLabelWidth, labelWidth);
+			}
+
+			return _maxRulerLabelWidth;
 		}
 
 		private void DrawRecordLabel(AssetRecord record, Rect rowRect)
@@ -1218,7 +1265,8 @@ namespace AssetManagement.Editor
 		{
 			_rulerLabelStyle ??= new GUIStyle(EditorStyles.miniLabel)
 			{
-				alignment = TextAnchor.MiddleCenter
+				alignment = TextAnchor.MiddleCenter,
+				fontSize = 9
 			};
 
 			_countBadgeStyle ??= new GUIStyle(EditorStyles.miniLabel)
@@ -1295,6 +1343,7 @@ namespace AssetManagement.Editor
 			public bool isLoaded;
 			public AssetMetadata metadata;
 			public double? releaseRemaining;
+			public string source;
 
 			public CurrentAssetState(bool isLoaded, AssetMetadata metadata)
 			{
@@ -1302,6 +1351,7 @@ namespace AssetManagement.Editor
 				this.isLoaded = isLoaded;
 				this.metadata = metadata;
 				releaseRemaining = null;
+				source = null;
 			}
 		}
 
@@ -1323,6 +1373,7 @@ namespace AssetManagement.Editor
 			public bool isLoaded;
 			public bool seen;
 			public double? releaseRemaining;
+			public string sourceName;
 
 			public bool IsActive => consumers > 0;
 			public bool IsPending => HasActivePendingSegment;
@@ -1500,6 +1551,11 @@ namespace AssetManagement.Editor
 					   .Append("\n\n" + TOOLTIP_LABEL_OPEN + "Group:</color> ").Append(groupName)
 					   .Append("\n" + TOOLTIP_LABEL_OPEN + "Type:</color> ").Append(typeName)
 					   .Append("\n" + TOOLTIP_LABEL_OPEN + "Path:</color> ").Append(assetPath);
+
+					// Источник ассета (Addressables/Resources); пустая строка-отступ внутри тега size, чтобы была небольшой
+					if (!sourceName.IsNullOrEmpty())
+						builder.Append("\n" + TOOLTIP_SOURCE_OPEN + "\n").Append(sourceName).Append(TOOLTIP_SOURCE_CLOSE);
+
 					return builder.ToString();
 				}
 			}
