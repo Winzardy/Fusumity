@@ -22,6 +22,7 @@ namespace AssetManagement.Editor
 		private const int MAX_HISTORY_SECONDS = 60;
 		private const double SAMPLE_INTERVAL = 0.05d;
 		private const double IDLE_REPAINT_INTERVAL = 0.25d;
+		private const double NATIVE_SAMPLE_INTERVAL = 1d;
 
 		private const float HEADER_HEIGHT = 24f;
 		private const float ROW_HEIGHT = 24f;
@@ -36,6 +37,7 @@ namespace AssetManagement.Editor
 		private const float USAGES_BADGE_VALUE_GAP = 1f;
 		private const string UNKNOWN_GROUP = "Other";
 		private const string UNKNOWN_TYPE = "Unknown";
+		private const string LABEL_TYPE = "Asset Label";
 		private const string TOOLTIP_LABEL_COLOR = "#808080";
 		private const string TOOLTIP_LABEL_OPEN = "<color=" + TOOLTIP_LABEL_COLOR + ">";
 
@@ -45,6 +47,7 @@ namespace AssetManagement.Editor
 		private const string TOOLTIP_SOURCE_CLOSE = "</color></size>";
 		private const string USAGES_LABEL = "usages:";
 		private const string HEADER_SUMMARY_FORMAT = "{0} assets   •   {1} active   •   {2} usages";
+		private const string HEADER_SUMMARY_MEMORY_FORMAT = HEADER_SUMMARY_FORMAT + "   •   {3}";
 
 		private static readonly string[] HISTORY_LABELS = {"15 sec", "30 sec", "60 sec"};
 		private static readonly int[] HISTORY_VALUES = {15, 30, 60};
@@ -181,7 +184,7 @@ namespace AssetManagement.Editor
 		private bool _wasEmpty;
 		private bool _displayDirty = true;
 
-		[MenuItem(MENU_PATH)]
+		[MenuItem(MENU_PATH, priority = 5)]
 		private static void Open()
 		{
 			var window = GetWindow<AssetUsageMonitorWindow>(WINDOW_NAME);
@@ -279,6 +282,8 @@ namespace AssetManagement.Editor
 				record.seen = true;
 				record.releaseRemaining = state.releaseRemaining;
 				record.sourceName ??= state.source;
+				if (state.instanceId != 0)
+					record.lastInstanceId = state.instanceId;
 				record.Sample(currentTime, state.consumers, state.isLoaded);
 			}
 
@@ -300,6 +305,24 @@ namespace AssetManagement.Editor
 			var consumers = Math.Max(0, state.UsageCount);
 			var containerKey = state.Key?.ToString();
 
+			// Загруженную коллекцию представляют её элементы: строка самого лейбла нужна только на время загрузки,
+			// иначе она остаётся висеть как ложный "отпущенный" ассет с именем первого ассета лейбла
+			if (state.IsCollection)
+			{
+				if (state.IsLoaded && CollectAssetCollection(state.Asset, consumers, state.SourceName))
+				{
+					RemoveRecord(containerKey);
+					return;
+				}
+
+				if (containerKey == null)
+					return;
+
+				AddCurrentState(containerKey, consumers, state.IsLoaded, CreateLabelMetadata(containerKey),
+					state.ReleaseRemainingSeconds, state.SourceName);
+				return;
+			}
+
 			if (state.IsLoaded)
 			{
 				if (state.Asset is UnityObject asset && asset != null)
@@ -311,7 +334,8 @@ namespace AssetManagement.Editor
 					// Ключ записи — всегда ключ контейнера: он стабилен между фазами загрузки и перезагрузками,
 					// в отличие от ключей по assetPath/instanceId (для бандловых и суб-ассетов они меняются → дубли)
 					var key = containerKey ?? GetAssetKey(asset, metadata);
-					AddCurrentState(key, consumers, true, metadata, state.ReleaseRemainingSeconds, state.SourceName);
+					AddCurrentState(key, consumers, true, metadata, state.ReleaseRemainingSeconds, state.SourceName,
+						asset.GetInstanceID());
 					return;
 				}
 
@@ -325,6 +349,19 @@ namespace AssetManagement.Editor
 			var keyMetadata = GetKeyMetadata(containerKey);
 			AddCurrentState(containerKey, consumers, state.IsLoaded, keyMetadata, state.ReleaseRemainingSeconds,
 				state.SourceName);
+		}
+
+		// Метаданные строки лейбла: имя берём из самого ключа, иначе резолв вернёт путь первого ассета лейбла
+		private static AssetMetadata CreateLabelMetadata(string containerKey) =>
+			new(null, containerKey, LABEL_TYPE, UNKNOWN_GROUP, null);
+
+		private void RemoveRecord(string key)
+		{
+			if (key == null || !_records.Remove(key, out var record))
+				return;
+
+			record.Dispose();
+			_displayDirty = true;
 		}
 
 		private bool CollectAssetCollection(object value, int consumers, string source)
@@ -357,7 +394,7 @@ namespace AssetManagement.Editor
 
 			var metadata = GetAssetMetadata(asset);
 			var key = GetAssetKey(asset, metadata);
-			AddCurrentState(key, consumers, true, metadata, source: source);
+			AddCurrentState(key, consumers, true, metadata, source: source, instanceId: asset.GetInstanceID());
 			return true;
 		}
 
@@ -374,7 +411,7 @@ namespace AssetManagement.Editor
 		}
 
 		private void AddCurrentState(string key, int consumers, bool isLoaded, AssetMetadata metadata,
-			double? releaseRemaining = null, string source = null)
+			double? releaseRemaining = null, string source = null, int instanceId = 0)
 		{
 			if (!_currentStates.TryGetValue(key, out var state))
 				state = new CurrentAssetState(isLoaded, metadata);
@@ -382,6 +419,8 @@ namespace AssetManagement.Editor
 			state.consumers += consumers;
 			state.isLoaded |= isLoaded;
 			state.source ??= source;
+			if (instanceId != 0)
+				state.instanceId = instanceId;
 			if (metadata.IsValid)
 				state.metadata = metadata;
 
@@ -429,6 +468,19 @@ namespace AssetManagement.Editor
 					assetPath = guidPath;
 			}
 
+			// Адрес суб-ассета вида "path.png[spriteName]" — по нему не резолвится ни GUID, ни группа
+			assetPath = NormalizeAssetPath(assetPath);
+
+			// Бандловый плеймод (Use Existing Build): объект не из AssetDatabase и ключ не резолвится —
+			// ищем исходный ассет по имени и типу, иначе группа/путь уходят в фолбэк (Non-Addressable)
+			if (asset != null &&
+				(assetPath.IsNullOrEmpty() || !assetPath.StartsWith("Assets/", StringComparison.Ordinal)))
+			{
+				var foundPath = FindAssetPathByName(asset);
+				if (!foundPath.IsNullOrEmpty())
+					assetPath = foundPath;
+			}
+
 			var displayName = asset != null ? asset.name : null;
 			if (displayName.IsNullOrEmpty() && !assetPath.IsNullOrEmpty())
 				displayName = Path.GetFileNameWithoutExtension(assetPath);
@@ -448,6 +500,28 @@ namespace AssetManagement.Editor
 					? AssetPreview.GetMiniThumbnail(asset)
 					: null;
 			return new AssetMetadata(assetPath, displayName, typeName, groupName, assetIcon);
+		}
+
+		private static string NormalizeAssetPath(string assetPath)
+		{
+			if (assetPath.IsNullOrEmpty())
+				return assetPath;
+
+			var subAssetIndex = assetPath.IndexOf('[');
+			return subAssetIndex > 0 ? assetPath.Substring(0, subAssetIndex) : assetPath;
+		}
+
+		private static string FindAssetPathByName(UnityObject asset)
+		{
+			var guids = AssetDatabase.FindAssets($"{asset.name} t:{asset.GetType().Name}");
+			foreach (var guid in guids)
+			{
+				var path = AssetDatabase.GUIDToAssetPath(guid);
+				if (Path.GetFileNameWithoutExtension(path) == asset.name)
+					return path;
+			}
+
+			return null;
 		}
 
 		private static string ResolveAssetTypeName(Type assetType, string assetPath)
@@ -492,7 +566,7 @@ namespace AssetManagement.Editor
 
 			foreach (var (key, record) in _records)
 			{
-				record.Prune(cutoff);
+				record.Prune(cutoff, currentTime);
 				if (!record.IsVisible)
 					_recordsToRemove.Add(key);
 			}
@@ -1148,24 +1222,28 @@ namespace AssetManagement.Editor
 		{
 			var activeCount = 0;
 			var usages = 0;
+			var memory = 0L;
 			for (var i = start; i < end; i++)
 			{
 				var record = _orderedRecords[i];
 				if (record.IsActive)
 					activeCount++;
 				usages += record.consumers;
+				memory += record.memorySize;
 			}
 
 			var assetCount = end - start;
 			var cacheKey = new HeaderCacheKey(kind, key);
 			if (!_headerSummaries.TryGetValue(cacheKey, out var summary) ||
-				!summary.Matches(assetCount, activeCount, usages))
+				!summary.Matches(assetCount, activeCount, usages, memory))
 			{
-				summary = new HeaderSummary(
-					assetCount,
-					activeCount,
-					usages,
-					string.Format(HEADER_SUMMARY_FORMAT, assetCount, activeCount, usages));
+				// Сумму пишем только если в группе есть ассеты с показательным размером
+				var text = memory > 0L
+					? string.Format(HEADER_SUMMARY_MEMORY_FORMAT, assetCount, activeCount, usages,
+						AssetMemoryUtility.FormatBytes(memory))
+					: string.Format(HEADER_SUMMARY_FORMAT, assetCount, activeCount, usages);
+
+				summary = new HeaderSummary(assetCount, activeCount, usages, memory, text);
 				_headerSummaries[cacheKey] = summary;
 			}
 
@@ -1344,6 +1422,7 @@ namespace AssetManagement.Editor
 			public AssetMetadata metadata;
 			public double? releaseRemaining;
 			public string source;
+			public int instanceId;
 
 			public CurrentAssetState(bool isLoaded, AssetMetadata metadata)
 			{
@@ -1352,6 +1431,7 @@ namespace AssetManagement.Editor
 				this.metadata = metadata;
 				releaseRemaining = null;
 				source = null;
+				instanceId = 0;
 			}
 		}
 
@@ -1374,10 +1454,19 @@ namespace AssetManagement.Editor
 			public bool seen;
 			public double? releaseRemaining;
 			public string sourceName;
+			public int lastInstanceId;
+
+			// Ассет отпущен, но натив всё ещё в памяти (бандл не выгружен) — такие строки не выпадают из монитора
+			public bool isResidentInMemory;
+
+			// Реально занятая нативная память ассета
+			public long memorySize;
+
+			private double _nextNativeSampleTime;
 
 			public bool IsActive => consumers > 0;
 			public bool IsPending => HasActivePendingSegment;
-			public bool IsVisible => IsActive || segments.Count > 0 || pendingSegments.Count > 0;
+			public bool IsVisible => IsActive || isResidentInMemory || segments.Count > 0 || pendingSegments.Count > 0;
 			public string ConsumersText
 			{
 				get
@@ -1473,10 +1562,25 @@ namespace AssetManagement.Editor
 				segments[index] = segment;
 			}
 
-			public void Prune(double cutoff)
+			public void Prune(double cutoff, double currentTime)
 			{
 				PruneSegments(segments, cutoff);
 				PruneSegments(pendingSegments, cutoff);
+				UpdateNativeState(currentTime);
+			}
+
+			// Пока контейнер жив, строку держат сегменты; после его смерти — живость натива.
+			// Размер опрашиваем редко: Profiler-запрос не бесплатный, а сэмплируем 20 раз в секунду
+			private void UpdateNativeState(double currentTime)
+			{
+				if (currentTime < _nextNativeSampleTime)
+					return;
+
+				_nextNativeSampleTime = currentTime + NATIVE_SAMPLE_INTERVAL;
+
+				var asset = lastInstanceId != 0 ? EditorUtility.InstanceIDToObject(lastInstanceId) : null;
+				isResidentInMemory = !seen && asset != null;
+				memorySize = AssetMemoryUtility.TryGetSize(asset, out var size) ? size : 0L;
 			}
 
 			private static void PruneSegments(List<UsageSegment> list, double cutoff)
@@ -1491,7 +1595,7 @@ namespace AssetManagement.Editor
 
 			public bool IsVisibleSince(double cutoff)
 			{
-				if (IsActive || IsPending)
+				if (IsActive || IsPending || isResidentInMemory)
 					return true;
 
 				foreach (var segment in segments)
@@ -1543,6 +1647,32 @@ namespace AssetManagement.Editor
 					// Обратный отсчёт до реальной выгрузки контейнера
 					if (!IsActive && IsPending && releaseRemaining.HasValue)
 						builder.Append(" (").Append(releaseRemaining.Value.ToString("0.0")).Append(" s left)");
+
+					var asset = lastInstanceId != 0 ? EditorUtility.InstanceIDToObject(lastInstanceId) : null;
+
+					// Только для Released: контейнер отпущен, но ассет мог остаться в памяти (бандл держат соседи)
+					if (!IsActive && !IsPending && lastInstanceId != 0)
+					{
+						builder.Append("\n" + TOOLTIP_LABEL_OPEN + "Memory:</color> ");
+
+						if (asset == null)
+							builder.Append("Unloaded");
+						else
+						{
+							builder.Append("In memory");
+
+							var bundleName = AssetLoader.ResolveBundleName(key);
+							if (!bundleName.IsNullOrEmpty())
+								builder.Append(" (").Append(bundleName).Append(')');
+						}
+					}
+
+					// Размер показываем только для типов с показательной нативной памятью (см. AssetMemoryUtility)
+					if (AssetMemoryUtility.TryGetSize(asset, out var size))
+					{
+						builder.Append("\n" + TOOLTIP_LABEL_OPEN + "Size:</color> ")
+						   .Append(AssetMemoryUtility.FormatBytes(size));
+					}
 
 					builder.Append("\n" + TOOLTIP_LABEL_OPEN + "Lifetime:</color> ")
 					   .Append(lifetime.ToString("0.00")).Append(" s")
@@ -1647,19 +1777,22 @@ namespace AssetManagement.Editor
 			private readonly int _assetCount;
 			private readonly int _activeCount;
 			private readonly int _usages;
+			private readonly long _memory;
 
-			public HeaderSummary(int assetCount, int activeCount, int usages, string text)
+			public HeaderSummary(int assetCount, int activeCount, int usages, long memory, string text)
 			{
 				_assetCount = assetCount;
 				_activeCount = activeCount;
 				_usages = usages;
+				_memory = memory;
 				this.text = text;
 			}
 
-			public bool Matches(int assetCount, int activeCount, int usages) =>
+			public bool Matches(int assetCount, int activeCount, int usages, long memory) =>
 				_assetCount == assetCount &&
 				_activeCount == activeCount &&
-				_usages == usages;
+				_usages == usages &&
+				_memory == memory;
 		}
 
 		[Flags]

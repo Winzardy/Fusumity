@@ -5,13 +5,23 @@ using System.Threading;
 using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 using UnityEngine;
+using UnityObject = UnityEngine.Object;
 
 namespace AssetManagement
 {
 	public partial class AssetProvider : IDisposable
 	{
+		internal const string NULL_KEY_TEXT = "<null>";
+
+		private const int RELEASED_ASSETS_HISTORY_LIMIT = 64;
+
 		private bool _initialized;
+
+		// История отпущенных контейнеров: ассет мог физически остаться в памяти (бандл держат соседние ассеты)
+		// WeakReference не удерживает ассет и не мешает выгрузке
+		private readonly List<ReleasedAssetEntry> _releasedAssets = new(16);
 
 		public bool IsInitialized { get => _initialized; }
 
@@ -85,6 +95,157 @@ namespace AssetManagement
 
 			foreach (var container in _keyToResourceContainer.Values)
 				states.Add(container);
+		}
+
+		public string BuildAssetContainersReport()
+		{
+			using (ListPool<IAssetContainerState>.Get(out var states))
+			using (StringBuilderPool.Get(out var builder))
+			{
+				CollectAssetContainerStates(states);
+
+				var totalUsages = 0;
+				var totalMemory = 0L;
+				foreach (var state in states)
+				{
+					totalUsages += state.UsageCount;
+					totalMemory += AssetMemoryUtility.GetSize(state.Asset);
+				}
+
+				builder.Append("Asset containers report")
+				   .Append("\nContainers: ").Append(states.Count)
+				   .Append(" | Total usages: ").Append(totalUsages)
+				   .Append(" | Total memory: ").Append(AssetMemoryUtility.FormatBytes(totalMemory));
+
+				for (var i = 0; i < states.Count; i++)
+				{
+					var state = states[i];
+
+					builder.Append("\n\n[").Append(i + 1).Append("]")
+					   .Append(" usages=").Append(state.UsageCount)
+					   .Append(" loaded=").Append(state.IsLoaded)
+					   .Append(" progress=").Append(state.Progress.ToString("P0"));
+
+					// Размер пишем только там, где нативная память показательна (текстуры, спрайты, аудио, меши)
+					var memory = AssetMemoryUtility.GetSize(state.Asset);
+					if (memory > 0L)
+						builder.Append(" memory=").Append(AssetMemoryUtility.FormatBytes(memory));
+
+					switch (state.Asset)
+					{
+						case UnityObject asset:
+							AppendAsset(builder, asset);
+							break;
+						case IEnumerable assets:
+							foreach (var item in assets)
+							{
+								if (item is UnityObject collectionAsset)
+									AppendAsset(builder, collectionAsset);
+							}
+							break;
+						default:
+							builder.Append("\nasset: <not loaded>");
+							break;
+					}
+
+					builder
+					   .Append("\npath: ").Append(ResolveAssetPath(state.Key))
+					   .Append("\nkey: ").Append(state.Key);
+
+					var bundleName = ResolveBundleName(state.Key);
+					if (!bundleName.IsNullOrEmpty())
+						builder.Append("\nbundle: ").Append(bundleName);
+				}
+
+				AppendReleasedAssets(builder);
+
+				return builder.ToString();
+			}
+		}
+
+		private static void AppendAsset(System.Text.StringBuilder builder, UnityObject asset)
+		{
+			builder.Append("\nasset: ").Append(asset != null ? asset.name : "<null>");
+
+#if UNITY_EDITOR
+			if (asset == null)
+				return;
+
+			var path = UnityEditor.AssetDatabase.GetAssetPath(asset);
+			if (path is {Length: > 0})
+				builder.Append(" | ").Append(path);
+#endif
+		}
+
+		internal void TrackReleasedAsset(object key, UnityObject asset)
+		{
+			if (asset == null || key == null)
+				return;
+
+			for (var i = 0; i < _releasedAssets.Count; i++)
+			{
+				if (!Equals(_releasedAssets[i].key, key))
+					continue;
+
+				_releasedAssets[i] = new ReleasedAssetEntry(key, asset);
+				return;
+			}
+
+			if (_releasedAssets.Count >= RELEASED_ASSETS_HISTORY_LIMIT)
+				_releasedAssets.RemoveAt(0);
+
+			_releasedAssets.Add(new ReleasedAssetEntry(key, asset));
+		}
+
+		private void AppendReleasedAssets(System.Text.StringBuilder builder)
+		{
+			if (_releasedAssets.Count == 0)
+				return;
+
+			builder.Append("\n\nReleased assets (containers disposed):");
+
+			for (var i = 0; i < _releasedAssets.Count; i++)
+			{
+				var entry = _releasedAssets[i];
+
+				// Живой натив за WeakReference — ассет всё ещё в памяти, хоть контейнер и отпущен
+				var inMemory = entry.assetReference.TryGetTarget(out var asset) && asset != null;
+
+				builder.Append("\n[").Append(i + 1).Append("] ")
+				   .Append(entry.assetName);
+
+				if (inMemory)
+				{
+					builder.Append(" | IN MEMORY");
+
+					var memory = AssetMemoryUtility.GetSize(asset);
+					if (memory > 0L)
+						builder.Append(' ').Append(AssetMemoryUtility.FormatBytes(memory));
+
+					var bundleName = ResolveBundleName(entry.key);
+					builder.Append(bundleName.IsNullOrEmpty()
+						? " (bundle not unloaded)"
+						: $" ({bundleName} not unloaded)");
+				}
+				else
+					builder.Append(" | unloaded");
+
+				builder.Append(" | key: ").Append(entry.key);
+			}
+		}
+
+		private readonly struct ReleasedAssetEntry
+		{
+			public readonly object key;
+			public readonly string assetName;
+			public readonly WeakReference<UnityObject> assetReference;
+
+			public ReleasedAssetEntry(object key, UnityObject asset)
+			{
+				this.key = key;
+				assetName = asset.name;
+				assetReference = new WeakReference<UnityObject>(asset);
+			}
 		}
 
 		private static void ThrowIfReferenceIsEmpty(IAssetReference reference)

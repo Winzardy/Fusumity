@@ -18,6 +18,11 @@ namespace AssetManagement
 
 		double? ReleaseRemainingSeconds => null;
 		string SourceName { get; }
+
+		/// <summary>
+		/// Контейнер держит коллекцию ассетов (загрузка по лейблу), а не один ассет
+		/// </summary>
+		bool IsCollection => false;
 	}
 
 	public interface IAssetContainer : IProgress<float>

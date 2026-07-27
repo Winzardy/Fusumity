@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sapientia;
-using Sapientia.Pooling;
 using UnityEngine;
 
 namespace AssetManagement
@@ -14,6 +13,9 @@ namespace AssetManagement
 
 	public partial class AssetLoader : StaticWrapper<AssetProvider>
 	{
+		private const string NULL_KEY_TEXT = "<null>";
+		private const string NOT_INITIALIZED_REPORT = "AssetLoader is not initialized";
+
 		// ReSharper disable once InconsistentNaming
 		private static AssetProvider provider
 		{
@@ -29,92 +31,29 @@ namespace AssetManagement
 
 		public static void CollectAssetContainers(List<IAssetContainer> containers)
 		{
-			if (containers == null)
-				throw new ArgumentNullException(nameof(containers));
-
-			containers.Clear();
-
 			if (IsInitialized)
 				provider.CollectAssetContainers(containers);
+			else
+				containers?.Clear();
 		}
 
 		public static void CollectAssetContainerStates(List<IAssetContainerState> states)
 		{
-			if (states == null)
-				throw new ArgumentNullException(nameof(states));
-
-			states.Clear();
-
 			if (IsInitialized)
 				provider.CollectAssetContainerStates(states);
+			else
+				states?.Clear();
 		}
 
 		public static string ResolveAssetPath(object key) =>
-			IsInitialized ? provider.ResolveAssetPath(key) : key?.ToString() ?? "<null>";
+			IsInitialized ? provider.ResolveAssetPath(key) : key?.ToString() ?? NULL_KEY_TEXT;
 
-		public static string BuildAssetContainersReport()
-		{
-			using (ListPool<IAssetContainerState>.Get(out var states))
-			using (StringBuilderPool.Get(out var builder))
-			{
-				CollectAssetContainerStates(states);
+		/// <inheritdoc cref="AssetProvider.ResolveBundleName"/>
+		public static string ResolveBundleName(object key) =>
+			IsInitialized ? provider.ResolveBundleName(key) : null;
 
-				var totalUsages = 0;
-				foreach (var state in states)
-					totalUsages += state.UsageCount;
-
-				builder.Append("Asset containers report")
-				   .Append("\nContainers: ").Append(states.Count)
-				   .Append(" | Total usages: ").Append(totalUsages);
-
-				for (var i = 0; i < states.Count; i++)
-				{
-					var state = states[i];
-
-					builder.Append("\n\n[").Append(i + 1).Append("]")
-					   .Append(" usages=").Append(state.UsageCount)
-					   .Append(" loaded=").Append(state.IsLoaded)
-					   .Append(" progress=").Append(state.Progress.ToString("P0"));
-
-					switch (state.Asset)
-					{
-						case UnityObject asset:
-							AppendAsset(builder, asset);
-							break;
-						case IEnumerable assets:
-							foreach (var item in assets)
-							{
-								if (item is UnityObject collectionAsset)
-									AppendAsset(builder, collectionAsset);
-							}
-							break;
-						default:
-							builder.Append("\nasset: <not loaded>");
-							break;
-					}
-
-					builder
-					   .Append("\npath: ").Append(ResolveAssetPath(state.Key))
-					   .Append("\nkey: ").Append(state.Key);
-				}
-
-				return builder.ToString();
-			}
-		}
-
-		private static void AppendAsset(System.Text.StringBuilder builder, UnityObject asset)
-		{
-			builder.Append("\nasset: ").Append(asset != null ? asset.name : "<null>");
-
-#if UNITY_EDITOR
-			if (asset == null)
-				return;
-
-			var path = UnityEditor.AssetDatabase.GetAssetPath(asset);
-			if (path is {Length: > 0})
-				builder.Append(" | ").Append(path);
-#endif
-		}
+		public static string BuildAssetContainersReport() =>
+			IsInitialized ? provider.BuildAssetContainersReport() : NOT_INITIALIZED_REPORT;
 
 		/// <summary>
 		/// Получить общее владение контейнером ассета
@@ -237,7 +176,6 @@ namespace AssetManagement
 		/// Значит что до этого был запрос на данный ассет и система его подгрузила, но система не знает когда он
 		/// больше не нужен чтобы выгрузить, поэтому нужно сообщить системе чтобы она отпустила
 		/// </summary>
-		// TODO: добавить Release Mode (delay, trigger (например смена локации))
 		public static void Release(IAssetReference reference, int? delayMs = 0) => provider.Release(reference, delayMs);
 
 		/// <summary>

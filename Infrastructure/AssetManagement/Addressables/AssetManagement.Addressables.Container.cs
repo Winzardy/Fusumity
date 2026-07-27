@@ -154,6 +154,8 @@ namespace AssetManagement
 
 		private class AssetsContainer : Container
 		{
+			public override bool IsCollection { get => true; }
+
 			public AssetsContainer(object key, AsyncOperationHandle handle, int usages = 1)
 				: base(key, handle, usages)
 			{
@@ -208,6 +210,7 @@ namespace AssetManagement
 			public float Progress { get => _progress.Value; }
 
 			public virtual double? ReleaseRemainingSeconds { get => null; }
+			public virtual bool IsCollection { get => false; }
 			string IAssetContainerState.SourceName { get => SOURCE_NAME; }
 
 			protected Container(object key, AsyncOperationHandle handle, int usages = 1)

@@ -418,7 +418,7 @@ namespace AssetManagement
 
 		internal string ResolveAssetPath(object key)
 		{
-			var keyText = key?.ToString() ?? "<null>";
+			var keyText = key?.ToString() ?? NULL_KEY_TEXT;
 
 #if UNITY_EDITOR
 			var editorPath = keyText.Length == 32
@@ -456,6 +456,31 @@ namespace AssetManagement
 			return keyText;
 		}
 
+		/// <summary>
+		/// Имя AssetBundle, из которого грузится ассет по ключу, либо null если бандл не определён
+		/// </summary>
+		internal string ResolveBundleName(object key)
+		{
+			if (key == null)
+				return null;
+
+			foreach (var locator in Addressables.ResourceLocators)
+			{
+				if (!locator.Locate(key, typeof(object), out var locations) || locations is not {Count: > 0})
+					continue;
+
+				var dependencies = locations[0].Dependencies;
+				if (dependencies is not {Count: > 0})
+					continue;
+
+				var bundleId = dependencies[0].InternalId;
+				if (bundleId is {Length: > 0})
+					return System.IO.Path.GetFileName(bundleId);
+			}
+
+			return null;
+		}
+
 		private void ReleaseAssetContainerImmediately(AssetContainer container)
 		{
 			if (!IsCurrentAssetContainer(container))
@@ -464,6 +489,11 @@ namespace AssetManagement
 			UntrackDelayedRelease(container);
 			var key = container.Key;
 			_keyToAssetContainer.Remove(key);
+
+			// Запоминаем отпущенный ассет: Addressables мог не выгрузить его физически (бандл держат соседи)
+			if (container.Asset is UnityEngine.Object asset && asset != null)
+				TrackReleasedAsset(key, asset);
+
 			container.Dispose();
 		}
 
