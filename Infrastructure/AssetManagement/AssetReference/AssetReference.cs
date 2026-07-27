@@ -1,10 +1,11 @@
 ﻿using System;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
-using UnityObject = UnityEngine.Object;
 
 namespace AssetManagement
 {
+	using UnityObject = UnityEngine.Object;
+	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
+
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
 	public sealed class AssetReferenceRequiredComponentAttribute : Attribute
 	{
@@ -30,21 +31,21 @@ namespace AssetManagement
 		where T : UnityObject
 	{
 		[FormerlySerializedAs("_assetReference")]
-		public AssetReferenceT<T> assetReference;
+		public UnityAssetReference assetReference;
 
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		AssetReference IAssetReference.AssetReference => assetReference;
+		UnityAssetReference IAssetReference.AssetReference => assetReference;
 		int IAssetReference.ReleaseDelayMs => releaseDelayMs;
 
 		public T editorAsset
 		{
 #if UNITY_EDITOR
-			get => assetReference?.editorAsset;
+			get => this.GetEditorAsset();
 			set
 			{
-				assetReference ??= new AssetReferenceT<T>(string.Empty);
+				assetReference ??= new UnityAssetReference(string.Empty);
 				this.SetEditorAsset(value);
 			}
 #else
@@ -70,12 +71,12 @@ namespace AssetManagement
 	public class AnyAssetReference : IAssetReference
 	{
 		[FormerlySerializedAs("_assetReference")]
-		public AssetReference assetReference;
+		public UnityAssetReference assetReference;
 
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
 
-		AssetReference IAssetReference.AssetReference => assetReference;
+		UnityAssetReference IAssetReference.AssetReference => assetReference;
 		int IAssetReference.ReleaseDelayMs => releaseDelayMs;
 
 		public UnityObject editorAsset
@@ -107,14 +108,16 @@ namespace AssetManagement
 		/// </summary>
 		const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif
-		AssetReference AssetReference { get; }
-		string AssetGuid { get => AssetReference.AssetGUID; }
-
-		int ReleaseDelayMs => 0;
+		UnityAssetReference AssetReference { get; }
+		string AssetGuid { get => AssetReference?.AssetGUID; }
+		object RuntimeKey { get => AssetReference?.RuntimeKey; }
+		bool IsRuntimeKeyValid { get => AssetReference?.RuntimeKeyIsValid() ?? false; }
+		int ReleaseDelayMs { get => 0; }
 
 		UnityObject EditorAsset =>
 #if UNITY_EDITOR
 			AssetReference?.editorAsset;
+
 #else
 			null;
 #endif

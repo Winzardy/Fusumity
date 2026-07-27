@@ -20,6 +20,9 @@ namespace UI
 		private (Image image, SpriteAssignerHandle handle) _single;
 		private Dictionary<Image, SpriteAssignerHandle> _imageToHandle;
 
+		private IAssetContainer _singleAssetContainer;
+		private HashSet<IAssetContainer> _retainedAssetContainers;
+
 		private bool _disposed;
 
 		public UISpriteAssigner()
@@ -33,18 +36,32 @@ namespace UI
 
 		public void Dispose()
 		{
-			_disposed = true;
-
-			ReleaseHandle(_single.image, _single.handle);
-			_single = default;
-
-			if (_imageToHandle == null)
+			if (_disposed)
 				return;
 
-			foreach (var (image, handle) in _imageToHandle)
-				ReleaseHandle(image, handle);
+			_disposed = true;
 
-			StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
+			ClearHandle(_single.image, _single.handle);
+			_single = default;
+
+			if (_imageToHandle != null)
+			{
+				foreach (var (image, handle) in _imageToHandle)
+					ClearHandle(image, handle);
+
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _imageToHandle);
+			}
+
+			_singleAssetContainer?.Release();
+			_singleAssetContainer = null;
+
+			if (_retainedAssetContainers == null)
+				return;
+
+			foreach (var container in _retainedAssetContainers)
+				container.Release();
+
+			StaticObjectPoolUtility.ReleaseAndSetNull(ref _retainedAssetContainers);
 		}
 
 		public void TrySetSprite(Image image, IAssetReference<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
@@ -63,6 +80,9 @@ namespace UI
 
 		public void SetSprite(Image image, IAssetReference<Sprite> iconRef, Action callback = null, bool disableDuringLoad = true)
 		{
+			if (_disposed)
+				return;
+
 			if (_single.image != null)
 			{
 				if (TryUpdateSingle(image, iconRef, callback, disableDuringLoad))
@@ -70,7 +90,7 @@ namespace UI
 			}
 			else if (_imageToHandle.IsNullOrEmpty() || !_imageToHandle.ContainsKey(image))
 			{
-				_single = (image, handle: new SpriteAssignerHandle(iconRef));
+				_single = (image, handle: CreateHandle(iconRef));
 				StartLoading(image, _single.handle, callback, disableDuringLoad);
 				return;
 			}
@@ -83,10 +103,10 @@ namespace UI
 				if (handle.SameAsset(iconRef) && TryReuseHandle(image, handle, callback, disableDuringLoad))
 					return;
 
-				ReleaseHandle(image, handle);
+				ClearHandle(image, handle);
 			}
 
-			handle = new SpriteAssignerHandle(iconRef);
+			handle = CreateHandle(iconRef);
 			_imageToHandle[image] = handle;
 			StartLoading(image, handle, callback, disableDuringLoad);
 		}
@@ -101,12 +121,54 @@ namespace UI
 					TryReuseHandle(image, _single.handle, callback, disableDuringLoad))
 					return true;
 
-				ReleaseHandle(image, _single.handle);
-				_single.handle = new SpriteAssignerHandle(spriteRef);
+				ClearHandle(image, _single.handle);
+				_single.handle = CreateHandle(spriteRef);
 				StartLoading(image, _single.handle, callback, disableDuringLoad);
 				return true;
 			}
 
+			return false;
+		}
+
+		private SpriteAssignerHandle CreateHandle(IAssetReference<Sprite> spriteRef)
+		{
+			if (TryGetRetainedContainer(spriteRef, out var container))
+				return new SpriteAssignerHandle(spriteRef, container);
+
+			container = AssetLoader.AcquireAssetContainer<Sprite>(spriteRef);
+			if (_singleAssetContainer == null)
+				_singleAssetContainer = container;
+			else
+			{
+				_retainedAssetContainers ??= HashSetPool<IAssetContainer>.Get();
+				_retainedAssetContainers.Add(container);
+			}
+
+			return new SpriteAssignerHandle(spriteRef, container);
+		}
+
+		private bool TryGetRetainedContainer(IAssetReference<Sprite> spriteRef, out IAssetContainer result)
+		{
+			var key = spriteRef.RuntimeKey;
+			if (_singleAssetContainer != null && Equals(_singleAssetContainer.State.Key, key))
+			{
+				result = _singleAssetContainer;
+				return true;
+			}
+
+			if (_retainedAssetContainers != null)
+			{
+				foreach (var container in _retainedAssetContainers)
+				{
+					if (!Equals(container.State.Key, key))
+						continue;
+
+					result = container;
+					return true;
+				}
+			}
+
+			result = null;
 			return false;
 		}
 
@@ -122,7 +184,7 @@ namespace UI
 
 			if (_single.image == image)
 			{
-				ReleaseHandle(image, _single.handle);
+				ClearHandle(image, _single.handle);
 				_single = default;
 				return;
 			}
@@ -133,7 +195,7 @@ namespace UI
 			if (!_imageToHandle.TryGetValue(image, out var handle))
 				return;
 
-			ReleaseHandle(image, handle);
+			ClearHandle(image, handle);
 			_imageToHandle.Remove(image);
 		}
 
@@ -164,7 +226,7 @@ namespace UI
 			LoadAndPlaceAsync(image, handle).Forget();
 		}
 
-		private void ReleaseHandle(Image image, SpriteAssignerHandle handle)
+		private void ClearHandle(Image image, SpriteAssignerHandle handle)
 		{
 			if (handle == null)
 				return;
@@ -174,7 +236,7 @@ namespace UI
 			if (handle.IsLoading)
 				_spinner?.Hide(handle);
 
-			handle.Release();
+			handle.Clear();
 		}
 
 		private static void ApplyLoadingState(Image image, SpriteAssignerHandle handle, bool disableDuringLoad)
@@ -200,24 +262,23 @@ namespace UI
 
 		private async UniTaskVoid LoadAndPlaceAsync(Image image, SpriteAssignerHandle handle)
 		{
-			var spriteRef = handle.spriteRef;
-			var assetLoaded = false;
+			var container = handle.container;
 
 			handle.state = SpriteAssignerHandle.State.Loading;
 			_spinner?.Show(handle);
 
 			try
 			{
-				// Не отменяем загрузку: один Addressables handle может ожидаться несколькими UI
-				var sprite = await spriteRef.LoadAsync();
-				assetLoaded = true;
+				var state = container.State;
+				var sprite = state.IsLoaded
+					? (Sprite) state.Asset
+					: await container.LoadAsync<Sprite>();
 
 				if (_disposed || image == null || !IsCurrentHandle(image, handle))
 					return;
 
 				image.sprite = sprite;
 				handle.SetSprite(sprite);
-				assetLoaded = false;
 				handle.RestoreImageState(image);
 				handle.InvokeCallback();
 			}
@@ -229,9 +290,6 @@ namespace UI
 			}
 			finally
 			{
-				if (assetLoaded)
-					spriteRef.Release();
-
 				if (handle.state == SpriteAssignerHandle.State.Loading && !_disposed && image != null && IsCurrentHandle(image, handle))
 					handle.RestoreImageState(image);
 
@@ -252,6 +310,7 @@ namespace UI
 		}
 
 		public IAssetReference<Sprite> spriteRef;
+		public IAssetContainer container;
 		public State state;
 
 		private Action _callback;
@@ -262,9 +321,10 @@ namespace UI
 		public bool IsLoading { get => state == State.Loading; }
 		public Sprite Sprite { get => _sprite; }
 
-		public SpriteAssignerHandle(IAssetReference<Sprite> spriteRef)
+		public SpriteAssignerHandle(IAssetReference<Sprite> spriteRef, IAssetContainer container)
 		{
 			this.spriteRef = spriteRef;
+			this.container = container;
 		}
 
 		public bool SameAsset(IAssetReference<Sprite> target) => spriteRef.SameAsset(target);
@@ -298,20 +358,16 @@ namespace UI
 			callback?.Invoke();
 		}
 
-		public void Release()
+		public void Clear()
 		{
-			var releaseAsset = IsLoaded;
-
 			state = State.Idle;
 
 			_callback = null;
 			_sprite = null;
 			_restoreImageEnable = false;
 
-			if (releaseAsset)
-				spriteRef?.Release();
-
 			spriteRef = null;
+			container = null;
 		}
 	}
 }
