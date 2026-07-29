@@ -412,11 +412,14 @@ namespace Fusumity.Editor
 			)
 		};
 
-		public static void BeginCardBox(Color? color = null)
+		public static void BeginCardBox(Color? color = null, bool verticalOrHorizontal = true)
 		{
 			if (color.HasValue)
 				GUIHelper.PushColor(color.Value);
-			SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+			if (verticalOrHorizontal)
+				SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+			else
+				SirenixEditorGUI.BeginIndentedHorizontal(CardStyle);
 			{
 				GUIHelper.PushHierarchyMode(false);
 				if (color.HasValue)
@@ -424,10 +427,13 @@ namespace Fusumity.Editor
 			}
 		}
 
-		public static void EndCardBox()
+		public static void EndCardBox(bool verticalOrHorizontal = true)
 		{
 			GUIHelper.PopHierarchyMode();
-			SirenixEditorGUI.EndIndentedVertical();
+			if (verticalOrHorizontal)
+				SirenixEditorGUI.EndIndentedVertical();
+			else
+				SirenixEditorGUI.EndIndentedHorizontal();
 		}
 
 		#endregion
