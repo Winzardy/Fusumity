@@ -17,6 +17,7 @@ namespace Fusumity.Editor.Utility
 		[InitializeOnLoadMethod]
 		private static void WarmupSearch()
 		{
+#if !UNITY_EDITOR || !LIGHT_EDITOR_MODE_AGGRESSIVE
 			if (Application.isBatchMode)
 				return;
 
@@ -32,6 +33,7 @@ namespace Fusumity.Editor.Utility
 						break;
 				};
 			};
+#endif
 		}
 
 		public static string ToGuid(this UnityObject obj)
