@@ -17,7 +17,7 @@ namespace Fusumity.Editor.Utility
 		[InitializeOnLoadMethod]
 		private static void WarmupSearch()
 		{
-#if !UNITY_EDITOR || !LIGHT_EDITOR_MODE_AGGRESSIVE
+#if !LIGHT_EDITOR_MODE
 			if (Application.isBatchMode)
 				return;
 
@@ -283,14 +283,51 @@ namespace Fusumity.Editor.Utility
 			return assets;
 		}
 
+#if LIGHT_EDITOR_MODE
+		private static readonly Dictionary<Type, List<GameObject>> _prefabsOfTypeCache = new();
+
+		private class PrefabsOfTypeCacheInvalidator : AssetPostprocessor
+		{
+			private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+			{
+				_prefabsOfTypeCache.Clear();
+			}
+		}
+#endif
+
 		public static IEnumerable<GameObject> EnumeratePrefabsOfType(Type type)
 		{
+#if LIGHT_EDITOR_MODE
+			// AssetDatabase's "t:" filter only matches an asset's own declared type (a prefab is
+			// always GameObject), so it can't find prefabs by a nested component's type - same
+			// reason GetPrefabsWithComponent above enumerates all prefabs and checks each manually
+			// instead. SearchService can do the component match, but SearchFlags.Synchronous forces
+			// a cold index build and busy-polls its readiness, which can cost tens of seconds when
+			// the Search index isn't already warm - so avoid it here too.
+			// Loading every prefab in the project (~1.6k here) to check its components is still
+			// several seconds' worth of work, so cache per type; PrefabsOfTypeCacheInvalidator
+			// below clears it whenever any asset changes so it can't go stale.
+			if (_prefabsOfTypeCache.TryGetValue(type, out var cached))
+				return cached;
+
+			var result = new List<GameObject>();
+			foreach (var guid in GetAssetsGuids<GameObject>())
+			{
+				var prefab = AssetDatabase.LoadAssetByGUID<GameObject>(guid);
+				if (prefab != null && PrefabUtility.IsPartOfAnyPrefab(prefab) && prefab.GetComponentInChildren(type, true) != null)
+					result.Add(prefab);
+			}
+
+			_prefabsOfTypeCache[type] = result;
+			return result;
+#else
 			using var context = SearchService.CreateContext(
 				"asset",
 				$"t:{type.Name}");
 			var items = SearchService.GetItems(context, SearchFlags.Synchronous | SearchFlags.WantsMore);
 			foreach (var item in items)
 				yield return item.ToObject<GameObject>();
+#endif
 		}
 
 		public static T CreateScriptableObject<T>(string path, string assetName, bool saveAssets = true) where T : ScriptableObject
@@ -340,7 +377,7 @@ namespace Fusumity.Editor.Utility
 		{
 			return string.IsNullOrEmpty(path)
 				? AssetDatabase.FindAssetGUIDs($"t:{typeName}")
-				: AssetDatabase.FindAssetGUIDs($"t:{typeName}", new string[] {path});
+				: AssetDatabase.FindAssetGUIDs($"t:{typeName}", new [] {path});
 		}
 
 		public static void Rename(UnityObject asset, string newName, bool setDirty = false)
