@@ -10,8 +10,6 @@ namespace Fusumity.Editor
 {
 	public class BridgeEvaluatorValueDrawer : OdinValueDrawer<IBridgeEvaluator>
 	{
-		private Rect? _iconRect;
-
 		private string _tooltip;
 		private GUIContent _label;
 
@@ -29,20 +27,22 @@ namespace Fusumity.Editor
 		{
 			var smartValueProxy = ValueEntry.SmartValue.Proxy;
 			var useOffset = EditorGUIUtility.hierarchyMode && smartValueProxy != null;
+			var b = smartValueProxy != null || !EditorGUIUtility.hierarchyMode;
+			var isZeroIndent = EditorGUI.indentLevel == 0;
+			var b1 = b && isZeroIndent;
+			if (b1)
+				EditorGUI.indentLevel++;
 
-			if (Property.LastDrawnValueRect.x != 0 && Property.LastDrawnValueRect.y != 20) // Хак, лучше не придумал
-				_iconRect = Property.LastDrawnValueRect.AlignLeft(15).AlignTop(EditorGUIUtility.singleLineHeight);
+			var hierarchyMode = EditorGUIUtility.hierarchyMode && isZeroIndent;
 
-			if (_iconRect.HasValue)
+			CallNextDrawer(label);
+
+			var valueProperty = Property.Children["value"];
+			if (valueProperty != null)
 			{
-				var iconRect = _iconRect.Value;
-				var b = smartValueProxy != null || !EditorGUIUtility.hierarchyMode;
-				var isZeroIndent = EditorGUI.indentLevel == 0;
-				var b1 = b && isZeroIndent;
-				if (b1)
-					EditorGUI.indentLevel++;
-
-				var hierarchyMode = EditorGUIUtility.hierarchyMode && isZeroIndent;
+				var iconRect = valueProperty.LastDrawnValueRect
+					.AlignLeft(15)
+					.AlignTop(EditorGUIUtility.singleLineHeight);
 				if (hierarchyMode)
 				{
 					iconRect.x -= 14;
@@ -74,14 +74,10 @@ namespace Fusumity.Editor
 				GUI.color = isHover ? origin : origin * 0.8f;
 				SdfIcons.DrawIcon(iconRect, SdfIconType.ArrowLeft);
 				GUI.color = origin;
-				CallNextDrawer(label);
-				if (b1)
-					EditorGUI.indentLevel--;
 			}
-			else
-			{
-				CallNextDrawer(label);
-			}
+
+			if (b1)
+				EditorGUI.indentLevel--;
 		}
 	}
 }

@@ -8,6 +8,9 @@ namespace Localization
 		public static string GetEditor(string key, string localeCode = null) =>
 			LocalizationResolver.GetEditor(key, localeCode);
 
+		public static bool HasEditor(string key, string localeCode = null) =>
+			LocalizationResolver.HasEditor(key, localeCode);
+
 		public static string CurrentLocaleCodeEditor =>
 			LocalizationResolver.CurrentLocaleCodeEditor;
 

@@ -21,11 +21,16 @@ namespace Content.ScriptableObjects.Editor
 	{
 		static ContentDatabaseCleanupOnStartup()
 		{
+#if !UNITY_EDITOR || !LIGHT_EDITOR_MODE_AGGRESSIVE
+			// Forces a full content-asset scan (ContentEditorCache.ClearAndRefreshScrObjs, ~thousands of
+			// assets) on every domain reload just to prune null entries from the databases. Skipped in
+			// Aggressive mode; databases just don't get their stray-null cleanup after each recompile.
 			EditorApplication.delayCall += () =>
 			{
 				foreach (var database in ContentDatabaseEditorUtility.Databases)
 					ContentDatabaseEditorUtility.RequestCleanup(database);
 			};
+#endif
 		}
 	}
 
@@ -90,7 +95,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
-		public static void AddToDatabase(ContentScriptableObject scriptableObject)
+		public static void AddToDatabase(ContentScriptableObject scriptableObject, bool save = true)
 		{
 			if (scriptableObject is ContentDatabaseScriptableObject)
 				return;
@@ -108,7 +113,11 @@ namespace Content.ScriptableObjects.Editor
 
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
-				AssetDatabase.SaveAssetIfDirty(database);
+
+#if LIGHT_EDITOR_MODE
+				if (save)
+#endif
+					AssetDatabase.SaveAssetIfDirty(database);
 
 				RequestCleanup(database);
 			}
@@ -126,7 +135,7 @@ namespace Content.ScriptableObjects.Editor
 			}
 		}
 
-		public static void RemoveToDatabase(ContentScriptableObject scriptableObject)
+		public static void RemoveToDatabase(ContentScriptableObject scriptableObject, bool save = true)
 		{
 			if (scriptableObject is ContentDatabaseScriptableObject)
 				return;
@@ -143,7 +152,10 @@ namespace Content.ScriptableObjects.Editor
 
 				database.OnUpdateContent();
 				EditorUtility.SetDirty(database);
-				AssetDatabase.SaveAssetIfDirty(database);
+#if LIGHT_EDITOR_MODE
+				if (save)
+#endif
+					AssetDatabase.SaveAssetIfDirty(database);
 			}
 		}
 

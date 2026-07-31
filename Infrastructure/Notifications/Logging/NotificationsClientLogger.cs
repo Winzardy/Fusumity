@@ -7,7 +7,7 @@ namespace Logging.Notifications
 	public class NotificationsClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Notifications";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(NotificationsDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(NotificationsDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

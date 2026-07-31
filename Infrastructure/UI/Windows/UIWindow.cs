@@ -108,10 +108,10 @@ namespace UI.Windows
 
 		public override WidgetFlags Flags { get => _config.flags; }
 
-		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
+		protected override IAssetReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
-		protected override List<AssetReference> PreloadAssets => _config.layout.preloadAssets;
+		protected override List<AnyAssetReference> PreloadAssets => _config.layout.preloadAssets;
 
 		protected override string Layer => LayerType.WINDOWS;
 		string IWidget.Layer => Layer;
@@ -144,7 +144,7 @@ namespace UI.Windows
 
 				if (Active)
 				{
-					if (_args.Equals(args))
+					if (_args != null && _args.Equals(args))
 						return;
 
 					EnableSuppress();
@@ -163,7 +163,7 @@ namespace UI.Windows
 			DisableSuppress();
 		}
 
-		protected void UpdateArgs(in TArgs args)
+		protected virtual void UpdateArgs(in TArgs args)
 		{
 			_args = args;
 		}

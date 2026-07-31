@@ -41,7 +41,6 @@ namespace Notifications
 
 			_platform.NotificationReceived += OnNotificationReceived;
 
-			//Очищаем все уведомления при запуске и пересоздаем. Это решаем вопросы с призрачными уведомлениями
 			if (!_settings.disableClearAllOnStart)
 			{
 				CancelAll();
@@ -110,13 +109,18 @@ namespace Notifications
 
 			var date = request.deliveryTime!.Value;
 			var isUtc = date.Kind == DateTimeKind.Utc;
-			if (isUtc ? date <= DateTime.UtcNow : date <= DateTime.Now)
+			var now = isUtc ? DateTime.UtcNow : DateTime.Now;
+			if (date <= now)
 			{
 				NotificationsDebug.LogError(
 					$"Trying to schedule notification by id [ {request.id} ] in the past, " +
 					$"date: {date.ToShortTimeString()}, {date.ToShortDateString()} (kind:{date.Kind})");
 				return;
 			}
+
+#if DEV
+			NotificationsDebug.ApplySettings(ref request, now);
+#endif
 
 			if (_platform.Schedule(in request))
 				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
@@ -133,6 +137,9 @@ namespace Notifications
 		internal void OpenApplicationSettings() => _platform?.OpenApplicationSettings();
 
 		internal string GetLastIntentNotificationId() => _platform?.GetLastIntentNotificationId();
+
+		internal IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
+			=> _platform?.EnumerateScheduledNotifications() ?? Array.Empty<NotificationRequest>();
 
 		private void OnNotificationReceived(string id, string data)
 		{

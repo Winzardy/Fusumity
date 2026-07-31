@@ -24,6 +24,18 @@ namespace UI
 		{
 		}
 
+		/// <summary>
+		/// Не возвращаем в пул задиспоуженный виджет: root мог вычистить его как своего ребёнка
+		/// (LayoutClearingInternal → DisposeAndClearChildren), и тогда Get выдал бы мёртвый инстанс
+		/// </summary>
+		public new void Release(TWidget widget)
+		{
+			if (widget == null || widget.IsDisposed)
+				return;
+
+			base.Release(widget);
+		}
+
 		private class Policy : IObjectPoolPolicy<TWidget>
 		{
 			private readonly UIWidget _root;

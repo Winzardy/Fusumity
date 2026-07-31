@@ -32,11 +32,12 @@ namespace Content.ScriptableObjects
 		{
 		}
 
+		bool IContentEntrySource.enabled { get => enabled; }
 		IContentEntry<T> IContentEntrySource<T>.ContentEntry { get => _entry; }
 		IContentEntry IContentEntrySource.ContentEntry { get => _entry; }
 		protected override IScriptableContentEntry BaseScriptableContentEntry { get => _entry; }
 
-		bool IContentEntrySource.Validate()
+		protected override bool OnValidated()
 		{
 #if UNITY_EDITOR
 			if (NeedSync())
@@ -66,17 +67,22 @@ namespace Content.ScriptableObjects
 		[HideInInspector]
 		public bool enabled = true;
 
-		public override bool Enabled { get  => enabled; }
+		public override bool Enabled { get => enabled; }
 
 		public abstract Type ValueType { get; }
 		IScriptableContentEntry IContentEntryScriptableObject.ScriptableContentEntry { get => BaseScriptableContentEntry; }
 
 		protected abstract IScriptableContentEntry BaseScriptableContentEntry { get; }
 
-		bool IContentEntryScriptableObject.enabled
+		bool IContentEntrySource.enabled { get => enabled; }
+		IContentEntry IContentEntrySource.ContentEntry { get => BaseScriptableContentEntry; }
+		bool IContentEntrySource.Validate() => OnValidated();
+
+		void IContentEntryScriptableObject.SetEnable(bool value)
 		{
-			get => enabled;
-			set => enabled = value;
+			enabled = value;
 		}
+
+		protected virtual bool OnValidated() => true;
 	}
 }

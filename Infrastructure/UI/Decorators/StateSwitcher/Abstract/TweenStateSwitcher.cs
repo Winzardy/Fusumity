@@ -13,6 +13,8 @@ namespace UI
 {
 	public abstract class TweenStateSwitcher<TState> : StateSwitcher<TState>
 	{
+		private bool _inactiveWarningLogged;
+
 		[NonSerialized]
 		private Tween _tween;
 
@@ -26,6 +28,7 @@ namespace UI
 		protected override bool UseEquals { get => true; }
 
 		private void Awake() => ClearTweens();
+		private void OnEnable() => _inactiveWarningLogged = false;
 		private void OnDestroy() => ClearTweens();
 
 		protected override void OnStateSwitched(TState state)
@@ -37,9 +40,13 @@ namespace UI
 			// Точное поведение не исследовалось, поэтому сразу применяем конечное состояние
 			if (!gameObject.IsActive())
 			{
-				Debug.LogWarning(
-					"Cannot play DOTween because GameObject is inactive. " +
-					"Applying final tween state immediately");
+				if (!_inactiveWarningLogged)
+				{
+					Debug.LogWarning(
+						"Cannot play DOTween because GameObject is inactive. " +
+						"Applying final tween state immediately");
+					_inactiveWarningLogged = true;
+				}
 
 				animationSequence = _dictionary.GetValueOrDefaultSafe(state, _default);
 				if (animationSequence.IsNullOrEmpty())
@@ -69,14 +76,15 @@ namespace UI
 
 			if (_immediate)
 			{
+				var origin = AnimationTweenCallback.immediate;
 				AnimationTweenCallback.immediate = true;
 				try
 				{
-					tween.GotoWithCallbacks(1);
+					tween.Complete(true);
 				}
 				finally
 				{
-					AnimationTweenCallback.immediate = false;
+					AnimationTweenCallback.immediate = origin;
 					tween.KillSafe();
 				}
 			}
@@ -94,6 +102,7 @@ namespace UI
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
+				DG.DOTweenEditor.DOTweenEditorPreview.Stop(true, true);
 				DG.DOTweenEditor.DOTweenEditorPreview.PrepareTweenForPreview(tween);
 				DG.DOTweenEditor.DOTweenEditorPreview.Start(EditorPreviewUpdate);
 			}

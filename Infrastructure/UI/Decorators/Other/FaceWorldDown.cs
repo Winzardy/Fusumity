@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UI
 {
-	public class FaceWorldDown : Updatable
+	public class FaceWorldDown : ReactiveBehaviour
 	{
 		protected override void OnEnabled()
 		{

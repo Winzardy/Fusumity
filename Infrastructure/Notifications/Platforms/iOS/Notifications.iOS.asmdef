@@ -8,7 +8,10 @@
         "GUID:bd10b8cc39d09ac4e9c31728752096c0",
         "GUID:dc8e8e524b04497ab575e558b7649abb",
         "GUID:79b63a521b7d3544fb1c7ae22811a7fa",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "AssetManagement",
+        "Content",
+        "GUID:e6a4266b5cb4b4d59928d525f5c06312"
     ],
     "includePlatforms": [
         "Editor",

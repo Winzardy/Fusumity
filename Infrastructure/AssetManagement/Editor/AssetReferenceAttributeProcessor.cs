@@ -2,19 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Fusumity.Editor;
 using Fusumity.Editor.Utility;
 using Sapientia.Extensions;
 using Sapientia.Utility;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
+using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AssetManagement.Editor
 {
 	public class AssetReferenceAttributeProcessor : BaseAssetReferenceAttributeProcessor<IAssetReference>
 	{
-		protected override string FieldName => nameof(AssetReference.assetReference);
+		protected override string FieldName => nameof(AnyAssetReference.assetReference);
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -23,13 +26,10 @@ namespace AssetManagement.Editor
 			if (member.Name != IAssetReference.CUSTOM_EDITOR_NAME)
 				return;
 
-			if (!IsGameObjectEntry(parentProperty))
+			if (!TryGetPickerComponentType(parentProperty, out var componentType, out var includeChildren))
 				return;
 
-			if (!TryGetRequiredComponentAttribute(parentProperty, out var attribute, false))
-				return;
-
-			attributes.Add(new ComponentReferencePickerAttribute(attribute.ComponentType));
+			attributes.Add(new AssetReferenceComponentPickerAttribute(componentType, includeChildren));
 		}
 
 		public static IEnumerable<ValueDropdownItem<GameObject>> FilterByRequiredComponent(InspectorProperty property)
@@ -40,7 +40,7 @@ namespace AssetManagement.Editor
 			if (componentType == null)
 				yield break;
 
-			foreach (var obj in AssetDatabaseUtility.EnumeratePrefabsOfType(componentType))
+			foreach (var obj in EnumeratePrefabsOfType(componentType, false))
 				yield return new ValueDropdownItem<GameObject>(obj.name, obj);
 		}
 
@@ -66,39 +66,69 @@ namespace AssetManagement.Editor
 			if (property?.ValueEntry?.WeakSmartValue is not GameObject gameObject || gameObject == null)
 				return true;
 
-			if (HasRequiredComponent(gameObject, componentType, requirement.IncludeChildren))
+			var includeChildren = requirement?.IncludeChildren ?? false;
+			if (HasRequiredComponent(gameObject, componentType, includeChildren))
 				return true;
 
-			message = requirement.IncludeChildren
+			message = includeChildren
 				? $"GameObject [ {gameObject.name} ] does not contain component [ {componentType.FullName} ] on itself or children"
 				: $"GameObject [ {gameObject.name} ] does not contain component [ {componentType.FullName} ]";
 			return false;
 		}
 
-		private static bool IsGameObjectEntry(InspectorProperty property)
+		internal static IEnumerable<GameObject> EnumeratePrefabsOfType(Type componentType, bool includeChildren)
 		{
-			var type = property?.ValueEntry?.TypeOfValue;
-			if (type == null)
+			foreach (var prefab in AssetDatabaseUtility.EnumeratePrefabsOfType(componentType))
+			{
+				if (HasRequiredComponent(prefab, componentType, includeChildren))
+					yield return prefab;
+			}
+		}
+
+		private static bool TryGetPickerComponentType(InspectorProperty property, out Type componentType, out bool includeChildren)
+		{
+			componentType = null;
+			includeChildren = false;
+
+			if (!TryGetReferenceValueType(property, out var referenceValueType))
 				return false;
 
-			var interfaceType = type
-				.GetInterfaces()
-				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetReference<>));
+			if (referenceValueType == typeof(GameObject))
+			{
+				if (!TryGetRequirement(property, out var requirement, out componentType, out _, false))
+					return false;
 
-			return interfaceType?.GetGenericArguments()[0] == typeof(GameObject);
+				includeChildren = requirement?.IncludeChildren ?? false;
+				return true;
+			}
+
+			if (!IsComponentReferenceValue(referenceValueType))
+				return false;
+
+			componentType = referenceValueType;
+			return true;
 		}
 
 		private static bool TryGetRequirement(InspectorProperty property,
 			out AssetReferenceRequiredComponentAttribute attribute,
 			out Type componentType,
-			out string error)
+			out string error,
+			bool includeParents = true)
 		{
-			attribute     = null;
+			attribute = null;
 			componentType = null;
-			error         = null;
+			error = null;
 
-			if (!TryGetRequiredComponentAttribute(property, out attribute))
+			if (!TryGetRequiredComponentAttribute(property, out attribute, includeParents))
+			{
+				if (TryGetReferenceValueType(property, out var referenceValueType) && IsComponentReferenceValue(referenceValueType))
+				{
+					componentType = referenceValueType;
+					return true;
+				}
+
 				return false;
+			}
 
 			componentType = attribute.ComponentType;
 
@@ -138,6 +168,41 @@ namespace AssetManagement.Editor
 			return false;
 		}
 
+		private static bool TryGetReferenceValueType(InspectorProperty property, out Type valueType)
+		{
+			valueType = null;
+
+			if (TryGetReferenceValueType(property?.ValueEntry?.TypeOfValue, out valueType))
+				return true;
+
+			return TryGetReferenceValueType(property?.ParentValueProperty?.ValueEntry?.TypeOfValue, out valueType);
+		}
+
+		private static bool TryGetReferenceValueType(Type type, out Type valueType)
+		{
+			valueType = null;
+			if (type == null)
+				return false;
+
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IAssetReference<>))
+			{
+				valueType = type.GetGenericArguments()[0];
+				return true;
+			}
+
+			var interfaceType = type
+				.GetInterfaces()
+				.FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IAssetReference<>));
+
+			valueType = interfaceType?.GetGenericArguments()[0];
+			return valueType != null;
+		}
+
+		private static bool IsComponentReferenceValue(Type type)
+		{
+			return type != null && !type.ContainsGenericParameters && typeof(Component).IsAssignableFrom(type);
+		}
+
 		private static bool HasRequiredComponent(GameObject gameObject, Type componentType, bool includeChildren)
 		{
 			if (gameObject == null || componentType == null)
@@ -169,6 +234,67 @@ namespace AssetManagement.Editor
 
 			CallNextDrawer(label);
 			GUI.backgroundColor = originColor;
+		}
+	}
+
+	public class AssetReferenceComponentPickerAttribute : Attribute
+	{
+		public Type ComponentType { get; }
+		public bool IncludeChildren { get; }
+
+		public AssetReferenceComponentPickerAttribute(Type type, bool includeChildren)
+		{
+			ComponentType = type;
+			IncludeChildren = includeChildren;
+		}
+	}
+
+	public class AssetReferenceComponentPickerDrawer : OdinAttributeDrawer<AssetReferenceComponentPickerAttribute>
+	{
+		private Rect? _rect;
+
+		protected override void DrawPropertyLayout(GUIContent label)
+		{
+			if (Property.ParentValueProperty?.ValueEntry?.WeakSmartValue is not IAssetReference reference)
+			{
+				CallNextDrawer(label);
+				return;
+			}
+
+			using (new EditorGUI.DisabledScope(Attribute.ComponentType == null))
+			{
+				if (_rect.HasValue)
+				{
+					if (GUI.Button(_rect.Value, GUIContent.none))
+					{
+						var selector = new GenericSelector<Object>("Select",
+							AssetReferenceAttributeProcessor.EnumeratePrefabsOfType(Attribute.ComponentType, Attribute.IncludeChildren),
+							false,
+							x => x.name);
+						selector.SetSelection(GetSelectionAsset(reference.EditorAsset));
+						selector.EnableSingleClickToSelect();
+						selector.SelectionConfirmed += selection =>
+						{
+							var prefab = selection.FirstOrDefault();
+							if (!prefab)
+								return;
+							Property.ValueEntry.WeakSmartValue = prefab;
+						};
+						var rect = Property.LastDrawnValueRect;
+						rect.width -= EditorGUIUtility.labelWidth;
+						rect.x += EditorGUIUtility.labelWidth;
+						selector.ShowInPopup(rect); // вот тут нужно чтобы он селектор открывал под полем object
+					}
+				}
+			}
+
+			CallNextDrawer(label);
+			_rect = Property.LastDrawnValueRect.AlignRight(18);
+		}
+
+		private static Object GetSelectionAsset(Object asset)
+		{
+			return asset is Component component ? component.gameObject : asset;
 		}
 	}
 }

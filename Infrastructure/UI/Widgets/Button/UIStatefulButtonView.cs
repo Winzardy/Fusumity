@@ -4,7 +4,9 @@ using Fusumity.MVVM;
 using Fusumity.MVVM.UI;
 using Fusumity.Utility;
 using Game.UI;
+using JetBrains.Annotations;
 using Sapientia.Extensions;
+using UnityEngine;
 
 namespace UI
 {
@@ -36,12 +38,17 @@ namespace UI
 				AddDisposable(_indicator = new UIAttentionIndicatorView(layout.indicator));
 			}
 
-			_clickElement = Subscribe(layout, HandleClick);
+			TryRegisterClickAndSubscribe(layout);
 		}
 
 		protected override void OnUpdate(IStatefulButtonViewModel viewModel)
 		{
 			SetActive(true);
+
+			if (viewModel is IUniqueStatefulButtonViewModel unique)
+				TryRegisterClickAndSubscribe(_layout, unique.Id, unique.GroudId);
+			else
+				TryRegisterClickAndSubscribe(_layout);
 
 			if (_layout.label != null && viewModel.Label != null)
 				viewModel.Label.Bind(UpdateLabel);
@@ -61,10 +68,34 @@ namespace UI
 
 		protected override void OnClear(IStatefulButtonViewModel viewModel)
 		{
+			if (viewModel is IUniqueStatefulButtonViewModel)
+				TryRegisterClickAndSubscribe(_layout);
+
 			viewModel.Label?.Release();
 
 			viewModel.StyleChanged -= UpdateStyle;
 			viewModel.InteractableChanged -= UpdateInteractable;
+		}
+
+		private void TryRegisterClickAndSubscribe(UIStatefulButtonLayout layout, string uId = null, string groupId = null)
+		{
+			uId = uId.IsNullOrEmpty() ? layout.uId : uId;
+			groupId = groupId.IsNullOrEmpty() ? layout.groupId : groupId;
+
+			if (_clickElement != null)
+			{
+				if (_clickElement.Matches(uId, groupId))
+					return;
+
+				DisposeAndRemoveDisposable(_clickElement);
+			}
+
+			_clickElement = null;
+
+			if (layout == null)
+				return;
+
+			_clickElement = Subscribe(layout.button, HandleClick, uId, groupId);
 		}
 
 		protected override void OnNullViewModel()
@@ -134,6 +165,12 @@ namespace UI
 			Clicked?.Invoke(this);
 			ViewModel?.Click();
 		}
+	}
+
+	public interface IUniqueStatefulButtonViewModel : IStatefulButtonViewModel
+	{
+		[CanBeNull] string Id { get; }
+		[CanBeNull] string GroudId { get => null; }
 	}
 
 	public interface IStatefulButtonViewModel

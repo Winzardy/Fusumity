@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Content;
 using Cysharp.Threading.Tasks;
 using ProjectInformation;
 using Sapientia;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,11 +19,11 @@ namespace Booting.ProjectInformation
 	{
 		public override int Priority => HIGH_PRIORITY - 30;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var options = ContentManager.Get<ProjectInfoConfig>();
 			var platform = GetTargetPlatform();
-			var provider = new DefaultProjectInfoAttendant(in options, in platform, GetBuildInfo());
+			var provider = new DefaultProjectInfoAttendant(in options, in platform, GetBuildInfo(), GetContentBuildInfo());
 
 			ProjectInfo.Set(provider);
 			return UniTask.CompletedTask;
@@ -72,6 +72,25 @@ namespace Booting.ProjectInformation
 			catch
 			{
 				return BuildInfo.CreateUnknown();
+			}
+		}
+
+		private static ContentBuildInfo GetContentBuildInfo()
+		{
+			var textAsset = Resources.Load<TextAsset>(nameof(ContentBuildInfo));
+			if (textAsset == null)
+			{
+				return new ContentBuildInfo();
+			}
+
+			try
+			{
+				return JsonUtility.FromJson<ContentBuildInfo>(textAsset.text);
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[ProjectInfoBootTask.GetContentBuildInfo] Failed to load content build info: {ex}");
+				return new ContentBuildInfo();
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Fusumity.Attributes;
 using Sapientia;
 using Sapientia.Extensions;
@@ -13,7 +14,7 @@ namespace Fusumity.Editor
 {
 	public abstract class ValueWrapperOdinAttributeProcessor<TValue> : OdinAttributeProcessor<TValue>
 	{
-		public static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
+		public static readonly ConditionalWeakTable<InspectorProperty, GUIContent> propertyToGUIContent = new();
 
 		protected abstract string ValueFieldName { get; }
 		protected virtual string SecondValueFieldName => string.Empty;
@@ -82,7 +83,8 @@ namespace Fusumity.Editor
 			base.ProcessSelfAttributes(property, attributes);
 
 			var guiContent = new GUIContent(property.Label);
-			propertyToGUIContent[property] = guiContent;
+			propertyToGUIContent.Remove(property);
+			propertyToGUIContent.Add(property, guiContent);
 
 			if (attributes.GetAttribute<HideLabelAttribute>() != null)
 				guiContent.text = string.Empty;

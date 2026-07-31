@@ -20,12 +20,13 @@ namespace Booting.Content
 	{
 		public override int Priority => HIGH_PRIORITY - 20;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var resolver = new ContentResolver();
 			ContentManager.Set(resolver);
 
-#if UNITY_EDITOR && FULLWEIGHT_MODE
+#if UNITY_EDITOR && !LIGHT_EDITOR_MODE_AGGRESSIVE
+			ContentManager.initializing = true;
 			ContentDatabaseEditorUtility.ValidateDatabases();
 
 			if (ClientEditorContentImporterMenu.IsEnable)
@@ -38,6 +39,13 @@ namespace Booting.Content
 		protected override void OnDispose()
 		{
 			ContentManager.Clear();
+		}
+
+		public override void OnBootCompleted()
+		{
+#if UNITY_EDITOR
+			ContentManager.initializing = false;
+#endif
 		}
 	}
 }

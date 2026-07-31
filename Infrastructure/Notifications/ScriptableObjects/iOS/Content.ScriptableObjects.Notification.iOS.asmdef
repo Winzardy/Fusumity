@@ -1,0 +1,23 @@
+{
+    "name": "Content.ScriptableObjects.Notification.iOS",
+    "rootNamespace": "",
+    "references": [
+        "Content.ScriptableObjects.Notifications",
+        "Content.ScriptableObjects",
+        "Notifications.iOS",
+        "Generic",
+        "Notifications.iOS.Config"
+    ],
+    "includePlatforms": [
+        "iOS",
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

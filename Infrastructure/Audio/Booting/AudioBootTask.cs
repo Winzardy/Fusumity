@@ -21,7 +21,7 @@ namespace Booting.Audio
 		private AudioFactory _factory;
 		private DefaultAudioListenerOwner _listener;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var settings = ContentManager.Get<AudioSettings>();
 

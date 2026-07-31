@@ -211,7 +211,7 @@ namespace Audio.Editor
 
 		public static int GetMax(InspectorProperty property)
 		{
-			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry)
+			if (property.ParentValueProperty.ValueEntry.WeakSmartValue is AudioEventConfig entry && !entry.tracks.IsNullOrEmpty())
 				return entry.tracks.Length - 1;
 
 			return 1;

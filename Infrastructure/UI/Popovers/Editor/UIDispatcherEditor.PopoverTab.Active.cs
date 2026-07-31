@@ -33,9 +33,12 @@ namespace UI.Popovers.Editor
 			foreach (var (popover, args) in _dispatcher.Active)
 			{
 				FusumityEditorGUILayout.BeginCardBox(Color.black.WithAlpha(0.3f));
-				if (!Draw(i, popover, args))
-					break;
+				var keepDrawing = Draw(i, popover, args);
 				FusumityEditorGUILayout.EndCardBox();
+
+				if (!keepDrawing)
+					break;
+
 				i++;
 			}
 
@@ -46,6 +49,7 @@ namespace UI.Popovers.Editor
 				const string BUTTON_HIDE_LABEL = "Hide";
 				const int BUTTON_HIDE_WIDTH = 44;
 
+				var keepDrawing = true;
 				GUIHelper.PushLabelWidth(13);
 				EditorGUILayout.BeginHorizontal();
 				{
@@ -53,13 +57,17 @@ namespace UI.Popovers.Editor
 
 					if (GUILayout.Button(BUTTON_HIDE_LABEL, GUILayout.Width(BUTTON_HIDE_WIDTH)))
 					{
-						//_dispatcher.TryHide(popover);
-						return false;
+						_dispatcher.TryHide(popover);
+						Clear();
+						keepDrawing = false;
 					}
 				}
 				EditorGUILayout.EndHorizontal();
 
 				GUIHelper.PopLabelWidth();
+
+				if (!keepDrawing)
+					return false;
 
 				if (popoverArgs != null)
 				{

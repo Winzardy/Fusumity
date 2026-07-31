@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -12,6 +13,9 @@ namespace AssetManagement
 
 	public partial class AssetLoader : StaticWrapper<AssetProvider>
 	{
+		private const string NULL_KEY_TEXT = "<null>";
+		private const string NOT_INITIALIZED_REPORT = "AssetLoader is not initialized";
+
 		// ReSharper disable once InconsistentNaming
 		private static AssetProvider provider
 		{
@@ -22,7 +26,46 @@ namespace AssetManagement
 		public static bool IsInitialized
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _instance != null;
+			get => _instance is {IsInitialized: true};
+		}
+
+		public static void CollectAssetContainers(List<IAssetContainer> containers)
+		{
+			if (IsInitialized)
+				provider.CollectAssetContainers(containers);
+			else
+				containers?.Clear();
+		}
+
+		public static void CollectAssetContainerStates(List<IAssetContainerState> states)
+		{
+			if (IsInitialized)
+				provider.CollectAssetContainerStates(states);
+			else
+				states?.Clear();
+		}
+
+		public static string ResolveAssetPath(object key) =>
+			IsInitialized ? provider.ResolveAssetPath(key) : key?.ToString() ?? NULL_KEY_TEXT;
+
+		/// <inheritdoc cref="AssetProvider.ResolveBundleName"/>
+		public static string ResolveBundleName(object key) =>
+			IsInitialized ? provider.ResolveBundleName(key) : null;
+
+		public static string BuildAssetContainersReport() =>
+			IsInitialized ? provider.BuildAssetContainersReport() : NOT_INITIALIZED_REPORT;
+
+		/// <summary>
+		/// Получить общее владение контейнером ассета
+		/// Каждый успешный вызов должен быть сбалансирован через <see cref="IAssetContainer.Release"/>
+		/// </summary>
+		public static IAssetContainer AcquireAssetContainer<T>(IAssetReference reference)
+			where T : UnityObject
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(default(CancellationToken));
+
+			return provider.AcquireAssetContainer<T>(reference);
 		}
 
 		/// <summary>
@@ -31,18 +74,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
 		public static async UniTask<T> LoadAssetAsync<T>(IAssetReference reference,
-			CancellationToken cancellationToken = default)
-			=> await provider.LoadAssetAsync<T>(reference, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
 
-		/// <summary>
-		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
-		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetReference,System.Threading.CancellationToken)"/> <br/>
-		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
-		/// </summary>
-		/// <typeparam name="T">Тип компонента</typeparam>
-		public static async UniTask<T> LoadComponentAsync<T>(ComponentReference reference,
-			CancellationToken cancellationToken = default)
-			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken);
+			return await provider.LoadAssetAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -51,16 +89,28 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
 		public static async UniTask<T> LoadComponentAsync<T>(IAssetReference reference,
-			CancellationToken cancellationToken = default)
-			where T : Component => await provider.LoadComponentAsync<T>(reference, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+			where T : Component
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить ассет в память по пути (текстура, геймобж, текст и т.д).
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(string)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип ассета</typeparam>
-		public static async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken = default)
-			where T : UnityObject => await provider.LoadAssetAsync<T>(path, cancellationToken);
+		public static async UniTask<T> LoadAssetAsync<T>(string path, CancellationToken cancellationToken = default,
+			IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetAsync<T>(path, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
@@ -68,8 +118,15 @@ namespace AssetManagement
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(string)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public static async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken = default)
-			where T : Component => await provider.LoadComponentAsync<T>(path, cancellationToken);
+		public static async UniTask<T> LoadComponentAsync<T>(string path, CancellationToken cancellationToken = default,
+			IProgress<float> progress = null)
+			where T : Component
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadComponentAsync<T>(path, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по лейблу (Label у Addressable). <br/>
@@ -77,8 +134,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(AssetLabelReference reference,
-			CancellationToken cancellationToken = default) =>
-			await provider.LoadAssetsAsync<T>(reference, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(reference, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
@@ -86,8 +148,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(string tag,
-			CancellationToken cancellationToken = default) =>
-			await provider.LoadAssetsAsync<T>(tag, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(tag, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Загрузить все ассеты по тегу (Label у Addressable). <br/>
@@ -95,8 +162,13 @@ namespace AssetManagement
 		/// </summary>
 		/// <typeparam name="T">Тип ассетов</typeparam>
 		public static async UniTask<IList<T>> LoadAssetsAsync<T>(IEnumerable tags,
-			CancellationToken cancellationToken = default) =>
-			await provider.LoadAssetsAsync<T>(tags, cancellationToken);
+			CancellationToken cancellationToken = default, IProgress<float> progress = null)
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
+
+			return await provider.LoadAssetsAsync<T>(tags, cancellationToken, progress);
+		}
 
 		/// <summary>
 		/// Отпустить ассет из памяти
@@ -104,7 +176,6 @@ namespace AssetManagement
 		/// Значит что до этого был запрос на данный ассет и система его подгрузила, но система не знает когда он
 		/// больше не нужен чтобы выгрузить, поэтому нужно сообщить системе чтобы она отпустила
 		/// </summary>
-		// TODO: добавить Release Mode (delay, trigger (например смена локации))
 		public static void Release(IAssetReference reference, int? delayMs = 0) => provider.Release(reference, delayMs);
 
 		/// <summary>

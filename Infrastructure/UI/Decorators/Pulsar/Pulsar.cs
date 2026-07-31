@@ -7,7 +7,7 @@ namespace UI
 	/// <summary>
 	/// Задача <see cref="Pulsar"/> выдавать нормализованное значение от 0 до 1 глобально, да так чтобы все "мигающие" активности были синхронные
 	/// </summary>
-	public abstract class Pulsar : Updatable
+	public abstract class Pulsar : ReactiveBehaviour
 	{
 		[SerializeField]
 		[Minimum(0), Unit(Units.Second)]

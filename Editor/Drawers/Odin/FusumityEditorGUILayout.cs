@@ -21,7 +21,10 @@ namespace Fusumity.Editor
 		}
 
 		public static bool drawAssetReference = true;
+		public static bool drawEnabledToggle = true;
 		public static bool drawInlineEditor = false;
+		public static bool allowInlineEditorIdEditing = false;
+		public static bool disableInlineEditorIdEditing => drawInlineEditor && !allowInlineEditorIdEditing;
 	}
 
 	public static partial class FusumityEditorGUILayout
@@ -106,6 +109,47 @@ namespace Fusumity.Editor
 			return true;
 		}
 
+		public static bool ToolbarButton(Rect rect, SdfIconType icon, GUIStyle style = null,
+			bool ignoreGUIEnabled = false)
+		{
+			if (style == null)
+			{
+				style = SirenixGUIStyles.ToolbarButton;
+			}
+
+			if (GUI.Button(rect, GUIContent.none, style))
+			{
+				GUIHelper.RemoveFocusControl();
+				GUIHelper.RequestRepaint();
+				return true;
+			}
+
+			if (Event.current.type == EventType.Repaint)
+			{
+				const float iconSize = 16f;
+				var iconRect = new Rect(
+					rect.x + (rect.width - iconSize) * 0.5f,
+					rect.y + (rect.height - iconSize) * 0.5f,
+					iconSize, iconSize);
+				SdfIcons.DrawIcon(iconRect, icon);
+			}
+
+			if (!ignoreGUIEnabled ||
+				Event.current.button != 0 ||
+				Event.current.rawType != EventType.MouseDown ||
+				!GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+			{
+				return false;
+			}
+
+			GUIHelper.RemoveFocusControl();
+			GUIHelper.RequestRepaint();
+			GUIHelper.PushGUIEnabled(true);
+			Event.current.Use();
+			GUIHelper.PopGUIEnabled();
+			return true;
+		}
+
 		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey,
 			bool useIndentBody = false, bool useIndent = true)
 		{
@@ -125,13 +169,13 @@ namespace Fusumity.Editor
 			if (!EditorGUIUtility.hierarchyMode && useIndent)
 			{
 				var offset = SirenixEditorGUI.FoldoutWidth + 3;
-				position.x     -= offset;
+				position.x -= offset;
 				position.width += offset;
 			}
 
 			var origin = GUI.enabled;
 			GUI.enabled = true;
-			foldout     = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
+			foldout = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
 			GUI.enabled = origin;
 			if (SirenixEditorGUI.BeginFadeGroup(fadeGroupKey, foldout))
 			{
@@ -149,7 +193,7 @@ namespace Fusumity.Editor
 							EditorGUI.indentLevel--;
 					}
 					FusumityEditorGUIHelper.drawAssetReference = originalDrawAssetReference;
-					OdinEditor.ForceHideMonoScriptInEditor     = originalForceHideMonoScriptInEditor;
+					OdinEditor.ForceHideMonoScriptInEditor = originalForceHideMonoScriptInEditor;
 				}
 			}
 
@@ -179,16 +223,16 @@ namespace Fusumity.Editor
 			var clipboardToolbar = new GUIContent(string.Empty, null, $"{CLIPBOARD_TOOLBAR_PREFIX}{copiedText}");
 			if (drawButton)
 			{
-				clipboardButtonRect        =  clipboardButtonRect.AlignRight(18);
+				clipboardButtonRect = clipboardButtonRect.AlignRight(18);
 				clipboardButtonRect.height -= 2;
-				clipboardButtonRect.y      += 1;
-				clipboardButtonRect.x      -= 0.5f;
+				clipboardButtonRect.y += 1;
+				clipboardButtonRect.x -= 0.5f;
 
 				{
 					var originColor = GUI.color;
 					{
-						GUI.color   *= 0.7f;
-						GUI.enabled =  true;
+						GUI.color *= 0.7f;
+						GUI.enabled = true;
 						{
 							if (GUI.Button(clipboardButtonRect, clipboardToolbar, GUIStyle.none))
 								Clipboard.Copy(copiedText);
@@ -202,12 +246,12 @@ namespace Fusumity.Editor
 
 				if (rawMode)
 				{
-					clipboardButtonRect2   =  clipboardButtonRect;
+					clipboardButtonRect2 = clipboardButtonRect;
 					clipboardButtonRect2.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 					var originColor = GUI.color;
 					{
-						GUI.color   *= 0.7f;
-						GUI.enabled =  true;
+						GUI.color *= 0.7f;
+						GUI.enabled = true;
 						{
 							if (GUI.Button(clipboardButtonRect2, GUIContent.none, GUIStyle.none))
 								Clipboard.Copy(guid.high.ToString());
@@ -222,21 +266,21 @@ namespace Fusumity.Editor
 			var rawModeToolbar = new GUIContent(string.Empty, null, rawMode ? "Default Mode" : "Raw Mode");
 			var rawModeButtonRect = clipboardButtonRect.AlignRight(drawButton ? 36 : 18);
 			rawModeButtonRect.height -= 2;
-			rawModeButtonRect.y      += 0.5f;
-			rawModeButtonRect.x      -= 0.5f;
+			rawModeButtonRect.y += 0.5f;
+			rawModeButtonRect.x -= 0.5f;
 			if (!rawMode)
 			{
-				rawModeButtonRect.y      += 1;
-				rawModeButtonRect.x      += 0.5f;
-				rawModeButtonRect.width  -= 0.5f;
+				rawModeButtonRect.y += 1;
+				rawModeButtonRect.x += 0.5f;
+				rawModeButtonRect.width -= 0.5f;
 				rawModeButtonRect.height -= 0.5f;
 			}
 
 			{
 				var originColor = GUI.color;
 				{
-					GUI.color   *= 0.7f;
-					GUI.enabled =  true;
+					GUI.color *= 0.7f;
+					GUI.enabled = true;
 					{
 						if (GUI.Button(rawModeButtonRect, rawModeToolbar, GUIStyle.none))
 							rawMode = !rawMode;
@@ -278,21 +322,21 @@ namespace Fusumity.Editor
 				if (GUI.Button(clipboardButtonRect, clipboardToolbar, SirenixGUIStyles.ToolbarButton))
 					Clipboard.Copy(copiedText);
 
-				clipboardButtonRect.width =  11;
-				clipboardButtonRect.x     += 3f;
+				clipboardButtonRect.width = 11;
+				clipboardButtonRect.x += 3f;
 				SdfIcons.DrawIcon(clipboardButtonRect, SdfIconType.Clipboard, SirenixGUIStyles.IconButton.normal.textColor);
 
 				EditorGUIUtility.AddCursorRect(clipboardButtonRect, MouseCursor.Link);
 
-				copiedText               = guid.high.ToString();
+				copiedText = guid.high.ToString();
 				clipboardToolbar.tooltip = $"{CLIPBOARD_TOOLBAR_PREFIX}{copiedText}";
 				if (rawMode)
 				{
 					if (GUI.Button(clipboardButtonRect2, clipboardToolbar, SirenixGUIStyles.ToolbarButton))
 						Clipboard.Copy(guid.high.ToString());
 
-					clipboardButtonRect2.width =  11;
-					clipboardButtonRect2.x     += 3f;
+					clipboardButtonRect2.width = 11;
+					clipboardButtonRect2.x += 3f;
 
 					SdfIcons.DrawIcon(clipboardButtonRect2, SdfIconType.Clipboard, SirenixGUIStyles.IconButton.normal.textColor);
 
@@ -303,8 +347,8 @@ namespace Fusumity.Editor
 			if (GUI.Button(rawModeButtonRect, rawModeToolbar, GUIStyle.none))
 				rawMode = !rawMode;
 
-			rawModeButtonRect.width =  11;
-			rawModeButtonRect.x     += 3f;
+			rawModeButtonRect.width = 11;
+			rawModeButtonRect.x += 3f;
 			SdfIcons.DrawIcon(rawModeButtonRect, rawMode ? SdfIconType.EyeFill : SdfIconType.EyeSlashFill,
 				SirenixGUIStyles.IconButton.normal.textColor);
 
@@ -338,8 +382,8 @@ namespace Fusumity.Editor
 				{
 					alignment = TextAnchor.MiddleCenter,
 					fontStyle = FontStyle.Bold,
-					padding   = new RectOffset(10, 10, 10, 10),
-					fontSize  = 20
+					padding = new RectOffset(10, 10, 10, 10),
+					fontSize = 20
 				};
 
 				icon ??= EditorGUIUtility.IconContent("console.warnicon");
@@ -368,11 +412,14 @@ namespace Fusumity.Editor
 			)
 		};
 
-		public static void BeginCardBox(Color? color = null)
+		public static void BeginCardBox(Color? color = null, bool verticalOrHorizontal = true)
 		{
 			if (color.HasValue)
 				GUIHelper.PushColor(color.Value);
-			SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+			if (verticalOrHorizontal)
+				SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+			else
+				SirenixEditorGUI.BeginIndentedHorizontal(CardStyle);
 			{
 				GUIHelper.PushHierarchyMode(false);
 				if (color.HasValue)
@@ -380,10 +427,13 @@ namespace Fusumity.Editor
 			}
 		}
 
-		public static void EndCardBox()
+		public static void EndCardBox(bool verticalOrHorizontal = true)
 		{
 			GUIHelper.PopHierarchyMode();
-			SirenixEditorGUI.EndIndentedVertical();
+			if (verticalOrHorizontal)
+				SirenixEditorGUI.EndIndentedVertical();
+			else
+				SirenixEditorGUI.EndIndentedHorizontal();
 		}
 
 		#endregion
@@ -415,7 +465,7 @@ namespace Fusumity.Editor
 
 			var lastRect = GUILayoutUtility.GetLastRect();
 			textStyle ??= suffixLabelStyleCache;
-			width     =   textStyle.CalcWidth(text);
+			width = textStyle.CalcWidth(text);
 
 			var labelRect = lastRect.AlignLeft(width, offset);
 			GUI.Label(labelRect, text, textStyle);
@@ -424,7 +474,7 @@ namespace Fusumity.Editor
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null, float offset = 4f)
 		{
 			suffixLabelStyleCache.normal.textColor = textColor ?? Color.gray;
-			suffixLabelStyleCache.hover.textColor  = textColor ?? Color.gray;
+			suffixLabelStyleCache.hover.textColor = textColor ?? Color.gray;
 
 			if (overlay)
 			{
@@ -443,5 +493,69 @@ namespace Fusumity.Editor
 		{
 			return EnumSelector<T>.DrawEnumField(label, value);
 		}
+
+		#region Icon
+
+		private static readonly Vector2 _objectFieldIconSpriteOffset = new(0.5f, 0.5f);
+		private static readonly Vector2 _objectFieldIconSpriteShrink = new Vector2(-0.5f, -0.5f);
+
+		public static void DrawObjectFieldIconSprite(Rect rect, Sprite sprite)
+		{
+			DrawSprite(rect, sprite, _objectFieldIconSpriteOffset, _objectFieldIconSpriteShrink);
+		}
+
+		public static void DrawSprite(Rect rect, Sprite sprite)
+		{
+			DrawSprite(rect, sprite, Vector2.zero, Vector2.zero);
+		}
+
+		private static void DrawSprite(Rect rect, Sprite sprite, Vector2 offset, Vector2 shrink)
+		{
+			if (!sprite || !sprite.texture)
+				return;
+
+			var tex = sprite.texture;
+			var tr = sprite.textureRect;
+			var texCoords = new Rect(
+				tr.x / tex.width,
+				tr.y / tex.height,
+				tr.width / tex.width,
+				tr.height / tex.height);
+
+			rect.x += offset.x;
+			rect.y += offset.y;
+			var drawRect = FitRect(rect, tr.size);
+			drawRect.height += shrink.x;
+			drawRect.width += shrink.y;
+			GUI.DrawTextureWithTexCoords(drawRect, tex, texCoords);
+		}
+
+		private static Rect FitRect(Rect rect, Vector2 size)
+		{
+			if (size.x <= 0f || size.y <= 0f)
+				return rect;
+
+			var aspect = size.x / size.y;
+			var rectAspect = rect.width / rect.height;
+
+			if (aspect > rectAspect)
+			{
+				var height = rect.width / aspect;
+				return new Rect(
+					rect.x,
+					rect.y + (rect.height - height) * 0.5f,
+					rect.width,
+					height);
+			}
+
+			var width = rect.height * aspect;
+			return new Rect(
+				rect.x + (rect.width - width) * 0.5f,
+				rect.y,
+				width,
+				rect.height);
+		}
+
+		#endregion
 	}
 }

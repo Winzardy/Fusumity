@@ -17,7 +17,7 @@ namespace Booting.Messaging
 	{
 		public override int Priority => HIGH_PRIORITY;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 			var bus = new MessageBus();
 			Messenger.Set(bus);

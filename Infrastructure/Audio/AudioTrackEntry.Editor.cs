@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
@@ -10,6 +12,8 @@ namespace Audio
 #if UNITY_EDITOR
 	public partial class AudioTrackScheme : ISerializationCallbackReceiver
 	{
+		private static readonly HashSet<AudioTrackScheme> EditorPreviews = new();
+
 		public const string PLAY_GROUP_EDITOR = "PlayGroup";
 
 		[ShowInInspector]
@@ -20,6 +24,7 @@ namespace Audio
 
 		private bool? _originEditorAudioMasterMute;
 		private bool _loop;
+		private int _editorPreviewVersion;
 		public bool IsPlayEditor => _go;
 		public bool? SelectedEditor { get; private set; }
 
@@ -28,46 +33,67 @@ namespace Audio
 		public async UniTask PlayEditorAsync(CancellationToken cancellationToken = default, bool useDelay = false, bool loop = false)
 		{
 			ClearPlayEditor();
+			var version = ++_editorPreviewVersion;
+			EditorPreviews.Add(this);
 
-			_originEditorAudioMasterMute = UnityEditor.EditorUtility.audioMasterMute;
-			UnityEditor.EditorUtility.audioMasterMute = false;
-
-			var go = new GameObject();
-			_go = go;
-			_go.hideFlags = HideFlags.HideAndDontSave;
-
-			var audioSource = _go.AddComponent<AudioSource>();
-			_loop = loop;
-			do
+			try
 			{
-				var d = delay;
+				if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+					return;
 
-				if (!(useDelay || _loop))
-					delay = 0;
+				_originEditorAudioMasterMute = UnityEditor.EditorUtility.audioMasterMute;
+				UnityEditor.EditorUtility.audioMasterMute = false;
 
-				audioSource.Play(this, editor: true);
-				delay = d;
+				var go = new GameObject();
+				_go = go;
+				_go.hideFlags = HideFlags.HideAndDontSave;
 
-				float? prev = null;
-				while (go && audioSource.isPlaying)
+				var audioSource = _go.AddComponent<AudioSource>();
+				_loop = loop;
+				do
 				{
-					if (prev.HasValue && Math.Abs(prev.Value - _normalizedTime) > float.Epsilon)
-						audioSource.time = _normalizedTime * clipReference.editorAsset.length;
+					var d = delay;
 
-					var normalizedValue = audioSource.time / clipReference.editorAsset.length;
-					prev = normalizedValue;
-					_normalizedTime = normalizedValue;
+					if (!(useDelay || _loop))
+						delay = 0;
 
-					audioSource.volume = volume;
-					audioSource.pitch = pitch;
+					if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+						break;
 
-					await UniTask.Yield(cancellationToken: cancellationToken);
+					audioSource.Play(this, editor: true);
+					delay = d;
+
+					float? prev = null;
+					while (go && audioSource.isPlaying && !UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+					{
+						if (prev.HasValue && Math.Abs(prev.Value - _normalizedTime) > float.Epsilon)
+							audioSource.time = _normalizedTime * clipReference.editorAsset.length;
+
+						var normalizedValue = audioSource.time / clipReference.editorAsset.length;
+						prev = normalizedValue;
+						_normalizedTime = normalizedValue;
+
+						audioSource.volume = volume;
+						audioSource.pitch = pitch;
+
+						await UniTask.Yield(cancellationToken: cancellationToken);
+					}
+
+					_normalizedTime = 0;
+				} while (_loop && _go && !UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode);
+			}
+			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+			}
+			finally
+			{
+				if (version == _editorPreviewVersion)
+				{
+					_normalizedTime = 0;
+					ClearPlayEditor();
+					EditorPreviews.Remove(this);
 				}
-
-				_normalizedTime = 0;
-			} while (_loop && _go);
-
-			ClearPlayEditor();
+			}
 		}
 
 		public void DisableLoopEditor() => _loop = false;
@@ -101,6 +127,12 @@ namespace Audio
 		public void DeselectEditor()
 		{
 			SelectedEditor = null;
+		}
+
+		internal static void StopAllEditorPreviews()
+		{
+			foreach (var track in EditorPreviews.ToArray())
+				track.ClearPlayEditor();
 		}
 	}
 #endif

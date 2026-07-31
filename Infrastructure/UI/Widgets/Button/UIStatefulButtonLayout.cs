@@ -55,6 +55,8 @@ namespace UI
 	[Serializable]
 	public struct ActionBusButtonScheme
 	{
+		//TODO: нужно убрать [CanBeNull] и делать иначе (решать уровнем выше)
+		[CanBeNull]
 		public Button button;
 
 		[ShowIf(nameof(button), null)]

@@ -1,4 +1,5 @@
-﻿using ZenoTween;
+﻿using System;
+using ZenoTween;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -6,7 +7,7 @@ using Fusumity.MVVM.UI;
 
 namespace UI
 {
-	public class UIToggleButtonLayout : UILabeledButtonLayout
+	public class UIToggleButtonLayout : UILegacyLabeledButtonLayout
 	{
 		public TMP_Text sublabel;
 		public UIAttentionIndicatorLayout indicator;

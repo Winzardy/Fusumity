@@ -14,11 +14,11 @@ namespace Booting.Localization
 	[Serializable]
 	public class LocalizationBootTask : BaseBootTask
 	{
-		public override int Priority => HIGH_PRIORITY - 200;
+		public override int Priority => HIGH_PRIORITY - 70;
 
 		public LocTableReference tableReference;
 
-		public override async UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 #if FULLWEIGHT_MODE
 			var resolver = new LocalizationResolver(in tableReference);

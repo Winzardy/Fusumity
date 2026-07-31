@@ -32,7 +32,7 @@ namespace Fusumity.Utility.UserLocator
 		private const string CHANNEL_NAME = "Location";
 
 		private static readonly string PREFIX = string.Format(CHANNEL_FORMAT,
-			CHANNEL_NAME.ColorTextInEditorOnly(Clipboard.DEBUG_COLOR));
+			CHANNEL_NAME.ColorTextInEditor(Clipboard.DEBUG_COLOR));
 
 		#endregion
 

@@ -29,11 +29,15 @@ namespace UI
 		}
 	}
 
+	public abstract class StateSwitcher : MonoBehaviour
+	{
+	}
+
 	/// <typeparam name="TState">
 	/// Настоятельно рекомендуется использовать:<br/>
 	/// <c>bool</c>, <c>int</c>, <c>string</c>
 	/// </typeparam>
-	public abstract class StateSwitcher<TState> : MonoBehaviour, IStateSwitcher
+	public abstract class StateSwitcher<TState> : StateSwitcher, IStateSwitcher
 	{
 		protected bool _immediate;
 
@@ -53,6 +57,8 @@ namespace UI
 		public IStateSwitcher Parent { get => _parent; }
 		protected virtual bool UseEquals { get => false; }
 
+		public event Action<TState, bool> StateSwitched;
+
 		protected abstract void OnStateSwitched(TState state);
 
 		public void Switch(TState value, bool immediate = false)
@@ -65,6 +71,7 @@ namespace UI
 
 			current = value;
 			OnStateSwitched(current);
+			StateSwitched?.Invoke(current, _immediate);
 		}
 
 		public virtual IEnumerable<object> GetVariants() => null;

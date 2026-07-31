@@ -61,7 +61,7 @@ namespace UI
 			}
 			set
 			{
-				_useMinWidth  = value >= 0;
+				_useMinWidth = value >= 0;
 				base.minWidth = value;
 			}
 		}
@@ -121,7 +121,7 @@ namespace UI
 			}
 			set
 			{
-				_useMinHeight  = value >= 0;
+				_useMinHeight = value >= 0;
 				base.minHeight = value;
 			}
 		}
@@ -135,18 +135,32 @@ namespace UI
 		[SerializeField]
 		private RectTransform _preferredWidthRect;
 
+		[SerializeField]
+		private bool _ignorePreferredWidthWhenEmpty;
+
 		public override float preferredWidth
 		{
 			get
 			{
+				// Во время рекурсивного замера контента игнорируем собственное значение,
+				// иначе LayoutUtility выберет нашу же preferred-ширину и решит, что контент не пустой
+				if (_ignoreOnGettingPreferredSize)
+					return -1;
+
+				float? width = null;
+				// Если контент пустой — отдаём -1, чтобы layout не резервировал ширину
+				if (_ignorePreferredWidthWhenEmpty && IsPreferredWidthEmpty(out width))
+					return -1;
+
 				var preferred = _preferredWidthRect ? _preferredWidthRect.rect.width : base.preferredWidth;
 				if (_useMaxWidth)
 				{
 					if (preferred < 0)
-						return GetMaxWidth();
+						return GetMaxWidth(width);
 					var max = maxWidth;
 					return preferred > max ? max : preferred;
 				}
+
 				return preferred;
 			}
 			set => base.preferredWidth = value;
@@ -161,18 +175,32 @@ namespace UI
 		[SerializeField]
 		private RectTransform _preferredHeightRect;
 
+		[SerializeField]
+		private bool _ignorePreferredHeightWhenEmpty;
+
 		public override float preferredHeight
 		{
 			get
 			{
+				// Во время рекурсивного замера контента игнорируем собственное значение,
+				// иначе LayoutUtility выберет нашу же preferred-высоту и решит, что контент не пустой
+				if (_ignoreOnGettingPreferredSize)
+					return -1;
+
+				float? height = null;
+				// Если контент пустой — отдаём -1, чтобы layout не резервировал высоту
+				if (_ignorePreferredHeightWhenEmpty && IsPreferredHeightEmpty(out height))
+					return -1;
+
 				var preferred = _preferredHeightRect ? _preferredHeightRect.rect.height : base.preferredHeight;
 				if (_useMaxHeight)
 				{
 					if (preferred < 0)
-						return GetMaxHeight();
+						return GetMaxHeight(height);
 					var max = maxHeight;
 					return preferred > max ? max : preferred;
 				}
+
 				return preferred;
 			}
 			set => base.preferredHeight = value;
@@ -184,13 +212,9 @@ namespace UI
 
 		private bool _ignoreOnGettingPreferredSize;
 
-		public override int layoutPriority
-		{
-			get => _ignoreOnGettingPreferredSize ? -1 : base.layoutPriority;
-			set => base.layoutPriority = value;
-		}
+		public override int layoutPriority { get => _ignoreOnGettingPreferredSize ? -1 : base.layoutPriority; set => base.layoutPriority = value; }
 
-		private float GetMaxWidth()
+		private float GetMaxWidth(float? width)
 		{
 			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
 			try
@@ -203,9 +227,8 @@ namespace UI
 
 				_ignoreOnGettingPreferredSize = true;
 
-				var baseValue = LayoutUtility.GetPreferredWidth(transform as RectTransform);
-
-				return baseValue > maxWidth ? maxWidth : baseValue;
+				var value = width ?? LayoutUtility.GetPreferredWidth(transform as RectTransform);
+				return value > maxWidth ? maxWidth : value;
 			}
 			catch (Exception e)
 			{
@@ -218,7 +241,7 @@ namespace UI
 			}
 		}
 
-		private float GetMaxHeight()
+		private float GetMaxHeight(float? height)
 		{
 			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
 			try
@@ -231,13 +254,70 @@ namespace UI
 
 				_ignoreOnGettingPreferredSize = true;
 
-				var baseValue = LayoutUtility.GetPreferredHeight(transform as RectTransform);
-				return baseValue > maxHeight ? maxHeight : baseValue;
+				var value = height ?? LayoutUtility.GetPreferredHeight(transform as RectTransform);
+				return value > maxHeight ? maxHeight : value;
 			}
 			catch (Exception e)
 			{
 				GUIDebug.LogWarning(e.Message, transform);
 				return base.preferredHeight;
+			}
+			finally
+			{
+				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+			}
+		}
+
+		/// <summary>
+		/// Пустой ли контент по ширине (собственная preferred ширина элемента игнорируется при замере)
+		/// </summary>
+		private bool IsPreferredWidthEmpty(out float? width)
+		{
+			if (_ignoreOnGettingPreferredSize)
+			{
+				width = null;
+				return false;
+			}
+
+			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
+			try
+			{
+				_ignoreOnGettingPreferredSize = true;
+				width = LayoutUtility.GetPreferredWidth(transform as RectTransform);
+				return width <= 0;
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogWarning(e.Message, transform);
+				width = null;
+				return false;
+			}
+			finally
+			{
+				_ignoreOnGettingPreferredSize = defaultIgnoreValue;
+			}
+		}
+
+		private bool IsPreferredHeightEmpty(out float? height)
+		{
+			if (_ignoreOnGettingPreferredSize)
+			{
+				height = null;
+				return false;
+			}
+
+			var defaultIgnoreValue = _ignoreOnGettingPreferredSize;
+			try
+			{
+				_ignoreOnGettingPreferredSize = true;
+				height = LayoutUtility.GetPreferredHeight(transform as RectTransform);
+				return height <= 0;
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogWarning(e.Message, transform);
+				height = null;
+				return false;
 			}
 			finally
 			{

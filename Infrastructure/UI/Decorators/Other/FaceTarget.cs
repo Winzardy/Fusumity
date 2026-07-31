@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UI
 {
-	public class FaceTarget : Updatable
+	public class FaceTarget : ReactiveBehaviour
 	{
 		public enum FacingMode
 		{

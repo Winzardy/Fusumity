@@ -51,10 +51,10 @@ namespace UI.Screens
 
 		#region Layout
 
-		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
+		protected override IAssetReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
-		protected override List<AssetReference> PreloadAssets => _config.layout.preloadAssets;
+		protected override List<AnyAssetReference> PreloadAssets => _config.layout.preloadAssets;
 
 		#endregion
 
@@ -69,8 +69,7 @@ namespace UI.Screens
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
-			if (_animator == null)
-				SetAnimator<DefaultScreenAnimator>();
+			OnSetupDefaultAnimator();
 
 			base.SetupLayout(layout);
 		}
@@ -98,7 +97,7 @@ namespace UI.Screens
 
 				if (Active)
 				{
-					if (_args.Equals(args))
+					if (_args != null && _args.Equals(args))
 						return;
 
 					EnableSuppress();
@@ -117,7 +116,7 @@ namespace UI.Screens
 			DisableSuppress();
 		}
 
-		protected void UpdateArgs(in TArgs args)
+		protected virtual void UpdateArgs(in TArgs args)
 		{
 			_args = args;
 		}

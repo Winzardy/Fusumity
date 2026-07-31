@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Fusumity.Utility;
+using Sapientia.Pooling;
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,7 +42,14 @@ namespace Fusumity.MVVM.UI
 				root = layout.root.gameObject;
 			if (root.TryGetComponent(out LayoutGroup layoutGroup) && layoutGroup.IsReverse())
 			{
-				collection.Update(Enumerable.Reverse(models));
+				// Reverse через пул-список: Enumerable.Reverse буферизует всё во внутренний массив (GC на каждый Update)
+				using (ListPool<TViewModel>.Get(out var reversed))
+				{
+					reversed.AddRange(models);
+					reversed.Reverse();
+					collection.Update(reversed);
+				}
+
 				return;
 			}
 

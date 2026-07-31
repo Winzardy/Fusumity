@@ -29,7 +29,7 @@ namespace Fusumity.MVVM.UI
 			return null;
 		}
 
-		protected ActionBusElement Subscribe(UILabeledButtonLayout layout, Action action)
+		protected ActionBusElement Subscribe(UILegacyLabeledButtonLayout layout, Action action)
 		{
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
@@ -42,6 +42,11 @@ namespace Fusumity.MVVM.UI
 		protected ActionBusElement Subscribe(ActionBusButtonScheme scheme, Action action)
 		{
 			return Subscribe(scheme.button, action, scheme.uId, scheme.groupId);
+		}
+
+		protected ActionBusElement Subscribe(UILabeledButtonLayout labeledButton, Action action)
+		{
+			return Subscribe(labeledButton.scheme, action);
 		}
 
 		protected void Bind(TMP_Text label, ILabelViewModel viewModel)

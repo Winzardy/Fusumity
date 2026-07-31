@@ -2,6 +2,7 @@
 using System.Collections;
 using ZenoTween;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -220,14 +221,10 @@ namespace UI.Scroll
 		/// </summary>
 		public bool interruptTweeningOnDrag;
 
-		[Tooltip
-		("Leave object that is used by Scroll as placeholder for ScrollRect intact. " +
-			"Could be used as prefab template object.")]
-		public bool preserveTemplate = true;
-
 		public UIScrollItemLayout template;
 
 		[Tooltip("Дополнительный Scroll для навигации...")]
+		[CanBeNull]
 		public UIScrollLayout pagination;
 
 		/// <summary>
@@ -637,7 +634,7 @@ namespace UI.Scroll
 			// one at design time because Unity gives errors if it can't find one.
 			if (_scrollRect.content != null)
 			{
-				if (preserveTemplate)
+				if (template != null)
 				{
 					_scrollRect.content.gameObject.SetActive(false);
 				}

@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using Content.ScriptableObjects;
-using Content.ScriptableObjects.Editor;
 
 namespace Content.Editor
 {
@@ -9,24 +9,24 @@ namespace Content.Editor
 	/// </summary>
 	public static class ContentEditor
 	{
+		public static IEnumerable<IUniqueContentEntryScriptableObject<T>> GetAllEntries<T>()
+		{
+			foreach (var target in ContentEditorCache.GetAssets<ContentScriptableObject>(false))
+			{
+				if (target is IUniqueContentEntryScriptableObject<T> source)
+					yield return source;
+			}
+		}
+
 		public static void Edit<T>(ContentEditing<T> editing)
 		{
-			foreach (var rawDatabase in ContentDatabaseEditorUtility.Databases)
+			foreach (var target in ContentEditorCache.GetAssets<ContentScriptableObject>(false))
 			{
-				if (rawDatabase is IContentEntryScriptableObject<T> database)
-				{
-					database.EditValue(editing);
-					return;
-				}
+				if (target is not IContentEntryScriptableObject<T> source)
+					continue;
 
-				foreach (var target in rawDatabase.scriptableObjects)
-				{
-					if (target is not IContentEntryScriptableObject<T> scriptableObject)
-						continue;
-
-					scriptableObject.EditValue(editing);
-					return;
-				}
+				source.EditValue(editing);
+				return;
 			}
 
 			throw new NullReferenceException("Not found single entry of type [ " + typeof(T).Name + " ]");
@@ -34,19 +34,13 @@ namespace Content.Editor
 
 		public static void Edit<T>(string id, ContentEditing<T> editing)
 		{
-			foreach (var database in ContentDatabaseEditorUtility.Databases)
+			foreach (var source in GetAllEntries<T>())
 			{
-				foreach (var target in database.scriptableObjects)
-				{
-					if (target is not IUniqueContentEntryScriptableObject<T> source)
-						continue;
+				if (source.Id != id)
+					continue;
 
-					if (source.Id != id)
-						continue;
-
-					source.EditValue(editing);
-					return;
-				}
+				source.EditValue(editing);
+				return;
 			}
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with id: [ " + id + " ]");
@@ -54,19 +48,13 @@ namespace Content.Editor
 
 		public static void Edit<T>(in SerializableGuid guid, ContentEditing<T> editing)
 		{
-			foreach (var database in ContentDatabaseEditorUtility.Databases)
+			foreach (var source in GetAllEntries<T>())
 			{
-				foreach (var target in database.scriptableObjects)
-				{
-					if (target is not IUniqueContentEntryScriptableObject<T> source)
-						continue;
+				if (source.UniqueContentEntry.Guid != guid)
+					continue;
 
-					if (source.UniqueContentEntry.Guid != guid)
-						continue;
-
-					source.EditValue(editing);
-					return;
-				}
+				source.EditValue(editing);
+				return;
 			}
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + guid + " ]");
@@ -74,19 +62,13 @@ namespace Content.Editor
 
 		public static void Edit<T>(in ContentReference<T> reference, ContentEditing<T> editing)
 		{
-			foreach (var database in ContentDatabaseEditorUtility.Databases)
+			foreach (var source in GetAllEntries<T>())
 			{
-				foreach (var target in database.scriptableObjects)
-				{
-					if (target is not IUniqueContentEntryScriptableObject<T> source)
-						continue;
+				if (source.UniqueContentEntry.Guid != reference.guid)
+					continue;
 
-					if (source.UniqueContentEntry.Guid != reference.guid)
-						continue;
-
-					source.EditValue(editing);
-					return;
-				}
+				source.EditValue(editing);
+				return;
 			}
 
 			throw new NullReferenceException("Not found entry of type [ " + typeof(T).Name + " ] with guid: [ " + reference.guid.guid + " ]");
@@ -95,6 +77,11 @@ namespace Content.Editor
 
 	public static class ContentEditorExtensions
 	{
+		/// <summary>Изменяем конкретный entry без повторного поиска по id</summary>
+		public static void Edit<T>(this IUniqueContentEntryScriptableObject<T> source,
+			ContentEditing<T> editing, bool save = true)
+			=> source.EditValue(editing, save);
+
 		/// <summary>
 		/// Изменяем Value по reference
 		/// </summary>

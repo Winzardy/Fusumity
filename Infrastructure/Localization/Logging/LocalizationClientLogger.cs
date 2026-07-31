@@ -7,7 +7,7 @@ namespace Logging.Localization
 	public class LocalizationClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Localization";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(LocalizationDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(LocalizationDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

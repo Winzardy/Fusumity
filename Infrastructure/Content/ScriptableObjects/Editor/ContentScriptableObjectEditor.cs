@@ -53,7 +53,7 @@ namespace Content.ScriptableObjects.Editor
 							"Enable",
 							MessageType.Info))
 						{
-							scriptableObject.enabled = true;
+							scriptableObject.SetEnable(true);
 							ContentDatabaseEditorUtility.AddToDatabase(asset);
 							EditorUtility.SetDirty(asset);
 						}
@@ -118,7 +118,7 @@ namespace Content.ScriptableObjects.Editor
 		{
 			if (target is IContentEntryScriptableObject scriptableObject and not ContentDatabaseScriptableObject)
 			{
-				if (!FusumityEditorGUIHelper.drawAssetReference)
+				if (!FusumityEditorGUIHelper.drawAssetReference || !FusumityEditorGUIHelper.drawEnabledToggle)
 					return scriptableObject.enabled;
 
 				var toggleRect = GUILayoutUtility.GetLastRect();
@@ -127,10 +127,11 @@ namespace Content.ScriptableObjects.Editor
 
 				var prev = scriptableObject.enabled;
 
-				scriptableObject.enabled = GUI.Toggle(
+				var enabled = GUI.Toggle(
 					toggleRect,
 					scriptableObject.enabled,
 					new GUIContent(string.Empty, "Используем ли? (вкл/выкл)"));
+				scriptableObject.SetEnable(enabled);
 
 				if (prev != scriptableObject.enabled)
 				{

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
@@ -11,8 +12,8 @@ namespace Content.Editor
 {
 	public class ContentReferenceAttributeProcessor : OdinAttributeProcessor<IContentReference>
 	{
-		public static readonly Dictionary<InspectorProperty, GUIContent> propertyToGUIContent = new();
-		public static readonly Dictionary<InspectorProperty, ContentReferenceAttribute> propertyToContentReferenceAttribute = new();
+		public static readonly ConditionalWeakTable<InspectorProperty, GUIContent> propertyToGUIContent = new();
+		public static readonly ConditionalWeakTable<InspectorProperty, ContentReferenceAttribute> propertyToContentReferenceAttribute = new();
 
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty,
 			MemberInfo member, List<Attribute> attributes)
@@ -71,14 +72,16 @@ namespace Content.Editor
 			var contentReferenceAttribute = attributes.GetAttribute<ContentReferenceAttribute>();
 			if (contentReferenceAttribute != null)
 			{
-				propertyToContentReferenceAttribute[property] = contentReferenceAttribute;
+				propertyToContentReferenceAttribute.Remove(property);
+				propertyToContentReferenceAttribute.Add(property, contentReferenceAttribute);
 				attributes.Remove(contentReferenceAttribute);
 			}
 
 			if (property.ValueEntry.TypeOfValue.IsGenericType || contentReferenceAttribute != null)
 			{
 				var guiContent = new GUIContent(property.Label);
-				propertyToGUIContent[property] = guiContent;
+				propertyToGUIContent.Remove(property);
+				propertyToGUIContent.Add(property, guiContent);
 
 				if (attributes.GetAttribute<HideLabelAttribute>() != null)
 					guiContent.text = string.Empty;

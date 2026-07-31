@@ -55,6 +55,11 @@ namespace Content.ScriptableObjects
 			UnityEditor.EditorUtility.SetDirty(this);
 		}
 
+		/// <see cref="_imported"/>
+		public bool IsImported { get => _imported; }
+
+		internal void MarkImported() => _imported = true;
+
 		private bool _useTechDescription;
 
 		[ContextMenu("Tech Description/Enable")]

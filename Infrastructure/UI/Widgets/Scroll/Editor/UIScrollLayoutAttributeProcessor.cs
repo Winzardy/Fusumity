@@ -15,10 +15,6 @@ namespace UI.Scroll.Editor
 
 			switch (member.Name)
 			{
-				case nameof(UIScrollLayout.template):
-					attributes.Add(new ShowIfAttribute($"@{nameof(UIScrollLayoutAttributeProcessor)}." +
-						$"{nameof(ShowIfPreserveTemplate)}($property)"));
-					break;
 				case "_" + nameof(UIScrollLayout.scrollRect):
 					attributes.Add(new ReadOnlyAttribute());
 					attributes.Add(new PropertySpaceAttribute(0, 8));
@@ -52,14 +48,5 @@ namespace UI.Scroll.Editor
 			}
 		}
 
-		public static bool ShowIfPreserveTemplate(InspectorProperty property)
-		{
-			if (property.Parent.ValueEntry.WeakSmartValue is UIScrollLayout layout)
-			{
-				return layout.preserveTemplate;
-			}
-
-			return false;
-		}
 	}
 }

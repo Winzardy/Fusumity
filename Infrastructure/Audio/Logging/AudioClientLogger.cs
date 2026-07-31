@@ -7,7 +7,7 @@ namespace Logging.Audio
 	public class AudioClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Audio";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(AudioDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(AudioDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

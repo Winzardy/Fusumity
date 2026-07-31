@@ -6,13 +6,18 @@ using Sirenix.OdinInspector.Editor;
 
 namespace UI.Editor
 {
+	public sealed class DisableStateSwitcherInlineEditorAttribute : Attribute
+	{
+	}
+
 	public class UIStateSwitcherAttributeProcessor : OdinAttributeProcessor<IStateSwitcher>
 	{
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
 
-			attributes.Add(new InlineEditorAttribute(InlineEditorObjectFieldModes.Foldout));
+			if (!attributes.Exists(x => x is DisableStateSwitcherInlineEditorAttribute))
+				attributes.Add(new InlineEditorAttribute(InlineEditorObjectFieldModes.Foldout));
 
 			if (property.Parent != null)
 				return;

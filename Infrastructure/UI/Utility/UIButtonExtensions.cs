@@ -18,7 +18,7 @@ namespace UI
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
-		public static ActionBusElement Subscribe(this UILabeledButtonLayout layout, Action action)
+		public static ActionBusElement Subscribe(this UILegacyLabeledButtonLayout layout, Action action)
 		{
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
@@ -28,12 +28,17 @@ namespace UI
 			return Subscribe(layout.button, action, layout.uId, layout.groupId);
 		}
 
+		public static ActionBusElement Subscribe(this ActionBusButtonScheme scheme, Action action)
+		{
+			return Subscribe(scheme.button, action, scheme.uId, scheme.groupId);
+		}
+
 		public static void Unsubscribe(this UIButtonLayout button, Action action)
 		{
 			Unsubscribe(button.button, action);
 		}
 
-		public static void Unsubscribe(this UILabeledButtonLayout button, Action action)
+		public static void Unsubscribe(this UILegacyLabeledButtonLayout button, Action action)
 		{
 			Unsubscribe(button.button, action);
 		}
@@ -44,6 +49,11 @@ namespace UI
 			{
 				ActionBus.Unregister(button.gameObject);
 			}
+		}
+
+		public static void Unsubscribe(this ActionBusButtonScheme scheme, Action action)
+		{
+			Unsubscribe(scheme.button, action);
 		}
 	}
 }

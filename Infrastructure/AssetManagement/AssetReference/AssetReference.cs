@@ -1,11 +1,10 @@
 ﻿using System;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
 
 namespace AssetManagement
 {
 	using UnityObject = UnityEngine.Object;
-	using UnityAssetReference =  UnityEngine.AddressableAssets.AssetReference;
+	using UnityAssetReference = UnityEngine.AddressableAssets.AssetReference;
 
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
 	public sealed class AssetReferenceRequiredComponentAttribute : Attribute
@@ -22,7 +21,7 @@ namespace AssetManagement
 
 		public AssetReferenceRequiredComponentAttribute(Type componentType, bool includeChildren = true)
 		{
-			ComponentType   = componentType;
+			ComponentType = componentType;
 			IncludeChildren = includeChildren;
 		}
 	}
@@ -32,7 +31,7 @@ namespace AssetManagement
 		where T : UnityObject
 	{
 		[FormerlySerializedAs("_assetReference")]
-		public AssetReferenceT<T> assetReference;
+		public UnityAssetReference assetReference;
 
 		[FormerlySerializedAs("_releaseDelayMs")]
 		public int releaseDelayMs;
@@ -43,14 +42,18 @@ namespace AssetManagement
 		public T editorAsset
 		{
 #if UNITY_EDITOR
-			get => assetReference?.editorAsset;
-			set { this.SetEditorAsset(value); }
+			get => this.GetEditorAsset();
+			set
+			{
+				assetReference ??= new UnityAssetReference(string.Empty);
+				this.SetEditorAsset(value);
+			}
 #else
 			get => null;
 #endif
 		}
 
-		public string AssetGuid { get => assetReference.AssetGUID; }
+		public string AssetGuid { get => assetReference?.AssetGUID; }
 
 		public static implicit operator bool(AssetReference<T> value) => !value.IsEmptyOrInvalid();
 
@@ -61,8 +64,11 @@ namespace AssetManagement
 		public override string ToString() => assetReference.ToString();
 	}
 
+	/// <remarks>
+	/// AssetReference занят Unity
+	/// </remarks>>
 	[Serializable]
-	public class AssetReference : IAssetReference
+	public class AnyAssetReference : IAssetReference
 	{
 		[FormerlySerializedAs("_assetReference")]
 		public UnityAssetReference assetReference;
@@ -83,11 +89,13 @@ namespace AssetManagement
 #endif
 		}
 
-		public static implicit operator bool(AssetReference value) => !value.IsEmptyOrInvalid();
+		public string AssetGuid { get => assetReference?.AssetGUID; }
 
-		public static bool operator ==(AssetReference a, AssetReference b) => a.SameAsset(b);
-		public static bool operator !=(AssetReference a, AssetReference b) => !(a == b);
-		public override bool Equals(object obj) => this == obj as AssetReference;
+		public static implicit operator bool(AnyAssetReference value) => !value.IsEmptyOrInvalid();
+
+		public static bool operator ==(AnyAssetReference a, AnyAssetReference b) => a.SameAsset(b);
+		public static bool operator !=(AnyAssetReference a, AnyAssetReference b) => !(a == b);
+		public override bool Equals(object obj) => this == obj as AnyAssetReference;
 		public override int GetHashCode() => assetReference.GetHashCode();
 		public override string ToString() => assetReference.ToString();
 	}
@@ -101,13 +109,15 @@ namespace AssetManagement
 		const string CUSTOM_EDITOR_NAME = "editorAsset";
 #endif
 		UnityAssetReference AssetReference { get; }
-		string AssetGuid { get => AssetReference.AssetGUID; }
-
-		int ReleaseDelayMs => 0;
+		string AssetGuid { get => AssetReference?.AssetGUID; }
+		object RuntimeKey { get => AssetReference?.RuntimeKey; }
+		bool IsRuntimeKeyValid { get => AssetReference?.RuntimeKeyIsValid() ?? false; }
+		int ReleaseDelayMs { get => 0; }
 
 		UnityObject EditorAsset =>
 #if UNITY_EDITOR
 			AssetReference?.editorAsset;
+
 #else
 			null;
 #endif
@@ -115,22 +125,5 @@ namespace AssetManagement
 
 	public interface IAssetReference<T> : IAssetReference where T : UnityObject
 	{
-	}
-
-	public static class AssetReferenceExtensions
-	{
-		public static bool SameAsset(this IAssetReference a, IAssetReference b)
-		{
-			if (ReferenceEquals(a, b))
-				return true;
-
-			if (a is null || b is null)
-				return false;
-
-			var aKey = (string) a.AssetReference.RuntimeKey;
-			var bKey = (string) b.AssetReference.RuntimeKey;
-
-			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
-		}
 	}
 }

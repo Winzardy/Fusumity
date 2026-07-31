@@ -1,3 +1,6 @@
+#if LIGHT_EDITOR_MODE
+#define LOCAL_ASSETDATABASE_SAVEASSETS
+#endif
 using System.Collections.Generic;
 using System.IO;
 using Content.Editor;
@@ -71,6 +74,9 @@ namespace Content.ScriptableObjects.Editor
 			string[] movedAssets,
 			string[] movedFromAssetPaths)
 		{
+#if LOCAL_ASSETDATABASE_SAVEASSETS
+			var touchedAny = false;
+#endif
 			foreach (var path in importedAssets)
 			{
 				var asset = AssetDatabase.LoadAssetAtPath<ContentScriptableObject>(path);
@@ -85,9 +91,12 @@ namespace Content.ScriptableObjects.Editor
 				}
 
 				if (asset.Enabled)
-					ContentDatabaseEditorUtility.AddToDatabase(asset);
+					ContentDatabaseEditorUtility.AddToDatabase(asset, save: false);
 				else
-					ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+					ContentDatabaseEditorUtility.RemoveToDatabase(asset, save: false);
+#if LOCAL_ASSETDATABASE_SAVEASSETS
+				touchedAny = true;
+#endif
 			}
 
 			foreach (var path in deletedAssets)
@@ -97,8 +106,18 @@ namespace Content.ScriptableObjects.Editor
 				if (!asset)
 					continue;
 
-				ContentDatabaseEditorUtility.RemoveToDatabase(asset);
+				ContentDatabaseEditorUtility.RemoveToDatabase(asset, save: false);
+#if LOCAL_ASSETDATABASE_SAVEASSETS
+				touchedAny = true;
+#endif
 			}
+
+#if LOCAL_ASSETDATABASE_SAVEASSETS
+			// Databases were only marked dirty above (save: false) to avoid re-serializing
+			// and writing a shared, potentially large database asset once per touched entry.
+			if (touchedAny)
+				AssetDatabase.SaveAssets();
+#endif
 		}
 	}
 }

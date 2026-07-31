@@ -1,4 +1,4 @@
-﻿#if FULLWEIGHT_MODE
+﻿#if !LIGHT_EDITOR_MODE
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

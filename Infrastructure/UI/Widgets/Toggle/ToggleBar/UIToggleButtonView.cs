@@ -143,7 +143,7 @@ namespace UI
 		void Click();
 	}
 
-	public delegate void ToggleDelegate(bool immediate = true);
+	public delegate void ToggleDelegate(bool immediate = false);
 
 	public static class ToggleButtonStyle
 	{

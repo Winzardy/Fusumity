@@ -34,7 +34,7 @@ namespace Booting.Advertising
 		private IAdvertisingService _offlineService;
 		private IAdvertisingIntegration _integration;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 #if FAKE
 			_integration = new FakeAdIntegration();

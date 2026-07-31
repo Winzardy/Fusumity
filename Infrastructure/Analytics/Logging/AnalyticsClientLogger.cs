@@ -7,7 +7,7 @@ namespace Logging.Analytics
 	public class AnalyticsClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Analytics";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(AnalyticsDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(AnalyticsDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

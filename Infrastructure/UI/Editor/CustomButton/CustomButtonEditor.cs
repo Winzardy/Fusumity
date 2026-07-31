@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Fusumity.Utility;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEditor.UI;
@@ -106,11 +107,7 @@ namespace UI.Editor
 		private const string MENU_PATH = "Tools/Other/Custom Button/Scene State Controls";
 		private const string ENABLED_PREF_KEY = "CustomButtonSceneGUI.Enabled";
 
-		private static bool Enabled
-		{
-			get => EditorPrefs.GetBool(ENABLED_PREF_KEY, true);
-			set => EditorPrefs.SetBool(ENABLED_PREF_KEY, value);
-		}
+		private static bool Enabled { get => EditorPrefs.GetBool(ENABLED_PREF_KEY, true); set => EditorPrefs.SetBool(ENABLED_PREF_KEY, value); }
 
 		static CustomButtonSceneGUI()
 		{
@@ -155,12 +152,18 @@ namespace UI.Editor
 				// Вниз по иерархии (компонент на самом объекте или на детях).
 				gameObject.transform.GetComponentsInChildren(true, _buffer);
 				foreach (var button in _buffer)
-					_buttons.Add(button);
+				{
+					if (button.isActiveAndEnabled)
+						_buttons.Add(button);
+				}
 
 				// Вверх по иерархии (компонент на родителе выделенного объекта).
 				gameObject.transform.GetComponentsInParent(true, _buffer);
 				foreach (var button in _buffer)
-					_buttons.Add(button);
+				{
+					if (button.isActiveAndEnabled)
+						_buttons.Add(button);
+				}
 			}
 
 			if (_buttons.Count == 0)

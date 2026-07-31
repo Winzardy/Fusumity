@@ -6,8 +6,8 @@ namespace Fusumity.Utility
 {
 	public static class RichTextUtility
 	{
-		private static readonly bool _useColorText = Application.isEditor && !IsBatchMode();
-		private static bool IsBatchMode()  => Array.IndexOf(Environment.GetCommandLineArgs(), "-batchmode") >= 0;
+		private static readonly bool _useEditorRichText = Application.isEditor && !IsBatchMode();
+		private static bool IsBatchMode() => Array.IndexOf(Environment.GetCommandLineArgs(), "-batchmode") >= 0;
 
 		public static bool IsRichText(this string text) => text.IndexOf('<') >= 0;
 
@@ -26,17 +26,14 @@ namespace Fusumity.Utility
 			return $"<color=#{htmlColor}>{obj}</color>";
 		}
 
-		public static string ColorTextInEditorOnly(this string text, Color color)
-		{
-#if UNITY_EDITOR
-			return ColorText(text, color, _useColorText);
-#endif
-			return text;
-		}
+		public static string ColorTextInEditor(this string text, Color color)
+			=> ColorText(text, color, _useEditorRichText);
 
-		public static string ColorText(this string text, Color color, Func<bool> condition) => text.ColorText(color, condition.Invoke());
+		public static string ColorText(this string text, Color color, Func<bool> condition)
+			=> text.ColorText(color, condition.Invoke());
 
-		public static string ColorText(this string text, Color color, bool condition) => condition ? text.ColorText(color) : text;
+		public static string ColorText(this string text, Color color, bool condition)
+			=> condition ? text.ColorText(color) : text;
 
 		public static string ColorText(this string text, Color color)
 		{
@@ -50,28 +47,42 @@ namespace Fusumity.Utility
 		public static string ColorText(this object obj, Color? color)
 			=> ColorText(obj.ToString(), color ?? default, color.HasValue);
 
-		public static string FontText(this string text, string fontName)
+		public static string FontText(this string text, string fontName, bool onlyEditor = false)
 		{
+			if (onlyEditor && !_useEditorRichText)
+				return text;
+
 			return $"<font={fontName}>{text}</font>";
 		}
 
-		public static string BoldText(this string text)
+		public static string BoldText(this string text, bool onlyEditor = false)
 		{
+			if (onlyEditor && !_useEditorRichText)
+				return text;
+
 			return $"<b>{text}</b>";
 		}
 
-		public static string UnderlineText(this string text)
+		public static string UnderlineText(this string text, bool onlyEditor = false)
 		{
+			if (onlyEditor && !_useEditorRichText)
+				return text;
+
 			return $"<u>{text}</u>";
 		}
 
-		public static string PercentSizeText(this string text, int percent)
+		public static string PercentSizeText(this string text, int percent, bool onlyEditor = false)
 		{
+			if (onlyEditor && !_useEditorRichText)
+				return text;
+
 			return $"<size={percent}%>{text}</size>";
 		}
 
-		public static string SizeText(this string text, int size)
+		public static string SizeText(this string text, int size, bool onlyEditor = false)
 		{
+			if (onlyEditor && !_useEditorRichText)
+				return text;
 			return $"<size={size}>{text}</size>";
 		}
 

@@ -29,7 +29,7 @@ namespace Booting.InAppPurchasing
 		private IInAppPurchasingGrantCenter _grantCenter;
 		private IInAppPurchasingService _offlineService;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken cancellationToken = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken cancellationToken = default)
 		{
 			_grantCenter = new InAppPurchasingGrantCenter();
 

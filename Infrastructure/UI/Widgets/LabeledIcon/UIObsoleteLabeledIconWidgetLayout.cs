@@ -1,4 +1,5 @@
 ﻿using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI
@@ -13,5 +14,8 @@ namespace UI
 
 		public override TMP_Text Label => label;
 		public override bool UseLayoutAnimations => useLayoutAnimations;
+
+		[Space]
+		public Button button;
 	}
 }

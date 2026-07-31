@@ -149,10 +149,10 @@ namespace UI.Popups
 
 		public override WidgetFlags Flags { get => _config.flags; }
 
-		protected override ComponentReference LayoutReference => _config.layout.LayoutReference;
+		protected override IAssetReference LayoutReference => _config.layout.LayoutReference;
 		protected override bool LayoutAutoDestroy => _config.layout.HasFlag(LayoutAutomationMode.AutoDestroy);
 		protected override int LayoutAutoDestroyDelayMs => _config.layout.autoDestroyDelayMs;
-		protected override List<AssetReference> PreloadAssets => _config.layout.preloadAssets;
+		protected override List<AnyAssetReference> PreloadAssets => _config.layout.preloadAssets;
 
 		public sealed override void SetupLayout(TLayout layout)
 		{
@@ -182,7 +182,7 @@ namespace UI.Popups
 
 				if (Active)
 				{
-					if (_args.Equals(args))
+					if (_args != null && _args.Equals(args))
 						return;
 
 					EnableSuppress();
@@ -201,7 +201,7 @@ namespace UI.Popups
 			DisableSuppress();
 		}
 
-		protected void UpdateArgs(in TArgs args)
+		protected virtual void UpdateArgs(in TArgs args)
 		{
 			_args = args;
 		}
@@ -318,5 +318,10 @@ namespace UI.Popups
 			_resetting = null;
 			return resetting;
 		}
+	}
+
+	public static class UIPopupExtensions
+	{
+		public static bool IsNotNullAndActive(this IPopup popup) => popup != null && popup.IsActive();
 	}
 }

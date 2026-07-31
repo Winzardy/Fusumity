@@ -544,7 +544,7 @@ namespace ZenoTween.Editor
 			var visited = new HashSet<AnimationSequence>();
 			var rows = new List<TimelineRow>();
 			var rawDuration = BuildSequence(sequence, rows, 0, visited);
-			TransformChildren(rows, sequence.delay, sequence.speed);
+			TransformChildren(rows, sequence.delay, ((AnimationTween) sequence).speed);
 			var duration = ApplyTweenEnvelope(rawDuration, sequence, standaloneRoot: true);
 			var maxKnownTime = rows
 				.Select(static x => x.start + (x.isInfinite ? 0f : x.duration))
@@ -698,7 +698,7 @@ namespace ZenoTween.Editor
 						: ApplyTweenEnvelope(innerDuration, sequence, standaloneRoot: false);
 					row.isInfinite = !row.stretchToParentDuration && float.IsInfinity(row.duration);
 					row.badge = BuildTweenBadge(sequence);
-					TransformChildren(children, sequence.delay, sequence.speed);
+					TransformChildren(children, sequence.delay, ((AnimationTween) sequence).speed);
 
 					return new TimelineParticipantLayout
 					{
@@ -716,7 +716,7 @@ namespace ZenoTween.Editor
 					if (sourceTween.source != null && sourceTween.source.sequence != null)
 					{
 						var sourceRawDuration = BuildSequence(sourceTween.source.sequence, children, depth + 1, visited);
-						TransformChildren(children, sourceTween.source.sequence.delay, sourceTween.source.sequence.speed);
+						TransformChildren(children, sourceTween.source.sequence.delay, ((AnimationTween) sourceTween.source.sequence).speed);
 						sourceDuration = ApplyTweenEnvelope(sourceRawDuration, sourceTween.source.sequence, standaloneRoot: true);
 					}
 
@@ -958,7 +958,7 @@ namespace ZenoTween.Editor
 			return participant switch
 			{
 				AnimationSequence sequence when sequence.IsLoop && sequence.lifetimeByParent =>
-					$"{participant.GetType().Name}\nDelay: {sequence.delay:0.###}s\nSpeed: {sequence.speed:0.###}\nLoop lifetime: parent-bound\nVisual duration: until parent end",
+					$"{participant.GetType().Name}\nDelay: {sequence.delay:0.###}s\nSpeed: {((AnimationTween) sequence).speed:0.###}\nLoop lifetime: parent-bound\nVisual duration: until parent end",
 				AnimationSequenceSourceTween sourceTween when sourceTween.IsLoop && sourceTween.lifetimeByParent =>
 					$"{participant.GetType().Name}\nDelay: {sourceTween.delay:0.###}s\nSpeed: {sourceTween.speed:0.###}\nLoop lifetime: parent-bound\nVisual duration: until parent end",
 				AnimationTween tween when tween.IsLoop && tween.lifetimeByParent =>

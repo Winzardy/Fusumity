@@ -56,7 +56,7 @@ namespace AssetManagement.Editor
 
 			switch (member.Name)
 			{
-				case nameof(AssetReference.releaseDelayMs):
+				case nameof(AnyAssetReference.releaseDelayMs):
 					attributes.Add(new TooltipAttribute("Задержка перед Release"));
 					attributes.Add(new LabelTextAttribute("Release Delay"));
 					attributes.Add(new UnitAttribute(Units.Millisecond));

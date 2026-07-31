@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
@@ -115,8 +116,16 @@ namespace UI
 			TryRecollectChildrenGraphics();
 		}
 
+		protected override void OnEnable()
+		{
+			base.OnEnable();
+			TryRecollectChildrenGraphics();
+		}
+
 		public override void SetMaterialDirty() => TryRecollectChildrenGraphics();
 		public override void SetVerticesDirty() => TryRecollectChildrenGraphics();
+
+		protected void OnTransformChildrenChanged() => TryRecollectChildrenGraphics();
 
 		private void TryRecollectChildrenGraphics()
 		{
@@ -128,10 +137,13 @@ namespace UI
 
 		private void RecursiveCollectChildrenGraphics()
 		{
-			using (ListPool<Graphic>.Get(out var list))
 			using (ListPool<Graphic>.Get(out var children))
 			{
 				Recursive(transform);
+
+				// Новый массив только если состав реально изменился — иначе без аллокации
+				if (IsSameAsCurrent(children))
+					return;
 
 				graphics = children.ToArray();
 				TrySetCachedCrossFade();
@@ -158,6 +170,20 @@ namespace UI
 					}
 				}
 			}
+		}
+
+		private bool IsSameAsCurrent(List<Graphic> collected)
+		{
+			if (graphics == null || graphics.Length != collected.Count)
+				return false;
+
+			for (int i = 0; i < collected.Count; i++)
+			{
+				if (graphics[i] != collected[i])
+					return false;
+			}
+
+			return true;
 		}
 
 		private void TrySetCachedCrossFade()

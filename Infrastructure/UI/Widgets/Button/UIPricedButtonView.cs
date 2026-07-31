@@ -23,6 +23,8 @@ namespace UI
 
 		protected override void OnUpdate(IPricedButtonViewModel viewModel)
 		{
+			viewModel.OnShow();
+
 			_button.Update(viewModel);
 			UpdatePrices();
 
@@ -32,6 +34,7 @@ namespace UI
 		protected override void OnClear(IPricedButtonViewModel viewModel)
 		{
 			viewModel.PricesChanged -= UpdatePrices;
+			viewModel.OnHide();
 
 			_button.ClearViewModel();
 			_price.Reset();
@@ -65,5 +68,13 @@ namespace UI
 		[CanBeNull] ILabeledIconViewModel PrimaryPrice { get => null; }
 
 		event Action PricesChanged;
+
+		void OnShow()
+		{
+		}
+
+		void OnHide()
+		{
+		}
 	}
 }

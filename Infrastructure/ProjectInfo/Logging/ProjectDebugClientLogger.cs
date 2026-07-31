@@ -7,7 +7,7 @@ namespace Logging.ProjectInformation
 	public class ProjectClientLogger : BaseLogger
 	{
 		private const string CHANNEL = "Project";
-		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditorOnly(ProjectDebug.COLOR));
+		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT, CHANNEL.ColorTextInEditor(ProjectDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

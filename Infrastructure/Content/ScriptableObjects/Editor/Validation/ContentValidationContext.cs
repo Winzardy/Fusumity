@@ -11,18 +11,21 @@ namespace Content.ScriptableObjects.Editor
 		public readonly Type valueType;
 
 		public readonly bool canBeEmpty;
+		public readonly ContentReferenceAttribute contentReferenceAttribute;
 
 		public ContentValidationContext(object value,
 			Type valueType,
 			string path,
 			ContentScriptableObject source,
-			bool canBeEmpty)
+			bool canBeEmpty,
+			ContentReferenceAttribute contentReferenceAttribute = null)
 		{
 			this.value = value;
 			this.valueType = valueType;
 			this.path = path;
 			this.source = source;
 			this.canBeEmpty = canBeEmpty;
+			this.contentReferenceAttribute = contentReferenceAttribute;
 		}
 	}
 

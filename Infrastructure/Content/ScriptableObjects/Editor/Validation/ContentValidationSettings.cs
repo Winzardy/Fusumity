@@ -49,7 +49,7 @@ namespace Content.ScriptableObjects.Editor
 		[Serializable]
 		public class ProjectSettings
 		{
-			[ListDrawerSettings(Expanded = true)]
+			[ListDrawerSettings(DefaultExpandedState = true)]
 			public List<ContentValueValidatorEntry> customValidators;
 
 			internal List<IContentValueValidator> GetEnabledCustomValidators()

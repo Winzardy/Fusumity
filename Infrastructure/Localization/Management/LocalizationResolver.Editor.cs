@@ -39,6 +39,36 @@ namespace Localization
 			return null;
 		}
 
+		public static bool HasEditor(string key, string localeCode)
+		{
+			foreach (var collection in LocalizationEditorSettings.GetStringTableCollections())
+			{
+				var locale = localeCode != null
+					? LocalizationEditorSettings.GetLocale(localeCode)
+					: LocalizationEditorSettings.GetLocale(DEFAULT_LOCALE_CODE);
+
+				if (!locale)
+					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetSelectedLocale();
+
+				if (!locale)
+					locale = LocalizationEditorSettings.ActiveLocalizationSettings.GetAvailableLocales().Locales.FirstOrDefault();
+
+				if (!locale)
+					continue;
+
+				var table = collection.GetTable(locale.Identifier) as StringTable;
+				if (table == null)
+					continue;
+				var entry = table.GetEntry(key);
+				if (entry == null)
+					continue;
+
+				return true;
+			}
+
+			return false;
+		}
+
 		internal static string CurrentLocaleCodeEditor
 		{
 			get

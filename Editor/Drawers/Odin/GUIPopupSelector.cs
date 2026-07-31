@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Collections;
+using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
@@ -34,6 +35,8 @@ namespace Fusumity.Editor
 
 		private Func<OdinMenuItem, bool> _searchFunction;
 		private Func<T, string> _nameEvaluator;
+		private Func<T, Sprite> _iconEvaluator;
+		private Func<T, string> _secondaryLabelEvaluator;
 
 		public bool show => _show;
 		public OdinEditorWindow Window => _window;
@@ -86,6 +89,18 @@ namespace Fusumity.Editor
 			}
 
 			_show = false;
+		}
+
+		// Иконка пункта (например Sprite из config'а) — применяется при построении дерева
+		public void SetIconEvaluator(Func<T, Sprite> evaluator)
+		{
+			_iconEvaluator = evaluator;
+		}
+
+		// Вторичная подпись (серым, rich text) рядом с именем пункта — например полное имя вложенного ассета
+		public void SetSecondaryLabelEvaluator(Func<T, string> evaluator)
+		{
+			_secondaryLabelEvaluator = evaluator;
 		}
 
 		public void SetSearchFunction(Func<OdinMenuItem, bool> function)
@@ -187,6 +202,24 @@ namespace Fusumity.Editor
 			return _show;
 		}
 
+		// Явный размер окна: Unity корректно переворачивает dropdown вверх, если снизу не хватает места
+		public bool ShowPopup(Rect position, Vector2 windowSize)
+		{
+			_show = !_show;
+
+			if (_show)
+			{
+				_window = ShowInPopup(position, windowSize);
+				_window.OnClose += OnClosed;
+			}
+			else
+			{
+				_window = null;
+			}
+
+			return _show;
+		}
+
 		private void DrawFunctionButtons(Rect position)
 		{
 			if (_functionButtonsInfo.IsNullOrEmpty())
@@ -211,7 +244,11 @@ namespace Fusumity.Editor
 			position.x = position.xMax + 1;
 			position.width = size;
 
-			if (FusumityEditorGUILayout.ToolbarButton(position, info.icon, GUI.skin.button))
+			var clicked = info.icon != null
+				? FusumityEditorGUILayout.ToolbarButton(position, info.icon, GUI.skin.button)
+				: FusumityEditorGUILayout.ToolbarButton(position, info.sdfIcon, GUI.skin.button);
+
+			if (clicked)
 			{
 				info.action?.Invoke();
 			}
@@ -245,16 +282,45 @@ namespace Fusumity.Editor
 				tree.Config.SearchFunction = _searchFunction;
 			}
 
+			if (_secondaryLabelEvaluator != null && tree.DefaultMenuStyle != null)
+			{
+				// Копии, а не мутация: по умолчанию DefaultLabelStyle возвращает общий SirenixGUIStyles.Label
+				tree.DefaultMenuStyle.DefaultLabelStyle = new GUIStyle(tree.DefaultMenuStyle.DefaultLabelStyle) {richText = true};
+				tree.DefaultMenuStyle.SelectedLabelStyle = new GUIStyle(tree.DefaultMenuStyle.SelectedLabelStyle) {richText = true};
+			}
+
 			for (int i = 0; i < _values.Length; i++)
 			{
 				var value = _values[i];
 
 				string path = _pathEvaluator != null ? _pathEvaluator.Invoke(value) : value.ToString();
 
-				if (value is UnityObject obj)
-					tree.Add(path, value, EditorGUIUtility.GetIconForObject(obj));
+				OdinMenuItem leaf;
+				var sprite = _iconEvaluator?.Invoke(value);
+				if (sprite != null)
+				{
+					// IconGetter, а не Add(..., Sprite): AssetPreview.GetAssetPreview асинхронный и при
+					// разовом построении дерева вернёт null — геттер же пересчитается, когда превью готово
+					leaf = tree.Add(path, value).LastOrDefault();
+					if (leaf != null)
+						leaf.IconGetter = () =>
+						{
+							var preview = AssetPreview.GetAssetPreview(sprite);
+							// Окно перерисовывается только по событиям — форсируем, пока превью догружаются
+							if (preview == null && _window && AssetPreview.IsLoadingAssetPreviews())
+								_window.Repaint();
+
+							return preview;
+						};
+				}
+				else if (value is UnityObject obj)
+					leaf = tree.Add(path, value, EditorGUIUtility.GetIconForObject(obj)).LastOrDefault();
 				else
-					tree.Add(path, value);
+					leaf = tree.Add(path, value).LastOrDefault();
+
+				var secondary = _secondaryLabelEvaluator?.Invoke(value);
+				if (leaf != null && !string.IsNullOrEmpty(secondary))
+					leaf.Name += $"  <color=#808080>{secondary}</color>";
 			}
 
 			SetSelection(selectedValue);
@@ -430,7 +496,11 @@ namespace Fusumity.Editor
 			if (!_toolbarFunctionButtonsInfo.IsNullOrEmpty())
 				foreach (var info in _toolbarFunctionButtonsInfo)
 				{
-					if (SirenixEditorGUI.ToolbarButton(info.icon))
+					var clicked = info.icon != null
+						? SirenixEditorGUI.ToolbarButton(info.icon)
+						: SirenixEditorGUI.ToolbarButton(info.sdfIcon);
+
+					if (clicked)
 						info.action?.Invoke();
 				}
 		}
@@ -460,5 +530,6 @@ namespace Fusumity.Editor
 	{
 		public Action action;
 		public EditorIcon icon;
+		public SdfIconType sdfIcon;
 	}
 }

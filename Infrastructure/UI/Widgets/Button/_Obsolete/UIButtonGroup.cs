@@ -2,14 +2,14 @@
 
 namespace UI
 {
-	public class UIButtonGroup : UIButtonGroup<UIButtonWidget, UILabeledButtonLayout, UIButtonWidget.Args>
+	public class UIButtonGroup : UIButtonGroup<UIButtonWidget, UILegacyLabeledButtonLayout, UIButtonWidget.Args>
 	{
 	}
 
 	public class UIButtonGroup<TButtonWidget, TButtonLayout, TButtonArgs> :
 		UIGroup<TButtonWidget, TButtonLayout, TButtonArgs>
 		where TButtonWidget : UIButtonWidget<TButtonLayout, TButtonArgs>
-		where TButtonLayout : UILabeledButtonLayout
+		where TButtonLayout : UILegacyLabeledButtonLayout
 		where TButtonArgs : struct, IObseleteButtonViewModel
 	{
 		public event Action<TButtonWidget, int> Clicked;

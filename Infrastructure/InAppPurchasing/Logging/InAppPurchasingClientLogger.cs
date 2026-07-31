@@ -9,7 +9,7 @@ namespace Logging.InAppPurchasing
 		private const string CHANNEL = "InAppPurchasing";
 
 		private static readonly string PREFIX = string.Format(WLogExtensions.CHANNEL_FORMAT,
-			CHANNEL.ColorTextInEditorOnly(IAPDebug.COLOR));
+			CHANNEL.ColorTextInEditor(IAPDebug.COLOR));
 
 		private WLogContext _logContext;
 		protected override string Prefix => PREFIX;

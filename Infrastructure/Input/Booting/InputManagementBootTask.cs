@@ -19,7 +19,7 @@ namespace Booting.Input
 
 		private IInputReader _inputReader;
 
-		public override UniTask RunAsync(Blackboard _, CancellationToken token = default)
+		protected override UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
 #if UNITY_EDITOR
 			_inputReader = new DesktopInputReader();

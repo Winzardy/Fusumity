@@ -1,3 +1,5 @@
+using Sapientia.Extensions;
+
 namespace Localization
 {
 	public partial class LocUtility
@@ -9,14 +11,25 @@ namespace Localization
 		public static string ToDescriptionKey(this string key) => $"{key}{DESCRIPTION_LOC_KEY_POSTFIX}";
 		public static string ToShortDescriptionKey(this string key) => $"{key}{SHORT_DESCRIPTION_LOC_KEY_POSTFIX}";
 		public static string ToTooltipKey(this string key) => $"{key}{TOOLTIP_LOC_KEY_POSTFIX}";
+		public static string ToTooltipKey(this string key, string suffix) => $"{key}_{suffix}{TOOLTIP_LOC_KEY_POSTFIX}";
 
 		public static LocKey ToDescriptionKey(this in LocKey key) => key.value.ToDescriptionKey();
 		public static LocKey ToShortDescriptionKey(this in LocKey key) => key.value.ToShortDescriptionKey();
 		public static LocKey ToTooltipKey(this in LocKey key) => key.value.ToTooltipKey();
 		public static LocKey ToTooltipKeySafe(this in LocKey key) => key.IsEmpty() ? null : key.value.ToTooltipKey();
+		public static LocKey ToTooltipKeySafe(this in LocKey key, string suffix) => key.IsEmpty() ? null : key.value.ToTooltipKey(suffix);
 
 		public static string ToDescriptionLocalize(this in LocKey key) => key.ToDescriptionKey().ToLocalize();
 		public static string ToShortDescriptionLocalize(this in LocKey key) => key.ToShortDescriptionKey().ToLocalize();
 		public static string ToTooltipLocalize(this in LocKey key) => key.ToTooltipKey().ToLocalize();
+
+		public static string ToPercent(this float percent)
+		{
+			percent = percent.Abs();
+
+			return percent % 1 == 0
+				? $"{percent:0}"
+				: $"{percent:0.#}";
+		}
 	}
 }

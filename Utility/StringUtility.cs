@@ -70,7 +70,7 @@ namespace Fusumity.Utility
 		}
 
 		/// <summary>
-		/// Работает только в Editor, но при желании можно добавить в Runtime
+		/// Преобразует техническое имя в читаемый текст
 		/// </summary>
 		public static string NicifyText(this string text, bool unity = true)
 		{
@@ -78,7 +78,43 @@ namespace Fusumity.Utility
 			if (unity)
 				return UnityEditor.ObjectNames.NicifyVariableName(text);
 #endif
-			return text.ToLower().CapitalizeFirstChar();
+
+			if (text.IsNullOrEmpty())
+				return text;
+
+			var startIndex = text[0] == '_'
+				? 1
+				: text.Length > 2 && text[0] == 'm' && text[1] == '_'
+					? 2
+					: text.Length > 1 && text[0] == 'k' && char.IsUpper(text[1])
+						? 1
+						: 0;
+
+			var builder = new StringBuilder(text.Length + 8);
+			for (var i = startIndex; i < text.Length; i++)
+			{
+				var current = text[i];
+				if (current is '_' or '-')
+				{
+					if (builder.Length > 0 && builder[^1] != ' ')
+						builder.Append(' ');
+
+					continue;
+				}
+
+				var previous = i > startIndex ? text[i - 1] : '\0';
+				var next = i + 1 < text.Length ? text[i + 1] : '\0';
+				var separateWord = builder.Length > 0 && builder[^1] != ' ' && char.IsUpper(current) &&
+					(char.IsLower(previous) || char.IsUpper(previous) && char.IsLower(next));
+
+				if (separateWord)
+					builder.Append(' ');
+
+				builder.Append(builder.Length == 0 ? char.ToUpperInvariant(current) : current);
+			}
+
+			return builder.ToString()
+				.TrimEnd();
 		}
 	}
 }

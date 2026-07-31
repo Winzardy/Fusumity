@@ -46,7 +46,7 @@ namespace UI
 					continue;
 				}
 #endif
-				item.Switch(state);
+				item.Switch(state, _immediate);
 			}
 		}
 

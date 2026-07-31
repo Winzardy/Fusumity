@@ -66,6 +66,7 @@ namespace UI
 		{
 			base.OnEnable();
 
+			DisableScenePickingInEditor();
 			ForceUpdateRect();
 			//Есть необходимость второй раз обновить рект
 			_delayedUpdate = true;
@@ -83,12 +84,15 @@ namespace UI
 
 		private void Update()
 		{
+			DisableScenePickingInEditor();
+
 			var safeArea = Screen.safeArea;
 
-			if (_lastSafeArea != safeArea || _delayedUpdate)
+			if (_lastSafeArea != safeArea || _delayedUpdate || HasTransformChangedInEditor())
 			{
 				UpdateRect(in safeArea);
 				_delayedUpdate = false;
+				ClearTransformChangedInEditor();
 			}
 		}
 
@@ -178,10 +182,26 @@ namespace UI
 		}
 
 #if UNITY_EDITOR
+		private void DisableScenePickingInEditor()
+		{
+			if (!Application.isPlaying)
+				UnityEditor.SceneVisibilityManager.instance.DisablePicking(gameObject, false);
+		}
+
+		private bool HasTransformChangedInEditor() =>
+			!Application.isPlaying && transform.hasChanged;
+
+		private void ClearTransformChangedInEditor()
+		{
+			if (!Application.isPlaying)
+				transform.hasChanged = false;
+		}
+
 		protected override void Reset()
 		{
 			base.Reset();
 
+			DisableScenePickingInEditor();
 			_rectTransform = GetComponent<RectTransform>();
 		}
 
@@ -190,11 +210,14 @@ namespace UI
 			base.OnValidate();
 			_delayedUpdate = true;
 
+			DisableScenePickingInEditor();
 			_rectTransform = GetComponent<RectTransform>();
 		}
 
 		private void OnDrawGizmos()
 		{
+			DisableScenePickingInEditor();
+
 			if (!IsActive())
 				return;
 
@@ -215,6 +238,19 @@ namespace UI
 			UnityEditor.Handles.color = originalColor;
 		}
 
+#else
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void DisableScenePickingInEditor()
+		{
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool HasTransformChangedInEditor() => false;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ClearTransformChangedInEditor()
+		{
+		}
 #endif
 
 		private bool _leftEdgesOffsetShowIfDebug => _adjustEdges.HasFlag(EdgeFlags.Left);

@@ -44,7 +44,9 @@ namespace AssetManagement
 			if (_references.IsNullOrEmpty())
 				return;
 
-			PreloadAsync().Forget();
+			_cts = new CancellationTokenSource();
+			PreloadAsync(_references, _cts)
+				.Forget(exception => AssetManagementDebug.LogException(exception));
 		}
 
 		public bool TryRelease(IAssetReference reference)
@@ -59,19 +61,21 @@ namespace AssetManagement
 			return true;
 		}
 
-		private async UniTaskVoid PreloadAsync()
+		private async UniTask PreloadAsync(HashSet<IAssetReference> references, CancellationTokenSource cts)
 		{
-			_cts = new CancellationTokenSource();
-
 			try
 			{
-				await _references.PreloadAsync(_cts.Token);
-				_preloaded = true;
+				await references.PreloadAsync(cts.Token);
+
+				if (ReferenceEquals(_references, references))
+					_preloaded = true;
 			}
 			finally
 			{
-				_cts?.Trigger();
-				_cts = null;
+				cts.Trigger();
+
+				if (ReferenceEquals(_cts, cts))
+					_cts = null;
 			}
 		}
 	}

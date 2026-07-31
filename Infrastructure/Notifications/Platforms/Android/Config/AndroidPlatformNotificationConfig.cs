@@ -1,4 +1,5 @@
 #if UNITY_ANDROID || UNITY_EDITOR
+using Sapientia;
 using Content;
 using UnityEngine;
 using Unity.Notifications.Android;
@@ -11,10 +12,11 @@ namespace Notifications.Android.Config
 #if UNITY_ANDROID || UNITY_EDITOR
 	[TypeRegistryItem("Android", icon: SdfIconType.Robot)]
 #endif
-	public class AndroidPlatformNotificationConfig : IPlatformNotificationConfig
+	public struct AndroidPlatformNotificationConfig : IPlatformNotificationConfig
 	{
 #if UNITY_ANDROID || UNITY_EDITOR
 		[InfoBox("Если не выбран, выбирается канал по дефолту")]
+		[CanBeEmpty]
 		public ContentReference<AndroidNotificationChannelConfig> channel;
 
 		public NotificationStyle style;
