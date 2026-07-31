@@ -11,7 +11,7 @@ namespace UI
 		//
 		// Напомню что идея была в том чтобы заполнять локаль данными которые можно выбрать прям в верстке (инспекторе)
 		// У нас есть аргументы из локали и мы им выставляем значения или выбираем откуда взять
-#if UNITY_EDITOR
+#if UNITY_EDITOR && FULLWEIGHT_MODE
 		[NonSerialized]
 		private string _languageEditor;
 

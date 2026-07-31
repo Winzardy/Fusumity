@@ -5,12 +5,7 @@
         "Booting",
         "InAppPurchasing.Unity",
         "InAppPurchasing",
-        "UnityEngine.Purchasing",
-        "Targeting",
         "InAppPurchasing.Fake",
-        "Logging",
-        "UnityEditor.UI",
-        "UnityEngine.UI",
         "WLog",
         "Fusumity",
         "Sapientia"
@@ -21,6 +16,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
+    "defineConstraints": ["FULLWEIGHT_MODE"],
     "versionDefines": [],
     "noEngineReferences": false
 }

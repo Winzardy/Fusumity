@@ -3,8 +3,6 @@
     "rootNamespace": "",
     "references": [
         "Sapientia",
-        "Distribution",
-        "Targeting",
         "Messaging",
         "ProjectInfo"
     ],

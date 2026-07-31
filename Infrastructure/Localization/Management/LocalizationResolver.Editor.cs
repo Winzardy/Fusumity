@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿#if UNITY_EDITOR && FULLWEIGHT_MODE
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Localization;

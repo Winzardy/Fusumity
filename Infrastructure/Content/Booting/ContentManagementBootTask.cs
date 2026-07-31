@@ -25,7 +25,7 @@ namespace Booting.Content
 			var resolver = new ContentResolver();
 			ContentManager.Set(resolver);
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && !LIGHT_EDITOR_MODE_AGGRESSIVE
 			ContentManager.initializing = true;
 			ContentDatabaseEditorUtility.ValidateDatabases();
 

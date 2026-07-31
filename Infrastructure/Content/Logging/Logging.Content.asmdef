@@ -2,9 +2,7 @@
   "name": "Logging.Content",
   "rootNamespace": "",
   "references": [
-    "Ashary",
     "Content",
-    "Logging",
     "WLog",
     "Fusumity",
     "Sapientia"

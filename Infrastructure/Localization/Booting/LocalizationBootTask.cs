@@ -20,9 +20,11 @@ namespace Booting.Localization
 
 		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
+#if FULLWEIGHT_MODE
 			var resolver = new LocalizationResolver(in tableReference);
 			await resolver.InitializeAsync(token);
 			LocManager.Set(resolver);
+#endif
 		}
 
 		protected override void OnDispose()

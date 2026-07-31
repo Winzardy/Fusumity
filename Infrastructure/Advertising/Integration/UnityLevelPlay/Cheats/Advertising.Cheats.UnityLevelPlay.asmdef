@@ -13,7 +13,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": ["FULLWEIGHT_MODE"],
     "versionDefines": [],
     "noEngineReferences": false
 }
