@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
+using Sapientia.Extensions;
 using Sapientia.Utility;
+using UnityEngine;
 
 namespace AssetManagement
 {
@@ -42,41 +43,32 @@ namespace AssetManagement
 			IProgress<float> progress = null)
 			where T : UnityObject
 		{
-			var usedAsset = await FindOrWaitUsedResourceByPathAsync<T>(path, cancellationToken, progress);
-
-			if (!ReferenceEquals(usedAsset, null))
-				return usedAsset;
-
-			var request = Resources.LoadAsync<T>(path);
-
-			if (request == null)
+			var container = AcquireResourceContainerByPath<T>(path);
+			try
 			{
-				AssetManagementDebug.LogError($"Failed to load resource: {path} is invalid");
-				throw new OperationCanceledException("Failed to load asset");
+				return await container.LoadAsync<T>(cancellationToken, progress);
 			}
-
-			_keyToResourceContainer[path] = new ResourceContainer(path, request);
-
-			var (isCanceled, asset) = await request
-			   .ToUniTask(progress, cancellationToken: cancellationToken)
-			   .SuppressCancellationThrow();
-
-			if (ReferenceEquals(asset, null))
+			catch
 			{
-				AssetManagementDebug.LogError(ASSET_IS_NULL_MESSAGE);
-				throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
+				container.Release();
+				throw;
 			}
-
-			if (isCanceled)
-			{
-				ReleaseResource(path);
-				AssetManagementDebug.LogWarning($"Cancelled to load resource by path [ {path} ]");
-				cancellationToken.ThrowIfCancellationRequested();
-			}
-
-			progress?.Report(1f);
-			return (T) asset;
 		}
+
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public IAssetContainer AcquireAssetContainer<T>(IResourceReference reference)
+			where T : UnityObject
+		{
+			if (reference == null)
+				throw new ArgumentNullException(nameof(reference));
+
+			return AcquireResourceContainerByPath<T>(reference.Path);
+		}
+
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public IAssetContainer AcquireResourceContainer<T>(string path)
+			where T : UnityObject =>
+			AcquireResourceContainerByPath<T>(path);
 
 		/// <summary>
 		/// Синхронно загрузить ресурс. Блокирует поток до готовности (<see cref="Resources.Load"/>). <br/>
@@ -104,7 +96,18 @@ namespace AssetManagement
 
 			//Уже загружен/грузится — переиспользуем контейнер
 			if (_keyToResourceContainer.TryGetValue(path, out var container))
-				return container.GetResource<T>();
+			{
+				container.Retain();
+				try
+				{
+					return container.GetResource<T>();
+				}
+				catch
+				{
+					container.Release();
+					throw;
+				}
+			}
 
 			var asset = Resources.Load<T>(path);
 
@@ -114,7 +117,7 @@ namespace AssetManagement
 				throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
 			}
 
-			_keyToResourceContainer[path] = new ResourceContainer(path, asset);
+			_keyToResourceContainer[path] = new ResourceContainer(this, path, asset);
 
 			return asset;
 		}
@@ -129,10 +132,13 @@ namespace AssetManagement
 
 		public void ReleaseResource(string path)
 		{
+			if (_keyToResourceContainer == null)
+				return;
+
 			if (!_keyToResourceContainer.TryGetValue(path, out var container))
 				return;
 
-			container.Release();
+			ReleaseResourceContainer(container);
 		}
 
 		private void DisposeResources()
@@ -145,23 +151,64 @@ namespace AssetManagement
 		private void ReleaseAllResources()
 		{
 			foreach (var container in _keyToResourceContainer.Values)
-				container.Dispose();
+				container.Shutdown();
 
 			_keyToResourceContainer.Clear();
 		}
 
-		private async UniTask<T> FindOrWaitUsedResourceByPathAsync<T>(string path, CancellationToken cancellationToken,
-			IProgress<float> progress = null)
+		private ResourceContainer AcquireResourceContainerByPath<T>(string path)
 			where T : UnityObject
 		{
-			if (_keyToResourceContainer.TryGetValue(path, out var container))
-				return await container.GetResourceAsync<T>(cancellationToken, progress);
+			if (_keyToResourceContainer == null)
+				throw new ObjectDisposedException(nameof(AssetProvider));
 
-			return null;
+			if (path.IsNullOrEmpty())
+				throw new ArgumentException("Resource path must not be empty", nameof(path));
+
+			if (_keyToResourceContainer.TryGetValue(path, out var container))
+			{
+				container.Retain();
+				return container;
+			}
+
+			var request = Resources.LoadAsync<T>(path);
+			if (request == null)
+			{
+				AssetManagementDebug.LogError($"Failed to load resource: {path} is invalid");
+				throw new OperationCanceledException("Failed to load asset");
+			}
+
+			container = new ResourceContainer(this, path, request);
+			_keyToResourceContainer.Add(path, container);
+			return container;
 		}
 
-		private class ResourceContainer : IDisposable
+		private void ReleaseResourceContainer(ResourceContainer container)
 		{
+			if (_keyToResourceContainer == null || container == null)
+				return;
+
+			if (container.Key is not string path ||
+				!_keyToResourceContainer.TryGetValue(path, out var current) ||
+				!ReferenceEquals(current, container))
+				return;
+
+			container.ReleaseUsage();
+		}
+
+		private void RemoveResourceContainer(ResourceContainer container)
+		{
+			if (_keyToResourceContainer == null || container == null || container.Key is not string path ||
+				!_keyToResourceContainer.TryGetValue(path, out var current) ||
+				!ReferenceEquals(current, container))
+				return;
+
+			_keyToResourceContainer.Remove(path);
+		}
+
+		private sealed class ResourceContainer : IAssetContainer
+		{
+			private AssetProvider _owner;
 			private string _path;
 
 			private int _usages;
@@ -174,10 +221,14 @@ namespace AssetManagement
 			private CancellationTokenSource _disposeCts;
 
 			//Итоговый ассет из async-запроса или синхронной загрузки
-			private UnityObject Asset => _request != null ? _request.asset : _syncAsset;
+			public object Key => _path;
+			public object Asset => _request != null && _request.asset != null ? _request.asset : _syncAsset;
+			public bool IsLoaded => Asset is UnityObject asset && asset != null;
+			public int ReferenceCount => _usages;
 
-			public ResourceContainer(string path, ResourceRequest initialRequest, int usages = 1)
+			public ResourceContainer(AssetProvider owner, string path, ResourceRequest initialRequest, int usages = 1)
 			{
+				_owner = owner;
 				_path = path;
 				_usages = usages;
 
@@ -185,82 +236,90 @@ namespace AssetManagement
 			}
 
 			//Контейнер для синхронно загруженного ресурса
-			public ResourceContainer(string path, UnityObject asset, int usages = 1)
+			public ResourceContainer(AssetProvider owner, string path, UnityObject asset, int usages = 1)
 			{
+				_owner     = owner;
 				_path      = path;
 				_usages    = usages;
 				_syncAsset = asset;
 				_cts       = new();
 			}
 
-			public void Dispose()
+			public void Retain()
 			{
-				if (_request == null)
-				{
-					//Синхронно загруженный ресурс
-					if (_syncAsset != null)
-						UnloadAsset();
+				if (_owner == null)
+					throw new ObjectDisposedException(nameof(ResourceContainer));
 
-					return;
-				}
-
-				if (_request.isDone)
-				{
-					UnloadAsset();
-					return;
-				}
-
-				//Нет другого способа остановить подгрузку ресурса...
-				//придется через такой костыль подождать и выгрузить после...
-				WaitLoadResourceAndUnloadAsync().Forget();
+				_usages++;
+				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
+				_cts ??= new CancellationTokenSource();
 			}
 
 			public void Release()
 			{
+				_owner?.ReleaseResourceContainer(this);
+			}
+
+			public void ReleaseUsage()
+			{
+				if (_usages <= 0)
+					return;
+
 				_usages--;
 
 				if (_usages > 0)
 					return;
 
-				Dispose();
+				BeginUnload();
 			}
 
-			public async UniTask<T> GetResourceAsync<T>(CancellationToken cancellationToken, IProgress<float> progress = null)
-				where T : UnityObject
+			public async UniTask<T> LoadAsync<T>(CancellationToken cancellationToken = default,
+				IProgress<float> progress = null)
 			{
-				_usages++;
-
-				if (AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
-				{
-					Release();
-					cancellationToken.ThrowIfCancellationRequested();
-				}
+				if (_usages <= 0 || _cts == null || AsyncUtility.AnyCancellation(cancellationToken, _cts.Token))
+					throw new OperationCanceledException(cancellationToken);
 
 				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 
+				if (Asset is T loadedAsset)
+				{
+					progress?.Report(1f);
+					return loadedAsset;
+				}
+
+				if (!typeof(UnityObject).IsAssignableFrom(typeof(T)))
+					throw new InvalidCastException($"Resource type [ {typeof(T)} ] must inherit UnityEngine.Object");
+
 				if (_request == null)
-					SetRequestInternal(Resources.LoadAsync<T>(_path));
+				{
+					var request = Resources.LoadAsync(_path, typeof(T));
+					if (request == null)
+						throw new OperationCanceledException($"Failed to load resource by path [ {_path} ]");
+
+					SetRequestInternal(request);
+				}
 
 				using var linked = _cts.Link(cancellationToken);
 				var (isCanceled, asset) = await _request.ToUniTask(progress, cancellationToken: linked.Token)
 				   .SuppressCancellationThrow();
 
 				if (isCanceled)
+					linked.Token.ThrowIfCancellationRequested();
+
+				if (ReferenceEquals(asset, null))
 				{
-					Release();
-					cancellationToken.ThrowIfCancellationRequested();
+					AssetManagementDebug.LogError(ASSET_IS_NULL_MESSAGE);
+					throw new OperationCanceledException(ASSET_IS_NULL_MESSAGE);
 				}
 
 				progress?.Report(1f);
-				return (T) asset;
+				return (T) (object) asset;
 			}
 
 			//Синхронное получение: если ассета ещё нет (async-запрос в полёте) — грузим синхронно
 			public T GetResource<T>()
 				where T : UnityObject
 			{
-				_usages++;
-
 				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
 
 				var asset = Asset;
@@ -268,40 +327,88 @@ namespace AssetManagement
 					return (T) asset;
 
 				_syncAsset = Resources.Load<T>(_path);
+				if (_syncAsset == null)
+					throw new OperationCanceledException($"Failed to load resource by path [ {_path} ]");
+
 				return (T) _syncAsset;
+			}
+
+			public void Shutdown()
+			{
+				_owner = null;
+				_usages = 0;
+				BeginUnload();
+			}
+
+			private void BeginUnload()
+			{
+				if (_request != null && !_request.isDone)
+				{
+					//Нет другого способа остановить подгрузку ресурса
+					//Приходится дождаться завершения и выгрузить результат
+					if (_disposeCts == null)
+						WaitLoadResourceAndUnloadAsync().Forget();
+
+					return;
+				}
+
+				UnloadAsset();
+				CompleteUnload();
 			}
 
 			//Нет другого способа остановить подгрузку ресурса...
 			//придется через такой костыль подождать и выгрузить после...
 			private async UniTaskVoid WaitLoadResourceAndUnloadAsync()
 			{
-				_disposeCts = new CancellationTokenSource();
+				var disposeCts = new CancellationTokenSource();
+				_disposeCts = disposeCts;
 
-				await UniTask.WaitUntil(() => _request.isDone, cancellationToken: _disposeCts.Token);
+				var isCanceled = await UniTask.WaitUntil(() => _request.isDone, cancellationToken: disposeCts.Token)
+					.SuppressCancellationThrow();
+
+				if (!ReferenceEquals(_disposeCts, disposeCts))
+					return;
+
+				_disposeCts.Dispose();
+				_disposeCts = null;
+
+				if (isCanceled)
+					return;
 
 				UnloadAsset();
-
-				AsyncUtility.TriggerAndSetNull(ref _disposeCts);
+				CompleteUnload();
 			}
 
 			private void UnloadAsset()
 			{
-				var asset = Asset;
+				var asset = Asset as UnityObject;
 
-				if (asset is GameObject or Component or AssetBundle)
-					RequestUnloadUnusedAssets();
-				else
-					Resources.UnloadAsset(asset);
+				if (asset != null)
+				{
+					if (asset is GameObject or Component or AssetBundle)
+						RequestUnloadUnusedAssets();
+					else
+						Resources.UnloadAsset(asset);
+				}
 
 				_request   = null;
 				_syncAsset = null;
 				AsyncUtility.TriggerAndSetNull(ref _cts);
 			}
 
+			private void CompleteUnload()
+			{
+				var owner = _owner;
+				owner?.RemoveResourceContainer(this);
+
+				_owner = null;
+				_path = null;
+			}
+
 			private void SetRequestInternal(ResourceRequest request)
 			{
 				_request = request;
-				_cts = new();
+				_cts ??= new CancellationTokenSource();
 			}
 
 			private void RequestUnloadUnusedAssets()

@@ -27,6 +27,19 @@ namespace AssetManagement
 		}
 
 		/// <summary>
+		/// Получить общее владение контейнером ассета
+		/// Каждый успешный вызов должен быть сбалансирован через <see cref="IAssetContainer.Release"/>
+		/// </summary>
+		public static IAssetContainer AcquireAssetContainer<T>(IAssetReference reference)
+			where T : UnityObject
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(default(CancellationToken));
+
+			return provider.AcquireAssetContainer<T>(reference);
+		}
+
+		/// <summary>
 		/// Загрузить ассет в память (текстура, геймобж, текст и т.д). <br/>
 		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
 		/// </summary>
@@ -38,22 +51,6 @@ namespace AssetManagement
 				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
 
 			return await provider.LoadAssetAsync<T>(reference, cancellationToken, progress);
-		}
-
-		/// <summary>
-		/// Загрузить GameObject и получить у него выбранный компонент. <br/>
-		/// Чтобы подгрузить GameObject используйте <see cref="LoadAssetAsync{T}(IAssetReference,System.Threading.CancellationToken)"/> <br/>
-		/// Ассет обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IAssetReference)"/>
-		/// </summary>
-		/// <typeparam name="T">Тип компонента</typeparam>
-		public static async UniTask<T> LoadComponentAsync<T>(ComponentReference reference,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			if (!IsInitialized)
-				throw AssetManagementDebug.OperationCanceledException(cancellationToken);
-
-			return await provider.LoadComponentAsync<T>(reference, cancellationToken, progress);
 		}
 
 		/// <summary>

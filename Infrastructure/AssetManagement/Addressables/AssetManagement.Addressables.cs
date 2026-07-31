@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using AssetManagement.AddressableAssets;
 using Cysharp.Threading.Tasks;
+using Fusumity.Reactive;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -54,9 +55,12 @@ namespace AssetManagement
 		//object в виде ключя из-за Addressables...
 		private Dictionary<object, AssetContainer> _keyToAssetContainer = new(16);
 		private Dictionary<object, AssetsContainer> _keyToAssetCollectionContainer = new(2);
+		private List<AssetContainer> _delayedReleaseContainers;
+		private bool _delayedReleaseSubscribed;
 
 		private void DisposeAddressable()
 		{
+			UnSubscribeDelayedAssetReleases();
 			ReleaseAllAddressable();
 			_addressableInitializationHandle.ReleaseSafe();
 			_addressableInitializationHandle = default;
@@ -101,6 +105,8 @@ namespace AssetManagement
 
 		private void ReleaseAllAddressable()
 		{
+			ClearDelayedAssetReleases();
+
 			foreach (var container in _keyToAssetContainer.Values)
 			{
 				container.Dispose();
@@ -189,6 +195,27 @@ namespace AssetManagement
 			return default;
 		}
 
+		private AssetContainer AcquireAssetContainerByKey<T>(object key, UnityObject context = null)
+		{
+			if (_keyToAssetContainer.TryGetValue(key, out var container))
+			{
+				container.Retain();
+				return container;
+			}
+
+			var handle = Addressables.LoadAssetAsync<T>(key);
+
+			if (!handle.IsValid())
+			{
+				AssetManagementDebug.LogError($"Failed to load asset: handle by key [ {key} ] is invalid", context);
+				throw AssetManagementDebug.Exception("Failed to load asset");
+			}
+
+			container = new AssetContainer(this, key, handle);
+			_keyToAssetContainer[key] = container;
+			return container;
+		}
+
 		private async UniTask<T> LoadAssetAsyncByKey<T>(object key, CancellationToken cancellationToken,
 			UnityObject context = null, IProgress<float> progress = null)
 		{
@@ -207,7 +234,7 @@ namespace AssetManagement
 				return default;
 			}
 
-			_keyToAssetContainer[key] = new AssetContainer(key, handle);
+			_keyToAssetContainer[key] = new AssetContainer(this, key, handle);
 
 			var (isCanceled, asset) = await handle
 				.ToUniTask(progress, cancellationToken: cancellationToken)
@@ -318,24 +345,125 @@ namespace AssetManagement
 			return null;
 		}
 
-		private void Release(UnityAssetReference assetReference)
+		private void ReleaseAssetByKey(object key, int delayMs = 0)
 		{
-			ReleaseAssetByKey(assetReference.RuntimeKey);
-		}
-
-		//Интересно, что под капотом AssetReference.RuntimeKey виртуальный метод внутри которого string...
-		private void ReleaseAssetByKey(object key)
-		{
-			if (!_initialized)
+			if (!_initialized || key == null)
 				return;
 
 			if (!_keyToAssetContainer.TryGetValue(key, out var container))
 				return;
 
-			if (!container.Release())
+			ReleaseAssetContainer(container, delayMs);
+		}
+
+		private void ReleaseAssetContainer(AssetContainer container, int delayMs = 0)
+		{
+			if (!_initialized || container == null)
 				return;
 
+			if (!IsCurrentAssetContainer(container))
+				return;
+
+			if (container.ReleaseUsage(delayMs, Time.unscaledTimeAsDouble))
+			{
+				ReleaseAssetContainerImmediately(container);
+				return;
+			}
+
+			if (container.IsReleasePending)
+				TrackDelayedRelease(container);
+		}
+
+		private bool IsCurrentAssetContainer(AssetContainer container)
+		{
+			var key = container.Key;
+			return _keyToAssetContainer != null &&
+				key != null &&
+				_keyToAssetContainer.TryGetValue(key, out var current) &&
+				ReferenceEquals(current, container);
+		}
+
+		private void ReleaseAssetContainerImmediately(AssetContainer container)
+		{
+			if (!IsCurrentAssetContainer(container))
+				return;
+
+			var key = container.Key;
 			_keyToAssetContainer.Remove(key);
+			container.Dispose();
+		}
+
+		private void TrackDelayedRelease(AssetContainer container)
+		{
+			if (!container.TryTrackRelease())
+				return;
+
+			_delayedReleaseContainers ??= new List<AssetContainer>(4);
+			_delayedReleaseContainers.Add(container);
+		}
+
+		private void UpdateDelayedAssetReleases()
+		{
+			if (!_initialized || _delayedReleaseContainers == null)
+				return;
+
+			var currentTime = Time.unscaledTimeAsDouble;
+			for (var i = _delayedReleaseContainers.Count - 1; i >= 0; i--)
+			{
+				var container = _delayedReleaseContainers[i];
+				if (!container.IsReleasePending || !IsCurrentAssetContainer(container))
+				{
+					RemoveDelayedReleaseAt(i);
+					continue;
+				}
+
+				if (!container.IsReleaseReady(currentTime))
+					continue;
+
+				RemoveDelayedReleaseAt(i);
+				ReleaseAssetContainerImmediately(container);
+			}
+		}
+
+		private void RemoveDelayedReleaseAt(int index)
+		{
+			var container = _delayedReleaseContainers[index];
+			var lastIndex = _delayedReleaseContainers.Count - 1;
+
+			if (index != lastIndex)
+				_delayedReleaseContainers[index] = _delayedReleaseContainers[lastIndex];
+
+			_delayedReleaseContainers.RemoveAt(lastIndex);
+			container.StopTrackingRelease();
+		}
+
+		private void ClearDelayedAssetReleases()
+		{
+			if (_delayedReleaseContainers == null)
+				return;
+
+			foreach (var container in _delayedReleaseContainers)
+				container.StopTrackingRelease();
+
+			_delayedReleaseContainers.Clear();
+		}
+
+		private void SubscribeDelayedAssetReleases()
+		{
+			if (_delayedReleaseSubscribed)
+				return;
+
+			_delayedReleaseSubscribed = true;
+			UnityLifecycle.UnscaledEachSecondEvent.Subscribe(UpdateDelayedAssetReleases);
+		}
+
+		private void UnSubscribeDelayedAssetReleases()
+		{
+			if (!_delayedReleaseSubscribed)
+				return;
+
+			_delayedReleaseSubscribed = false;
+			UnityLifecycle.UnscaledEachSecondEvent.UnSubscribe(UpdateDelayedAssetReleases);
 		}
 
 		private void ReleaseAssets(UnityAssetLabelReference labelReference)
@@ -351,7 +479,7 @@ namespace AssetManagement
 			if (!_keyToAssetCollectionContainer.TryGetValue(key, out var container))
 				return;
 
-			if (!container.Release())
+			if (!container.ReleaseUsage())
 				return;
 
 			_keyToAssetCollectionContainer.Remove(key);

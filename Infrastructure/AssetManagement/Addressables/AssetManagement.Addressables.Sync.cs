@@ -84,7 +84,7 @@ namespace AssetManagement
 				return default;
 			}
 
-			_keyToAssetContainer[key] = new AssetContainer(key, handle);
+			_keyToAssetContainer[key] = new AssetContainer(this, key, handle);
 
 			var asset = handle.WaitForCompletion();
 
