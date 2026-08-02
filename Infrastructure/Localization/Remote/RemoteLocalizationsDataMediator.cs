@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using Sapientia.Localization;
 using Sapientia.ServiceManagement;
+using Sapientia.Utility;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace Localization
 		UniTask<Result<string>> LoadRemoteLocalization(string id);
 	}
 
-	public class RemoteLocalizationsDataMediator
+	public class RemoteLocalizationsDataMediator : IDisposable
 	{
 		private IRemoteLocalizationsWebClient _webClient;
 
@@ -27,6 +28,12 @@ namespace Localization
 		public RemoteLocalizationsDataMediator()
 		{
 			ServiceLocator.Get(out _webClient);
+		}
+
+		public void Dispose()
+		{
+			_cts.Trigger();
+			_cts = null;
 		}
 
 		public UniTask<Result<string>> LoadRemoteLocalization(string id)
