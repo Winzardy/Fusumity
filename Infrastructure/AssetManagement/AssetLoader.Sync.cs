@@ -26,13 +26,6 @@ namespace AssetManagement
 		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
 		/// </summary>
 		/// <typeparam name="T">Тип компонента</typeparam>
-		public static T LoadComponent<T>(ComponentReference reference)
-			where T : UnityComponent => provider.LoadComponent<T>(reference);
-
-		/// <summary>
-		/// Синхронно загрузить GameObject и получить у него выбранный компонент. См. <see cref="LoadAsset{T}(IAssetReference)"/>
-		/// </summary>
-		/// <typeparam name="T">Тип компонента</typeparam>
 		public static T LoadComponent<T>(IAssetReference reference)
 			where T : UnityComponent => provider.LoadComponent<T>(reference);
 

@@ -26,7 +26,7 @@ namespace UI
 
 		protected abstract RectTransform LayerRectTransform { get; }
 
-		protected abstract ComponentReference LayoutReference { get; }
+		protected abstract IAssetReference LayoutReference { get; }
 		protected virtual bool LayoutAutoDestroy => false;
 		protected virtual int LayoutAutoDestroyDelayMs => 5000;
 		protected virtual List<AnyAssetReference> PreloadAssets => null;

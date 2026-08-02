@@ -145,27 +145,35 @@ namespace Audio
 
 		#region Runtime
 
-		[NonSerialized]
-		private AudioClip _clip;
+		/// <summary>
+		/// Клип, переданный напрямую через конструктор: владение внешнее, плеер его не грузит и не отпускает
+		/// </summary>
+		public AudioClip DirectClip { get; }
 
-		public AudioClip clip
+		public AudioTrackScheme()
 		{
-			get
-			{
-#if UNITY_EDITOR
-				return Application.isPlaying ? _clip : clipReference.editorAsset;
-#endif
-				return _clip;
-			}
-			set
-			{
-#if UNITY_EDITOR
-				if (!Application.isPlaying)
-					return;
-#endif
-				_clip = value;
-			}
 		}
+
+		public AudioTrackScheme(AudioClip clip)
+		{
+			DirectClip = clip;
+		}
+
+		public AudioTrackScheme(AssetReference<AudioClip> clipReference)
+		{
+			this.clipReference = clipReference;
+		}
+
+		#endregion
+
+		#region Editor
+
+#if UNITY_EDITOR
+		/// <summary>
+		/// Клип только для редакторного превью: в рантайме клипами владеет AudioEventPlayer (см. _ownedClips)
+		/// </summary>
+		public AudioClip clip => clipReference?.editorAsset;
+#endif
 
 		#endregion
 	}

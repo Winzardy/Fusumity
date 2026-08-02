@@ -8,6 +8,34 @@ namespace AssetManagement
 	public partial class AssetLoader
 	{
 		/// <summary>
+		/// Получить общее владение контейнером ресурса
+		/// Каждый успешный вызов должен быть сбалансирован через <see cref="IAssetContainer.Release"/>
+		/// </summary>
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public static IAssetContainer AcquireAssetContainer<T>(IResourceReference reference)
+			where T : Object
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(default(CancellationToken));
+
+			return _instance.AcquireAssetContainer<T>(reference);
+		}
+
+		/// <summary>
+		/// Получить общее владение контейнером ресурса по пути
+		/// Каждый успешный вызов должен быть сбалансирован через <see cref="IAssetContainer.Release"/>
+		/// </summary>
+		[Obsolete("Not usually used Resources (Unity), only rare cases when it is really necessary...")]
+		public static IAssetContainer AcquireResourceContainer<T>(string path)
+			where T : Object
+		{
+			if (!IsInitialized)
+				throw AssetManagementDebug.OperationCanceledException(default(CancellationToken));
+
+			return _instance.AcquireResourceContainer<T>(path);
+		}
+
+		/// <summary>
 		/// Загрузить ресурс в память (текстура, геймобж, текст и т.д).
 		/// Ресурс обязательно нужно отпустить (release) после использования. (при отмене отпускается автоматически) <see cref="Release(IResourceReference)"/>
 		/// </summary>

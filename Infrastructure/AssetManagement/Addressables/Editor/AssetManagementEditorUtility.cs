@@ -14,6 +14,22 @@ namespace AssetManagement.AddressableAssets.Editor
 {
 	public static class AssetManagementEditorUtility
 	{
+		public static string GetAddressableGroupName(string assetPath)
+		{
+			if (assetPath.IsNullOrEmpty())
+				return null;
+
+			var settings = AddressableAssetSettingsDefaultObject.Settings;
+			if (settings == null)
+				return null;
+
+			var guid = AssetDatabase.AssetPathToGUID(assetPath);
+			if (guid.IsNullOrEmpty())
+				return null;
+
+			return settings.FindAssetEntry(guid, true)?.parentGroup?.Name;
+		}
+
 		public static List<T> LoadAddressableAssets<T>() where T : Object
 		{
 			AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;

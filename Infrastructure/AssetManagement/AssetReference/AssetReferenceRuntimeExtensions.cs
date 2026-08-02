@@ -19,9 +19,16 @@ namespace AssetManagement
 			if (a is null || b is null)
 				return false;
 
-			var aKey = a.AssetReference.RuntimeKey as string;
-			var bKey = b.AssetReference.RuntimeKey as string;
-			return string.Equals(aKey, bKey, StringComparison.OrdinalIgnoreCase);
+			var aKey = a.RuntimeKey;
+			var bKey = b.RuntimeKey;
+
+			if (aKey == null || bKey == null)
+				return false;
+
+			if (aKey is string aString && bKey is string bString)
+				return string.Equals(aString, bString, StringComparison.OrdinalIgnoreCase);
+
+			return Equals(aKey, bKey);
 		}
 
 		public static void Preload(this IEnumerable<IAssetReference> references,
@@ -132,51 +139,11 @@ namespace AssetManagement
 			return AssetLoader.LoadAsset<T>(reference);
 		}
 
-		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		public static T LoadOrNull<T>(this ComponentReference reference)
-			where T : Component
-		{
-			if (reference.IsEmptyOrInvalid())
-				return null;
-
-			return AssetLoader.LoadComponent<T>(reference);
-		}
-
 		/// <inheritdoc cref="AssetLoader.LoadAsset{T}(IAssetReference)"/>
 		public static T Load<T>(this AssetReference<T> reference)
 			where T : UnityObject
 		{
 			return AssetLoader.LoadAsset<T>(reference);
-		}
-
-		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		public static T Load<T>(this ComponentReference reference)
-			where T : Component
-		{
-			return AssetLoader.LoadComponent<T>(reference);
-		}
-
-		/// <inheritdoc cref="AssetLoader.LoadComponentAsync{T}(ComponentReference,System.Threading.CancellationToken,System.IProgress{float})"/>
-		public static async UniTask<T> LoadAsync<T>(this ComponentReference reference,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			return await AssetLoader.LoadComponentAsync<T>(reference, cancellationToken, progress);
-		}
-
-		/// <inheritdoc cref="AssetLoader.LoadComponentAsync{T}(ComponentReference,System.Threading.CancellationToken,System.IProgress{float})"/>
-		public static async UniTask<T> LoadAsync<T>(this ComponentReference<T> reference,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			return await AssetLoader.LoadComponentAsync<T>(reference, cancellationToken, progress);
-		}
-
-		/// <inheritdoc cref="AssetLoader.LoadComponent{T}(ComponentReference)"/>
-		public static T Load<T>(this ComponentReference<T> reference)
-			where T : Component
-		{
-			return AssetLoader.LoadComponent<T>(reference);
 		}
 
 		/// <param name="delayMs">Кастомная задержка перед выгрузкой: <br/>
@@ -227,25 +194,11 @@ namespace AssetManagement
 			return await LoadAssetsAsync<T>(references, cancellationToken, progress);
 		}
 
-		public static async UniTask<IList<T>> LoadAsync<T>(this IEnumerable<ComponentReference> references,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			return await LoadComponentsAsync<T>(references, cancellationToken, progress);
-		}
-
-		public static async UniTask<IList<T>> LoadAsync<T>(this IEnumerable<ComponentReference<T>> references,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			return await LoadComponentsAsync<T>(references, cancellationToken, progress);
-		}
-
 		public static bool IsEmptyOrInvalid(this IAssetReference reference) =>
-			reference == null || !(reference.AssetReference?.RuntimeKeyIsValid() ?? false);
+			reference == null || !reference.IsRuntimeKeyValid;
 
 		public static bool IsValid(this IAssetReference reference) =>
-			reference is {AssetReference: not null} && reference.AssetReference.RuntimeKeyIsValid();
+			reference is {IsRuntimeKeyValid: true};
 
 		private static async UniTask<IList<T>> LoadAssetsAsync<T>(this IEnumerable<IAssetReference> references,
 			CancellationToken cancellationToken = default, IProgress<float> progress = null)
@@ -282,47 +235,6 @@ namespace AssetManagement
 				{
 					var asset = await reference.LoadAsync<T>(cancellationToken, assetProgress);
 					assets.Add(asset);
-					loaded.Add(reference);
-				}
-			}
-		}
-
-		private static async UniTask<IList<T>> LoadComponentsAsync<T>(this IEnumerable<ComponentReference> references,
-			CancellationToken cancellationToken = default, IProgress<float> progress = null)
-			where T : Component
-		{
-			using (ListPool<IAssetReference>.Get(out var loaded))
-			using (ListPool<UniTask>.Get(out var tasks))
-			using (ListPool<T>.Get(out var components))
-			{
-				var progressValues = progress != null ? new List<float>() : null;
-				foreach (var entry in references)
-				{
-					var progressIndex = progressValues?.Count ?? -1;
-					progressValues?.Add(0f);
-					tasks.Add(LoadComponentAsync(entry, CreateCollectionProgress(progress, progressValues, progressIndex)));
-				}
-
-				var isCanceled = await UniTask.WhenAll(tasks)
-					.SuppressCancellationThrow();
-
-				if (isCanceled)
-				{
-					foreach (var entry in loaded)
-					{
-						entry.Release();
-					}
-
-					cancellationToken.ThrowIfCancellationRequested();
-				}
-
-				progress?.Report(1f);
-				return components.ToArray();
-
-				async UniTask LoadComponentAsync(ComponentReference reference, IProgress<float> componentProgress)
-				{
-					var component = await reference.LoadAsync<T>(cancellationToken, componentProgress);
-					components.Add(component);
 					loaded.Add(reference);
 				}
 			}
