@@ -6,9 +6,7 @@
         "InAppPurchasing.Unity",
         "InAppPurchasing",
         "UnityEngine.Purchasing",
-        "Targeting",
         "InAppPurchasing.Fake",
-        "Logging",
         "UnityEditor.UI",
         "UnityEngine.UI",
         "WLog",
@@ -21,6 +19,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }
