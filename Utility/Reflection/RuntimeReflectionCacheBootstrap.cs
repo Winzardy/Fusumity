@@ -4,7 +4,7 @@ using Sapientia.Utility;
 using System.Linq;
 using UnityEngine;
 
-namespace Framework.Utilities.Client
+namespace Fusumity.Utilities.Client
 {
     public static class RuntimeReflectionCacheBootstrap
     {
