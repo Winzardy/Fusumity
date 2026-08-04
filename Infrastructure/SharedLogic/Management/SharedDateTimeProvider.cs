@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Fusumity.Utility;
 using Sapientia;
+using UnityEngine;
 
 namespace SharedLogic
 {
@@ -14,7 +15,22 @@ namespace SharedLogic
 		private DateTime _anchorDateTime;
 		private long _anchorTimestamp;
 
-		public DateTime SystemTime => GetNowTime() + _delta;
+		private int _cachedFrame = int.MinValue;
+		private DateTime _cachedSystemTime;
+
+		public DateTime SystemTime
+		{
+			get
+			{
+				var frame = Time.frameCount;
+				if (_cachedFrame == frame)
+					return _cachedSystemTime;
+
+				_cachedFrame = frame;
+				_cachedSystemTime = GetNowTime() + _delta;
+				return _cachedSystemTime;
+			}
+		}
 
 		public SharedDateTimeProvider()
 		{
@@ -34,6 +50,7 @@ namespace SharedLogic
 
 			_anchorDateTime = DateTime.UtcNow;
 			_anchorTimestamp = Stopwatch.GetTimestamp();
+			_cachedFrame = int.MinValue;
 
 			LocalSave.Save(LOCAL_SAVE_DELTA_CACHE_KEY, delta);
 		}
