@@ -15,12 +15,11 @@ namespace Content.ContextLabel.Editor
 	{
 		private const string NONE_MENU = "None";
 		private const int NONE_KEY = 0;
-
-		private const string ADD_MENU = "Add new";
-		private const int ADD_KEY = -1;
+		private const float SUFFIX_MARGIN = 16f;
 
 		private int _cacheKeyCount = -1;
 		private bool? _showedSelectorBeforeClick;
+		private bool _expanded;
 
 		private GUIPopupSelector<int> _selector;
 
@@ -109,18 +108,75 @@ namespace Content.ContextLabel.Editor
 				};
 			}
 
+			string labelByKey = null;
+			var hasLabel = currentCatalog.TryGet(selectedKey, out labelByKey);
+
+			// Если лейбл каталога не влезает рядом с полем — вместо наплыва текста прячем его
+			// в разворачивающийся блок, как переполнение перевода в LocKeyAttributeDrawer
+			var overflow = hasLabel && !FitsSuffix(textFieldPosition, label, selectedKey, labelByKey, style);
+
+			if (overflow)
+			{
+				var foldoutRect = textFieldPosition;
+				foldoutRect.width = SirenixEditorGUI.FoldoutWidth;
+				_expanded = SirenixEditorGUI.Foldout(foldoutRect, _expanded, GUIContent.none);
+
+				textFieldPosition.xMin += SirenixEditorGUI.FoldoutWidth;
+			}
+			else
+			{
+				_expanded = false;
+			}
+
 			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.IntField(textFieldPosition, label, selectedKey, style);
 			GUI.color = originalColor;
 
-			if (currentCatalog.TryGet(selectedKey, out var labelByKey))
-				FusumityEditorGUILayout.SuffixValue(label, selectedKey, labelByKey, style, EditorStyles.label);
+			if (hasLabel)
+			{
+				if (overflow)
+				{
+					if (SirenixEditorGUI.BeginFadeGroup(this, _expanded))
+					{
+						using (new GUILayout.HorizontalScope())
+						{
+							var textAreaStyle = new GUIStyle(GUI.skin.textArea);
+							var padding = textAreaStyle.padding;
+							padding.left += 3;
+							padding.top += 3;
+							padding.bottom = 4;
+							textAreaStyle.padding = padding;
+
+							GUILayout.TextArea(labelByKey, textAreaStyle);
+							var textAreaRect = GUILayoutUtility.GetLastRect();
+
+							EditorGUIUtility.AddCursorRect(textAreaRect, MouseCursor.Text);
+						}
+					}
+
+					SirenixEditorGUI.EndFadeGroup();
+				}
+				else
+				{
+					// Рект явно: под [ValueDropdown]/[InlineProperty] поле живёт с отступом,
+					// и суффикс должен считаться от него же
+					FusumityEditorGUILayout.SuffixValue(textFieldPosition, label, selectedKey, labelByKey, style,
+						EditorStyles.label);
+				}
+			}
 
 			if (!_selector.show)
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretDownFill);
 			else
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretUpFill);
+		}
 
-			CustomizeAddMenu();
+		// Насколько бы влез лейбл каталога рядом со значением поля (как в SuffixValue), без реальной отрисовки
+		private static bool FitsSuffix(Rect fieldRect, GUIContent label, int value, string suffixText, GUIStyle valueStyle)
+		{
+			var labelWidth = label.text.IsNullOrEmpty() ? 0f : EditorGUIUtility.labelWidth;
+			var available = fieldRect.width - labelWidth;
+			var occupied = valueStyle.CalcWidth(value.ToString()) + EditorStyles.miniLabel.CalcWidth(suffixText) + SUFFIX_MARGIN;
+			return occupied <= available;
 		}
 
 		private void TryResolveEntry()
@@ -129,22 +185,6 @@ namespace Content.ContextLabel.Editor
 				return;
 
 			ContentManager.TryGetEntry(Attribute.Catalog, out _contentEntry);
-		}
-
-		private void CustomizeAddMenu()
-		{
-			if (!_selector.TryGetMenuItemByValue(ADD_KEY, out var menuItem))
-				return;
-
-			menuItem.Icon = EditorIcons.Plus.Active;
-			var menuStyle = menuItem.Style;
-			menuItem.Style = new OdinMenuStyle
-			{
-				DefaultLabelStyle = new GUIStyle(menuStyle.DefaultLabelStyle),
-				SelectedLabelStyle = new GUIStyle(menuStyle.SelectedLabelStyle)
-			};
-			menuItem.Style.DefaultLabelStyle.normal.textColor = Color.grey;
-			menuItem.Style.SelectedInactiveColorLightSkin = Color.gray;
 		}
 
 		private void TryCreateSelector()
@@ -164,7 +204,7 @@ namespace Content.ContextLabel.Editor
 			using var _ = ListPool<int>.Get(out var keys);
 			foreach (var key in catalog.GetKeys())
 				keys.Add(key + 1);
-			keys.Add(ADD_KEY);
+
 			var selector = new GUIPopupSelector<int>(keys.ToArray(),
 				ValueEntry.SmartValue + 1,
 				HandleSelected,
@@ -173,17 +213,13 @@ namespace Content.ContextLabel.Editor
 					if (key == NONE_KEY)
 						return NONE_MENU;
 
-					if (key == ADD_KEY)
-						return ADD_MENU;
-
 					var i = key - 1;
 					return currentCatalog[i];
 				});
 
 			selector.SetSearchFunction(item =>
 			{
-				if (item.GetFullPath() == ADD_MENU ||
-					item.GetFullPath() == NONE_MENU)
+				if (item.GetFullPath() == NONE_MENU)
 					return false;
 
 				if (item?.Value == null)
@@ -201,6 +237,11 @@ namespace Content.ContextLabel.Editor
 				action = SelectAsset, icon = EditorIcons.List
 			});
 
+			selector.AddToolbarFunctionButtons(new FunctionButtonInfo
+			{
+				action = PromptAddNew, sdfIcon = SdfIconType.Plus
+			});
+
 			return selector;
 		}
 
@@ -209,19 +250,18 @@ namespace Content.ContextLabel.Editor
 			EditorGUIUtility.PingObject(Asset);
 		}
 
+		private void PromptAddNew()
+		{
+			_selector.SetSelection(ValueEntry.SmartValue + 1);
+			if (Asset != null)
+				GUIHelper.OpenInspectorWindow(Asset);
+			_selector?.Hide();
+		}
+
 		private void HandleSelected(int key)
 		{
 			if (key == NONE_KEY)
 				return;
-
-			if (key == ADD_KEY)
-			{
-				_selector.SetSelection(ValueEntry.SmartValue + 1);
-				if (Asset != null)
-					GUIHelper.OpenInspectorWindow(Asset);
-				_selector?.Hide();
-				return;
-			}
 
 			ValueEntry.WeakSmartValue = key - 1;
 		}

@@ -29,6 +29,18 @@ namespace Content.ContextLabel
 
 		public readonly IEnumerable<TKey> GetKeys() => _keyToLabel.Keys;
 
+#if UNITY_EDITOR
+		/// <summary>
+		/// Быстрое добавление ключа прямо из поля с [ContextLabel]: дровер видит незнакомый
+		/// ключ и предлагает завести его, не открывая ассет каталога
+		/// </summary>
+		public void SetEditor(TKey key, string label)
+		{
+			_keyToLabel ??= new SerializableDictionary<TKey, string>();
+			_keyToLabel[key] = label;
+		}
+#endif
+
 		public static implicit operator SerializableDictionary<TKey, string>(in ContextLabelCatalog<TKey> contextLabel) =>
 			contextLabel._keyToLabel;
 	}

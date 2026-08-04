@@ -151,7 +151,7 @@ namespace Fusumity.Editor
 		}
 
 		public static void FoldoutContainer(Func<Rect> header, Action body, ref bool foldout, object fadeGroupKey,
-			bool useIndentBody = false, bool useIndent = true)
+			bool useIndentBody = false, bool useIndent = true, bool animate = true)
 		{
 			var originalIndent = EditorGUI.indentLevel;
 
@@ -177,7 +177,12 @@ namespace Fusumity.Editor
 			GUI.enabled = true;
 			foldout = SirenixEditorGUI.Foldout(position, foldout, GUIContent.none);
 			GUI.enabled = origin;
-			if (SirenixEditorGUI.BeginFadeGroup(fadeGroupKey, foldout))
+
+			// Без анимации: пока идёт fade, высота строки плавает кадр от кадра, и у вложенных
+			// Odin Dictionary/ListDrawer (например ключ-словаря с AssetReference) крестик удаления
+			// записи на это время считается по разным rect'ам Layout/Repaint — раздваивается визуально
+			var visible = animate ? SirenixEditorGUI.BeginFadeGroup(fadeGroupKey, foldout) : foldout;
+			if (visible)
 			{
 				using (new GUILayout.VerticalScope())
 				{
@@ -197,7 +202,8 @@ namespace Fusumity.Editor
 				}
 			}
 
-			SirenixEditorGUI.EndFadeGroup();
+			if (animate)
+				SirenixEditorGUI.EndFadeGroup();
 
 			EditorGUI.indentLevel = originalIndent;
 		}
@@ -451,24 +457,37 @@ namespace Fusumity.Editor
 			}
 		};
 
+		/// <summary>
+		/// Рект поля берётся из последнего layout-контрола: верно, только если поле нарисовано
+		/// непосредственно перед вызовом и занимает всю строку. Под обёртками вроде [ValueDropdown]
+		/// или внутри [HorizontalGroup] это уже чужой рект — там зови перегрузку с явным
+		/// <paramref name="fieldRect"/>
+		/// </summary>
 		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
-			GUIStyle textStyle = null, float textOffset = 0)
+			GUIStyle textStyle = null, float textOffset = 0) =>
+			SuffixValue(GUILayoutUtility.GetLastRect(), label, value, text, valueStyle, textStyle, textOffset);
+
+		/// <inheritdoc cref="SuffixValue(GUIContent,object,string,GUIStyle,GUIStyle,float)"/>
+		public static void SuffixValue(Rect fieldRect, GUIContent label, object value, string text,
+			GUIStyle valueStyle = null, GUIStyle textStyle = null, float textOffset = 0)
 		{
 			valueStyle ??= EditorStyles.textField;
 
+			// Поле рисуется по отступу (внутри [InlineProperty], фолдаутов и прочей вложенности),
+			// а выданный рект — без него: без этого суффикс уезжает влево на 15px за уровень
+			// и наезжает на значение
+			fieldRect = EditorGUI.IndentedRect(fieldRect);
+
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
-			var width = valueStyle.CalcWidth(value.ToString());
-			var offset = width + textOffset + 0.5f;
+			var offset = valueStyle.CalcWidth(value?.ToString() ?? string.Empty) + textOffset + 0.5f;
 
 			if (!isEmptyLabel)
 				offset += GUIHelper.BetterLabelWidth;
 
-			var lastRect = GUILayoutUtility.GetLastRect();
 			textStyle ??= suffixLabelStyleCache;
-			width = textStyle.CalcWidth(text);
+			var width = textStyle.CalcWidth(text);
 
-			var labelRect = lastRect.AlignLeft(width, offset);
-			GUI.Label(labelRect, text, textStyle);
+			GUI.Label(fieldRect.AlignLeft(width, offset), text, textStyle);
 		}
 
 		public static void SuffixLabel(string text, bool overlay = true, Color? textColor = null, float offset = 4f)
