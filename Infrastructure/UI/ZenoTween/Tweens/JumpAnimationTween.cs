@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ namespace ZenoTween.Participant.Tweens
 		sourceAssembly: "Generic")]
 	public class JumpAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Transform root;
 
 		public bool useLocal;

@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UI;
@@ -18,6 +19,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		sourceAssembly: "UI")]
 	public class ScrollRectMoveAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public ScrollRect scroll;
 
 		public bool useToWatcher;

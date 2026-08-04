@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace ZenoTween.Participant.Tweens
 	[TypeRegistryItem(Icon = SdfIconType.ArrowsMove, CategoryPath = CATEGORY_PATH)]
 	public class MoveAnchoredPositionTween : AnimationTween
 	{
+		[NotNull]
 		public RectTransform rectTransform;
 
 		[Space]

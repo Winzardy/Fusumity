@@ -11,6 +11,7 @@ using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Utility;
+using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
@@ -402,7 +403,19 @@ namespace Content.Editor
 				logMessageFormatter,
 				errorMessageBuilder);
 			if (target == null)
+			{
+				if (failIfEmpty)
+				{
+					var errorMessage = FormatLogMessage(
+						$"Empty value [ {path} ] with [NotEmpty], [NotNull] or [Required] attribute",
+						logMessageFormatter);
+					AppendErrorMessage(errorMessageBuilder, errorMessage);
+					RecordError(errorMessage, logContext, path);
+					errorCount++;
+				}
+
 				return errorCount;
+			}
 
 			if (target is IContentReference reference)
 				return errorCount + ValidateContentReference(reference,
@@ -638,8 +651,11 @@ namespace Content.Editor
 					continue;
 				}
 
-				if (message.IsNullOrEmpty())
-					message = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+				if (message.Length == 0)
+				{
+					errorCount++;
+					continue;
+				}
 
 				var formattedMessage = FormatLogMessage(message, logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, formattedMessage);
@@ -848,7 +864,8 @@ namespace Content.Editor
 		{
 			return field.GetCustomAttribute<NotEmptyAttribute>() != null ||
 				field.GetCustomAttribute<JetBrains.Annotations.NotNullAttribute>() != null ||
-				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null;
+				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null ||
+				field.GetCustomAttribute<RequiredAttribute>() != null;
 		}
 
 		private static IEnumerable<FieldInfo> GetSerializableFields(Type type)

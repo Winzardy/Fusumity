@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		sourceAssembly: "UI")]
 	public class CanvasGroupAlphaAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public CanvasGroup group;
 
 		[PropertyRange(0, 1)]

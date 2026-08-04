@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -14,8 +15,13 @@ namespace ZenoTween.Participant.Tweens
 		private Vector2? _originalPos;
 		private Vector3? _originalScale;
 
+		[NotNull]
 		public RectTransform rectTransform;
+
+		[NotNull]
 		public CanvasGroup canvasGroup;
+
+		[NotNull]
 		public Image flashImage;
 
 		[Header("Shake")]
