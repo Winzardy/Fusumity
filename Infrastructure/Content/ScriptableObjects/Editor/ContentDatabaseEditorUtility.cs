@@ -21,11 +21,16 @@ namespace Content.ScriptableObjects.Editor
 	{
 		static ContentDatabaseCleanupOnStartup()
 		{
+#if !UNITY_EDITOR || !LIGHT_EDITOR_MODE_AGGRESSIVE
+			// Forces a full content-asset scan (ContentEditorCache.ClearAndRefreshScrObjs, ~thousands of
+			// assets) on every domain reload just to prune null entries from the databases. Skipped in
+			// Aggressive mode; databases just don't get their stray-null cleanup after each recompile.
 			EditorApplication.delayCall += () =>
 			{
 				foreach (var database in ContentDatabaseEditorUtility.Databases)
 					ContentDatabaseEditorUtility.RequestCleanup(database);
 			};
+#endif
 		}
 	}
 
