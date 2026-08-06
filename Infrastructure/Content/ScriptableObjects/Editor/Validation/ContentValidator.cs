@@ -19,7 +19,7 @@ namespace Content.Editor
 {
 	using UnityObject = UnityEngine.Object;
 
-	public static class ContentValidator
+	public static partial class ContentValidator
 	{
 		private const string TITLE = "Validate Content";
 
@@ -204,17 +204,10 @@ namespace Content.Editor
 								if (!scriptableObject.Enabled || scriptableObject.SkipValidation())
 									continue;
 
-								if (scriptableObject is IValidatable validatable)
-								{
-									if (!validatable.Validate(out var soMessage))
-									{
-										errorCount++;
-										AppendErrorMessage(errStringBuilder, soMessage);
-										RecordError(soMessage, scriptableObject, scriptableObject.name);
-									}
-								}
-
-								errorCount += ValidateContentReferences(scriptableObject, valueValidators, ref warningCount, errStringBuilder);
+								errorCount += ValidateScriptableObjectCore(scriptableObject,
+									valueValidators,
+									ref warningCount,
+									errStringBuilder);
 							}
 						}
 
@@ -342,6 +335,27 @@ namespace Content.Editor
 		private static void RecordWarning(string message, object context = null, string path = null)
 		{
 			_activeReport?.AddWarning(message, context as UnityObject, path);
+		}
+
+		/// <summary>
+		/// Полная проверка одного SO: собственный IValidatable плюс обход ссылок. Общая для
+		/// полной и точечной валидации
+		/// </summary>
+		private static int ValidateScriptableObjectCore(ContentScriptableObject scriptableObject,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount,
+			StringBuilder errorMessageBuilder)
+		{
+			var errorCount = 0;
+
+			if (scriptableObject is IValidatable validatable && !validatable.Validate(out var soMessage))
+			{
+				errorCount++;
+				AppendErrorMessage(errorMessageBuilder, soMessage);
+				RecordError(soMessage, scriptableObject, scriptableObject.name);
+			}
+
+			return errorCount + ValidateContentReferences(scriptableObject, valueValidators, ref warningCount, errorMessageBuilder);
 		}
 
 		private static int ValidateContentReferences(ContentScriptableObject scriptableObject,

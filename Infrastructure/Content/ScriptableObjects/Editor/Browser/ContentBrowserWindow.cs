@@ -62,8 +62,6 @@ namespace Content.Editor
 		private const float NAVIGATION_SCROLLBAR_HIT_WIDTH = 18f;
 		private const float NAVIGATION_SCROLLBAR_RESIZE_GAP = 4f;
 		private const float INSPECTOR_BOTTOM_PADDING = 10f;
-		private const string DOCUMENTATION_TOOLTIP_FORMAT = "Открыть документацию для типа: {0}";
-		private const string GENERATE_CONSTANTS_TOOLTIP_FORMAT = "Сгенерировать константы для типа: {0}";
 
 		// Ключи закреплённых баз/конфигов/категорий (хранятся в EditorPrefs)
 		private HashSet<string> _pinned;
@@ -74,7 +72,12 @@ namespace Content.Editor
 		private static readonly GUIContent SETTINGS_TOOLTIP = new(string.Empty, "Настройки Content Browser");
 		private static readonly GUIContent BACK_TOOLTIP = new(string.Empty, "Back");
 		private static readonly GUIContent FORWARD_TOOLTIP = new(string.Empty, "Forward");
-		private static readonly GUIContent DELETE_ASSET_TOOLTIP = new(string.Empty, "Удалить выбранный Asset");
+		private const int ACTIONS_POPUP_WIDTH = 220;
+
+		private static readonly GUIContent ACTIONS_TOOLTIP = new(string.Empty, "Действия: константы, документация, поиск ссылок, валидация, удаление");
+
+		private readonly ToolbarDropdown _actionsDropdown = new(SdfIconType.ListTask, ACTIONS_TOOLTIP);
+		private readonly ToolbarDropdown _settingsDropdown = new(SdfIconType.GearFill, SETTINGS_TOOLTIP);
 		private static readonly GUIContent CATEGORY_DELETE_MODE_TOOLTIP = new(string.Empty, "Выбрать конфиги для удаления");
 		private static readonly GUIContent APPLY_CATEGORY_DELETE_TOOLTIP = new(string.Empty, "Удалить выбранные конфиги");
 		private static readonly GUIContent CANCEL_CATEGORY_DELETE_TOOLTIP = new(string.Empty, "Отменить удаление");
@@ -1385,18 +1388,9 @@ namespace Content.Editor
 
 			GUILayout.FlexibleSpace();
 
-			if (selectedValue is ContentEntryScriptableObject selectedAsset)
-			{
-				DrawGenerateConstantsButton(selectedAsset.GetType(), selectedAsset.ValueType);
-				DrawDocumentationButton(selectedAsset.GetType(), selectedAsset.ValueType);
-				DrawReferenceSearchButton(selectedAsset);
-				DrawDeleteButton(selectedAsset, selectedItem);
-			}
-			else if (selectedValue is CategoryPage selectedCategoryPage)
-			{
-				DrawGenerateConstantsButton(selectedCategoryPage.ConfigType, selectedCategoryPage.ValueType);
-				DrawDocumentationButton(selectedCategoryPage.ConfigType, selectedCategoryPage.ValueType);
-			}
+			// Все действия по выделению — одним дропдауном, чтобы тулбар не распухал кнопками
+			if (selectedValue is ContentEntryScriptableObject or CategoryPage or ContentDatabaseScriptableObject)
+				DrawActionsDropdown(selectedValue, selectedItem);
 
 			DrawSettingsDropdown();
 
@@ -1426,37 +1420,219 @@ namespace Content.Editor
 
 		private void DrawSettingsDropdown()
 		{
-			if (!DrawToolbarButton(SdfIconType.GearFill, SETTINGS_TOOLTIP))
+			if (!_settingsDropdown.DrawButton())
 				return;
 
-			var menu = new GenericMenu();
-			menu.AddItem(new GUIContent("Sync Project Selection"), AutoSyncProjectSelection,
-				() => AutoSyncProjectSelection = !AutoSyncProjectSelection);
-			menu.AddItem(new GUIContent("Group by Id"), GroupByIdPath,
-				() => SetGroupByIdPath(!GroupByIdPath));
-			menu.AddItem(new GUIContent("Sort By Enabled"), SortByEnabled,
-				() => SetSortByEnabled(!SortByEnabled));
-			menu.AddItem(new GUIContent("Force Rebuild Browser"), false, ForceRebuild);
-			menu.ShowAsContext();
+			var actions = new List<BrowserAction>
+			{
+				new("Sync Project Selection", ToggleIcon(AutoSyncProjectSelection),
+					() => AutoSyncProjectSelection = !AutoSyncProjectSelection),
+				new("Group by Id", ToggleIcon(GroupByIdPath),
+					() => SetGroupByIdPath(!GroupByIdPath)),
+				new("Sort By Enabled", ToggleIcon(SortByEnabled),
+					() => SetSortByEnabled(!SortByEnabled)),
+				new("Force Rebuild Browser", SdfIconType.ArrowRepeat, ForceRebuild)
+			};
+
+			_settingsDropdown.Show(actions, ACTIONS_POPUP_WIDTH);
 		}
 
-		private void DrawReferenceSearchButton(ContentScriptableObject asset)
+		private static SdfIconType ToggleIcon(bool value)
+			=> value ? SdfIconType.ToggleOn : SdfIconType.ToggleOff;
+
+		/// <summary>Пункт дропдауна действий: лейбл + Sdf-иконка + сам экшен</summary>
+		private readonly struct BrowserAction
 		{
-			if (asset == null)
-				return;
+			public readonly string label;
+			public readonly SdfIconType icon;
+			public readonly Action action;
 
-			var tooltip = new GUIContent(string.Empty, ContentSearchProvider.GetFindReferencesTooltip(asset));
-			if (DrawToolbarButton(SdfIconType.FileEarmarkBreakFill, tooltip))
-				ContentSearchProvider.OpenReferenceSearch(asset);
+			public BrowserAction(string label, SdfIconType icon, Action action)
+			{
+				this.label = label;
+				this.icon = icon;
+				this.action = action;
+			}
 		}
 
-		private static void DrawDocumentationButton(Type configType, Type valueType)
+		/// <summary>
+		/// Кнопка-тугл в тулбаре с якорным попапом-списком под ней: нажатость, guard от
+		/// повторного открытия тем же кликом и позиционирование — общие для всех дропдаунов
+		/// </summary>
+		private sealed class ToolbarDropdown
+		{
+			private const double REOPEN_GUARD = 0.15;
+
+			private static readonly Color PRESSED_COLOR = new(1f, 1f, 1f, 0.14f);
+
+			private readonly SdfIconType _icon;
+			private readonly GUIContent _tooltip;
+
+			private Rect _buttonRect;
+			private OdinEditorWindow _popup;
+			private double _closedAt;
+
+			public ToolbarDropdown(SdfIconType icon, GUIContent tooltip)
+			{
+				_icon = icon;
+				_tooltip = tooltip;
+			}
+
+			/// <summary>Рисует кнопку; true — пора открывать попап</summary>
+			public bool DrawButton()
+			{
+				var clicked = SirenixEditorGUI.ToolbarButton(_icon);
+
+				// Рект берём только на Repaint: на событии клика GetLastRect отдаёт чужой рект,
+				// и попап открывался в случайном месте окна
+				if (Event.current.type == EventType.Repaint)
+				{
+					_buttonRect = GUILayoutUtility.GetLastRect();
+
+					// «Нажатость», пока попап жив. Рисуем ПОВЕРХ кнопки: у тулбарных кнопок
+					// непрозрачный фон, а второй bool у ToolbarButton — ignoreGUIEnabled, не selected
+					if (_popup != null)
+						SirenixEditorGUI.DrawSolidRect(_buttonRect, PRESSED_COLOR);
+				}
+
+				GUI.Label(_buttonRect, _tooltip);
+
+				if (!clicked)
+					return false;
+
+				// Тугл: клик при открытом списке сначала закрывает попап потерей фокуса —
+				// без защиты по времени тот же клик тут же открыл бы его заново
+				return EditorApplication.timeSinceStartup - _closedAt >= REOPEN_GUARD;
+			}
+
+			public void Show(List<BrowserAction> actions, float width)
+			{
+				var selector = new GenericSelector<BrowserAction>(null, false, action => action.label, actions);
+				selector.SelectionTree.Config.DrawSearchToolbar = false;
+				selector.EnableSingleClickToSelect();
+
+				foreach (var item in selector.SelectionTree.EnumerateTree())
+				{
+					if (item.Value is BrowserAction action)
+						item.SdfIcon = action.icon;
+				}
+
+				selector.SelectionConfirmed += HandleSelection;
+
+				// Якорим под кнопкой, правым краем к ней. Рект — в GUI-координатах: Odin сам
+				// конвертирует его в экранные
+				var anchor = _buttonRect;
+				anchor.xMin = anchor.xMax - width;
+
+				_popup = selector.ShowInPopup(anchor, width);
+				_popup.OnClose += HandlePopupClosed;
+
+				// Иначе нажатое состояние кнопки не отрисуется, пока фокус в попапе
+				GUIHelper.RequestRepaint();
+			}
+
+			private static void HandleSelection(IEnumerable<BrowserAction> selection)
+			{
+				foreach (var action in selection)
+				{
+					action.action?.Invoke();
+					break;
+				}
+			}
+
+			private void HandlePopupClosed()
+			{
+				_popup = null;
+				_closedAt = EditorApplication.timeSinceStartup;
+			}
+		}
+
+		private void DrawActionsDropdown(object selectedValue, OdinMenuItem selectedItem)
+		{
+			if (!_actionsDropdown.DrawButton())
+				return;
+
+			// Не пул: попап живёт дольше кадра, список уходит в его коллбэки
+			var actions = new List<BrowserAction>();
+			FillActions(actions, selectedValue, selectedItem);
+			_actionsDropdown.Show(actions, ACTIONS_POPUP_WIDTH);
+		}
+
+		private void FillActions(List<BrowserAction> actions, object selectedValue, OdinMenuItem selectedItem)
+		{
+			switch (selectedValue)
+			{
+				case ContentEntryScriptableObject asset:
+					AddGenerateConstantsAction(actions, asset.GetType(), asset.ValueType);
+					AddDocumentationAction(actions, asset.GetType(), asset.ValueType);
+					actions.Add(new BrowserAction("Find References", SdfIconType.FileEarmarkBreakFill,
+						() => ContentSearchProvider.OpenReferenceSearch(asset)));
+					actions.Add(new BrowserAction("Validate", SdfIconType.ClipboardCheck,
+						() => ContentValidator.ValidateAsset(asset)));
+
+					if (!_creating)
+						actions.Add(new BrowserAction("Delete", SdfIconType.TrashFill,
+							() => TryDeleteAsset(asset, selectedItem)));
+
+					break;
+
+				case CategoryPage page:
+					AddGenerateConstantsAction(actions, page.ConfigType, page.ValueType);
+					AddDocumentationAction(actions, page.ConfigType, page.ValueType);
+					actions.Add(new BrowserAction("Validate All", SdfIconType.ClipboardCheck,
+						() => ValidatePage(page.Database, page.ConfigType)));
+					break;
+
+				case ContentDatabaseScriptableObject database:
+					actions.Add(new BrowserAction("Validate All", SdfIconType.ClipboardCheck,
+						() => ValidatePage(database, configType: null)));
+					break;
+			}
+		}
+
+		private void AddGenerateConstantsAction(List<BrowserAction> actions, Type configType, Type valueType)
+		{
+			if (_creating || !HasContentGeneration(configType, valueType))
+				return;
+
+			actions.Add(new BrowserAction("Generate Constants", SdfIconType.Magic,
+				() => GenerateConstants(valueType)));
+		}
+
+		private static void AddDocumentationAction(List<BrowserAction> actions, Type configType, Type valueType)
 		{
 			if (!TryGetDocumentationUrl(configType, valueType, out var url))
 				return;
 
-			if (DrawToolbarButton(SdfIconType.JournalBookmarkFill, GetDocumentationTooltip(valueType)))
-				Help.BrowseURL(url);
+			actions.Add(new BrowserAction("Open Documentation", SdfIconType.JournalBookmarkFill,
+				() => Help.BrowseURL(url)));
+		}
+
+		/// <summary>
+		/// Точечная валидация страницы: конфиги базы, при заданном типе — только категория
+		/// </summary>
+		private static void ValidatePage(ContentDatabaseScriptableObject database, Type configType)
+		{
+			if (database == null)
+				return;
+
+			using (ListPool<UnityEngine.Object>.Get(out var targets))
+			{
+				var scriptableObjects = database.scriptableObjects;
+
+				for (var i = 0; i < (scriptableObjects?.Count ?? 0); i++)
+				{
+					var scriptableObject = scriptableObjects[i];
+
+					if (!scriptableObject)
+						continue;
+
+					if (configType == null || configType.IsInstanceOfType(scriptableObject))
+						targets.Add(scriptableObject);
+				}
+
+				ContentValidator.ValidateAssets(targets, out _);
+			}
 		}
 
 		private static bool TryGetDocumentationUrl(Type configType, Type valueType, out string url)
@@ -1482,27 +1658,6 @@ namespace Content.Editor
 			return !url.IsNullOrEmpty();
 		}
 
-		private void DrawGenerateConstantsButton(Type configType, Type valueType)
-		{
-			if (!HasContentGeneration(configType, valueType))
-				return;
-
-			EditorGUI.BeginDisabledGroup(_creating);
-
-			if (DrawToolbarButton(SdfIconType.Magic, GetGenerateConstantsTooltip(valueType)))
-				GenerateConstants(valueType);
-
-			EditorGUI.EndDisabledGroup();
-		}
-
-		private static GUIContent GetDocumentationTooltip(Type type) =>
-			new(string.Empty, DOCUMENTATION_TOOLTIP_FORMAT.Format(GetTooltipTypeName(type)));
-
-		private static GUIContent GetGenerateConstantsTooltip(Type type) =>
-			new(string.Empty, GENERATE_CONSTANTS_TOOLTIP_FORMAT.Format(GetTooltipTypeName(type)));
-
-		private static string GetTooltipTypeName(Type type) => type != null ? type.GetNiceName() : "Unknown";
-
 		private static bool HasContentGeneration(Type configType, Type valueType)
 		{
 			return valueType != null && valueType.HasAttribute<ConstantsAttribute>() ||
@@ -1515,16 +1670,6 @@ namespace Content.Editor
 				return;
 
 			ContentConstantGenerator.Generate(type, ContentDatabaseEditorUtility.GetScriptableObjectsByType(type), fullLog: true);
-		}
-
-		private void DrawDeleteButton(ContentEntryScriptableObject asset, OdinMenuItem selectedItem)
-		{
-			EditorGUI.BeginDisabledGroup(_creating || asset == null);
-
-			if (DrawToolbarButton(SdfIconType.TrashFill, DELETE_ASSET_TOOLTIP))
-				TryDeleteAsset(asset, selectedItem);
-
-			EditorGUI.EndDisabledGroup();
 		}
 
 		private static bool DrawToolbarButton(SdfIconType icon, GUIContent tooltip)

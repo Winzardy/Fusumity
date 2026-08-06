@@ -30,6 +30,12 @@ namespace Content.Editor
 		private ContentValidationReport _report;
 		private int _reportGeneration = -1;
 
+		// Свои пустые массивы у каждого списка: Array.Empty<T>() — общий синглтон, и Odin,
+		// встретив один и тот же инстанс во втором поле, рисует «Reference to _errorRows»
+		// вместо списка. List.ToArray() на пустом списке отдаёт тот же синглтон
+		private static readonly ContentValidationReportRow[] EMPTY_ERROR_ROWS = new ContentValidationReportRow[0];
+		private static readonly ContentValidationReportRow[] EMPTY_WARNING_ROWS = new ContentValidationReportRow[0];
+
 		[ShowInInspector, Searchable, PropertyOrder(0)]
 		[ShowIf(nameof(ShowErrors))]
 		[LabelText("@ErrorsLabel")]
@@ -39,7 +45,7 @@ namespace Content.Editor
 			HideAddButton = true,
 			HideRemoveButton = true,
 			DraggableItems = false)]
-		private ContentValidationReportRow[] _errorRows = Array.Empty<ContentValidationReportRow>();
+		private ContentValidationReportRow[] _errorRows = EMPTY_ERROR_ROWS;
 
 		[ShowInInspector, Searchable, PropertyOrder(1), PropertySpace(4)]
 		[ShowIf(nameof(ShowWarnings))]
@@ -50,7 +56,7 @@ namespace Content.Editor
 			HideAddButton = true,
 			HideRemoveButton = true,
 			DraggableItems = false)]
-		private ContentValidationReportRow[] _warningRows = Array.Empty<ContentValidationReportRow>();
+		private ContentValidationReportRow[] _warningRows = EMPTY_WARNING_ROWS;
 
 		private bool ShowErrors { get => (_severityFilter & SeverityFilter.Errors) != 0; }
 		private bool ShowWarnings { get => (_severityFilter & SeverityFilter.Warnings) != 0; }
@@ -221,8 +227,8 @@ namespace Content.Editor
 			{
 				_report = null;
 				_reportGeneration = -1;
-				_errorRows = Array.Empty<ContentValidationReportRow>();
-				_warningRows = Array.Empty<ContentValidationReportRow>();
+				_errorRows = EMPTY_ERROR_ROWS;
+				_warningRows = EMPTY_WARNING_ROWS;
 				return;
 			}
 
@@ -243,8 +249,8 @@ namespace Content.Editor
 						warningRows.Add(row);
 				}
 
-				_errorRows = errorRows.ToArray();
-				_warningRows = warningRows.ToArray();
+				_errorRows = errorRows.Count > 0 ? errorRows.ToArray() : EMPTY_ERROR_ROWS;
+				_warningRows = warningRows.Count > 0 ? warningRows.ToArray() : EMPTY_WARNING_ROWS;
 			}
 
 			_report = report;
