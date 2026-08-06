@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
+using Fusumity.Reactive;
 using Fusumity.Utility;
 using Sapientia;
-using UnityEngine;
 
 namespace SharedLogic
 {
@@ -22,7 +22,9 @@ namespace SharedLogic
 		{
 			get
 			{
-				var frame = Time.frameCount;
+				// UnityLifecycle.FrameCount, а не Time.frameCount: тот бросает вне мейн-треда,
+				// а время симуляции читают и из фоновых потоков
+				var frame = UnityLifecycle.FrameCount;
 				if (_cachedFrame == frame)
 					return _cachedSystemTime;
 
