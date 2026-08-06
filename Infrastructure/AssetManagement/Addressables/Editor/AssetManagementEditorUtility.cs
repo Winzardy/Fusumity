@@ -210,7 +210,16 @@ namespace AssetManagement.AddressableAssets.Editor
 			}
 		}
 
-		public static AddressableAssetEntry MakeAddressable(this Object obj,
+		public static void MakeAddressable(this Object obj,
+			string groupName = null,
+			string addressName = null,
+			string labelName = null,
+			bool createGroupIfNonExistent = false)
+		{
+			AssetManagementEditorUtility.CreateAddressable(obj, groupName, addressName, labelName, createGroupIfNonExistent);
+		}
+
+		public static AddressableAssetEntry MakeAddressableWithEntry(this Object obj,
 			string groupName = null,
 			string addressName = null,
 			string labelName = null,
@@ -240,7 +249,7 @@ namespace AssetManagement.AddressableAssets.Editor
 			bool createGroupIfNonExistent = false)
 		{
 			return asset
-				.MakeAddressable(groupName, addressName, labelName, createGroupIfNonExistent)
+				.MakeAddressableWithEntry(groupName, addressName, labelName, createGroupIfNonExistent)
 				.MakeReference();
 		}
 
