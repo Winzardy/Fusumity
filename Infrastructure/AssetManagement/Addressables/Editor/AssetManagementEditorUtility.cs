@@ -216,16 +216,19 @@ namespace AssetManagement.AddressableAssets.Editor
 			string labelName = null,
 			bool createGroupIfNonExistent = false)
 		{
-			AssetManagementEditorUtility.CreateAddressable(obj, groupName, addressName, labelName, createGroupIfNonExistent);
+			MakeAddressableWithEntry(obj, out _, groupName, addressName, labelName, createGroupIfNonExistent);
 		}
 
-		public static AddressableAssetEntry MakeAddressableWithEntry(this Object obj,
+		// Именно отдельное имя, а не перегрузка MakeAddressable: одноимённые перегрузки
+		// участвуют в overload resolution все сразу, и вызывающей сборке пришлось бы
+		// ссылаться на Unity.Addressables.Editor ради AddressableAssetEntry в сигнатуре
+		public static void MakeAddressableWithEntry(this Object obj, out AddressableAssetEntry entry,
 			string groupName = null,
 			string addressName = null,
 			string labelName = null,
 			bool createGroupIfNonExistent = false)
 		{
-			return AssetManagementEditorUtility.CreateAddressable(obj, groupName, addressName, labelName, createGroupIfNonExistent);
+			entry = AssetManagementEditorUtility.CreateAddressable(obj, groupName, addressName, labelName, createGroupIfNonExistent);
 		}
 
 		public static AssetReference MakeReference(this AddressableAssetEntry entry) => AssetManagementEditorUtility.CreateReference(entry);
@@ -248,9 +251,8 @@ namespace AssetManagement.AddressableAssets.Editor
 			string labelName = null,
 			bool createGroupIfNonExistent = false)
 		{
-			return asset
-				.MakeAddressableWithEntry(groupName, addressName, labelName, createGroupIfNonExistent)
-				.MakeReference();
+			asset.MakeAddressableWithEntry(out var entry, groupName, addressName, labelName, createGroupIfNonExistent);
+			return entry.MakeReference();
 		}
 
 		public static bool TryGetAddressableEntry(this AssetReference reference, out AddressableAssetEntry entry)
