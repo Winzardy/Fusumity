@@ -26,6 +26,18 @@ namespace UI
 		public event Action StyleChanged;
 		public event Action InteractableChanged;
 
+		public UIAnemicStatefulButtonViewModel()
+		{
+		}
+
+		public UIAnemicStatefulButtonViewModel(Action action, bool createLabel = true)
+		{
+			if (createLabel)
+				_label = new LabelViewModel();
+
+			ClickAction = action;
+		}
+
 		public void Click()
 		{
 			ClickAction?.Invoke();
