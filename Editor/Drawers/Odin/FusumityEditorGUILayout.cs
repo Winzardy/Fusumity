@@ -464,19 +464,20 @@ namespace Fusumity.Editor
 		/// <paramref name="fieldRect"/>
 		/// </summary>
 		public static void SuffixValue(GUIContent label, object value, string text, GUIStyle valueStyle = null,
-			GUIStyle textStyle = null, float textOffset = 0) =>
-			SuffixValue(GUILayoutUtility.GetLastRect(), label, value, text, valueStyle, textStyle, textOffset);
+			GUIStyle textStyle = null, float textOffset = 0, bool indent = true) =>
+			SuffixValue(GUILayoutUtility.GetLastRect(), label, value, text, valueStyle, textStyle, textOffset, indent);
 
 		/// <inheritdoc cref="SuffixValue(GUIContent,object,string,GUIStyle,GUIStyle,float)"/>
 		public static void SuffixValue(Rect fieldRect, GUIContent label, object value, string text,
-			GUIStyle valueStyle = null, GUIStyle textStyle = null, float textOffset = 0)
+			GUIStyle valueStyle = null, GUIStyle textStyle = null, float textOffset = 0, bool indent = true)
 		{
 			valueStyle ??= EditorStyles.textField;
 
 			// Поле рисуется по отступу (внутри [InlineProperty], фолдаутов и прочей вложенности),
 			// а выданный рект — без него: без этого суффикс уезжает влево на 15px за уровень
 			// и наезжает на значение
-			fieldRect = EditorGUI.IndentedRect(fieldRect);
+			if (indent)
+				fieldRect = EditorGUI.IndentedRect(fieldRect);
 
 			var isEmptyLabel = label == null || label == GUIContent.none || label.text.IsNullOrEmpty();
 			var offset = valueStyle.CalcWidth(value?.ToString() ?? string.Empty) + textOffset + 0.5f;

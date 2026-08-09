@@ -24,7 +24,7 @@ namespace Fusumity.Editor.Drawers
 			FusumityEditorGUILayout.SuffixValue(
 				Attribute.Label ?? label,
 				Property.ValueEntry.WeakSmartValue,
-				_valueResolver.GetValue()
+				_valueResolver.GetValue(), indent: false
 			);
 		}
 	}

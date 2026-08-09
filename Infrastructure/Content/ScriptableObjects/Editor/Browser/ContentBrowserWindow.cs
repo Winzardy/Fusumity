@@ -1425,33 +1425,38 @@ namespace Content.Editor
 
 			var actions = new List<BrowserAction>
 			{
-				new("Sync Project Selection", ToggleIcon(AutoSyncProjectSelection),
-					() => AutoSyncProjectSelection = !AutoSyncProjectSelection),
-				new("Group by Id", ToggleIcon(GroupByIdPath),
-					() => SetGroupByIdPath(!GroupByIdPath)),
-				new("Sort By Enabled", ToggleIcon(SortByEnabled),
-					() => SetSortByEnabled(!SortByEnabled)),
+				new("Sync Project Selection", SdfIconType.ToggleOn,
+					() => AutoSyncProjectSelection = !AutoSyncProjectSelection,
+					() => AutoSyncProjectSelection),
+				new("Group by Id", SdfIconType.ToggleOn,
+					() => SetGroupByIdPath(!GroupByIdPath),
+					() => GroupByIdPath),
+				new("Sort By Enabled", SdfIconType.ToggleOn,
+					() => SetSortByEnabled(!SortByEnabled),
+					() => SortByEnabled),
 				new("Force Rebuild Browser", SdfIconType.ArrowRepeat, ForceRebuild)
 			};
 
 			_settingsDropdown.Show(actions, ACTIONS_POPUP_WIDTH);
 		}
 
-		private static SdfIconType ToggleIcon(bool value)
-			=> value ? SdfIconType.ToggleOn : SdfIconType.ToggleOff;
-
-		/// <summary>Пункт дропдауна действий: лейбл + Sdf-иконка + сам экшен</summary>
+		/// <summary>
+		/// Пункт дропдауна: лейбл + Sdf-иконка + экшен. С заданным isOn — тумблер: клик
+		/// не закрывает попап, а переключает состояние на месте
+		/// </summary>
 		private readonly struct BrowserAction
 		{
 			public readonly string label;
 			public readonly SdfIconType icon;
 			public readonly Action action;
+			public readonly Func<bool> isOn;
 
-			public BrowserAction(string label, SdfIconType icon, Action action)
+			public BrowserAction(string label, SdfIconType icon, Action action, Func<bool> isOn = null)
 			{
 				this.label = label;
 				this.icon = icon;
 				this.action = action;
+				this.isOn = isOn;
 			}
 		}
 
@@ -1507,43 +1512,143 @@ namespace Content.Editor
 
 			public void Show(List<BrowserAction> actions, float width)
 			{
-				var selector = new GenericSelector<BrowserAction>(null, false, action => action.label, actions);
-				selector.SelectionTree.Config.DrawSearchToolbar = false;
-				selector.EnableSingleClickToSelect();
-
-				foreach (var item in selector.SelectionTree.EnumerateTree())
-				{
-					if (item.Value is BrowserAction action)
-						item.SdfIcon = action.icon;
-				}
-
-				selector.SelectionConfirmed += HandleSelection;
-
 				// Якорим под кнопкой, правым краем к ней. Рект — в GUI-координатах: Odin сам
 				// конвертирует его в экранные
 				var anchor = _buttonRect;
 				anchor.xMin = anchor.xMax - width;
 
-				_popup = selector.ShowInPopup(anchor, width);
+				var content = new DropdownContent(actions);
+				var size = new Vector2(width, content.Height);
+
+				_popup = OdinEditorWindow.InspectObjectInDropDown(content, anchor, size);
 				_popup.OnClose += HandlePopupClosed;
+				content.window = _popup;
+
+				// Ховер строк без движения мыши не перерисуется
+				_popup.wantsMouseMove = true;
 
 				// Иначе нажатое состояние кнопки не отрисуется, пока фокус в попапе
 				GUIHelper.RequestRepaint();
-			}
-
-			private static void HandleSelection(IEnumerable<BrowserAction> selection)
-			{
-				foreach (var action in selection)
-				{
-					action.action?.Invoke();
-					break;
-				}
 			}
 
 			private void HandlePopupClosed()
 			{
 				_popup = null;
 				_closedAt = EditorApplication.timeSinceStartup;
+			}
+		}
+
+		/// <summary>
+		/// Начинка попапа: строки рисуются вручную — GenericSelector закрывается на любом
+		/// выборе, а тумблерам нужно переключаться, не закрывая попап
+		/// </summary>
+		private sealed class DropdownContent
+		{
+			private const float ROW_HEIGHT = 24f;
+			private const float ICON_SIZE = 16f;
+			private const float TOGGLE_ICON_SIZE = 26f;
+			private const float LEFT_PADDING = 8f;
+			private const float ICON_LABEL_SPACING = 8f;
+
+			private static readonly Color HOVER_COLOR = new(1f, 1f, 1f, 0.08f);
+			private static readonly Color TOGGLE_ON_COLOR = new(0.35f, 0.65f, 1f);
+			private static readonly Color TOGGLE_OFF_COLOR = new(0.55f, 0.55f, 0.55f);
+
+			private static Texture2D _toggleOnTexture;
+			private static Texture2D _toggleOffTexture;
+			private static GUIStyle _labelStyle;
+
+			private readonly List<BrowserAction> _actions;
+
+			internal OdinEditorWindow window;
+
+			public DropdownContent(List<BrowserAction> actions)
+			{
+				_actions = actions;
+			}
+
+			public float Height => _actions.Count * ROW_HEIGHT + 8f;
+
+			[OnInspectorGUI]
+			private void Draw()
+			{
+				var currentEvent = Event.current;
+
+				for (var i = 0; i < _actions.Count; i++)
+				{
+					var action = _actions[i];
+					var rect = GUILayoutUtility.GetRect(0, ROW_HEIGHT, GUILayout.ExpandWidth(true));
+					var hover = rect.Contains(currentEvent.mousePosition);
+					var isToggle = action.isOn != null;
+
+					if (currentEvent.type == EventType.Repaint)
+					{
+						if (hover)
+							SirenixEditorGUI.DrawSolidRect(rect, HOVER_COLOR);
+
+						// Тумблер заметно крупнее иконок-действий — иначе строки читаются
+						// одинаково и переключатель принимают за действие
+						var size = isToggle ? TOGGLE_ICON_SIZE : ICON_SIZE;
+						var iconRect = new Rect(
+							rect.x + LEFT_PADDING + (TOGGLE_ICON_SIZE - size) * 0.5f,
+							rect.y + (rect.height - size) * 0.5f,
+							size,
+							size);
+
+						if (isToggle)
+							GUI.DrawTexture(iconRect, ToggleTexture(action.isOn()), ScaleMode.ScaleToFit);
+						else
+							SdfIcons.DrawIcon(iconRect, action.icon);
+
+						var labelRect = new Rect(
+							rect.x + LEFT_PADDING + TOGGLE_ICON_SIZE + ICON_LABEL_SPACING,
+							rect.y,
+							rect.width - LEFT_PADDING - TOGGLE_ICON_SIZE - ICON_LABEL_SPACING,
+							rect.height);
+
+						GUI.Label(labelRect, action.label, LabelStyle());
+					}
+
+					if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && hover)
+					{
+						currentEvent.Use();
+						action.action?.Invoke();
+
+						// Тумблер живёт в открытом попапе, действие попап закрывает
+						if (isToggle)
+							GUIHelper.RequestRepaint();
+						else
+							window?.Close();
+					}
+				}
+
+				if (currentEvent.type == EventType.MouseMove)
+					GUIHelper.RequestRepaint();
+			}
+
+			private static Texture2D ToggleTexture(bool value)
+			{
+				ref var cached = ref value ? ref _toggleOnTexture : ref _toggleOffTexture;
+
+				if (cached != null)
+					return cached;
+
+				// 52px под retina: SDF-текстура в размер рендерится мыльно
+				cached = SdfIcons.CreateTransparentIconTexture(
+					value ? SdfIconType.ToggleOn : SdfIconType.ToggleOff,
+					value ? TOGGLE_ON_COLOR : TOGGLE_OFF_COLOR,
+					52, 52, 0);
+				cached.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+
+				return cached;
+			}
+
+			private static GUIStyle LabelStyle()
+			{
+				return _labelStyle ??= new GUIStyle(EditorStyles.label)
+				{
+					alignment = TextAnchor.MiddleLeft
+				};
 			}
 		}
 
