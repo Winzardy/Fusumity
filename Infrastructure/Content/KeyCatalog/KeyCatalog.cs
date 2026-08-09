@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Fusumity.Collections;
 using UnityEngine;
 
-namespace Content.ContextLabel
+namespace Content.Keys
 {
-	public interface IContextLabelCatalog
+	public interface IKeyCatalog
 	{
 		public Type Type { get; }
 	}
@@ -13,7 +13,7 @@ namespace Content.ContextLabel
 	// TODO: добавить подсветку одинаковых label's
 	[Serializable]
 	[Constants]
-	public struct ContextLabelCatalog<TKey> : IContextLabelCatalog
+	public struct KeyCatalog<TKey> : IKeyCatalog
 	{
 		[SerializeField]
 		private SerializableDictionary<TKey, string> _keyToLabel;
@@ -31,7 +31,7 @@ namespace Content.ContextLabel
 
 #if UNITY_EDITOR
 		/// <summary>
-		/// Быстрое добавление ключа прямо из поля с [ContextLabel]: дровер видит незнакомый
+		/// Быстрое добавление ключа прямо из поля с [Key]: дровер видит незнакомый
 		/// ключ и предлагает завести его, не открывая ассет каталога
 		/// </summary>
 		public void SetEditor(TKey key, string label)
@@ -41,7 +41,7 @@ namespace Content.ContextLabel
 		}
 #endif
 
-		public static implicit operator SerializableDictionary<TKey, string>(in ContextLabelCatalog<TKey> contextLabel) =>
-			contextLabel._keyToLabel;
+		public static implicit operator SerializableDictionary<TKey, string>(in KeyCatalog<TKey> catalog) =>
+			catalog._keyToLabel;
 	}
 }

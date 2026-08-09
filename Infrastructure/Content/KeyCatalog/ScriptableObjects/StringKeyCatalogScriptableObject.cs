@@ -1,11 +1,13 @@
 using System.Collections.Generic;
-using Content.ContextLabel;
+using Content.Keys;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace Content.ScriptableObjects
 {
-	[CreateAssetMenu(menuName = ContentMenuConstants.CREATE_MENU + "Misc/Label/String Catalog", fileName = "ContextLabels_String_New")]
-	public class ContextLabelStringCatalogScriptableObject : ContentEntryScriptableObject<ContextLabelCatalog<string>>
+	[CreateAssetMenu(menuName = ContentMenuConstants.CREATE_MENU + "Misc/Key Catalog/String", fileName = "KeyCatalog_String_New")]
+	[MovedFrom(true, sourceClassName: "ContextLabelStringCatalogScriptableObject")]
+	public class StringKeyCatalogScriptableObject : ContentEntryScriptableObject<KeyCatalog<string>>
 	{
 		public override bool UseConstants { get => true; }
 

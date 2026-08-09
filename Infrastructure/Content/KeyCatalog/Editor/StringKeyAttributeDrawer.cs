@@ -12,13 +12,12 @@ using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace Content.ContextLabel.Editor
+namespace Content.Keys.Editor
 {
-	[CustomPropertyDrawer(typeof(ContextLabelAttribute))]
-	public class ContextLabelStringAttributeDrawer : OdinAttributeDrawer<ContextLabelAttribute, string>
+	[CustomPropertyDrawer(typeof(KeyAttribute))]
+	public class StringKeyAttributeDrawer : OdinAttributeDrawer<KeyAttribute, string>
 	{
 		private const string NONE_MENU = "None";
-		private const float SUFFIX_MARGIN = 16f;
 
 		private const float PEN_SIZE = 11f;
 		private const float PEN_MARGIN = 19f;
@@ -27,10 +26,22 @@ namespace Content.ContextLabel.Editor
 		private bool? _showedSelectorBeforeClick;
 		private bool _expanded;
 
+		private bool _isDictionaryKey;
+
+		// Запас на переключение «влезает/не влезает»: у самого порога решение иначе щёлкает
+		// от любого изменения ширины строки (например, когда появляется скроллбар), и поле
+		// дёргается на ширину фолдаута — заодно за компанию с соседними такими же
+		private const float OVERFLOW_HYSTERESIS = 16f;
+
+		// Переполнение решается на Layout и держится весь кадр, ширина строки — замер прошлого
+		// не-Layout прохода: иначе состав layout-контролов расходится между Layout и Repaint
+		private bool _overflow;
+		private float _rowWidth;
+
 		private GUIPopupSelector<string> _selector;
 
-		private UniqueContentEntry<ContextLabelCatalog<string>> _contentEntry;
-		private ref readonly ContextLabelCatalog<string> currentCatalog => ref _contentEntry.Value;
+		private UniqueContentEntry<KeyCatalog<string>> _contentEntry;
+		private ref readonly KeyCatalog<string> currentCatalog => ref _contentEntry.Value;
 
 		private ScriptableObject Asset => _contentEntry is IScriptableContentEntry scriptableObjectEntry
 			? scriptableObjectEntry.ScriptableObject
@@ -39,6 +50,27 @@ namespace Content.ContextLabel.Editor
 		protected override void Initialize()
 		{
 			TryResolveEntry();
+			_isDictionaryKey = IsDictionaryKey();
+		}
+
+		/// <summary>
+		/// Поле — ключ строки словаря (EditableKeyValuePair): смена ключа заставляет Odin
+		/// пересобрать строку, поэтому писать значение на каждый символ нельзя
+		/// </summary>
+		private bool IsDictionaryKey()
+		{
+			for (var current = Property; current?.Parent != null; current = current.Parent)
+			{
+				var parentType = current.Parent.ValueEntry?.TypeOfValue;
+
+				if (parentType == null || !parentType.IsGenericType ||
+					parentType.GetGenericTypeDefinition() != typeof(EditableKeyValuePair<,>))
+					continue;
+
+				return current.Name == "Key";
+			}
+
+			return false;
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
@@ -49,7 +81,8 @@ namespace Content.ContextLabel.Editor
 				if (_contentEntry == null)
 				{
 					if (!ContentManager.initializing)
-						SirenixEditorGUI.WarningMessageBox($"Not found catalog (int) by id [ {Attribute.Catalog} ] ");
+						KeyCatalogCreator.DrawMissingCatalogBox(Attribute.CatalogId, "string",
+							typeof(KeyCatalog<string>), TryResolveEntry);
 					CallNextDrawer(label);
 					return;
 				}
@@ -70,8 +103,9 @@ namespace Content.ContextLabel.Editor
 			var isEmpty = selectedKey.IsNullOrEmpty();
 			var contains = !isEmpty && currentCatalog.Contains(selectedKey);
 
-			// [CanBeEmpty] на самом поле или на поле-контейнере — пустой ключ здесь не ошибка,
-			// жёлтым подсвечиваем только реально невалидный (непустой, но не из каталога) ключ
+			// [CanBeEmpty] на самом поле или на поле-контейнере (например CosmeticId в сокете) —
+			// пустой ключ здесь не ошибка, жёлтым подсвечиваем только реально невалидный
+			// (непустой, но не из каталога) ключ
 			var acceptableEmpty = isEmpty && (Property.GetAttribute<CanBeEmptyAttribute>() != null ||
 				Property.ParentValueProperty?.GetAttribute<CanBeEmptyAttribute>() != null);
 			label ??= new GUIContent();
@@ -135,9 +169,28 @@ namespace Content.ContextLabel.Editor
 			string labelByKey = null;
 			var hasLabel = !selectedKey.IsNullOrEmpty() && currentCatalog.TryGet(selectedKey, out labelByKey);
 
+			// Заглушечный рект 1x1 приходит не только на Layout: у временных пар словаря ({temp})
+			// и в первых кадрах попапов ширина тоже единица. По такой мерке «влезает/не влезает»
+			// металось кадр за кадром — берём только осмысленную ширину
+			if (textFieldPosition.width > 1f)
+				_rowWidth = textFieldPosition.width;
+
 			// Если лейбл каталога не влезает рядом с полем — вместо наплыва текста прячем его
-			// в разворачивающийся блок, как переполнение перевода в LocKeyAttributeDrawer
-			var overflow = hasLabel && !FitsSuffix(textFieldPosition, label, selectedKey, labelByKey, style);
+			// в разворачивающийся блок, как переполнение перевода в LocKeyAttributeDrawer.
+			// Решаем один раз, на Layout: от этого зависит состав контролов, а он обязан
+			// совпадать у Layout и Repaint
+			if (Event.current.type == EventType.Layout)
+			{
+				var probeRect = textFieldPosition;
+				probeRect.width = _overflow
+					? _rowWidth - OVERFLOW_HYSTERESIS
+					: _rowWidth + OVERFLOW_HYSTERESIS;
+
+				_overflow = hasLabel && _rowWidth > 0f &&
+					!KeyDrawerGUI.FitsSuffix(probeRect, label, selectedKey, labelByKey, style);
+			}
+
+			var overflow = _overflow;
 
 			if (overflow)
 			{
@@ -152,41 +205,42 @@ namespace Content.ContextLabel.Editor
 				_expanded = false;
 			}
 
-			selectedKey = ValueEntry.SmartValue = SirenixEditorFields.TextField(textFieldPosition, label, selectedKey, style);
+			// Ключ словаря коммитим по Enter/расфокусу, а не на каждый символ: на смену ключа
+			// Odin пересобирает строку словаря вместе с дровером — фокус слетает
+			var editedKey = _isDictionaryKey
+				? EditorGUI.DelayedTextField(textFieldPosition, label, selectedKey, style)
+				: SirenixEditorFields.TextField(textFieldPosition, label, selectedKey, style);
+
+			if (editedKey != selectedKey)
+				ValueEntry.SmartValue = editedKey;
+
+			selectedKey = editedKey;
 			GUI.color = originalColor;
 
-			if (hasLabel)
+			if (hasLabel && !overflow)
+				KeyDrawerGUI.DrawSuffix(textFieldPosition, label, selectedKey, labelByKey, style);
+
+			// Fade-группу открываем всегда, даже свёрнутой: под условием она то появлялась,
+			// то исчезала между Layout и Repaint, и IMGUI обрывал отрисовку окна
+			if (SirenixEditorGUI.BeginFadeGroup(this, hasLabel && overflow && _expanded))
 			{
-				if (overflow)
+				using (new GUILayout.HorizontalScope())
 				{
-					if (SirenixEditorGUI.BeginFadeGroup(this, _expanded))
-					{
-						using (new GUILayout.HorizontalScope())
-						{
-							var textAreaStyle = new GUIStyle(GUI.skin.textArea);
-							var padding = textAreaStyle.padding;
-							padding.left += 3;
-							padding.top += 3;
-							padding.bottom = 4;
-							textAreaStyle.padding = padding;
+					var textAreaStyle = new GUIStyle(GUI.skin.textArea);
+					var padding = textAreaStyle.padding;
+					padding.left += 3;
+					padding.top += 3;
+					padding.bottom = 4;
+					textAreaStyle.padding = padding;
 
-							GUILayout.TextArea(labelByKey, textAreaStyle);
-							var textAreaRect = GUILayoutUtility.GetLastRect();
+					GUILayout.TextArea(labelByKey ?? string.Empty, textAreaStyle);
+					var textAreaRect = GUILayoutUtility.GetLastRect();
 
-							EditorGUIUtility.AddCursorRect(textAreaRect, MouseCursor.Text);
-						}
-					}
-
-					SirenixEditorGUI.EndFadeGroup();
-				}
-				else
-				{
-					// Рект явно: под [ValueDropdown]/[InlineProperty] поле живёт с отступом,
-					// и суффикс должен считаться от него же
-					FusumityEditorGUILayout.SuffixValue(textFieldPosition, label, selectedKey, labelByKey, style,
-						EditorStyles.label);
+					EditorGUIUtility.AddCursorRect(textAreaRect, MouseCursor.Text);
 				}
 			}
+
+			SirenixEditorGUI.EndFadeGroup();
 
 			if (!_selector.show)
 				SdfIcons.DrawIcon(trianglePosition, SdfIconType.CaretDownFill);
@@ -199,7 +253,7 @@ namespace Content.ContextLabel.Editor
 
 		private void PromptAddKey(string key)
 		{
-			EditorInputDialog.Show("Add Context Label",
+			EditorInputDialog.Show("Add Key",
 				"Label",
 				key.LastIndexOf('/') is var i && i >= 0 ? key[(i + 1)..].NicifyText() : key.NicifyText(),
 				label => AddKey(key, label),
@@ -208,13 +262,13 @@ namespace Content.ContextLabel.Editor
 
 		private void AddKey(string key, string label)
 		{
-			if (Asset is not IContentEntryScriptableObject<ContextLabelCatalog<string>> entry)
+			if (Asset is not IContentEntryScriptableObject<KeyCatalog<string>> entry)
 			{
-				Debug.LogError($"Catalog [ {Attribute.Catalog} ] is not editable");
+				Debug.LogError($"Catalog [ {Attribute.CatalogId} ] is not editable");
 				return;
 			}
 
-			Undo.RecordObject(Asset, "Add Context Label");
+			Undo.RecordObject(Asset, "Add Key");
 			entry.EditValue.SetEditor(key, label);
 			EditorUtility.SetDirty(Asset);
 			AssetDatabase.SaveAssetIfDirty(Asset);
@@ -223,13 +277,12 @@ namespace Content.ContextLabel.Editor
 			GUIHelper.RequestRepaint();
 		}
 
-		// Насколько бы влез лейбл каталога рядом со значением поля (как в SuffixValue), без реальной отрисовки
-		private static bool FitsSuffix(Rect fieldRect, GUIContent label, string value, string suffixText, GUIStyle valueStyle)
+		private void TryResolveEntry()
 		{
-			var labelWidth = label.text.IsNullOrEmpty() ? 0f : EditorGUIUtility.labelWidth;
-			var available = fieldRect.width - labelWidth;
-			var occupied = valueStyle.CalcWidth(value) + EditorStyles.miniLabel.CalcWidth(suffixText) + SUFFIX_MARGIN;
-			return occupied <= available;
+			if (ContentManager.initializing)
+				return;
+
+			ContentManager.TryGetEntry(Attribute.CatalogId, out _contentEntry);
 		}
 
 		private void TryCreateSelector()
@@ -243,7 +296,7 @@ namespace Content.ContextLabel.Editor
 			_selector = CreateSelector(in currentCatalog);
 		}
 
-		private GUIPopupSelector<string> CreateSelector(in ContextLabelCatalog<string> catalog)
+		private GUIPopupSelector<string> CreateSelector(in KeyCatalog<string> catalog)
 		{
 			_cacheKeyCount = catalog.Count;
 			using var _ = ListPool<string>.Get(out var keys);
@@ -338,15 +391,47 @@ namespace Content.ContextLabel.Editor
 			if (key == NONE_MENU)
 				return;
 
+			if (IsDuplicateDictionaryKey(key))
+			{
+				Debug.LogWarning($"Key [ {key} ] already exists in this dictionary — selection ignored");
+				EditorApplication.Beep();
+				return;
+			}
+
 			ValueEntry.WeakSmartValue = key;
 		}
 
-		private void TryResolveEntry()
+		// Это поле — Key внутри строки словаря (EditableKeyValuePair<TKey,TValue>): не даём выбрать
+		// значение, уже занятое соседней записью. Иначе резолвер словаря молча перезаписывает
+		// строку (не бросает ошибку), а его кеш строк рассинхронизируется с Layout/Repaint —
+		// ArgumentException в GUILayoutGroup.GetNext на следующей перерисовке
+		private bool IsDuplicateDictionaryKey(string newKey)
 		{
-			if (ContentManager.initializing)
-				return;
+			var rowProperty = Property.Parent?.Parent;
+			var rowType = rowProperty?.ValueEntry?.TypeOfValue;
+			if (rowType == null || !rowType.IsGenericType ||
+				rowType.GetGenericTypeDefinition() != typeof(EditableKeyValuePair<,>))
+				return false;
 
-			ContentManager.TryGetEntry(Attribute.Catalog, out _contentEntry);
+			var dictionaryProperty = rowProperty.Parent;
+			if (dictionaryProperty == null)
+				return false;
+
+			foreach (var sibling in dictionaryProperty.Children)
+			{
+				if (ReferenceEquals(sibling, rowProperty))
+					continue;
+
+				var siblingKeyProperty = sibling.Children["Key"];
+				var siblingValueProperty = siblingKeyProperty != null && siblingKeyProperty.Children.Count > 0
+					? siblingKeyProperty.Children[0]
+					: null;
+
+				if (siblingValueProperty != null && Equals(siblingValueProperty.ValueEntry.WeakSmartValue, newKey))
+					return true;
+			}
+
+			return false;
 		}
 	}
 }
