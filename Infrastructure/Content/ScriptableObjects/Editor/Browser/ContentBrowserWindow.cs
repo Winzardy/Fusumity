@@ -1524,6 +1524,10 @@ namespace Content.Editor
 				_popup.OnClose += HandlePopupClosed;
 				content.window = _popup;
 
+				// InspectObjectInDropDown включает превью Unity-редактора, а у обычного C#-объекта
+				// редактора нет: Odin всё равно лезет в массив редакторов окна после отрисовки
+				_popup.DrawUnityEditorPreview = false;
+
 				// Ховер строк без движения мыши не перерисуется
 				_popup.wantsMouseMove = true;
 
@@ -1618,12 +1622,29 @@ namespace Content.Editor
 						if (isToggle)
 							GUIHelper.RequestRepaint();
 						else
-							window?.Close();
+							CloseWindow();
 					}
 				}
 
 				if (currentEvent.type == EventType.MouseMove)
 					GUIHelper.RequestRepaint();
+			}
+
+			/// <summary>
+			/// Close изнутри OnGUI сносит редакторы и деревья свойств окна прямо посреди его же
+			/// отрисовки — закрываем следующим тиком
+			/// </summary>
+			private void CloseWindow()
+			{
+				var closing = window;
+				window = null;
+
+				EditorApplication.delayCall += () =>
+				{
+					// Попап мог закрыться сам, потеряв фокус на окне, которое открыло действие
+					if (closing != null)
+						closing.Close();
+				};
 			}
 
 			private static Texture2D ToggleTexture(bool value)
