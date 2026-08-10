@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
@@ -17,28 +16,6 @@ namespace Content.ScriptableObjects
 		protected long timeCreated;
 
 		public string techDescription;
-
-		#region Constants
-
-		// Редакторные атрибуты — в ContentScriptableObjectAttributeProcessor
-		[SerializeField]
-		private ContentConstantsSettings _constants;
-
-		/// <summary>
-		/// Поддерживает ли тип генерацию констант по своему содержимому: переопредели вместе
-		/// с <see cref="EnumerateConstants"/>, и в инспекторе появится блок настроек с кнопкой
-		/// </summary>
-		public virtual bool UseConstants { get => false; }
-
-		/// <summary>
-		/// Что именно превращать в константы. Вызывается только в редакторе, при генерации
-		/// и при расчёте слепка «содержимое изменилось»
-		/// </summary>
-		public virtual IEnumerable<ContentConstantEntry> EnumerateConstants() => null;
-
-		public ref ContentConstantsSettings ConstantsSettings { get => ref _constants; }
-
-		#endregion
 
 		public DateTime CreationTime
 		{

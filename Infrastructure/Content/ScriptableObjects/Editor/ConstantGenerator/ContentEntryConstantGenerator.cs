@@ -11,52 +11,53 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using UnityEditor;
+using Object = UnityEngine.Object;
 
 namespace Content.ScriptableObjects.Editor
 {
 	// В отличие от ContentConstantGenerator (который по [Constants] на типе генерит константы
 	// по Id самих ассетов) — этот генерит константы по СОДЕРЖИМОМУ одного ассета: что именно,
-	// решает сам ассет через ContentScriptableObject.EnumerateConstants
+	// решает сам ассет через IContentConstantsSource.EnumerateConstants
 	public static class ContentEntryConstantGenerator
 	{
 		private const string DEFAULT_NAMESPACE = "Content.Constants";
 		private const string DEFAULT_OUTPUT_PATH = "Assets/Scripts/Content/Constants";
 		private const string GENERATED_POSTFIX = "Generated";
 
-		public static void Generate(ContentScriptableObject scriptableObject, string id)
+		public static void Generate(IContentConstantsSource source, string id)
 		{
-			if (!scriptableObject.UseConstants)
-				return;
-
-			ref var settings = ref scriptableObject.ConstantsSettings;
+			ref var settings = ref source.ConstantsSettings;
 			if (!settings.useConstants)
 				return;
 
-			var entries = scriptableObject.EnumerateConstants()?.ToList();
+			var context = source as Object;
+
+			var entries = source.EnumerateConstants()?.ToList();
 			if (entries == null || entries.Count == 0)
 			{
-				ContentDebug.LogWarning("Nothing to generate: no constants", scriptableObject);
+				ContentDebug.LogWarning("Nothing to generate: no constants", context);
 				return;
 			}
 
-			if (!Write(id, entries, settings, scriptableObject))
+			if (!Write(id, entries, settings, context))
 				return;
 
 			settings.generatedHash = ComputeHash(id, entries, settings);
-			EditorUtility.SetDirty(scriptableObject);
-			AssetDatabase.SaveAssetIfDirty(scriptableObject);
+
+			if (!context)
+				return;
+
+			EditorUtility.SetDirty(context);
+			AssetDatabase.SaveAssetIfDirty(context);
 		}
 
-		public static bool IsDirty(ContentScriptableObject scriptableObject, string id)
+		public static bool IsDirty(IContentConstantsSource source, string id)
 		{
-			if (!scriptableObject.UseConstants)
-				return false;
-
-			ref var settings = ref scriptableObject.ConstantsSettings;
+			ref var settings = ref source.ConstantsSettings;
 			if (!settings.useConstants)
 				return false;
 
-			var entries = scriptableObject.EnumerateConstants()?.ToList();
+			var entries = source.EnumerateConstants()?.ToList();
 			if (entries == null || entries.Count == 0)
 				return false;
 
@@ -86,7 +87,7 @@ namespace Content.ScriptableObjects.Editor
 		}
 
 		private static bool Write(string id, List<ContentConstantEntry> entries,
-			in ContentConstantsSettings settings, ContentScriptableObject context)
+			in ContentConstantsSettings settings, Object context)
 		{
 			var className = settings.className.IsNullOrEmpty() ? $"{id}Keys" : settings.className;
 			var @namespace = settings.@namespace.IsNullOrEmpty() ? DEFAULT_NAMESPACE : settings.@namespace;

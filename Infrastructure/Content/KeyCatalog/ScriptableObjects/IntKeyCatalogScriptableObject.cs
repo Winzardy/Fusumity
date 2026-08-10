@@ -7,13 +7,16 @@ namespace Content.ScriptableObjects
 {
 	[CreateAssetMenu(menuName = ContentMenuConstants.CREATE_MENU + "Misc/Key Catalog/Int", fileName = "KeyCatalog_Int_New")]
 	[MovedFrom(true, sourceClassName: "ContextLabelIntCatalogScriptableObject")]
-	public class IntKeyCatalogScriptableObject : ContentEntryScriptableObject<KeyCatalog<int>>
+	public class IntKeyCatalogScriptableObject : ContentEntryScriptableObject<KeyCatalog<int>>, IContentConstantsSource
 	{
-		public override bool UseConstants { get => true; }
+		[SerializeField]
+		private ContentConstantsSettings _constants;
+
+		public ref ContentConstantsSettings ConstantsSettings { get => ref _constants; }
 
 		// У int-ключа иерархии нет, имя константы берём из лейбла — единственного
 		// человекочитаемого текста, который у записи есть
-		public override IEnumerable<ContentConstantEntry> EnumerateConstants()
+		public IEnumerable<ContentConstantEntry> EnumerateConstants()
 		{
 			foreach (var key in Value.GetKeys())
 				yield return new ContentConstantEntry(Value[key], key, summary: Value[key]);

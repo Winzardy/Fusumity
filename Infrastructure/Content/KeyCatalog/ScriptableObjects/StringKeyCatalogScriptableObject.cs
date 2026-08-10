@@ -7,12 +7,15 @@ namespace Content.ScriptableObjects
 {
 	[CreateAssetMenu(menuName = ContentMenuConstants.CREATE_MENU + "Misc/Key Catalog/String", fileName = "KeyCatalog_String_New")]
 	[MovedFrom(true, sourceClassName: "ContextLabelStringCatalogScriptableObject")]
-	public class StringKeyCatalogScriptableObject : ContentEntryScriptableObject<KeyCatalog<string>>
+	public class StringKeyCatalogScriptableObject : ContentEntryScriptableObject<KeyCatalog<string>>, IContentConstantsSource
 	{
-		public override bool UseConstants { get => true; }
+		[SerializeField]
+		private ContentConstantsSettings _constants;
+
+		public ref ContentConstantsSettings ConstantsSettings { get => ref _constants; }
 
 		// Ключ несёт иерархию ("hair/00"): из него и имя константы, и группа-заголовок
-		public override IEnumerable<ContentConstantEntry> EnumerateConstants()
+		public IEnumerable<ContentConstantEntry> EnumerateConstants()
 		{
 			foreach (var key in Value.GetKeys())
 			{

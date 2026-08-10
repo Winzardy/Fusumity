@@ -15,7 +15,7 @@ namespace Content.ScriptableObjects.Editor
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
 			var source = Property.Tree.WeakTargets.Count > 0
-				? Property.Tree.WeakTargets[0] as ContentScriptableObject
+				? Property.Tree.WeakTargets[0] as IContentConstantsSource
 				: null;
 
 			if (source == null || !ValueEntry.SmartValue.useConstants)
@@ -24,7 +24,7 @@ namespace Content.ScriptableObjects.Editor
 				return;
 			}
 
-			var id = source is IUniqueContentEntryScriptableObject entry ? entry.Id : source.name;
+			var id = source is IUniqueContentEntryScriptableObject entry ? entry.Id : (source as Object)?.name;
 			var dirty = ContentEntryConstantGenerator.IsDirty(source, id);
 
 			using (new GUILayout.HorizontalScope())
