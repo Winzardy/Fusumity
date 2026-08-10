@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using Fusumity.Attributes.Odin;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		sourceAssembly: "UI")]
 	public class GraphicColorAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Graphic graphic;
 
 		[InlineToggle(nameof(useStartColor), "From")]

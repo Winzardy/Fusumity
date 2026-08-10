@@ -2,6 +2,7 @@
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ZenoTween.Participant.Tweens
 		sourceAssembly: "Generic")]
 	public class ScaleAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Transform root;
 
 		[Space]

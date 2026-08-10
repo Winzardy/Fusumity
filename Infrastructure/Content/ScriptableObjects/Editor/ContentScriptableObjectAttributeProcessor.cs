@@ -109,6 +109,15 @@ namespace Content.ScriptableObjects.Editor
 					attributes.Add(new TextAreaAttribute(1, 3));
 					break;
 
+				case ContentScriptableObject.CONSTANTS_FIELD_NAME:
+					attributes.Add(new HideLabelAttribute());
+					// Space самой карточки, а не PropertySpace на поле: последний отрисуется
+					// внутри рамки, а нужен отступ над ней (ColorCardBoxAttributeDrawer)
+					attributes.Add(new DarkCardBoxAttribute {Space = 8});
+					attributes.Add(new PropertyOrderAttribute(100));
+					attributes.Add(new ShowIfAttribute(nameof(ContentScriptableObject.UseConstants)));
+					break;
+
 				case ContentEntryScriptableObject.REDIRECT_FIELD_NAME:
 					attributes.Add(new PropertyOrderAttribute(-1));
 

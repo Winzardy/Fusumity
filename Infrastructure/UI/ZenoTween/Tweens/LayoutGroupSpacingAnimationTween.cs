@@ -2,6 +2,7 @@
 using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using JetBrains.Annotations;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ZenoTween.Participant.Tweens
 	{
 		private RectTransform _cacheRectTransform;
 
+		[NotNull]
 		public HorizontalOrVerticalLayoutGroup group;
 
 		public float to;

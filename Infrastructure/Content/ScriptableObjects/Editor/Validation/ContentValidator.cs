@@ -11,6 +11,7 @@ using Sapientia;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Utility;
+using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace Content.Editor
 {
 	using UnityObject = UnityEngine.Object;
 
-	public static class ContentValidator
+	public static partial class ContentValidator
 	{
 		private const string TITLE = "Validate Content";
 
@@ -203,17 +204,10 @@ namespace Content.Editor
 								if (!scriptableObject.Enabled || scriptableObject.SkipValidation())
 									continue;
 
-								if (scriptableObject is IValidatable validatable)
-								{
-									if (!validatable.Validate(out var soMessage))
-									{
-										errorCount++;
-										AppendErrorMessage(errStringBuilder, soMessage);
-										RecordError(soMessage, scriptableObject, scriptableObject.name);
-									}
-								}
-
-								errorCount += ValidateContentReferences(scriptableObject, valueValidators, ref warningCount, errStringBuilder);
+								errorCount += ValidateScriptableObjectCore(scriptableObject,
+									valueValidators,
+									ref warningCount,
+									errStringBuilder);
 							}
 						}
 
@@ -343,6 +337,27 @@ namespace Content.Editor
 			_activeReport?.AddWarning(message, context as UnityObject, path);
 		}
 
+		/// <summary>
+		/// Полная проверка одного SO: собственный IValidatable плюс обход ссылок. Общая для
+		/// полной и точечной валидации
+		/// </summary>
+		private static int ValidateScriptableObjectCore(ContentScriptableObject scriptableObject,
+			IReadOnlyList<IContentValueValidator> valueValidators,
+			ref int warningCount,
+			StringBuilder errorMessageBuilder)
+		{
+			var errorCount = 0;
+
+			if (scriptableObject is IValidatable validatable && !validatable.Validate(out var soMessage))
+			{
+				errorCount++;
+				AppendErrorMessage(errorMessageBuilder, soMessage);
+				RecordError(soMessage, scriptableObject, scriptableObject.name);
+			}
+
+			return errorCount + ValidateContentReferences(scriptableObject, valueValidators, ref warningCount, errorMessageBuilder);
+		}
+
 		private static int ValidateContentReferences(ContentScriptableObject scriptableObject,
 			IReadOnlyList<IContentValueValidator> valueValidators,
 			ref int warningCount,
@@ -402,7 +417,19 @@ namespace Content.Editor
 				logMessageFormatter,
 				errorMessageBuilder);
 			if (target == null)
+			{
+				if (failIfEmpty)
+				{
+					var errorMessage = FormatLogMessage(
+						$"Empty value [ {path} ] with [NotEmpty], [NotNull] or [Required] attribute",
+						logMessageFormatter);
+					AppendErrorMessage(errorMessageBuilder, errorMessage);
+					RecordError(errorMessage, logContext, path);
+					errorCount++;
+				}
+
 				return errorCount;
+			}
 
 			if (target is IContentReference reference)
 				return errorCount + ValidateContentReference(reference,
@@ -638,8 +665,11 @@ namespace Content.Editor
 					continue;
 				}
 
-				if (message.IsNullOrEmpty())
-					message = $"Invalid content value [ {path} ] by type [ {valueType.Name} ] and validator [ {validator.GetType().Name} ]";
+				if (message.Length == 0)
+				{
+					errorCount++;
+					continue;
+				}
 
 				var formattedMessage = FormatLogMessage(message, logMessageFormatter);
 				AppendErrorMessage(errorMessageBuilder, formattedMessage);
@@ -848,7 +878,8 @@ namespace Content.Editor
 		{
 			return field.GetCustomAttribute<NotEmptyAttribute>() != null ||
 				field.GetCustomAttribute<JetBrains.Annotations.NotNullAttribute>() != null ||
-				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null;
+				field.GetCustomAttribute<System.Diagnostics.CodeAnalysis.NotNullAttribute>() != null ||
+				field.GetCustomAttribute<RequiredAttribute>() != null;
 		}
 
 		private static IEnumerable<FieldInfo> GetSerializableFields(Type type)

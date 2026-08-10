@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,9 +14,11 @@ namespace ZenoTween.Participant.Tweens
 	{
 		private RectTransform _cacheRectTransform;
 
+		[NotNull]
 		public HorizontalOrVerticalLayoutGroup group;
 
 		[InfoBox("Вставка, копирование, может привести к крашу редактора", InfoMessageType.Warning)]
+		[NotNull]
 		public RectOffset to;
 
 		[Space]

@@ -5,9 +5,9 @@ using Sapientia;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 
-namespace Content.ContextLabel.Editor
+namespace Content.Keys.Editor
 {
-	public class ContextLabelCatalogAttributeProcessor : OdinAttributeProcessor<IContextLabelCatalog>
+	public class KeyCatalogAttributeProcessor : OdinAttributeProcessor<IKeyCatalog>
 	{
 		public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
 		{
@@ -26,7 +26,7 @@ namespace Content.ContextLabel.Editor
 		}
 	}
 
-	public class ContextLabelAttributeProcessor : OdinAttributeProcessor<IToggle>
+	public class KeyAttributeProcessor : OdinAttributeProcessor<IToggle>
 	{
 		private static Dictionary<InspectorProperty, string> _propertyToCatalog = new();
 
@@ -37,7 +37,7 @@ namespace Content.ContextLabel.Editor
 			{
 				case "value":
 					if (_propertyToCatalog.TryGetValue(parentProperty, out var catalog))
-						attributes.Add(new ContextLabelAttribute(catalog));
+						attributes.Add(new KeyAttribute(catalog));
 
 					break;
 			}
@@ -46,11 +46,11 @@ namespace Content.ContextLabel.Editor
 		public override void ProcessSelfAttributes(InspectorProperty property, List<Attribute> attributes)
 		{
 			base.ProcessSelfAttributes(property, attributes);
-			var attribute = property.GetAttribute<ContextLabelAttribute>();
+			var attribute = property.GetAttribute<KeyAttribute>();
 
 			if (attribute != null)
 			{
-				_propertyToCatalog[property] = attribute.Catalog;
+				_propertyToCatalog[property] = attribute.CatalogId;
 				attributes.Remove(attribute);
 			}
 		}

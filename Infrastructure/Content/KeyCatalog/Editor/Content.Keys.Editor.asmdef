@@ -1,11 +1,13 @@
 {
-    "name": "Content.ContextLabel.Editor",
+    "name": "Content.Keys.Editor",
     "rootNamespace": "",
     "references": [
         "Fusumity",
         "Fusumity.Editor",
         "Content",
+        "Content.Editor",
         "Content.ScriptableObjects",
+        "Content.ScriptableObjects.Editor",
         "Sapientia"
     ],
     "includePlatforms": [

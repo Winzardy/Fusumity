@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusumity.Attributes.Odin;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
@@ -11,6 +12,7 @@ namespace ZenoTween.Participant.Tweens.UI
 	[TypeRegistryItem(Icon = SdfIconType.SquareHalf, CategoryPath = UIAnimationTweenConstants.TWEEN_CATEGORY_PATH)]
 	public class PixelPerUnitMultiplierTween : AnimationTween
 	{
+		[NotNull]
 		public Image image;
 
 		[Space]

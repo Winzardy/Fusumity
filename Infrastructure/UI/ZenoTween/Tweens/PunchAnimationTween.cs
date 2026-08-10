@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace ZenoTween.Participant.Tweens
 			Scale
 		}
 
+		[NotNull]
 		public Transform root;
 
 		[LabelText("Type")]

@@ -5,6 +5,7 @@ using DG.Tweening;
 using Fusumity.Attributes;
 using Fusumity.Attributes.Odin;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace ZenoTween.Participant.Tweens
 		[HideInInspector]
 		public bool durationPerChild;
 
+		[NotNull]
 		[DarkCardBox]
 		[PropertyOrder(10)]
 		public Transform root;

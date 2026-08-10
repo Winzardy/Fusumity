@@ -11,6 +11,9 @@ namespace Content.ScriptableObjects
 		/// <see cref="timeCreated"/>
 		public const string TIME_CREATED_FILED_NAME = "timeCreated";
 
+		/// <see cref="_constants"/>
+		public const string CONSTANTS_FIELD_NAME = "_constants";
+
 		/// <inheritdoc cref="CreationTimeStr"/>
 		public const string CREATION_TIME_TOOLTIP = "Не всегда является временем когда был создан ассет, но стремится к этомy";
 

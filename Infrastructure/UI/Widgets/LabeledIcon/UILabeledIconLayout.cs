@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Sapientia;
 using Sirenix.OdinInspector;
 using TMPro;
 using UI;
@@ -8,13 +9,13 @@ namespace Game.UI
 {
 	public class UILabeledIconLayout : UIBaseLayout
 	{
-		[NotNull]
+		[CanBeEmpty]
 		public Image icon;
 		[Indent, LabelText("Button")]
 		[CanBeNull]
 		public Button iconButton;
 
-		[NotNull]
+		[CanBeEmpty]
 		public TMP_Text label;
 		[Indent, LabelText("Button")]
 		[CanBeNull]
