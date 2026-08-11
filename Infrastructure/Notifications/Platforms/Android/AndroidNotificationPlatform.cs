@@ -32,6 +32,8 @@ namespace Notifications.Android
 		private const string EXTRA_FIRE_TIME = "fireTime";
 		private const string EXTRA_REPEAT_INTERVAL = "repeatInterval";
 
+		private static bool _permissionRequested;
+
 		private BidirectionalMap<string, int> _ids;
 
 		public event Action<string, string> NotificationReceived;
@@ -118,8 +120,23 @@ namespace Notifications.Android
 			return true;
 		}
 
+		/// <summary>
+		/// Запрашивает разрешение не более одного раза за сессию
+		/// </summary>
+		/// <remarks>
+		/// Каждый запрос поднимает системную GrantPermissionsActivity, а это pause/resume приложения.
+		/// Если планирование завязано на потерю фокуса, получается бесконечный цикл, в котором система
+		/// в итоге сносит активити игры (rapidActivityLaunch), и Unity убивает процесс в onDestroy.
+		/// Отказ при этом может приходить мгновенно и без диалога — например под Enhanced Confirmation Mode
+		/// (Android 16) для сборок, установленных не из стора
+		/// </remarks>
 		private static void TryRequestUserPermission()
 		{
+			if (_permissionRequested)
+				return;
+
+			_permissionRequested = true;
+
 			if (AndroidNotificationCenter.UserPermissionToPost == PermissionStatus.Allowed)
 				return;
 
