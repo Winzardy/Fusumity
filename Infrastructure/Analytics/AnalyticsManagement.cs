@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Fusumity.Reactive;
 using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Collections;
@@ -23,6 +24,8 @@ namespace Analytics
 
 		private List<IAnalyticsIntegration> _integrations;
 
+		private DeferredQueue<AnalyticsEventPayload> _deferred;
+
 		public event Receiver<AnalyticsEventPayload> BeforeSend;
 
 		public bool Active => !_integrations.IsNullOrEmpty();
@@ -33,6 +36,8 @@ namespace Analytics
 			_isValidationEnabled = isValidationEnabled;
 
 			_cts = new CancellationTokenSource();
+
+			_deferred = new DeferredQueue<AnalyticsEventPayload>(SendDeferred);
 		}
 
 		public async UniTask InitializeAsync(CancellationToken cancellationToken)
@@ -53,6 +58,8 @@ namespace Analytics
 		public void Dispose()
 		{
 			AsyncUtility.TriggerAndSetNull(ref _cts);
+
+			DisposeUtility.DisposeAndSetNull(ref _deferred);
 
 			if (_integrations.IsNullOrEmpty())
 				return;
@@ -84,6 +91,41 @@ namespace Analytics
 		{
 			BeforeSend?.Invoke(payload);
 
+			// Логируем до откладывания, пока в стеке виден отправитель
+			AnalyticsDebug.Log($"Sent event: {payload}\n{_cachedIntegrationsDebugMessage}");
+
+			if (_deferred.CanHandleNow())
+			{
+				SendInternal(in payload);
+				return;
+			}
+
+			// Параметры приходят из пула и вернутся туда сразу после вызова, поэтому копируем в свой словарь
+			if (payload.parameters != null)
+			{
+				var parameters = DictionaryPool<string, object>.Get();
+				parameters.AddRange(payload.parameters);
+				payload.parameters = parameters;
+			}
+
+			_deferred.Enqueue(in payload);
+		}
+
+		private void SendDeferred(in AnalyticsEventPayload payload)
+		{
+			try
+			{
+				SendInternal(in payload);
+			}
+			finally
+			{
+				if (payload.parameters != null)
+					DictionaryPool<string, object>.Release(payload.parameters);
+			}
+		}
+
+		private void SendInternal(in AnalyticsEventPayload payload)
+		{
 			foreach (var integration in _integrations)
 			{
 				if (_isValidationEnabled && !integration.IsValid(in payload, out var error))
@@ -94,8 +136,6 @@ namespace Analytics
 
 				integration.SendEvent(in payload);
 			}
-
-			AnalyticsDebug.Log($"Sent event: {payload}\n{_cachedIntegrationsDebugMessage}");
 		}
 
 		private async UniTask InitializeIntegrationAsync(IAnalyticsIntegration integration, CancellationToken cancellationToken)
