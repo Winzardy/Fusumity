@@ -10,7 +10,6 @@ namespace Notifications
 {
 	public class NotificationsManagement : IDisposable
 	{
-		private const int DEFAULT_DELAY_MIN = 5;
 		private const string SCHEDULED_LOG_MESSAGE_FORMAT = "Scheduled notification: {0}";
 		private const string FAILED_LOG_MESSAGE_FORMAT = "Failed to schedule notification: {0}";
 		private const string INVALID_ARGS_BY_TIME_LOGS_MESSAGE = "RemainingTime or deliveryTime can't be null at the same time";
