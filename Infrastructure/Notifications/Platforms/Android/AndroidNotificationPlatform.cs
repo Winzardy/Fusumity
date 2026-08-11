@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Content;
 using Localization;
 using Notifications.Android.Config;
@@ -40,20 +39,38 @@ namespace Notifications.Android
 
 		public AndroidNotificationPlatform()
 		{
+			// Явно, а не побочным эффектом обращения к UserPermissionToPost/RegisterNotificationChannel:
+			// без инициализации mUnityNotificationManager пуст и восстановление _ids молча пропускается
+			if (!AndroidNotificationCenter.Initialize())
+			{
+				NotificationsDebug.LogError("[Android] Failed to initialize AndroidNotificationCenter");
+				return;
+			}
+
 			_ids = new();
+
 			InitializeChannels();
-			var userPermission = AndroidNotificationCenter.UserPermissionToPost;
-			foreach (var (systemId, notif) in EnumerateScheduledNotificationsInternal())
-				TryRestoreId(notif.id, systemId);
+
+			try
+			{
+				foreach (var (systemId, notif) in EnumerateScheduledNotificationsInternal())
+					TryRestoreId(notif.id, systemId);
+			}
+			catch (Exception e)
+			{
+				// Читаем приватные поля плагина через рефлексию — обновление пакета может их поменять
+				NotificationsDebug.LogError($"[Android] Failed to restore scheduled notification ids: {e}");
+			}
 
 			AndroidNotificationCenter.OnNotificationReceived += OnNotificationReceived;
 
-			NotificationsDebug.Log($"[Android] User Permission: {userPermission}");
+			NotificationsDebug.Log($"[Android] User Permission: {AndroidNotificationCenter.UserPermissionToPost}");
 		}
 
 		public void Dispose()
 		{
 			AndroidNotificationCenter.OnNotificationReceived -= OnNotificationReceived;
+
 			_ids?.Dispose();
 			_ids = null;
 		}
@@ -113,9 +130,17 @@ namespace Notifications.Android
 			}
 
 			if (_ids.TryGetValue(request.id, out var androidId))
+			{
 				AndroidNotificationCenter.SendNotificationWithExplicitID(notification, channel, androidId);
+			}
 			else
-				_ids[request.id] = AndroidNotificationCenter.SendNotification(notification, channel);
+			{
+				var newId = AndroidNotificationCenter.SendNotification(notification, channel);
+				if (newId < 0)
+					return false;
+
+				_ids[request.id] = newId;
+			}
 
 			return true;
 		}
@@ -127,8 +152,8 @@ namespace Notifications.Android
 		/// Каждый запрос поднимает системную GrantPermissionsActivity, а это pause/resume приложения.
 		/// Если планирование завязано на потерю фокуса, получается бесконечный цикл, в котором система
 		/// в итоге сносит активити игры (rapidActivityLaunch), и Unity убивает процесс в onDestroy.
-		/// Отказ при этом может приходить мгновенно и без диалога — например под Enhanced Confirmation Mode
-		/// (Android 16) для сборок, установленных не из стора
+		/// Отказ при этом может приходить мгновенно и без диалога — например после двух отказов на Android 11+
+		/// (разрешение переходит в «Don't ask again») или при device policy с авто-отказом
 		/// </remarks>
 		private static void TryRequestUserPermission()
 		{
@@ -181,8 +206,8 @@ namespace Notifications.Android
 
 		public IEnumerable<NotificationRequest> EnumerateScheduledNotifications()
 		{
-			return EnumerateScheduledNotificationsInternal()
-				.Select(x => x.notif);
+			foreach (var (_, notif) in EnumerateScheduledNotificationsInternal())
+				yield return notif;
 		}
 
 		private IEnumerable<(int systemId, NotificationRequest notif)> EnumerateScheduledNotificationsInternal()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Fusumity.Reactive;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -50,12 +49,17 @@ namespace Notifications
 				RemoveAll();
 			}
 
-			_schedulerToOverrider = ReflectionUtility.GetAllTypes<ISchedulerOverrider>(false)
-				.Where(type => typeof(IPlatformNotification<>).MakeGenericType(PlatformType).IsAssignableFrom(type))
-				.ToDictionary(
-					type => type,
-					type => type.GetInterface(typeof(ISchedulerOverrider<>).Name)!.GetGenericArguments().First()
-				);
+			_schedulerToOverrider = new Dictionary<Type, Type>();
+			var platformInterface = typeof(IPlatformNotification<>).MakeGenericType(PlatformType);
+			foreach (var overriderType in ReflectionUtility.GetAllTypes<ISchedulerOverrider>(false))
+			{
+				if (!platformInterface.IsAssignableFrom(overriderType))
+					continue;
+
+				var schedulerType = overriderType.GetInterface(typeof(ISchedulerOverrider<>).Name)!
+					.GetGenericArguments()[0];
+				_schedulerToOverrider[schedulerType] = overriderType;
+			}
 
 			_deferred = new DeferredQueue<NotificationRequest>(ScheduleInternal);
 
@@ -88,7 +92,9 @@ namespace Notifications
 		internal bool Register<T>(T scheduler)
 			where T : NotificationScheduler
 		{
-			var type = typeof(T);
+			// Вызов приходит из конструктора базового класса, где this типизирован как
+			// NotificationScheduler, поэтому typeof(T) здесь бесполезен — берем тип с инстанса
+			var type = scheduler.GetType();
 
 			if (_settings.disableSchedulers.Contains(type.FullName))
 				return false;
@@ -105,7 +111,7 @@ namespace Notifications
 		}
 
 		internal bool Unregister<T>(T scheduler) where T : NotificationScheduler
-			=> _registeredSchedulers.Remove(scheduler);
+			=> _registeredSchedulers != null && _registeredSchedulers.Remove(scheduler);
 
 		internal void Schedule(ref NotificationRequest request)
 		{
