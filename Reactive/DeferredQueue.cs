@@ -1,32 +1,40 @@
 using System;
-using System.Collections.Generic;
+using Sapientia.Collections;
 using UnityEngine;
 
 namespace Fusumity.Reactive
 {
+	public delegate void DeferredHandler<T>(in T item);
+
 	/// <summary>
 	/// Очередь, которая после возвращения приложения из фона пропускает не больше нескольких элементов
 	/// за кадр, а остальное разбирает в следующих кадрах (борьба с ANR)
 	/// </summary>
 	public class DeferredQueue<T> : IDisposable
 	{
-		private readonly Action<T> _handler;
-		private readonly Queue<T> _queue;
+		private readonly DeferredHandler<T> _handler;
+
+		/// <remarks>
+		/// Список вместо очереди, чтобы отдавать элемент обработчику по ссылке, без копии структуры.
+		/// Голова двигается индексом, массив чистится когда очередь разобрана
+		/// </remarks>
+		private readonly SimpleList<T> _items;
+		private int _head;
 
 		private readonly DeferredGate _gate;
 		private readonly bool _ownsGate;
 
 		private bool _handling;
 
-		public bool IsEmpty { get => _queue.Count == 0; }
+		public bool IsEmpty { get => _head >= _items.Count; }
 
 		/// <inheritdoc cref="DeferredGate"/>
 		public DeferredGate Gate { get => _gate; }
 
-		public DeferredQueue(Action<T> handler, DeferredGate gate = null)
+		public DeferredQueue(DeferredHandler<T> handler, DeferredGate gate = null)
 		{
 			_handler = handler;
-			_queue = new Queue<T>();
+			_items = new SimpleList<T>();
 
 			_ownsGate = gate == null;
 			_gate = gate ?? new DeferredGate();
@@ -45,6 +53,8 @@ namespace Fusumity.Reactive
 
 			if (_ownsGate)
 				_gate.Dispose();
+
+			_items.Dispose();
 		}
 
 		/// <summary>
@@ -66,18 +76,22 @@ namespace Fusumity.Reactive
 		/// <summary>
 		/// Обработать элемент сейчас или отложить, если бюджет кадра исчерпан
 		/// </summary>
-		public void Handle(T item)
+		public void Handle(in T item)
 		{
 			if (CanHandleNow())
 			{
-				Invoke(item);
+				Invoke(in item);
 				return;
 			}
 
-			_queue.Enqueue(item);
+			_items.Add(in item);
 		}
 
-		public void Enqueue(T item) => _queue.Enqueue(item);
+		/// <remarks>
+		/// ⚠️ Обработчик получает элемент по ссылке на внутренний массив, поэтому пополнять очередь
+		/// во время разбора нельзя — <see cref="CanHandleNow"/> это гарантирует
+		/// </remarks>
+		public void Enqueue(in T item) => _items.Add(in item);
 
 		/// <summary>
 		/// Немедленно обработать всё отложенное и закрыть окно
@@ -87,7 +101,7 @@ namespace Fusumity.Reactive
 			_gate.Close();
 
 			while (!IsEmpty)
-				Invoke(_queue.Dequeue());
+				InvokeNext();
 		}
 
 		private void HandleUpdate()
@@ -99,16 +113,28 @@ namespace Fusumity.Reactive
 				return;
 
 			while (!IsEmpty && _gate.TryTakeBudget())
-				Invoke(_queue.Dequeue());
+				InvokeNext();
 		}
 
-		private void Invoke(T item)
+		private void InvokeNext()
+		{
+			Invoke(in _items[_head]);
+			_head++;
+
+			if (!IsEmpty)
+				return;
+
+			_items.ClearPartial();
+			_head = 0;
+		}
+
+		private void Invoke(in T item)
 		{
 			_handling = true;
 
 			try
 			{
-				_handler.Invoke(item);
+				_handler.Invoke(in item);
 			}
 			catch (Exception exception)
 			{

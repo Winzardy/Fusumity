@@ -37,7 +37,7 @@ namespace Analytics
 
 			_cts = new CancellationTokenSource();
 
-			_deferred = new DeferredQueue<AnalyticsEventPayload>(SendInternal);
+			_deferred = new DeferredQueue<AnalyticsEventPayload>(SendDeferred);
 		}
 
 		public async UniTask InitializeAsync(CancellationToken cancellationToken)
@@ -96,20 +96,35 @@ namespace Analytics
 
 			if (_deferred.CanHandleNow())
 			{
-				SendInternal(payload);
+				SendInternal(in payload);
 				return;
 			}
 
-			// Параметры приходят из пула и вернутся туда сразу после вызова, поэтому копируем
-			_deferred.Enqueue(new AnalyticsEventPayload(payload.id)
+			// Параметры приходят из пула и вернутся туда сразу после вызова, поэтому копируем в свой словарь
+			if (payload.parameters != null)
 			{
-				parameters = payload.parameters != null
-					? new Dictionary<string, object>(payload.parameters)
-					: null
-			});
+				var parameters = DictionaryPool<string, object>.Get();
+				parameters.AddRange(payload.parameters);
+				payload.parameters = parameters;
+			}
+
+			_deferred.Enqueue(in payload);
 		}
 
-		private void SendInternal(AnalyticsEventPayload payload)
+		private void SendDeferred(in AnalyticsEventPayload payload)
+		{
+			try
+			{
+				SendInternal(in payload);
+			}
+			finally
+			{
+				if (payload.parameters != null)
+					DictionaryPool<string, object>.Release(payload.parameters);
+			}
+		}
+
+		private void SendInternal(in AnalyticsEventPayload payload)
 		{
 			foreach (var integration in _integrations)
 			{

@@ -133,10 +133,10 @@ namespace Notifications
 			NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
 
 			// Планирование на платформе дорогое, поэтому пачку уведомлений раскладываем по кадрам
-			_deferred.Handle(request);
+			_deferred.Handle(in request);
 		}
 
-		private void ScheduleInternal(NotificationRequest request)
+		private void ScheduleInternal(in NotificationRequest request)
 		{
 			if (!_platform.Schedule(in request))
 				NotificationsDebug.LogError(FAILED_LOG_MESSAGE_FORMAT.Format(request));
