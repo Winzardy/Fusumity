@@ -34,7 +34,7 @@ namespace Booting.Notifications
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			_platform = new EditorNotificationPlatform();
 			SetupManagement(settings);
-//#elif UNITY_ANDROID
+#elif UNITY_ANDROID
 			if (AndroidNotificationPlatform.Initialize())
 			{
 				// Контент и локализацию читаем на мейн-треде, дальше — регистрация каналов,
