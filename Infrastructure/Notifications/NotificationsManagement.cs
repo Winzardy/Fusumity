@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Fusumity.Reactive;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -11,14 +10,16 @@ namespace Notifications
 {
 	public class NotificationsManagement : IDisposable
 	{
-		private const int DEFAULT_DELAY_MIN = 5;
 		private const string SCHEDULED_LOG_MESSAGE_FORMAT = "Scheduled notification: {0}";
+		private const string FAILED_LOG_MESSAGE_FORMAT = "Failed to schedule notification: {0}";
 		private const string INVALID_ARGS_BY_TIME_LOGS_MESSAGE = "RemainingTime or deliveryTime can't be null at the same time";
 
 		private readonly INotificationPlatform _platform;
 		private readonly NotificationsSettings _settings;
 
 		private List<NotificationScheduler> _registeredSchedulers;
+
+		private DeferredQueue<NotificationRequest> _deferred;
 
 		//Пока соотношение 1 к 1, но пока не придумал кейсов когда нужно больше одного overrider'а
 		private Dictionary<Type, Type> _schedulerToOverrider;
@@ -47,12 +48,19 @@ namespace Notifications
 				RemoveAll();
 			}
 
-			_schedulerToOverrider = ReflectionUtility.GetAllTypes<ISchedulerOverrider>(false)
-				.Where(type => typeof(IPlatformNotification<>).MakeGenericType(PlatformType).IsAssignableFrom(type))
-				.ToDictionary(
-					type => type,
-					type => type.GetInterface(typeof(ISchedulerOverrider<>).Name)!.GetGenericArguments().First()
-				);
+			_schedulerToOverrider = new Dictionary<Type, Type>();
+			var platformInterface = typeof(IPlatformNotification<>).MakeGenericType(PlatformType);
+			foreach (var overriderType in ReflectionUtility.GetAllTypes<ISchedulerOverrider>(false))
+			{
+				if (!platformInterface.IsAssignableFrom(overriderType))
+					continue;
+
+				var schedulerType = overriderType.GetInterface(typeof(ISchedulerOverrider<>).Name)!
+					.GetGenericArguments()[0];
+				_schedulerToOverrider[schedulerType] = overriderType;
+			}
+
+			_deferred = new DeferredQueue<NotificationRequest>(ScheduleInternal);
 
 			UnityLifecycle.ApplicationFocusEvent += OnApplicationFocus;
 		}
@@ -63,6 +71,8 @@ namespace Notifications
 				return;
 
 			_schedulerToOverrider = null;
+
+			DisposeUtility.DisposeAndSetNull(ref _deferred);
 
 			_platform.NotificationReceived -= OnNotificationReceived;
 
@@ -81,7 +91,9 @@ namespace Notifications
 		internal bool Register<T>(T scheduler)
 			where T : NotificationScheduler
 		{
-			var type = typeof(T);
+			// Вызов приходит из конструктора базового класса, где this типизирован как
+			// NotificationScheduler, поэтому typeof(T) здесь бесполезен — берем тип с инстанса
+			var type = scheduler.GetType();
 
 			if (_settings.disableSchedulers.Contains(type.FullName))
 				return false;
@@ -98,7 +110,7 @@ namespace Notifications
 		}
 
 		internal bool Unregister<T>(T scheduler) where T : NotificationScheduler
-			=> _registeredSchedulers.Remove(scheduler);
+			=> _registeredSchedulers != null && _registeredSchedulers.Remove(scheduler);
 
 		internal void Schedule(ref NotificationRequest request)
 		{
@@ -122,8 +134,17 @@ namespace Notifications
 			NotificationsDebug.ApplySettings(ref request, now);
 #endif
 
-			if (_platform.Schedule(in request))
-				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
+			// Логируем до откладывания, пока в стеке виден инициатор
+			NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
+
+			// Планирование на платформе дорогое, поэтому пачку уведомлений раскладываем по кадрам
+			_deferred.Handle(in request);
+		}
+
+		private void ScheduleInternal(in NotificationRequest request)
+		{
+			if (!_platform.Schedule(in request))
+				NotificationsDebug.LogError(FAILED_LOG_MESSAGE_FORMAT.Format(request));
 		}
 
 		internal void Cancel(string id) => _platform?.Cancel(id);
