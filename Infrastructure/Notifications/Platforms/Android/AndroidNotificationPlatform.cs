@@ -37,19 +37,30 @@ namespace Notifications.Android
 
 		public event Action<string, string> NotificationReceived;
 
-		public AndroidNotificationPlatform()
+		/// <summary>
+		/// Только с мейн-треда: создаёт GameObject-диспетчер, а UserPermissionToPost читает PlayerPrefs.
+		/// Инициализируем явно, а не побочным эффектом обращения к UserPermissionToPost/RegisterNotificationChannel:
+		/// без инициализации mUnityNotificationManager пуст и восстановление _ids молча пропускается
+		/// </summary>
+		public static bool Initialize()
 		{
-			// Явно, а не побочным эффектом обращения к UserPermissionToPost/RegisterNotificationChannel:
-			// без инициализации mUnityNotificationManager пуст и восстановление _ids молча пропускается
 			if (!AndroidNotificationCenter.Initialize())
 			{
 				NotificationsDebug.LogError("[Android] Failed to initialize AndroidNotificationCenter");
-				return;
+				return false;
 			}
 
+			NotificationsDebug.Log($"[Android] User Permission: {AndroidNotificationCenter.UserPermissionToPost}");
+			return true;
+		}
+
+		/// <param name="channels">Собираются на мейн-треде через <see cref="BuildChannels"/></param>
+		public AndroidNotificationPlatform(List<AndroidNotificationChannel> channels)
+		{
 			_ids = new();
 
-			InitializeChannels();
+			foreach (var channel in channels)
+				AndroidNotificationCenter.RegisterNotificationChannel(channel);
 
 			try
 			{
@@ -63,8 +74,6 @@ namespace Notifications.Android
 			}
 
 			AndroidNotificationCenter.OnNotificationReceived += OnNotificationReceived;
-
-			NotificationsDebug.Log($"[Android] User Permission: {AndroidNotificationCenter.UserPermissionToPost}");
 		}
 
 		public void Dispose()
@@ -263,9 +272,15 @@ namespace Notifications.Android
 				.ToLocalTime();
 		}
 
-		private void InitializeChannels()
+		/// <summary>
+		/// Собирает каналы из контента и локализации — только с мейн-треда (LocManager/StringTable
+		/// не тред-сейф). Сама регистрация (биндер) идёт в конструкторе, который можно уводить в пул
+		/// </summary>
+		public static List<AndroidNotificationChannel> BuildChannels()
 		{
 			//TODO: есть еще какие-то AndroidNotificationChannelGroup...
+
+			var channels = new List<AndroidNotificationChannel>();
 
 			foreach (var (id, contentEntry) in ContentManager.GetAllEntries<AndroidNotificationChannelConfig>())
 			{
@@ -275,7 +290,7 @@ namespace Notifications.Android
 				AndroidNotificationChannelConfig config = contentEntry;
 				var name = config.nameLocKey.IsNullOrEmpty() ? id : LocManager.Get(config.nameLocKey);
 				var description = config.descriptionLocKey.IsNullOrEmpty() ? name : LocManager.Get(config.descriptionLocKey);
-				var channel = new AndroidNotificationChannel()
+				channels.Add(new AndroidNotificationChannel()
 				{
 					Id = id,
 
@@ -290,10 +305,10 @@ namespace Notifications.Android
 					VibrationPattern = config.vibrationPattern,
 					Importance = config.importance,
 					LockScreenVisibility = config.lockScreenVisibility,
-				};
-
-				AndroidNotificationCenter.RegisterNotificationChannel(channel);
+				});
 			}
+
+			return channels;
 		}
 	}
 }
