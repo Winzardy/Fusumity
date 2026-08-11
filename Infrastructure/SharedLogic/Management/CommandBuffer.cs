@@ -82,6 +82,15 @@ namespace SharedLogic
 			_typeToBuffer[entry.type].OnExecute(root, entry.index);
 		}
 
+		/// <summary>
+		/// Отправить первую команду в очереди в раннер, не теряя её тип
+		/// </summary>
+		public bool Run(ICommandRunner runner)
+		{
+			var entry = _queue.Peek();
+			return _typeToBuffer[entry.type].Run(runner, entry.index);
+		}
+
 		public bool Validate(ISharedRoot root, out Exception exception)
 		{
 			var entry = _queue.Peek();
@@ -167,6 +176,12 @@ namespace SharedLogic
 			center.Submit(in command);
 		}
 
+		public bool Run(ICommandRunner runner, int index)
+		{
+			ref var command = ref _buffer[index];
+			return runner.Execute(in command);
+		}
+
 		public ICommand Get(int index)
 		{
 			return _buffer[index];
@@ -189,6 +204,7 @@ namespace SharedLogic
 		public void OnExecute(ISharedRoot root, int index);
 		public bool Validate(ISharedRoot root, int index, out Exception exception);
 		public void Send(ICommandCenter center, int index);
+		public bool Run(ICommandRunner runner, int index);
 		public ICommand Get(int index);
 		public void AddCommandToList(int index, SimpleList<ICommand> list);
 	}

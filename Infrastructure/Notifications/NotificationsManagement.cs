@@ -13,12 +13,15 @@ namespace Notifications
 	{
 		private const int DEFAULT_DELAY_MIN = 5;
 		private const string SCHEDULED_LOG_MESSAGE_FORMAT = "Scheduled notification: {0}";
+		private const string FAILED_LOG_MESSAGE_FORMAT = "Failed to schedule notification: {0}";
 		private const string INVALID_ARGS_BY_TIME_LOGS_MESSAGE = "RemainingTime or deliveryTime can't be null at the same time";
 
 		private readonly INotificationPlatform _platform;
 		private readonly NotificationsSettings _settings;
 
 		private List<NotificationScheduler> _registeredSchedulers;
+
+		private DeferredQueue<NotificationRequest> _deferred;
 
 		//Пока соотношение 1 к 1, но пока не придумал кейсов когда нужно больше одного overrider'а
 		private Dictionary<Type, Type> _schedulerToOverrider;
@@ -54,6 +57,8 @@ namespace Notifications
 					type => type.GetInterface(typeof(ISchedulerOverrider<>).Name)!.GetGenericArguments().First()
 				);
 
+			_deferred = new DeferredQueue<NotificationRequest>(ScheduleInternal);
+
 			UnityLifecycle.ApplicationFocusEvent += OnApplicationFocus;
 		}
 
@@ -63,6 +68,8 @@ namespace Notifications
 				return;
 
 			_schedulerToOverrider = null;
+
+			DisposeUtility.DisposeAndSetNull(ref _deferred);
 
 			_platform.NotificationReceived -= OnNotificationReceived;
 
@@ -122,8 +129,17 @@ namespace Notifications
 			NotificationsDebug.ApplySettings(ref request, now);
 #endif
 
-			if (_platform.Schedule(in request))
-				NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
+			// Логируем до откладывания, пока в стеке виден инициатор
+			NotificationsDebug.Log(SCHEDULED_LOG_MESSAGE_FORMAT.Format(request));
+
+			// Планирование на платформе дорогое, поэтому пачку уведомлений раскладываем по кадрам
+			_deferred.Handle(request);
+		}
+
+		private void ScheduleInternal(NotificationRequest request)
+		{
+			if (!_platform.Schedule(in request))
+				NotificationsDebug.LogError(FAILED_LOG_MESSAGE_FORMAT.Format(request));
 		}
 
 		internal void Cancel(string id) => _platform?.Cancel(id);
