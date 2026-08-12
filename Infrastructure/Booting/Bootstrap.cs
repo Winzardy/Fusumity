@@ -35,14 +35,25 @@ namespace Booting
 
 		public event Action<IBootTask, float> TaskBooted;
 
+		// Максимально допустимое время без Update: если синхронные буттаски держат главный поток дольше,
+		// перед запуском следующей таски ждём, пока движок "продышится" (кадр отрисуется, Update тикнет)
+		private const double MAX_TIME_WITHOUT_UPDATE_SEC = 0.5d;
+
 		private List<IBootTask> _bootedTasks;
 
 		private CompositeProgress<BootProgressInfo> _compositeProgress;
+
+		private double _lastUpdateTime;
 
 		private void Start()
 		{
 			RunTasksAsync(destroyCancellationToken)
 				.Forget();
+		}
+
+		private void Update()
+		{
+			_lastUpdateTime = Time.realtimeSinceStartupAsDouble;
 		}
 
 		private void OnDestroy()
@@ -68,7 +79,10 @@ namespace Booting
 
 			_compositeProgress = new CompositeProgress<BootProgressInfo>(GetTotalWeight(tasks), controller.Progress);
 
-			InvalidUsageProgress invalidUsageProgress = new InvalidUsageProgress();
+			var invalidUsageProgress = new InvalidUsageProgress();
+
+			// Start вызывается до первого Update — считаем, что на старте главный поток свободен
+			_lastUpdateTime = loadingTime;
 
 			foreach (var task in tasks)
 			{
@@ -77,6 +91,8 @@ namespace Booting
 
 				if (task.WaitForPreviousTasks)
 					await WaitForTasksReadyAsync(cancellationToken);
+
+				await WaitForUpdateAsync(cancellationToken);
 
 				var taskTimer = Timer.Start();
 
@@ -116,6 +132,28 @@ namespace Booting
 				task.OnBootCompleted();
 
 			controller.UnRegisterAsService();
+		}
+
+		/// <summary>
+		/// Если синхронные буттаски заблокировали главный поток дольше <see cref="MAX_TIME_WITHOUT_UPDATE_SEC"/>,
+		/// ждём следующего Update, чтобы движок успел прокрутить кадр
+		/// </summary>
+		private async UniTask WaitForUpdateAsync(CancellationToken cancellationToken)
+		{
+			var lastUpdateTime = _lastUpdateTime;
+			if (Time.realtimeSinceStartupAsDouble - lastUpdateTime < MAX_TIME_WITHOUT_UPDATE_SEC)
+				return;
+
+			var waitingTimer = Timer.Start();
+
+			await UniTask.WaitUntil(Wait, cancellationToken: cancellationToken);
+
+			var passedTime = waitingTimer.Seconds
+				.ToString(CultureInfo.InvariantCulture)
+				.BoldText();
+			Log($"Main thread was busy, waited for update {passedTime} seconds");
+
+			bool Wait() => _lastUpdateTime > lastUpdateTime;
 		}
 
 		private async UniTask WaitForTasksReadyAsync(CancellationToken cancellationToken)
