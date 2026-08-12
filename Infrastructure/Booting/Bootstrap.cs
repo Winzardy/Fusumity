@@ -27,6 +27,10 @@ namespace Booting
 	[HideMonoScript]
 	public partial class Bootstrap : MonoBehaviour
 	{
+		// Максимально допустимое время без кадра: если синхронные буттаски держат главный поток дольше,
+		// перед запуском следующей таски ждём, пока движок "продышится" (кадр отрисуется)
+		private const double MAX_TIME_WITHOUT_FRAME_SEC = 0.1d;
+
 		[SerializeReference]
 #if UNITY_EDITOR
 		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawAutoFillTasksButton), NumberOfItemsPerPage = 100)]
@@ -35,15 +39,12 @@ namespace Booting
 
 		public event Action<IBootTask, float> TaskBooted;
 
-		// Максимально допустимое время без Update: если синхронные буттаски держат главный поток дольше,
-		// перед запуском следующей таски ждём, пока движок "продышится" (кадр отрисуется, Update тикнет)
-		private const double MAX_TIME_WITHOUT_UPDATE_SEC = 0.5d;
-
 		private List<IBootTask> _bootedTasks;
 
 		private CompositeProgress<BootProgressInfo> _compositeProgress;
 
-		private double _lastUpdateTime;
+		// Время с начала текущего кадра, считается по монотонному Stopwatch, а не по Time.realtimeSinceStartup
+		private Timer _frameTimer;
 
 		private void Start()
 		{
@@ -53,7 +54,7 @@ namespace Booting
 
 		private void Update()
 		{
-			_lastUpdateTime = Time.realtimeSinceStartupAsDouble;
+			_frameTimer = Timer.Start();
 		}
 
 		private void OnDestroy()
@@ -82,7 +83,7 @@ namespace Booting
 			var invalidUsageProgress = new InvalidUsageProgress();
 
 			// Start вызывается до первого Update — считаем, что на старте главный поток свободен
-			_lastUpdateTime = loadingTime;
+			_frameTimer = Timer.Start();
 
 			foreach (var task in tasks)
 			{
@@ -92,7 +93,7 @@ namespace Booting
 				if (task.WaitForPreviousTasks)
 					await WaitForTasksReadyAsync(cancellationToken);
 
-				await WaitForUpdateAsync(cancellationToken);
+				await WaitForEndOfFrameAsync(cancellationToken);
 
 				var taskTimer = Timer.Start();
 
@@ -135,25 +136,25 @@ namespace Booting
 		}
 
 		/// <summary>
-		/// Если синхронные буттаски заблокировали главный поток дольше <see cref="MAX_TIME_WITHOUT_UPDATE_SEC"/>,
-		/// ждём следующего Update, чтобы движок успел прокрутить кадр
+		/// Если синхронные буттаски заблокировали главный поток дольше <see cref="MAX_TIME_WITHOUT_FRAME_SEC"/>,
+		/// ждём конца кадра, чтобы движок успел его прокрутить
 		/// </summary>
-		private async UniTask WaitForUpdateAsync(CancellationToken cancellationToken)
+		private async UniTask WaitForEndOfFrameAsync(CancellationToken cancellationToken)
 		{
-			var lastUpdateTime = _lastUpdateTime;
-			if (Time.realtimeSinceStartupAsDouble - lastUpdateTime < MAX_TIME_WITHOUT_UPDATE_SEC)
+			if (_frameTimer.Seconds < MAX_TIME_WITHOUT_FRAME_SEC)
 				return;
 
 			var waitingTimer = Timer.Start();
 
-			await UniTask.WaitUntil(Wait, cancellationToken: cancellationToken);
+			await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken);
+
+			// Продолжение выполняется в конце того же кадра, до следующего Update — обновляем таймер сами
+			_frameTimer = Timer.Start();
 
 			var passedTime = waitingTimer.Seconds
 				.ToString(CultureInfo.InvariantCulture)
 				.BoldText();
-			Log($"Main thread was busy, waited for update {passedTime} seconds");
-
-			bool Wait() => _lastUpdateTime > lastUpdateTime;
+			Log($"Main thread was busy, waited for end of frame {passedTime} seconds");
 		}
 
 		private async UniTask WaitForTasksReadyAsync(CancellationToken cancellationToken)
@@ -219,6 +220,7 @@ namespace Booting
 					weight += weightedProgress.Weight;
 				}
 			}
+
 			return weight;
 		}
 
@@ -281,10 +283,7 @@ namespace Booting
 
 		public BootstrapLoadingProgress()
 		{
-			Progress = new(newProgress =>
-			{
-				CurrentProgress = new(newProgress.locKey.value ?? CurrentProgress.locKey.value, newProgress.Progress);
-			});
+			Progress = new(newProgress => { CurrentProgress = new(newProgress.locKey.value ?? CurrentProgress.locKey.value, newProgress.Progress); });
 		}
 	}
 
@@ -298,10 +297,7 @@ namespace Booting
 		/// <summary>
 		/// Прошедшее время в секундах с момента запуска
 		/// </summary>
-		public double Seconds
-		{
-			get => (Stopwatch.GetTimestamp() - _startTimestamp) * SECONDS_PER_TICK;
-		}
+		public double Seconds { get => (Stopwatch.GetTimestamp() - _startTimestamp) * SECONDS_PER_TICK; }
 
 		private Timer(long startTimestamp)
 		{
