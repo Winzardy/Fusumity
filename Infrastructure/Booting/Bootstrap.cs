@@ -27,6 +27,10 @@ namespace Booting
 	[HideMonoScript]
 	public partial class Bootstrap : MonoBehaviour
 	{
+		// Максимально допустимое время без кадра: если синхронные буттаски держат главный поток дольше,
+		// перед запуском следующей таски ждём, пока движок "продышится" (кадр отрисуется)
+		private const double MAX_TIME_WITHOUT_FRAME_SEC = 0.1d;
+
 		[SerializeReference]
 #if UNITY_EDITOR
 		[ListDrawerSettings(OnTitleBarGUI = nameof(DrawAutoFillTasksButton), NumberOfItemsPerPage = 100)]
@@ -39,10 +43,18 @@ namespace Booting
 
 		private CompositeProgress<BootProgressInfo> _compositeProgress;
 
+		// Время с начала текущего кадра, считается по монотонному Stopwatch, а не по Time.realtimeSinceStartup
+		private Timer _frameTimer;
+
 		private void Start()
 		{
 			RunTasksAsync(destroyCancellationToken)
 				.Forget();
+		}
+
+		private void Update()
+		{
+			_frameTimer = Timer.Start();
 		}
 
 		private void OnDestroy()
@@ -68,7 +80,10 @@ namespace Booting
 
 			_compositeProgress = new CompositeProgress<BootProgressInfo>(GetTotalWeight(tasks), controller.Progress);
 
-			InvalidUsageProgress invalidUsageProgress = new InvalidUsageProgress();
+			var invalidUsageProgress = new InvalidUsageProgress();
+
+			// Start вызывается до первого Update — считаем, что на старте главный поток свободен
+			_frameTimer = Timer.Start();
 
 			foreach (var task in tasks)
 			{
@@ -77,6 +92,8 @@ namespace Booting
 
 				if (task.WaitForPreviousTasks)
 					await WaitForTasksReadyAsync(cancellationToken);
+
+				await WaitForEndOfFrameAsync(cancellationToken);
 
 				var taskTimer = Timer.Start();
 
@@ -116,6 +133,28 @@ namespace Booting
 				task.OnBootCompleted();
 
 			controller.UnRegisterAsService();
+		}
+
+		/// <summary>
+		/// Если синхронные буттаски заблокировали главный поток дольше <see cref="MAX_TIME_WITHOUT_FRAME_SEC"/>,
+		/// ждём конца кадра, чтобы движок успел его прокрутить
+		/// </summary>
+		private async UniTask WaitForEndOfFrameAsync(CancellationToken cancellationToken)
+		{
+			if (_frameTimer.Seconds < MAX_TIME_WITHOUT_FRAME_SEC)
+				return;
+
+			var waitingTimer = Timer.Start();
+
+			await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellationToken);
+
+			// Продолжение выполняется в конце того же кадра, до следующего Update — обновляем таймер сами
+			_frameTimer = Timer.Start();
+
+			var passedTime = waitingTimer.Seconds
+				.ToString(CultureInfo.InvariantCulture)
+				.BoldText();
+			Log($"Main thread was busy, waited for end of frame {passedTime} seconds");
 		}
 
 		private async UniTask WaitForTasksReadyAsync(CancellationToken cancellationToken)
@@ -181,6 +220,7 @@ namespace Booting
 					weight += weightedProgress.Weight;
 				}
 			}
+
 			return weight;
 		}
 
@@ -243,10 +283,7 @@ namespace Booting
 
 		public BootstrapLoadingProgress()
 		{
-			Progress = new(newProgress =>
-			{
-				CurrentProgress = new(newProgress.locKey.value ?? CurrentProgress.locKey.value, newProgress.Progress);
-			});
+			Progress = new(newProgress => { CurrentProgress = new(newProgress.locKey.value ?? CurrentProgress.locKey.value, newProgress.Progress); });
 		}
 	}
 
@@ -260,10 +297,7 @@ namespace Booting
 		/// <summary>
 		/// Прошедшее время в секундах с момента запуска
 		/// </summary>
-		public double Seconds
-		{
-			get => (Stopwatch.GetTimestamp() - _startTimestamp) * SECONDS_PER_TICK;
-		}
+		public double Seconds { get => (Stopwatch.GetTimestamp() - _startTimestamp) * SECONDS_PER_TICK; }
 
 		private Timer(long startTimestamp)
 		{
