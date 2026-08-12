@@ -35,6 +35,7 @@ namespace Fusumity.Reactive
 		private int _passedInFrame;
 
 		private bool _closing;
+		private bool _wasBackgrounded;
 
 		/// <summary>
 		/// Окно закрылось — накопленное нужно разобрать немедленно
@@ -57,22 +58,42 @@ namespace Fusumity.Reactive
 			this.windowTime = windowTime;
 			this.perFrame = perFrame;
 
-			UnityLifecycle.ApplicationResumeEvent += Open;
+			// Возврат фокуса открывает окно наравне с резюмом: реклама, системные диалоги и шторка
+			// снимают фокус без паузы, и без этого лимит остался бы выключенным до следующего
+			// полноценного ухода в фон — ровно там, где нагрузка на возврате самая большая
+			UnityLifecycle.ApplicationResumeEvent += HandleForeground;
+			UnityLifecycle.ApplicationFocusEvent += HandleForeground;
 
 			// Уходим в фон: обновлений больше не будет, поэтому просим разобрать накопленное сразу.
 			// Потеря фокуса приходит раньше паузы, так что хватает её одной
-			UnityLifecycle.ApplicationUnfocusEvent += Close;
+			UnityLifecycle.ApplicationUnfocusEvent += HandleBackground;
 			UnityLifecycle.ApplicationShutdown += Close;
 		}
 
 		public void Dispose()
 		{
-			UnityLifecycle.ApplicationResumeEvent -= Open;
+			UnityLifecycle.ApplicationResumeEvent -= HandleForeground;
+			UnityLifecycle.ApplicationFocusEvent -= HandleForeground;
 
-			UnityLifecycle.ApplicationUnfocusEvent -= Close;
+			UnityLifecycle.ApplicationUnfocusEvent -= HandleBackground;
 			UnityLifecycle.ApplicationShutdown -= Close;
 
 			Closed = null;
+		}
+
+		private void HandleBackground()
+		{
+			_wasBackgrounded = true;
+			Close();
+		}
+
+		private void HandleForeground()
+		{
+			// При запуске фокус приходит без предшествующего ухода в фон — разбирать тогда нечего
+			if (!_wasBackgrounded)
+				return;
+
+			Open();
 		}
 
 		public void Open()
