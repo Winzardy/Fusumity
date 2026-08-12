@@ -29,23 +29,50 @@ namespace Booting.Notifications
 
 		protected override async UniTask RunTaskAsync(Blackboard _, IProgress<BootProgressInfo> progress = null, CancellationToken token = default)
 		{
+			var settings = ContentManager.Get<NotificationsSettings>();
+
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 			_platform = new EditorNotificationPlatform();
+			SetupManagement(settings);
 #elif UNITY_ANDROID
-			_platform = new AndroidNotificationPlatform();
+			if (AndroidNotificationPlatform.Initialize())
+			{
+				// Контент и локализацию читаем на мейн-треде, дальше — регистрация каналов,
+				// JNI-обход запланированных уведомлений и рефлексия по сборкам: уводим в пул,
+				// чтобы мейн-тред на буте продолжал крутить кадры. Порядок бут-цепочки сохраняется,
+				// потому что таск ожидается через await
+				var channels = AndroidNotificationPlatform.BuildChannels();
+
+				await UniTask.RunOnThreadPool(() =>
+				{
+					UnityEngine.AndroidJNI.AttachCurrentThread();
+					try
+					{
+						_platform = new AndroidNotificationPlatform(channels);
+						SetupManagement(settings);
+					}
+					finally
+					{
+						UnityEngine.AndroidJNI.DetachCurrentThread();
+					}
+				}, cancellationToken: token);
+			}
 #elif UNITY_IOS
 			var platform = new iOSNotificationPlatform();
 			await platform.AuthorizeAsync(token);
 			_platform = platform;
+			SetupManagement(settings);
 #endif
-			if (_platform != null)
-			{
-				var settings = ContentManager.Get<NotificationsSettings>();
-				var management = new NotificationsManagement(settings, _platform);
-				NotificationsCenter.Set(management);
-			}
-
 			await UniTask.CompletedTask;
+		}
+
+		private void SetupManagement(NotificationsSettings settings)
+		{
+			if (_platform == null)
+				return;
+
+			var management = new NotificationsManagement(settings, _platform);
+			NotificationsCenter.Set(management);
 		}
 
 		protected override void OnDispose()
