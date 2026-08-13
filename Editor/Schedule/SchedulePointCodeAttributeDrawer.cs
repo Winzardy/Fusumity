@@ -15,8 +15,9 @@ namespace Fusumity.Editor
 		private const string TYPE_LABEL = "Type";
 		private const string FROM_LABEL = "from";
 
-		private const float SUFFIX_TEXT_OFFSET = -1.5f;
+		private const float SUFFIX_TEXT_OFFSET = 0;
 		private GUIStyle _suffixTextStyle;
+		private GUIStyle _infoStyle;
 
 		protected override void Initialize()
 		{
@@ -32,6 +33,15 @@ namespace Fusumity.Editor
 					textColor = Color.gray
 				}
 			};
+
+			// Стиль справки под полями раньше создавался на каждый repaint
+			_infoStyle = new GUIStyle(SirenixGUIStyles.MiniLabelCentered)
+			{
+				alignment = TextAnchor.UpperLeft,
+				richText = true,
+			};
+
+			_infoStyle.fontSize -= 2;
 		}
 
 		protected override void DrawPropertyLayout(GUIContent label)
@@ -51,6 +61,16 @@ namespace Fusumity.Editor
 			{
 				decode = SchedulePointDecode.GetDefault(newKind);
 				ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+
+				// Точка сбрасывается к дефолту нового типа — окно старого не переживает смену:
+				// у Interval окон не бывает, а на коротком периоде чужая длительность длиннее
+				// периода, и валидация тут же ругается на «ошибку», которую сделал сам редактор
+				var schemeProperty = Property.Parent?.Parent?.Parent;
+
+				if (schemeProperty?.ValueEntry?.WeakSmartValue is ScheduleScheme scheme &&
+					scheme.GetWindowDuration(Property.Parent.Index) > 0)
+					SchedulePointWindowDrawer.WriteDuration(schemeProperty, Property.Parent.Index, 0);
+
 				Property.MarkSerializationRootDirty();
 				return;
 			}
@@ -66,7 +86,7 @@ namespace Fusumity.Editor
 					: decode.sec <= TimeUtility.SECS_IN_ONE_MINUTE - 1
 						? $"{TimeUtility.SECOND_LABEL}s"
 						: $"{TimeUtility.SECOND_LABEL}s, {timeLabel}";
-				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix, textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
+				FusumityEditorGUILayout.SuffixValue(label, decode.sec, suffix, textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET + 1.75f);
 			}
 			else
 			{
@@ -76,9 +96,9 @@ namespace Fusumity.Editor
 					var dateTimeFormat = culture.DateTimeFormat;
 
 					if (kind is not SchedulePointKind.Daily
-					    and SchedulePointKind.Weekly
-					    or SchedulePointKind.MonthlyOnWeekday
-					    or SchedulePointKind.YearlyOnWeekday)
+						and SchedulePointKind.Weekly
+						or SchedulePointKind.MonthlyOnWeekday
+						or SchedulePointKind.YearlyOnWeekday)
 					{
 						if (kind is SchedulePointKind.MonthlyOnWeekday or SchedulePointKind.YearlyOnWeekday)
 						{
@@ -132,9 +152,9 @@ namespace Fusumity.Editor
 						textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 
 					if (kind is not SchedulePointKind.Daily
-					    and not SchedulePointKind.Weekly
-					    and not SchedulePointKind.MonthlyOnWeekday
-					    and not SchedulePointKind.YearlyOnWeekday)
+						and not SchedulePointKind.Weekly
+						and not SchedulePointKind.MonthlyOnWeekday
+						and not SchedulePointKind.YearlyOnWeekday)
 					{
 						var displayDay = decode.day + 1;
 						displayDay = SirenixEditorFields.LongField(displayDay);
@@ -172,7 +192,7 @@ namespace Fusumity.Editor
 					}
 
 					if (kind is SchedulePointKind.Yearly
-					    or SchedulePointKind.Date)
+						or SchedulePointKind.Date)
 					{
 						DrawMonth(ref decode);
 					}
@@ -217,14 +237,7 @@ namespace Fusumity.Editor
 				Property.MarkSerializationRootDirty();
 			}
 
-			var style = new GUIStyle(SirenixGUIStyles.MiniLabelCentered)
-			{
-				alignment = TextAnchor.UpperLeft,
-				richText = true,
-			};
-
-			style.fontSize -= 2;
-
+			var style = _infoStyle;
 			var now = DateTime.UtcNow;
 			var date = point.ToDateTime(now);
 
@@ -244,8 +257,8 @@ namespace Fusumity.Editor
 			var width = style.CalcWidth(code);
 			var height = style.CalcHeight(code, width);
 			GUI.Label(GUILayoutUtility.GetLastRect()
-			   .AlignRight(width, 2)
-			   .AlignBottom(height), code, style);
+				.AlignRight(width, 2)
+				.AlignBottom(height), code, style);
 		}
 
 		private static string Suffix(long number)

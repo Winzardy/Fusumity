@@ -86,6 +86,8 @@ namespace Fusumity.Reactive
 			InvokeEachSecond(UnscaledEachSecondEvent, ref _unscaledTimeAccumulator, Time.unscaledDeltaTime, 1);
 
 			EndOfFrameEvent.ImmediatelyInvoke();
+
+			IncrementFrameCount();
 		}
 
 		private void OnDestroy()
@@ -121,6 +123,9 @@ namespace Fusumity.Reactive
 
 		private void OnApplicationPause(bool pauseStatus)
 		{
+			// Инвалидация покадровых кэшей: пока приложение стоит, кадры не тикают, а время идёт
+			FrameCount++;
+
 			_pause = pauseStatus;
 			if (pauseStatus)
 				ApplicationPauseEvent?.Invoke();
@@ -130,6 +135,8 @@ namespace Fusumity.Reactive
 
 		private void OnApplicationFocus(bool hasFocus)
 		{
+			FrameCount++;
+
 			if (hasFocus)
 				ApplicationFocusEvent?.Invoke();
 			else

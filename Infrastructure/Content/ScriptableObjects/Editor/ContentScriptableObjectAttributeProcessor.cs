@@ -31,6 +31,18 @@ namespace Content.ScriptableObjects.Editor
 		{
 			base.ProcessChildMemberAttributes(parentProperty, member, attributes);
 
+			// Поле настроек живёт не в базе, а у самого IContentConstantsSource — имя неизвестно,
+			// поэтому ловим по типу
+			if ((member as FieldInfo)?.FieldType == typeof(ContentConstantsSettings))
+			{
+				attributes.Add(new HideLabelAttribute());
+				// Space самой карточки, а не PropertySpace на поле: последний отрисуется
+				// внутри рамки, а нужен отступ над ней (ColorCardBoxAttributeDrawer)
+				attributes.Add(new DarkCardBoxAttribute {Space = 8});
+				attributes.Add(new PropertyOrderAttribute(100));
+				return;
+			}
+
 			var rootClass = nameof(ContentScriptableObjectAttributeProcessor);
 			switch (member.Name)
 			{

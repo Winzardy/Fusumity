@@ -49,7 +49,6 @@ namespace UI
 		{
 		}
 
-
 		[Space]
 		[PropertyOrder(10)]
 		[SerializeField]
@@ -58,17 +57,13 @@ namespace UI
 #if UNITY_EDITOR
 		private void Update()
 		{
-			if (Mode.HasFlags(UpdateMode.Update))
+			if (!_updateInEditMode || Application.isPlaying)
 				return;
-			if (_updateInEditMode && !Application.isPlaying)
-				OnUpdate();
-		}
 
-		private void LateUpdate()
-		{
+			if (Mode.HasFlags(UpdateMode.Update))
+				OnUpdate();
+
 			if (Mode.HasFlags(UpdateMode.LateUpdate))
-				return;
-			if (_updateInEditMode && !Application.isPlaying)
 				OnLateUpdate();
 		}
 #endif

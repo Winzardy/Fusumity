@@ -2,6 +2,7 @@ using System;
 using DG.Tweening;
 using Fusumity;
 using Fusumity.Utility;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Evaluators;
 using Sirenix.OdinInspector;
@@ -16,8 +17,10 @@ namespace ZenoTween.Participant.Tweens
 		public const string INDEX = "index";
 		public const string SEGMENTS = "segments";
 
+		[NotNull]
 		public BlackboardSource blackboard;
 
+		[NotNull]
 		public Transform pivot;
 
 		[Space]

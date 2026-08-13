@@ -32,12 +32,18 @@ namespace Audio
 		private bool _cleared = true;
 		private bool _finished;
 
+		// Поколение жизненного цикла: растёт в Release, чтобы опоздавшие загрузки не трогали переиспользованный плеер
+		private int _generation;
+
 		private Tween _fade;
 
 		[ShowInInspector, ReadOnly, ShowIf(nameof(ShowCurrentTrack)), PropertyOrder(-1)]
 		private int _currentTrack;
 
 		private HashSet<AudioTrackScheme> _loadingTracks;
+
+		// Клипы, загруженные этим плеером: ровно один Retain на трек за цикл, отпускаются в ReleaseOwnedClips
+		private Dictionary<AudioTrackScheme, AudioClip> _ownedClips;
 
 		public bool IsPlaying => IsLoaded || GetUsedSources().Any(source => source.isPlaying);
 
@@ -53,6 +59,7 @@ namespace Audio
 
 			_audioSources?.ReleaseToStaticPool();
 			_loadingTracks?.ReleaseToStaticPool();
+			_ownedClips?.ReleaseToStaticPool();
 		}
 
 		public void Setup(in AudioEventDefinition definition)
@@ -155,7 +162,11 @@ namespace Audio
 
 			_fade?.KillSafe();
 
-			_current.ReleasePlaylist();
+			// Новое поколение: опоздавшие загрузки прошлого цикла больше не трогают состояние плеера
+			_generation++;
+			_loadingTracks?.Clear();
+
+			ReleaseOwnedClips();
 
 			if (_singleAudioSource)
 				ClearAndDisableSource(_singleAudioSource);
@@ -285,6 +296,7 @@ namespace Audio
 
 						var track = _current.playlist[index];
 
+						source.clip = GetTrackClip(track);
 						var tween = source.Play(track, _current);
 
 						if (tween != null)
@@ -300,6 +312,7 @@ namespace Audio
 						return;
 
 					var nextTrack = _current.playlist[_currentTrack];
+					_singleAudioSource.clip = GetTrackClip(nextTrack);
 					_fade = _singleAudioSource.Play(nextTrack, _current);
 					break;
 			}
@@ -420,7 +433,7 @@ namespace Audio
 
 		private void RollPlaylist()
 		{
-			_current.ReleasePlaylist();
+			ReleaseOwnedClips();
 			_current.RollPlaylist();
 		}
 
@@ -443,35 +456,86 @@ namespace Audio
 
 		private async UniTask LoadTrackAndTryPlayAsync(AudioTrackScheme track)
 		{
+			// Прямой клип из конструктора: владение внешнее, грузить нечего
+			if (track.DirectClip)
+				return;
+
 			if (!track.clipReference)
 			{
-				if (!track.clip)
-					AudioDebug.LogError("Reference and clip can't be null same time!");
-
+				AudioDebug.LogError("Reference and clip can't be null same time!");
 				return;
 			}
 
 			_loadingTracks ??= HashSetPool<AudioTrackScheme>.Get();
 			_loadingTracks.Add(track);
 
-			if (!track.clip)
-				track.clip = await track.clipReference.LoadAsync();
-
-			if (track.clip.loadState != AudioDataLoadState.Loaded)
+			var generation = _generation;
+			try
 			{
-				track.clip.LoadAudioData();
+				// Владение клипом у плеера: свой Retain на каждый трек, схема конфига только читается
+				_ownedClips ??= DictionaryPool<AudioTrackScheme, AudioClip>.Get();
+				if (!_ownedClips.TryGetValue(track, out var clip) || !clip)
+				{
+					clip = await track.clipReference.LoadAsync();
 
-				if (track.clip.loadType != AudioClipLoadType.Streaming)
-					while (track.clip.loadState == AudioDataLoadState.Loading)
-						await UniTask.NextFrame();
+					// Плеер уже отпущен, пока грузились: владение никому не нужно, возвращаем сразу
+					if (generation != _generation)
+					{
+						track.clipReference.Release();
+						return;
+					}
+
+					_ownedClips[track] = clip;
+				}
+
+				if (clip && clip.loadState != AudioDataLoadState.Loaded)
+				{
+					clip.LoadAudioData();
+
+					if (clip.loadType != AudioClipLoadType.Streaming)
+						while (generation == _generation && clip && clip.loadState == AudioDataLoadState.Loading)
+							await UniTask.NextFrame();
+				}
+
+				if (clip && clip.loadType == AudioClipLoadType.Streaming)
+					await UniTask.NextFrame();
+			}
+			catch (Exception e)
+			{
+				AudioDebug.LogException(e);
+			}
+			finally
+			{
+				if (generation == _generation)
+					_loadingTracks.Remove(track);
 			}
 
-			if (track.clip.loadType == AudioClipLoadType.Streaming)
-				await UniTask.NextFrame();
-
-			_loadingTracks.Remove(track);
+			if (generation != _generation)
+				return;
 
 			TryPlay();
+		}
+
+		private AudioClip GetTrackClip(AudioTrackScheme track)
+		{
+			if (track.DirectClip)
+				return track.DirectClip;
+
+			if (_ownedClips != null && _ownedClips.TryGetValue(track, out var clip))
+				return clip;
+
+			return null;
+		}
+
+		private void ReleaseOwnedClips()
+		{
+			if (_ownedClips == null || _ownedClips.Count == 0)
+				return;
+
+			foreach (var track in _ownedClips.Keys)
+				track.clipReference.Release(AudioEventUtility.DEFAULT_RELEASE_DELAY_MS);
+
+			_ownedClips.Clear();
 		}
 
 		private void InitializeSingleSource()

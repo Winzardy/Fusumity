@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using Fusumity.Attributes;
+using JetBrains.Annotations;
 using Sapientia;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ZenoTween.Participant.Tweens.UI
 		sourceAssembly: "UI")]
 	public class ImageFillAmountAnimationTween : AnimationTween
 	{
+		[NotNull]
 		public Image image;
 
 		[PropertyRange(0, 1)]

@@ -17,7 +17,7 @@ namespace Advertising.Editor
 			switch (member.Name)
 			{
 				case nameof(RewardedAdTradeCost.group):
-					attributes.Add(new ContextLabelAttribute("AdTokenGroup"));
+					attributes.Add(new KeyAttribute("AdTokenGroup"));
 					attributes.Add(new TooltipAttribute(
 						"Нужно чтобы разделять выдачу билетиков по группам, например чтобы в одном месте не использовались допустимые билетики из другой группы"));
 					break;

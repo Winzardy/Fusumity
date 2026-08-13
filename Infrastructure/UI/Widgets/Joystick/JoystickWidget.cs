@@ -79,7 +79,7 @@ namespace UI.Joystick
 
 		protected override void OnHide() => Clear();
 
-		private void Clear()
+		public void Clear()
 		{
 			_lastPointerId = null;
 

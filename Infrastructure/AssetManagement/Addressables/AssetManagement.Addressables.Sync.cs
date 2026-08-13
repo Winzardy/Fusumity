@@ -84,7 +84,8 @@ namespace AssetManagement
 				return default;
 			}
 
-			_keyToAssetContainer[key] = new AssetContainer(key, handle);
+			var container = new AssetContainer(this, key, handle);
+			_keyToAssetContainer[key] = container;
 
 			var asset = handle.WaitForCompletion();
 
@@ -100,6 +101,7 @@ namespace AssetManagement
 				throw AssetManagementDebug.Exception("Failed to load asset");
 			}
 
+			container.Report(1f);
 			return asset;
 		}
 	}
