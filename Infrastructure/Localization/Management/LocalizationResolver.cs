@@ -140,6 +140,52 @@ namespace Localization
 			return value;
 		}
 
+		/// <summary>
+		/// Перевод слова по ключу для конкретного языка
+		/// </summary>
+		/// <remarks>Асинхронный, так как таблица нужного языка может быть ещё не загружена</remarks>
+		internal async UniTask<string> GetAsync(string key, string localeCode, string defaultValue = null,
+			CancellationToken token = default)
+		{
+			if (key.IsNullOrEmpty())
+				throw LocalizationDebug.NullException("Key cannot be null or empty!");
+
+			if (localeCode.IsNullOrEmpty() || localeCode == CurrentLocaleCode)
+				return Get(key, defaultValue);
+
+			var locale = LocalizationSettings.AvailableLocales.GetLocale(localeCode);
+			if (!locale)
+			{
+				LocalizationDebug.LogError($"Not found locale by code [ {localeCode} ]", this);
+				return Get(key, defaultValue);
+			}
+
+			foreach (var reference in _refToHandle.Keys)
+			{
+				var handle = LocalizationSettings.StringDatabase.GetTableAsync(reference.id, locale);
+
+				await handle
+					.WithCancellation(token);
+
+				if (!handle.IsValid() || handle.Status != AsyncOperationStatus.Succeeded)
+				{
+					LocalizationDebug.LogError(
+						$"Not found table by name [ {reference} ] for locale [ {locale.LocaleName} ]",
+						this);
+					continue;
+				}
+
+				var entry = handle.Result.GetEntry(key);
+				if (entry != null)
+					return entry.Value;
+			}
+
+			if (_remoteContainer.HasKey(key, localeCode))
+				return _remoteContainer.GetString(key, localeCode);
+
+			return defaultValue ?? $"#{key.ToUpper()}#".ColorText(UnityColorUtility.ERROR);
+		}
+
 		internal void SetLanguage(string localeCode)
 			=> LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.GetLocale(localeCode);
 

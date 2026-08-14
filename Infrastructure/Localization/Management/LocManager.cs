@@ -42,6 +42,11 @@ namespace Localization
 		/// <returns>Перевод слова по ключу (текущего выбранного языка)</returns>
 		public static string Get(string key, string defaultValue = null) => resolver.Get(key, defaultValue);
 
+		/// <inheritdoc cref="LocalizationResolver.GetAsync"/>
+		public static UniTask<string> GetAsync(string key, string localeCode, string defaultValue = null,
+			CancellationToken token = default)
+			=> resolver.GetAsync(key, localeCode, defaultValue, token);
+
 		public static string GetFormatted(string key, params (string tag, string value)[] toReplace)
 		{
 			var localized = Get(key);

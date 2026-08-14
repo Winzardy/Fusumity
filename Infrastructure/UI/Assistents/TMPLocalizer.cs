@@ -1,6 +1,10 @@
-﻿using Localization;
+using Cysharp.Threading.Tasks;
+using Localization;
+using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 
@@ -14,6 +18,11 @@ namespace UI
 		[SerializeField]
 		[OnValueChanged(nameof(SetEditModeKey))]
 		private LocKey _key;
+		[Tooltip("Язык, на котором всегда показывать текст. Пусто — текущий язык игры")]
+		[SerializeField]
+		[OnValueChanged(nameof(SetEditModeKey))]
+		[ValueDropdown(nameof(GetLocaleCodes))]
+		private string _localeCode;
 
 		private IEnumerator Start()
 		{
@@ -45,7 +54,18 @@ namespace UI
 			if (!gameObject.activeSelf)
 				return;
 
-			_text.text = LocManager.Get(_key);
+			if (_localeCode.IsNullOrEmpty())
+			{
+				_text.text = LocManager.Get(_key);
+				return;
+			}
+
+			UpdateTextAsync(destroyCancellationToken).Forget();
+		}
+
+		private async UniTaskVoid UpdateTextAsync(CancellationToken token)
+		{
+			_text.text = await LocManager.GetAsync(_key, _localeCode, token: token);
 		}
 
 		private void OnEnable()
@@ -75,11 +95,22 @@ namespace UI
 
 			if (_text != null)
 			{
+				var locale = _localeCode.IsNullOrEmpty() ? string.Empty : $":{_localeCode.ToUpper()}";
 				_text.text =
 					_key.IsEmpty() ?
 					$"#NULL#" :
-					$"#{_key.value.ToUpper()}#";
+					$"#{_key.value.ToUpper()}{locale}#";
 			}
 		}
+
+#if UNITY_EDITOR
+		private static IEnumerable<ValueDropdownItem<string>> GetLocaleCodes()
+		{
+			yield return new ValueDropdownItem<string>("Current", string.Empty);
+
+			foreach (var code in LocManager.GetAllLocalCodesEditor())
+				yield return new ValueDropdownItem<string>($"{LocManager.GetLanguageEditor(code)} ({code})", code);
+		}
+#endif
 	}
 }
