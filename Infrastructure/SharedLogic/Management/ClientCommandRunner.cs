@@ -1,3 +1,4 @@
+using Messaging;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -9,8 +10,6 @@ namespace SharedLogic
 		private readonly ICommandCenter _center;
 
 		private CommandBuffer _buffer;
-
-		public event Action<Exception, string> OnException;
 
 		public bool IsEmpty { get => _buffer.IsEmpty; }
 
@@ -41,7 +40,7 @@ namespace SharedLogic
 			ref var hackDefensiveCopy = ref Unsafe.AsRef(in command);
 			if (!hackDefensiveCopy.Validate(_root, out var exception1))
 			{
-				OnException?.Invoke(exception1, "validation on start");
+				new CommandExceptionMessage(exception1, "validation on start").Send();
 				return false;
 			}
 
@@ -65,7 +64,7 @@ namespace SharedLogic
 				// клиент никогда не узнает и выполнит эту команду без повторного запуска
 				if (needValidate && !_buffer.Validate(_root, out var exception))
 				{
-					OnException?.Invoke(exception, "cycle validation");
+					new CommandExceptionMessage(exception, "cycle validation").Send();
 					break;
 				}
 
@@ -81,7 +80,7 @@ namespace SharedLogic
 				}
 				catch (Exception ex)
 				{
-					OnException?.Invoke(ex, "exception");
+					new CommandExceptionMessage(ex, "exception").Send();
 					break;
 				}
 			}
@@ -89,6 +88,18 @@ namespace SharedLogic
 			bool success = _buffer.IsEmpty;
 			_buffer.Clear();
 			return success;
+		}
+	}
+
+	public readonly struct CommandExceptionMessage
+	{
+		public readonly Exception exception;
+		public readonly string context;
+
+		public CommandExceptionMessage(Exception exception, string context)
+		{
+			this.exception = exception;
+			this.context = context;
 		}
 	}
 }
