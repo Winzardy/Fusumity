@@ -18,8 +18,8 @@ namespace Game.UI
 		public Color? IconColor { get => _iconColor; set { _iconColor = value; IconColorChanged?.Invoke(); } }
 		public Color? LabelColor { get => _labelColor; set { _labelColor = value; LabelColorChanged?.Invoke(); } }
 		public string Style { get => _labelStyle; set { _labelStyle = value; StyleChanged?.Invoke(); } }
-		public Action LabelClickAction { get; set; }
-		public Action IconClickAction { get; set; }
+		public Action<Vector2> LabelClickAction { get; set; }
+		public Action<Vector2> IconClickAction { get; set; }
 
 		public event Action LabelChanged;
 		public event Action IconChanged;
@@ -27,8 +27,8 @@ namespace Game.UI
 		public event Action LabelColorChanged;
 		public event Action StyleChanged;
 
-		public void LabelClick(Vector2 _) => LabelClickAction?.Invoke();
-		public void IconClick(Vector2 _) => IconClickAction?.Invoke();
+		public void LabelClick(Vector2 pos) => LabelClickAction?.Invoke(pos);
+		public void IconClick(Vector2 pos) => IconClickAction?.Invoke(pos);
 
 		public void Clear()
 		{
