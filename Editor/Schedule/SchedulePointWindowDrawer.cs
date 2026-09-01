@@ -22,11 +22,21 @@ namespace Fusumity.Editor
 		private const string MOMENT_LABEL = "moment, no window";
 		private const float NUMBER_WIDTH = 58f;
 
-		private static readonly GUIContent DURATION_LABEL =
-			new("Duration", "Длительность окна. Хранится в durations схемы, параллельно точкам");
+		/// <summary>Режим ввода общий на редактор: дизайнер переключает его один раз, а не на каждой точке</summary>
+		private const string PIN_END_PREF = "ScheduleWindow.PinEnd";
 
-		private static readonly GUIContent UNTIL_LABEL =
-			new("Until", "Конец окна: до какого дня и времени оно идёт. Хранится всё равно длительность");
+		private const float MODE_WIDTH = 78f;
+		private const int MAX_DAYS = (int) (ScheduleEditorFormat.MAX_SECONDS / TimeUtility.SECS_IN_ONE_DAY);
+		private const float LABEL_PADDING = 4f;
+
+		private static readonly GUIContent RANGE_LABEL =
+			new("Range", "Точка становится отрезком [дата, дата + длительность) — в данных это «окно», " +
+				"сам отрезок хранится длительностью, в durations схемы параллельно точкам\n\n" +
+				"Until — вводится конец, и при сдвиге точки он остаётся на месте\n" +
+				"Duration — вводится длина, и конец едет вместе с точкой");
+
+		/// <summary>Что дизайнер вводит и что остаётся на месте при сдвиге точки</summary>
+		private static readonly string[] MODE_NAMES = {"Until", "Duration"};
 
 		private bool _enabled;
 
@@ -35,6 +45,18 @@ namespace Fusumity.Editor
 		/// от данных при первом показе, дальше живёт как состояние редактора
 		/// </summary>
 		private bool? _active;
+
+		/// <summary>
+		/// Что остаётся на месте при сдвиге точки: конец окна или его длина. Хранится в схеме
+		/// всё равно длительность — режим только про ввод
+		/// </summary>
+		private bool? _pinEnd;
+
+		/// <summary>Начало окна прошлого кадра — по нему видно, на сколько уехала точка</summary>
+		private long? _start;
+
+		/// <summary>Код точки прошлого кадра — по нему видно подмену точки под этим индексом</summary>
+		private long? _code;
 
 		private GUIStyle _suffixTextStyle;
 		private GUIStyle _previewStyle;
@@ -63,6 +85,10 @@ namespace Fusumity.Editor
 			};
 
 			_previewStyle.fontSize -= 2;
+
+			// Без отступов подпись прилипает к полям и к краю карточки и читается как строка
+			// следующего свойства, а не как пояснение к этому
+			_previewStyle.margin = new RectOffset(6, 0, 4, 3);
 		}
 
 		/// <summary>Ищет [ScheduleWindow] вверх по дереву — атрибут висит на поле со схемой</summary>
@@ -79,7 +105,21 @@ namespace Fusumity.Editor
 
 		protected override void DrawPropertyLayout(GUIContent label)
 		{
-			CallNextDrawer(label);
+			// Правку самой точки надо отличать от правки со стороны: undo и календарь меняют код
+			// мимо этих полей, и подгонять под них длительность нельзя
+			bool moved;
+
+			EditorGUI.BeginChangeCheck();
+
+			try
+			{
+				CallNextDrawer(label);
+			}
+			finally
+			{
+				// finally: на кривом коде точки дровер бросает, и проверка осталась бы незакрытой
+				moved = EditorGUI.EndChangeCheck();
+			}
 
 			if (!_enabled)
 				return;
@@ -90,11 +130,13 @@ namespace Fusumity.Editor
 			if (schemeProperty?.ValueEntry?.WeakSmartValue is not ScheduleScheme scheme)
 				return;
 
+			long code;
 			SchedulePointDecode decode;
 
 			try
 			{
-				decode = ValueEntry.SmartValue.code;
+				code = GetCode();
+				decode = code;
 			}
 			catch
 			{
@@ -110,18 +152,46 @@ namespace Fusumity.Editor
 				if (scheme.GetWindowDuration(Property.Index) > 0)
 					SetDuration(schemeProperty, Property.Index, 0);
 
+				_start = null;
 				return;
 			}
 
 			var index = Property.Index;
 			var duration = scheme.GetWindowDuration(index);
+
+			// Дровер живёт на индексе элемента, а не на точке: после удаления или перестановки под
+			// ним оказывается другая точка. Своя правка меняет код в этом же кадре (moved), всё
+			// остальное — признак подмены, и состояние дровера надо перечитать от данных
+			if (!moved && _code.HasValue && _code.Value != code)
+			{
+				_active = null;
+				_start = null;
+			}
+
+			_code = code;
+
 			var active = _active ??= duration > 0;
 
-			// Режим ввода зависит от типа точки: там, где конец окна однозначен, дизайнер
-			// мыслит концом («до пятницы», «до 23:00») — там и рисуем конец. У остальных
-			// правил период плавает, ввод только длительностью
-			SirenixEditorGUI.BeginHorizontalPropertyLayout(
-				CanPickEnd(kind) ? UNTIL_LABEL : DURATION_LABEL);
+			// Ввод концом только там, где конец однозначен: у месячных и годовых правил период
+			// плавает, и «до 30-го числа» упирается в разную длину месяцев
+			var canPickEnd = CanPickEnd(kind);
+			var pinEnd = canPickEnd && (_pinEnd ??= EditorPrefs.GetBool(PIN_END_PREF, true));
+			var start = GetStart(in decode, kind);
+
+			// Сдвиг точки не должен таскать конец за собой: раз дизайнер задал именно конец,
+			// на месте остаётся он, а пересчитывается длительность
+			if (moved && pinEnd && duration > 0 && _start.HasValue && _start.Value != start)
+			{
+				duration = Reanchor(duration, start - _start.Value, kind);
+				SetDuration(schemeProperty, index, duration);
+			}
+
+			_start = start;
+
+			// Колонка подписи по ширине слова: стандартная тянется на треть строки, и между
+			// подписью и туглом остаётся пустое место
+			GUIHelper.PushLabelWidth(EditorStyles.label.CalcSize(RANGE_LABEL).x + LABEL_PADDING);
+			SirenixEditorGUI.BeginHorizontalPropertyLayout(RANGE_LABEL);
 			{
 				var toggled = EditorGUILayout.Toggle(active, GUILayout.Width(16));
 
@@ -136,9 +206,16 @@ namespace Fusumity.Editor
 
 				if (active)
 				{
+					// Перед полями: так подпись режима читается как заголовок к тому, что в них вводят.
+					// У месячных и годовых правил конец не привязать к дню — там режим один и показан
+					// выключенным, иначе непонятно, почему выбора нет
+					GUIHelper.PushGUIEnabled(canPickEnd);
+					DrawMode(pinEnd);
+					GUIHelper.PopGUIEnabled();
+
 					EditorGUI.BeginChangeCheck();
 
-					duration = CanPickEnd(kind)
+					duration = pinEnd
 						? DrawUntil(in decode, kind, duration)
 						: DrawLength(kind, duration);
 
@@ -147,9 +224,40 @@ namespace Fusumity.Editor
 				}
 			}
 			SirenixEditorGUI.EndHorizontalPropertyLayout();
+			GUIHelper.PopLabelWidth();
 
 			if (active)
-				DrawPreview(ValueEntry.SmartValue, duration);
+				DrawPreview(new SchedulePoint {code = code}, duration);
+		}
+
+		/// <summary>
+		/// Код точки этого кадра: правка уходит в дочернее свойство, а в саму точку попадает
+		/// только на ApplyChanges — до него окно считало бы конец от прежнего начала
+		/// </summary>
+		private long GetCode()
+		{
+			var codeProperty = Property.Children[nameof(SchedulePoint.code)];
+
+			return codeProperty?.ValueEntry?.WeakSmartValue is long code
+				? code
+				: ValueEntry.SmartValue.code;
+		}
+
+		/// <summary>
+		/// Переключатель ввода. Хранится всё равно длительность — режим про то, что дизайнер
+		/// держит в голове и что остаётся на месте при сдвиге точки
+		/// </summary>
+		private void DrawMode(bool pinEnd)
+		{
+			var selected = SirenixEditorFields.Dropdown(pinEnd ? 0 : 1, MODE_NAMES,
+				GUILayout.Width(MODE_WIDTH)) == 0;
+
+			if (selected == pinEnd)
+				return;
+
+			// Со следующего кадра: смена набора полей посреди отрисовки путает id контролов
+			_pinEnd = selected;
+			EditorPrefs.SetBool(PIN_END_PREF, selected);
 		}
 
 		private void SetDuration(InspectorProperty schemeProperty, int index, long value)
@@ -161,6 +269,10 @@ namespace Fusumity.Editor
 		/// </summary>
 		internal static void WriteDuration(InspectorProperty schemeProperty, int index, long value)
 		{
+			// Единственная точка записи: за потолком переполняются TimeSpan и DateTime, и починить
+			// такую длительность из инспектора уже нечем — поля перестают рисоваться
+			value = Math.Clamp(value, 0, ScheduleEditorFormat.MAX_SECONDS);
+
 			var scheme = (ScheduleScheme) schemeProperty.ValueEntry.WeakSmartValue;
 			var length = Math.Max(scheme.points?.Length ?? 0, index + 1);
 
@@ -210,6 +322,74 @@ namespace Fusumity.Editor
 		private static bool CanPickEnd(SchedulePointKind kind)
 			=> kind is SchedulePointKind.Daily or SchedulePointKind.Weekly or SchedulePointKind.Date;
 
+		/// <summary>
+		/// Начало окна в тех же единицах, в каких живёт длительность: секунды от начала периода
+		/// правила, а у разовой даты — от эпохи
+		/// </summary>
+		private static long GetStart(in SchedulePointDecode decode, SchedulePointKind kind)
+		{
+			var time = decode.hr * TimeUtility.SECS_IN_ONE_HOUR
+				+ decode.min * TimeUtility.SECS_IN_ONE_MINUTE
+				+ decode.sec;
+
+			switch (kind)
+			{
+				case SchedulePointKind.Weekly:
+					return decode.day * TimeUtility.SECS_IN_ONE_DAY + time;
+
+				case SchedulePointKind.Date:
+					try
+					{
+						var date = new DateTime((int) decode.yr, decode.mh + 1, (int) decode.day + 1,
+							decode.hr, decode.min, (int) decode.sec, DateTimeKind.Utc);
+
+						return (long) (date - DateTime.UnixEpoch).TotalSeconds;
+					}
+					catch
+					{
+						return time;
+					}
+
+				default:
+					return time;
+			}
+		}
+
+		/// <summary>Пересчитывает длительность так, чтобы конец окна остался на месте</summary>
+		/// <remarks>
+		/// У повторяющихся правил начало может перешагнуть конец — тогда окно уезжает в следующий
+		/// период, ровно как при ручном вводе конца раньше начала. У разовой даты периода нет,
+		/// и такое окно схлопывается
+		/// </remarks>
+		private static long Reanchor(long duration, long shift, SchedulePointKind kind)
+		{
+			var result = duration - shift;
+			var period = PeriodSeconds(kind);
+
+			// У разовой даты периода нет: конца «в следующем периоде» не существует. Начало
+			// перешагнуло конец — оставляем длину как есть, иначе окно молча стёрлось бы
+			if (period <= 0)
+				return result > 0 ? result : duration;
+
+			if (result >= 0 && result <= period)
+				return result;
+
+			// Конец вышел за период — заворачиваем, как и при ручном вводе конца раньше начала;
+			// без этого сдвиг назад раздувает окно длиннее периода повторения
+			result %= period;
+
+			return result < 0 ? result + period : result;
+		}
+
+		/// <summary>Период повторения правила — в нём заворачивается конец окна</summary>
+		private static long PeriodSeconds(SchedulePointKind kind)
+			=> kind switch
+			{
+				SchedulePointKind.Daily => TimeUtility.SECS_IN_ONE_DAY,
+				SchedulePointKind.Weekly => TimeUtility.SECS_IN_ONE_DAY * 7L,
+				_ => 0
+			};
+
 		#region Length
 
 		private long DrawLength(SchedulePointKind kind, long duration)
@@ -244,7 +424,10 @@ namespace Fusumity.Editor
 				SchedulePointKind.Weekly => 6,
 				SchedulePointKind.Monthly or SchedulePointKind.MonthlyOnWeekday => 27,
 				SchedulePointKind.Yearly or SchedulePointKind.YearlyOnWeekday => 364,
-				_ => int.MaxValue
+
+				// У разовой даты периода нет, но потолок всё равно нужен: без него в поле уезжает
+				// длительность, на которой переполняются TimeSpan и DateTime
+				_ => MAX_DAYS
 			};
 
 		private int Field(int value, string suffix)
@@ -318,7 +501,9 @@ namespace Fusumity.Editor
 				return duration;
 			}
 
-			var end = start.AddSeconds(Math.Max(0, duration));
+			// С потолком: у даты близко к границе DateTime сложение бросает, а try выше
+			// покрывает только сборку начала
+			var end = ScheduleEditorFormat.AddSeconds(start, duration);
 
 			var day = Math.Clamp(SirenixEditorFields.IntField(end.Day, GUILayout.MinWidth(NUMBER_WIDTH)), 1, 31);
 			FusumityEditorGUILayout.SuffixValue(null, day, TimeUtility.SHORT_DAY_LABEL, textStyle: _suffixTextStyle);
@@ -412,7 +597,7 @@ namespace Fusumity.Editor
 					var start = point.ToDateTime(DateTime.UtcNow);
 					var end = start.AddSeconds(duration);
 
-					text = $" start — {start.ToString("ddd dd MMM, HH:mm", CultureInfo.InvariantCulture)}" +
+					text = $"start — {start.ToString("ddd dd MMM, HH:mm", CultureInfo.InvariantCulture)}" +
 						$"   ·   end — {end.ToString("ddd dd MMM, HH:mm", CultureInfo.InvariantCulture)}" +
 						$"   ·   {CompactSpan(duration)}";
 				}
