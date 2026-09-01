@@ -15,7 +15,7 @@ namespace Fusumity.Editor
 	public class SchedulePointAttributeProcessor : OdinAttributeProcessor<ISchedulePoint>
 	{
 		private const string INTERVAL_WARNING_MESSAGE =
-			"Нет смысла использовать больше двух интервалов! Потому что они конфликтуют друг с другом";
+			"Нет смысла использовать больше одного интервала! Потому что они конфликтуют друг с другом";
 
 		private const string INTERVAL_DURATION_MESSAGE =
 			"У Interval окна не бывает: он задаёт моменты от точки отсчёта. " +

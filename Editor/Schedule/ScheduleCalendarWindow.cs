@@ -5,9 +5,9 @@ using Sapientia;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities.Editor;
 using Fusumity.Editor.Utility;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -32,6 +32,12 @@ namespace Fusumity.Editor
 		/// Потолок вхождений одной точки за период: от кривого кода можно получить бесконечный шаг
 		/// </summary>
 		private const int OCCURRENCES_LIMIT = 512;
+
+		/// <summary>Как часто календарь сверяет схему с показанным снимком, мс</summary>
+		private const long SYNC_INTERVAL = 250;
+
+		private const ulong FNV_BASIS = 14695981039346656037;
+		private const ulong FNV_PRIME = 1099511628211;
 
 		private const int COMPACT_DOTS_LIMIT = 4;
 		private const float SIDEBAR_WIDTH = 250f;
@@ -93,9 +99,18 @@ namespace Fusumity.Editor
 		private static Texture2D _windowIcon;
 		private static Texture2D _editIcon;
 
+		// DontUnloadUnusedAsset переживает рекомпиляцию, а статические ссылки нет — без уборки
+		// каждая пересборка кода оставляла бы в редакторе прошлый набор иконок
+		static ScheduleCalendarWindow() => AssemblyReloadEvents.beforeAssemblyReload += ReleaseIcons;
+
 		private readonly Dictionary<int, Button> _modeButtons = new();
 
 		private DateTime? _nearest;
+
+		/// <summary>
+		/// Отпечаток схемы на момент последней перерисовки: по нему ловятся правки со стороны
+		/// </summary>
+		private ulong _signature;
 
 		/// <summary>Длительности окон из схемы — параллельно точкам, снимок на момент Refresh</summary>
 		private long[] _durations;
@@ -141,6 +156,12 @@ namespace Fusumity.Editor
 		private void OnDisable() => Undo.undoRedoPerformed -= SyncExternalChange;
 
 		/// <summary>
+		/// В фоне планировщик UIToolkit не тикает — на возврате сверяемся сразу, иначе окно
+		/// показывает расписание на момент ухода
+		/// </summary>
+		private void OnFocus() => ReloadData();
+
+		/// <summary>
 		/// После undo или правки из окна точки дерево Odin держит прежние значения —
 		/// без обновления календарь рисует то, чего в ассете уже нет
 		/// </summary>
@@ -153,21 +174,20 @@ namespace Fusumity.Editor
 				if (this == null)
 					return;
 
-				try
-				{
-					_property?.Tree?.UpdateTree();
-				}
-				catch
-				{
-					_property = null;
-				}
-
-				Refresh();
+				ReloadData();
 			};
 		}
 
 		private void CreateGUI()
 		{
+			// Окно переживает перезагрузку домена, а несериализуемые даты — нет: без этого сетка
+			// встаёт на DateTime.MinValue, и листание назад бросает на каждом клике
+			if (_anchor == default)
+				_anchor = DateTime.UtcNow.Date;
+
+			if (_focus == default)
+				_focus = DateTime.UtcNow;
+
 			var root = rootVisualElement;
 			root.style.paddingLeft = 6;
 			root.style.paddingRight = 6;
@@ -240,6 +260,10 @@ namespace Fusumity.Editor
 
 			// «Сейчас» едет само: без тика линия замирает на времени открытия окна
 			root.schedule.Execute(SyncNow).Every(20_000);
+
+			// Точки правят и мимо календаря — из инспектора, из окна точки, скриптом, undo.
+			// Уведомления есть не от каждого источника, поэтому календарь сам сверяет схему
+			root.schedule.Execute(SyncData).Every(SYNC_INTERVAL);
 
 			Refresh();
 		}
@@ -577,7 +601,7 @@ namespace Fusumity.Editor
 		}
 
 		private static Texture2D WindowIcon()
-			=> Icon(ref _windowIcon, SdfIconType.CalendarWeek, 16);
+			=> Icon(ref _windowIcon, SdfIconType.CalendarWeek, 24);
 
 		private static Texture2D EditIcon()
 			=> Icon(ref _editIcon, SdfIconType.PencilFill, 12);
@@ -591,6 +615,22 @@ namespace Fusumity.Editor
 			cache.hideFlags |= HideFlags.DontUnloadUnusedAsset;
 
 			return cache;
+		}
+
+		private static void ReleaseIcons()
+		{
+			Release(ref _rulesIconNormal);
+			Release(ref _rulesIconSelected);
+			Release(ref _windowIcon);
+			Release(ref _editIcon);
+		}
+
+		private static void Release(ref Texture2D icon)
+		{
+			if (icon != null)
+				DestroyImmediate(icon);
+
+			icon = null;
 		}
 
 		/// <summary>
@@ -713,8 +753,7 @@ namespace Fusumity.Editor
 				if (!byKind.TryGetValue(kind, out var indices))
 					continue;
 
-				var foldout = new Foldout {text = $"{kind} ({indices.Count})", value = true};
-				foldout.style.marginBottom = 2;
+				var foldout = BuildGroup($"{kind} ({indices.Count})");
 
 				foreach (var index in indices)
 					foldout.Add(BuildRule(index, points[index], kind, occurrences));
@@ -724,21 +763,52 @@ namespace Fusumity.Editor
 
 			if (invalid.Count > 0)
 			{
-				var foldout = new Foldout {text = $"Invalid ({invalid.Count})", value = true};
+				var foldout = BuildGroup($"Invalid ({invalid.Count})");
 
 				foreach (var index in invalid)
-				{
-					foldout.Add(new Label($"#{index} · code {points[index].code}")
-					{
-						style = {color = new Color(0.85f, 0.4f, 0.4f), fontSize = 11}
-					});
-				}
+					foldout.Add(BuildInvalidRule(index, points[index]));
 
 				_rules.Add(foldout);
 			}
 
 			if (points.Length == 0)
 				_rules.Add(new Label("No points") {style = {color = Color.gray, fontSize = 11}});
+		}
+
+		/// <summary>
+		/// Foldout сдвигает содержимое под свою стрелку — в узком сайдбаре этот отступ съедает
+		/// строку правила, а вкладывать сюда всё равно нечего
+		/// </summary>
+		private static Foldout BuildGroup(string text)
+		{
+			var foldout = new Foldout {text = text, value = true};
+			foldout.style.marginBottom = 2;
+			foldout.contentContainer.style.marginLeft = 0;
+
+			return foldout;
+		}
+
+		/// <summary>
+		/// Битую точку надо хотя бы удалить: её код не декодируется, карточку правила по нему
+		/// не построить, а инспектор такую строку не рисует вовсе
+		/// </summary>
+		private VisualElement BuildInvalidRule(int index, SchedulePoint point)
+		{
+			var row = new VisualElement
+			{
+				style = {flexDirection = FlexDirection.Row, alignItems = Align.Center, marginBottom = 1}
+			};
+
+			row.Add(new Label($"#{index} · code {point.code}")
+			{
+				style = {flexGrow = 1, color = new Color(0.85f, 0.4f, 0.4f), fontSize = 11}
+			});
+
+			var remove = OverlayButton("×", () => RemovePoint(index), 18);
+			remove.tooltip = $"Удалить точку #{index}";
+			row.Add(remove);
+
+			return row;
 		}
 
 		private VisualElement BuildRule(int index, SchedulePoint point, SchedulePointKind kind,
@@ -1057,6 +1127,8 @@ namespace Fusumity.Editor
 		{
 			if (_content == null)
 				return;
+
+			_signature = GetSignature();
 
 			_content.Clear();
 			_nearest = null;
@@ -1528,9 +1600,10 @@ namespace Fusumity.Editor
 		{
 			var inMonth = date.Month == month.Month && date.Year == month.Year;
 
-			// В году выпадающий день попадает сразу в два мини-месяца: пометь его в обоих —
-			// и метки задвоятся. Чужой день остаётся просто числом
-			var muted = compact && !inMonth;
+			// Чужой день остаётся просто числом: в году он попадает сразу в два мини-месяца
+			// (метки задвоились бы), а в месяце вхождения за границами периода вообще не собраны —
+			// «пустой» рабочий день читался бы как «правило тут не срабатывает»
+			var muted = !inMonth;
 
 			var isFocus = !muted && date.Date == _focus.Date;
 			var isToday = !muted && date.Date == today;
@@ -1948,6 +2021,9 @@ namespace Fusumity.Editor
 			private string _path;
 			private GUIContent _label;
 
+			/// <summary>Сколько точек было на момент открытия — путь окна привязан к индексу</summary>
+			private int _count;
+
 			public static void Open(InspectorProperty pointsProperty, int index, Action onEdited)
 			{
 				InspectorProperty child;
@@ -1967,6 +2043,7 @@ namespace Fusumity.Editor
 				var window = CreateInstance<PointEditWindow>();
 				window.titleContent = new GUIContent($"Edit Point #{index}", WindowIcon());
 				window._path = child.Path;
+				window._count = pointsProperty.Children.Count;
 				window._label = new GUIContent($"#{index}");
 				window._tree = PropertyTree.Create(new List<object>(pointsProperty.Tree.WeakTargets));
 				window._tree.OnPropertyValueChanged += (_, _) => onEdited?.Invoke();
@@ -1982,6 +2059,14 @@ namespace Fusumity.Editor
 
 				// Точку могли удалить, ассет — выгрузить: без цели окну нечего редактировать
 				if (property == null)
+				{
+					Close();
+					return;
+				}
+
+				// Путь элемента коллекции — это индекс: стоит удалить точку, и под ним окажется
+				// другая. Состав массива изменился — закрываемся, а не правим чужое правило
+				if (property.Parent != null && property.Parent.Children.Count != _count)
 				{
 					Close();
 					return;
@@ -2047,6 +2132,122 @@ namespace Fusumity.Editor
 
 		#region Data
 
+		/// <summary>Тик сверки: перечитывается только то, что календарь и рисует</summary>
+		private void SyncData() => Sync(reload: false);
+
+		/// <summary>
+		/// Полная сверка — после undo и правок из чужих окон: там дерево могло перестроить
+		/// сами свойства, а не только их значения
+		/// </summary>
+		private void ReloadData() => Sync(reload: true);
+
+		/// <summary>
+		/// Сверяет схему с показанным снимком и перестраивает окно, когда они разошлись
+		/// </summary>
+		/// <remarks>
+		/// Правка точки приходит не только из календаря: инспектор, окно точки, undo, скрипт —
+		/// уведомления есть не от каждого источника, а от окна точки приходят через дерево,
+		/// которое календарю не принадлежит. Дешевле сверять содержимое, чем ловить все события
+		/// </remarks>
+		/// <param name="reload">
+		/// Перечитать дерево целиком. На тике это лишнее: UpdateTree обходит все живые свойства
+		/// таргета, пересчитывает их состояния и попутно применяет чужие отложенные правки —
+		/// календарю же нужны ровно points и durations
+		/// </param>
+		private void Sync(bool reload)
+		{
+			if (_content == null)
+				return;
+
+			try
+			{
+				if (reload)
+					_property?.Tree?.UpdateTree();
+				else
+					UpdateValues();
+			}
+			catch
+			{
+				// Дерево могло умереть вместе с инспектором — работаем по прошлому снимку,
+				// а недоступность данных покажет сам Refresh
+			}
+
+			if (GetSignature() == _signature)
+				return;
+
+			Refresh();
+		}
+
+		/// <summary>Перечитывает значения от корня дерева до массива точек</summary>
+		/// <remarks>
+		/// Правку внутри точки видно и без этого — массив общий с деревом инспектора. Ветка нужна
+		/// на замену самого массива: add/remove, undo, пересоздание при десериализации. Сверху
+		/// вниз, потому что значение ребёнка читается из значения родителя
+		/// </remarks>
+		private void UpdateValues()
+		{
+			if (_property == null)
+				return;
+
+			UpdateValueChain(_property.ParentValueProperty);
+
+			// Самому массиву — полный Update: он обновляет ещё и детей. Без этого добавленная
+			// мимо календаря точка есть в данных, а свойства для неё в дереве ещё нет,
+			// и «Edit point» по ней молча ничего не делает
+			_property.Update(true);
+		}
+
+		private static void UpdateValueChain(InspectorProperty property)
+		{
+			if (property == null)
+				return;
+
+			UpdateValueChain(property.ParentValueProperty);
+			property.ValueEntry?.Update();
+		}
+
+		/// <summary>
+		/// Отпечаток схемы — точки и длительности окон, всё, что рисует календарь
+		/// </summary>
+		/// <remarks>
+		/// FNV-1a вместо копии массивов: цена коллизии — одна пропущенная перерисовка
+		/// до следующей правки. Ноль отдаётся, когда схемы нет вовсе — это тоже состояние
+		/// </remarks>
+		private ulong GetSignature()
+		{
+			if (!TryGetPoints(out var points))
+				return 0;
+
+			var durations = GetDurations();
+			var hash = Mix(FNV_BASIS, points.Length);
+
+			for (var i = 0; i < points.Length; i++)
+				hash = Mix(hash, points[i].code);
+
+			hash = Mix(hash, durations?.Length ?? 0);
+
+			if (durations == null)
+				return hash;
+
+			for (var i = 0; i < durations.Length; i++)
+				hash = Mix(hash, durations[i]);
+
+			return hash;
+
+			// Побайтово: FNV смешивает по байту, восьмёркой сразу соседние коды дали бы
+			// соседние же хеши — а различать надо именно их
+			static ulong Mix(ulong hash, long value)
+			{
+				for (var i = 0; i < sizeof(long); i++)
+				{
+					hash ^= (byte) (value >> (i * 8));
+					hash *= FNV_PRIME;
+				}
+
+				return hash;
+			}
+		}
+
 		private void Mutate(Func<SchedulePoint[], SchedulePoint[]> mutate,
 			Func<long[], long[]> mutateDurations = null)
 		{
@@ -2078,8 +2279,11 @@ namespace Fusumity.Editor
 					}
 					else
 					{
+						// ApplyChanges обязателен: durations скрыт HideInInspector, своего свойства
+						// у него нет, и без применения запись затрёт ближайший Update дерева
 						scheme.durations = durations;
 						_property.Parent.ValueEntry.WeakSmartValue = scheme;
+						_property.Parent.ValueEntry.ApplyChanges();
 					}
 				}
 
@@ -2090,6 +2294,10 @@ namespace Fusumity.Editor
 					if (target is UnityEngine.Object unityObject)
 						EditorUtility.SetDirty(unityObject);
 				}
+
+				// Инспектор сам не перерисуется: правка пришла из чужого окна, и до наведения
+				// мыши список точек показывал бы прежнее расписание
+				InternalEditorUtility.RepaintAllViews();
 			}
 			catch (Exception exception)
 			{
@@ -2151,8 +2359,12 @@ namespace Fusumity.Editor
 
 				var duration = GetDuration(durations, i);
 
-				// Окно могло начаться до периода и дотянуться в него — отступаем на его длину
-				var cursor = SubtractSeconds(from, duration).AddSeconds(-1);
+				// Окно могло начаться до периода и дотянуться в него — отступаем на его длину.
+				// Секунда назад — только если есть куда: на нижней границе DateTime бросает
+				var cursor = SubtractSeconds(from, duration);
+
+				if (cursor > DateTime.MinValue)
+					cursor = cursor.AddSeconds(-1);
 
 				for (var guard = 0; guard < OCCURRENCES_LIMIT; guard++)
 				{
@@ -2174,7 +2386,7 @@ namespace Fusumity.Editor
 					cursor = next;
 
 					// Отступ назад мог захватить уже закончившиеся окна
-					if (next.AddSeconds(duration) <= from && next < from)
+					if (ScheduleEditorFormat.AddSeconds(next, duration) <= from && next < from)
 						continue;
 
 					result.Add(new Occurrence(i, kind, next, duration));
@@ -2240,7 +2452,7 @@ namespace Fusumity.Editor
 			// и пачка карточек на весь период не добавляет информации. Показываем только
 			// ближайшее срабатывание — первый шаг ПОСЛЕ focus, а не в него, иначе чип
 			// дублировал бы сам focus
-			var current = focus.AddSeconds(decode.sec);
+			var current = ScheduleEditorFormat.AddSeconds(focus, decode.sec);
 
 			if (current >= from && current < to)
 				result.Add(new Occurrence(index, SchedulePointKind.Interval, current, 0));
@@ -2375,7 +2587,7 @@ namespace Fusumity.Editor
 
 			public bool HasWindow => duration > 0;
 
-			public DateTime End => utc.AddSeconds(duration);
+			public DateTime End => ScheduleEditorFormat.AddSeconds(utc, duration);
 
 			/// <summary>Последний день окна: конец исключающий, полночь принадлежит прошлым суткам</summary>
 			public DateTime LastDate => End.AddTicks(-1).Date;

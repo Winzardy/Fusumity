@@ -16,6 +16,10 @@ namespace Fusumity.Editor
 		private const string FROM_LABEL = "from";
 
 		private const float SUFFIX_TEXT_OFFSET = 0;
+		private const float RESET_WIDTH = 52f;
+
+		private static readonly GUIContent RESET_LABEL =
+			new("Reset", "Код точки не распознан — сбросить её к ежедневной и задать заново");
 		private GUIStyle _suffixTextStyle;
 		private GUIStyle _infoStyle;
 
@@ -49,10 +53,23 @@ namespace Fusumity.Editor
 			if (Property.Parent.ValueEntry.WeakSmartValue is not ISchedulePoint point)
 				return;
 
-			SchedulePointDecode decode = ValueEntry.SmartValue;
 			var enumLabel = label == null || label.text.IsNullOrEmpty()
 				? new GUIContent(TYPE_LABEL, tooltip: label?.tooltip)
 				: label;
+
+			SchedulePointDecode decode;
+
+			try
+			{
+				decode = ValueEntry.SmartValue;
+			}
+			catch
+			{
+				// Код не декодируется — миграция, скрипт, правка ассета руками. Рисуем один выбор
+				// типа: иначе такую точку не починить ни здесь, ни в календаре
+				DrawBrokenCode(enumLabel);
+				return;
+			}
 
 			EditorGUI.BeginChangeCheck();
 			var newKind = FusumityEditorGUILayout.EnumPopup(enumLabel, decode.kind);
@@ -79,7 +96,9 @@ namespace Fusumity.Editor
 			var kind = decode.kind;
 			if (kind is SchedulePointKind.Interval)
 			{
-				decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 1, long.MaxValue - ISchedulePoint.TYPE_OFFSET);
+				// Потолок общий с окнами: Encode умножает секунды на TYPE_OFFSET, и у самой границы
+				// long код заворачивается в отрицательный — точка молча становится чужим правилом
+				decode.sec = Math.Clamp(SirenixEditorFields.LongField(decode.sec), 1, ScheduleEditorFormat.MAX_SECONDS);
 				var timeLabel = decode.sec.ToLabel();
 				var suffix = decode.sec == 1
 					? TimeUtility.SECOND_LABEL
@@ -199,7 +218,9 @@ namespace Fusumity.Editor
 
 					if (kind is SchedulePointKind.Date)
 					{
-						decode.yr = SirenixEditorFields.LongField(decode.yr);
+						// Год вне границ DateTime роняет и Encode, и превью — а попасть туда
+						// достаточно, стерев поле
+						decode.yr = Math.Clamp(SirenixEditorFields.LongField(decode.yr), 1, 9999);
 						FusumityEditorGUILayout.SuffixValue(label, decode.yr, Suffix(decode.yr) + TimeUtility.YEAR_LABEL,
 							textStyle: _suffixTextStyle, textOffset: SUFFIX_TEXT_OFFSET);
 						decode.sign = decode.yr > DateTime.UnixEpoch.Year;
@@ -233,13 +254,30 @@ namespace Fusumity.Editor
 
 			if (EditorGUI.EndChangeCheck())
 			{
+				// Месяц и год рисуются после поля дня, поэтому день мог остаться от прежнего месяца:
+				// 31 марта → февраль иначе роняет Encode на несуществующем 31 февраля
+				if (kind is SchedulePointKind.Date)
+					decode.day = Math.Clamp(decode.day, 0,
+						DateTime.DaysInMonth((int) decode.yr, decode.mh + 1) - 1);
+
 				ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
 				Property.MarkSerializationRootDirty();
 			}
 
 			var style = _infoStyle;
 			var now = DateTime.UtcNow;
-			var date = point.ToDateTime(now);
+			DateTime date;
+
+			try
+			{
+				date = point.ToDateTime(now);
+			}
+			catch
+			{
+				// Дата не собирается — показываем хотя бы код, чтобы точку было видно
+				GUILayout.Label($" code: {ValueEntry.SmartValue}", style);
+				return;
+			}
 
 			var remaining = date - now;
 
@@ -259,6 +297,32 @@ namespace Fusumity.Editor
 			GUI.Label(GUILayoutUtility.GetLastRect()
 				.AlignRight(width, 2)
 				.AlignBottom(height), code, style);
+		}
+
+		/// <summary>
+		/// Сброс поверх нераспознанного кода — единственный способ оживить такую точку
+		/// </summary>
+		/// <remarks>
+		/// Кнопкой, а не попапом типа: нераспознанный код не приводится к валидному значению
+		/// enum, и рисовать по нему выпадающий список нечем. После сброса точка становится
+		/// обычной Daily, и дальше работает штатный дровер
+		/// </remarks>
+		private void DrawBrokenCode(GUIContent label)
+		{
+			var raw = ValueEntry.SmartValue;
+
+			SirenixEditorGUI.BeginHorizontalPropertyLayout(label);
+			{
+				GUILayout.Label($"broken code: {raw}", _infoStyle);
+
+				if (GUILayout.Button(RESET_LABEL, EditorStyles.miniButton, GUILayout.Width(RESET_WIDTH)))
+				{
+					var decode = SchedulePointDecode.GetDefault(SchedulePointKind.Daily);
+					ValueEntry.SmartValue = SchedulePointDecode.Encode(in decode);
+					Property.MarkSerializationRootDirty();
+				}
+			}
+			SirenixEditorGUI.EndHorizontalPropertyLayout();
 		}
 
 		private static string Suffix(long number)
