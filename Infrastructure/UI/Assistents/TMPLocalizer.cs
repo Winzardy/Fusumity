@@ -15,13 +15,17 @@ namespace UI
 		[InfoBox("Utility component for static localizations.", InfoMessageType.Info)]
 		[SerializeField]
 		private TMP_Text _text;
+
 		[SerializeField]
 		[OnValueChanged(nameof(SetEditModeKey))]
 		private LocKey _key;
+
 		[Tooltip("Язык, на котором всегда показывать текст. Пусто — текущий язык игры")]
 		[SerializeField]
 		[OnValueChanged(nameof(SetEditModeKey))]
+#if UNITY_EDITOR
 		[ValueDropdown(nameof(GetLocaleCodes))]
+#endif
 		private string _localeCode;
 
 		private IEnumerator Start()
@@ -97,9 +101,7 @@ namespace UI
 			{
 				var locale = _localeCode.IsNullOrEmpty() ? string.Empty : $":{_localeCode.ToUpper()}";
 				_text.text =
-					_key.IsEmpty() ?
-					$"#NULL#" :
-					$"#{_key.value.ToUpper()}{locale}#";
+					_key.IsEmpty() ? $"#NULL#" : $"#{_key.value.ToUpper()}{locale}#";
 			}
 		}
 
