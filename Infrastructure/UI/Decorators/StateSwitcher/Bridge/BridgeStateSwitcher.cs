@@ -31,7 +31,7 @@ namespace UI.Bridge
 		{
 			if (TryRetrieveLinkedState(state, out var linkedState))
 			{
-				_switcher?.Switch(linkedState);
+				_switcher?.Switch(linkedState, _immediate);
 			}
 		}
 
@@ -49,6 +49,13 @@ namespace UI.Bridge
 
 			linkedState = _dictionary.GetValueOrDefaultSafe(providedState, _default);
 			return true;
+		}
+
+		protected void Reset()
+		{
+			_switcher = GetComponent<StateSwitcher<TLinkedState>>();
+			if (_switcher != null)
+				_default = _switcher.Current;
 		}
 	}
 }
