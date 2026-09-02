@@ -74,7 +74,8 @@ namespace Fusumity.MVVM.UI
 				pos.y += Mathf.Sin(Time.realtimeSinceStartup * Mathf.PI) * amplitude;
 				_layout.rectTransform.anchoredPosition = pos;
 			})
-			.SetLoops(-1);
+			.SetLoops(-1)
+			.SetLink(_layout.gameObject);
 		}
 	}
 }

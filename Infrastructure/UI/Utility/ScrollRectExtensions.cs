@@ -24,9 +24,11 @@ namespace UI
 				return null;
 
 			if (scrollRect.horizontal)
-				return scrollRect.DOHorizontalNormalizedPos(normalizedPos, duration);
+				return scrollRect.DOHorizontalNormalizedPos(normalizedPos, duration)
+					.SetLink(scrollRect.gameObject);
 			else
-				return scrollRect.DOVerticalNormalizedPos(1 - normalizedPos, duration);
+				return scrollRect.DOVerticalNormalizedPos(1 - normalizedPos, duration)
+					.SetLink(scrollRect.gameObject);
 		}
 
 		public static Tween MoveTo([CanBeNull] this ScrollRect scrollRect, Vector2 normalizedPos, float duration)
@@ -34,7 +36,8 @@ namespace UI
 			if (scrollRect == null)
 				return null;
 
-			return scrollRect.DONormalizedPos(normalizedPos, duration);
+			return scrollRect.DONormalizedPos(normalizedPos, duration)
+				.SetLink(scrollRect.gameObject);
 		}
 
 		// TODO: пока работает только в одном направлении, если будет scrollRect с двумя осями нужно доработать
@@ -69,9 +72,10 @@ namespace UI
 					isHorizontal ? 0 : normalizedPos
 				));
 
-			return isHorizontal
-				? scrollRect.DOHorizontalNormalizedPos(normalizedPos, Mathf.Max(0, duration))
-				: scrollRect.DOVerticalNormalizedPos(normalizedPos, Mathf.Max(0, duration));
+			return (isHorizontal
+					? scrollRect.DOHorizontalNormalizedPos(normalizedPos, Mathf.Max(0, duration))
+					: scrollRect.DOVerticalNormalizedPos(normalizedPos, Mathf.Max(0, duration)))
+				.SetLink(scrollRect.gameObject);
 		}
 
 		private static float GetNormalizedPos(RectTransform content,

@@ -198,24 +198,10 @@ namespace ZenoTween
 			if (tween == null || owner == null)
 				return tween;
 
-			if (TryResolveLink(owner, out var link))
-				tween.SetLink(link, LinkBehaviour.KillOnDestroy);
-
+			tween.LinkTo(owner);
 			tween.SetId(owner);
 
 			return tween;
-		}
-
-		private static bool TryResolveLink(object target, out GameObject link)
-		{
-			link = target switch
-			{
-				GameObject gameObject => gameObject,
-				Component component => component.gameObject,
-				_ => null
-			};
-
-			return link != null;
 		}
 
 		private static void AppendOnComplete(Sequence sequence, TweenCallback callback)

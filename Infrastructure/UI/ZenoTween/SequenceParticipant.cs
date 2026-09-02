@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
+using ZenoTween.Utility;
 
 namespace ZenoTween
 {
@@ -72,16 +73,7 @@ namespace ZenoTween
 
 			sequence.SetTarget(owner);
 			sequence.SetId(owner);
-
-			var link = owner switch
-			{
-				GameObject gameObject => gameObject,
-				Component component => component.gameObject,
-				_ => null
-			};
-
-			if (link != null)
-				sequence.SetLink(link, LinkBehaviour.KillOnDestroy);
+			sequence.LinkTo(owner);
 		}
 	}
 }

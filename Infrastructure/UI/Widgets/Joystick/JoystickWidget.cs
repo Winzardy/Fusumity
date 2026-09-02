@@ -55,6 +55,7 @@ namespace UI.Joystick
 			_pressAnimation = DOTween.Sequence()
 				.Pause()
 				.SetAutoKill(false)
+				.SetLink(_layout.gameObject)
 				.Append(frame.DOColor(_layout.pressColor, _layout.colorTweenDuration))
 				.Join(stick.DOColor(_layout.pressColor, _layout.colorTweenDuration));
 		}
