@@ -58,7 +58,7 @@ namespace UI.Scroll
 		public void Update(TValue value, bool equals = true)
 		{
 			//Зачем обновлять если там одно и тоже
-			if (equals && _args.Equals(value))
+			if (equals && EqualityComparer<TValue>.Default.Equals(_args.value, value))
 				return;
 
 			var cacheActive = Active;
@@ -66,7 +66,8 @@ namespace UI.Scroll
 			if (cacheActive)
 				SetActive(false, true);
 
-			_args = args;
+			//Только value, чтобы не потерять Index
+			_args.value = value;
 
 			if (cacheActive)
 				SetActive(true, true);

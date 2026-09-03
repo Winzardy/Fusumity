@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -82,9 +83,7 @@ namespace UI
 			_equals = equals;
 
 			//Зачем обновлять если там одно и тоже
-			if (equals &&
-				_args != null &&
-				_args.Equals(args))
+			if (equals && EqualityComparer<TArgs>.Default.Equals(_args, args))
 				return;
 
 			var cacheActive = Active;
@@ -172,7 +171,8 @@ namespace UI
 		protected virtual bool ShouldSkipActivation(in TArgs args, out bool reset)
 		{
 			reset = true;
-			return args == null;
+			//Для value-типов проверка на null бессмысленна, а `args == null` боксит аргумент
+			return !typeof(TArgs).IsValueType && EqualityComparer<TArgs>.Default.Equals(args, default);
 		}
 
 		public static implicit operator TArgs(UISelfConstructedLayerWidget<TLayout, TArgs> widget) => widget._args;

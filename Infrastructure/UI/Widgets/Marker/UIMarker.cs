@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
@@ -25,7 +26,7 @@ namespace UI
 	}
 
 	/// <typeparam name="T">Вложенные аргументы</typeparam>
-	public struct UIMarkerArgs<T>
+	public struct UIMarkerArgs<T> : IEquatable<UIMarkerArgs<T>>
 	{
 		public T nestedArgs;
 
@@ -82,6 +83,32 @@ namespace UI
 		}
 
 		public static implicit operator T(UIMarkerArgs<T> args) => args.nestedArgs;
+		public bool Equals(UIMarkerArgs<T> other)
+			=> EqualityComparer<T>.Default.Equals(nestedArgs, other.nestedArgs) &&
+				target == other.target &&
+				positionFunc == other.positionFunc &&
+				position == other.position &&
+				offsetFunc == other.offsetFunc &&
+				offset == other.offset &&
+				screenOffsetFunc == other.screenOffsetFunc &&
+				screenOffset == other.screenOffset &&
+				sizeFunc == other.sizeFunc &&
+				size == other.size &&
+				ReferenceEquals(positionUpdateEventSource, other.positionUpdateEventSource) &&
+				visibleFunc == other.visibleFunc &&
+				EqualityComparer<Range<float>?>.Default.Equals(distance, other.distance) &&
+				distanceOrigin == other.distanceOrigin &&
+				distanceOriginFunc == other.distanceOriginFunc &&
+				area == other.area &&
+				offscreen == other.offscreen &&
+				hideOffscreenInFrustum == other.hideOffscreenInFrustum &&
+				camera == other.camera &&
+				disableCameraMainIfTargetCameraNull == other.disableCameraMainIfTargetCameraNull &&
+				disableCachedWorldPosition == other.disableCachedWorldPosition;
+
+		public override bool Equals(object obj) => obj is UIMarkerArgs<T> other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(nestedArgs, target, position, offset, screenOffset, size, area, camera);
 	}
 
 	//TODO: добавить разные состояние при маркер над объектом или в режиме offscreen

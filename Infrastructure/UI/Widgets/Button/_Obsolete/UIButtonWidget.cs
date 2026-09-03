@@ -14,7 +14,7 @@ namespace UI
 	[Obsolete("Используйте UIButton")]
 	public class UIButtonWidget : UIButtonWidget<UILegacyLabeledButtonLayout, UIButtonWidget.Args>
 	{
-		public struct Args : IObseleteButtonViewModel
+		public struct Args : IObseleteButtonViewModel, IEquatable<Args>
 		{
 			public AssetReference<Sprite> IconReference { get; set; }
 
@@ -35,6 +35,21 @@ namespace UI
 			/// </summary>
 			[Obsolete("убрать после полной миграции")]
 			public bool DisablePrefixStyle { get; set; }
+			#pragma warning disable 618 // DisablePrefixStyle помечен Obsolete, но входит в состояние аргументов
+			public bool Equals(Args other)
+				=> IconReference == other.IconReference &&
+					Icon == other.Icon &&
+					Label == other.Label &&
+					Style == other.Style &&
+					Interactable == other.Interactable &&
+					DisablePrefixStyle == other.DisablePrefixStyle &&
+					Action == other.Action &&
+					LocLabel.Equals(other.LocLabel);
+			#pragma warning restore 618
+
+			public override bool Equals(object obj) => obj is Args other && Equals(other);
+
+			public override int GetHashCode() => HashCode.Combine(IconReference, Icon, Label, Style, Interactable, Action, LocLabel);
 		}
 	}
 

@@ -117,7 +117,8 @@ namespace UI.Popups
 		protected virtual bool ShouldSkipActivation(in TArgs args, out bool reset)
 		{
 			reset = true;
-			return args == null;
+			//Для value-типов проверка на null бессмысленна, а `args == null` боксит аргумент
+			return !typeof(TArgs).IsValueType && EqualityComparer<TArgs>.Default.Equals(args, default);
 		}
 
 		protected override void OnAfterSetupTemplate() => _suppressHide = false;
@@ -182,7 +183,7 @@ namespace UI.Popups
 
 				if (Active)
 				{
-					if (_args != null && _args.Equals(args))
+					if (EqualityComparer<TArgs>.Default.Equals(_args, args))
 						return;
 
 					EnableSuppress();

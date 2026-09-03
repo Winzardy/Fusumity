@@ -7,7 +7,7 @@ using Sapientia.Pooling;
 namespace Localization
 {
 	[Obsolete("Решили, что данный способ не очень, лучше использовать ILabelViewModel и сложной логикой менять текст, а это легаси")]
-	public struct LocText
+	public struct LocText : IEquatable<LocText>
 	{
 		/// <summary>
 		/// Ключ локали
@@ -134,6 +134,21 @@ namespace Localization
 		public static implicit operator LocText(string key) => new(key);
 		public static implicit operator LocText(LocKey key) => new(key);
 		public static implicit operator bool(in LocText args) => !args.IsEmpty();
+		public bool Equals(LocText other)
+			=> key == other.key &&
+				defaultValue == other.defaultValue &&
+				trim == other.trim &&
+				upperCase == other.upperCase &&
+				ReferenceEquals(composite, other.composite) &&
+				//Словари тегов сравниваем по ссылке: поэлементный обход дороже, чем лишний показ виджета
+				ReferenceEquals(tagToValue, other.tagToValue) &&
+				ReferenceEquals(tagToFunc, other.tagToFunc) &&
+				args.SequenceEquals(other.args);
+
+		public override bool Equals(object obj) => obj is LocText other && Equals(other);
+
+		public override int GetHashCode()
+			=> HashCode.Combine(key, defaultValue, trim, upperCase, composite, tagToValue, tagToFunc, args?.Length ?? 0);
 	}
 
 	public class CompositeLocText

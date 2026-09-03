@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 namespace Localization
 {
 	[Serializable]
-	public struct LocKey
+	public struct LocKey : IEquatable<LocKey>
 	{
 		[FormerlySerializedAs(("id")), LabelText("LocKey"), LocKey]
 		public string value;
@@ -20,5 +20,10 @@ namespace Localization
 			=> a.IsEmpty() ? b : a;
 
 		public override string ToString() => value;
+		public bool Equals(LocKey other) => value == other.value;
+
+		public override bool Equals(object obj) => obj is LocKey other && Equals(other);
+
+		public override int GetHashCode() => value != null ? value.GetHashCode() : 0;
 	}
 }

@@ -11,7 +11,7 @@ namespace UI
 	/// </summary>
 	public class UIToggleWidget : UIToggleWidget<UIToggleButtonLayout, UIToggleWidget.Args>
 	{
-		public struct Args : IToggleArgs
+		public struct Args : IToggleArgs, IEquatable<Args>
 		{
 			public bool IsOn { get; set; }
 
@@ -24,6 +24,17 @@ namespace UI
 			public string Label { get; set; }
 
 			public bool? Interactable { get; set; }
+			public bool Equals(Args other)
+				=> IsOn == other.IsOn &&
+					Interactable == other.Interactable &&
+					IconReference == other.IconReference &&
+					Icon == other.Icon &&
+					Label == other.Label &&
+					LocLabel.Equals(other.LocLabel);
+
+			public override bool Equals(object obj) => obj is Args other && Equals(other);
+
+			public override int GetHashCode() => HashCode.Combine(IsOn, Interactable, IconReference, Icon, Label, LocLabel);
 		}
 	}
 

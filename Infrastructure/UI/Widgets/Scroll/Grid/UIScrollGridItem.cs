@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
@@ -21,7 +22,7 @@ namespace UI.Scroll
 		protected internal void SetItems(in ArraySection<TArgs> items);
 	}
 
-	public struct UIScrollGridItemArgs<TArgs> : IScrollGridItemArgs<TArgs>
+	public struct UIScrollGridItemArgs<TArgs> : IScrollGridItemArgs<TArgs>, IEquatable<UIScrollGridItemArgs<TArgs>>
 	{
 		public int Index { get; private set; }
 
@@ -33,6 +34,11 @@ namespace UI.Scroll
 			Items = items;
 
 		public IEnumerator<int> GetEnumerator() => Items.GetEnumerator();
+		public bool Equals(UIScrollGridItemArgs<TArgs> other) => Index == other.Index && Items.Equals(other.Items);
+
+		public override bool Equals(object obj) => obj is UIScrollGridItemArgs<TArgs> other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(Index, Items);
 	}
 
 	public class UIScrollGridItem<TItem, TItemLayout, TItemArgs> : UIScrollGridItem

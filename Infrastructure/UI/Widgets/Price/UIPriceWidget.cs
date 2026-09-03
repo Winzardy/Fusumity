@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System;
 using Localization;
 using Sapientia.Collections;
 
@@ -11,7 +13,7 @@ namespace UI
 
 	public class UIPriceWidget : UIWidget<UIPriceWidgetLayout, UIPriceWidget.Args>
 	{
-		public struct Args
+		public struct Args : IEquatable<Args>
 		{
 			public UIObsoleteLabeledIconWidget.Args? banner;
 			public UIObsoleteLabeledIconWidget.Args[] items;
@@ -26,6 +28,19 @@ namespace UI
 
 			public LocText locLabel;
 			public string label;
+			public bool Equals(Args other)
+				=> badge == other.badge &&
+					label == other.label &&
+					locBadge.Equals(other.locBadge) &&
+					locLabel.Equals(other.locLabel) &&
+					EqualityComparer<UIObsoleteLabeledIconWidget.Args?>.Default.Equals(banner, other.banner) &&
+					items.SequenceEquals(other.items) &&
+					miniItems.SequenceEquals(other.miniItems);
+
+			public override bool Equals(object obj) => obj is Args other && Equals(other);
+
+			public override int GetHashCode()
+				=> HashCode.Combine(badge, label, locBadge, locLabel, banner, items?.Length ?? 0, miniItems?.Length ?? 0);
 		}
 
 		private UIObsoleteLabeledIconWidget _banner;

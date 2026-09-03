@@ -8,7 +8,7 @@ namespace UI
 	[Obsolete("Лучше использовать UILabeledIcon")]
 	public class UIObsoleteLabeledIconWidget : UIWidget<UIObsoleteLabeledIconWidgetLayout, UIObsoleteLabeledIconWidget.Args>
 	{
-		public struct Args
+		public struct Args : IEquatable<Args>
 		{
 			public AssetReference<Sprite> iconRef;
 			public Sprite icon;
@@ -20,6 +20,18 @@ namespace UI
 
 			public Action onClick;
 			public Action<RectTransform> onClickRT;
+			public bool Equals(Args other)
+				=> iconRef == other.iconRef &&
+					icon == other.icon &&
+					label == other.label &&
+					state == other.state &&
+					onClick == other.onClick &&
+					onClickRT == other.onClickRT &&
+					locLabel.Equals(other.locLabel);
+
+			public override bool Equals(object obj) => obj is Args other && Equals(other);
+
+			public override int GetHashCode() => HashCode.Combine(iconRef, icon, label, state, onClick, onClickRT, locLabel);
 		}
 
 		private Sprite _defaultIconSprite;

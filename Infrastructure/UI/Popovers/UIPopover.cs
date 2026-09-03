@@ -193,7 +193,7 @@ namespace UI.Popovers
 
 				if (Active)
 				{
-					if (_args != null && _args.Equals(args))
+					if (EqualityComparer<TArgs>.Default.Equals(_args, args))
 						return;
 
 					EnableSuppress();

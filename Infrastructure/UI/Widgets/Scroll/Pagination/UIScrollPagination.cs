@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UI.Scroll.Pagination
 {
-	public struct UIScrollPageArgs<TArgs> : IScrollListItemArgs
+	public struct UIScrollPageArgs<TArgs> : IScrollListItemArgs, IEquatable<UIScrollPageArgs<TArgs>>
 		where TArgs : IScrollListItemArgs
 	{
 		public bool selected;
@@ -20,6 +20,12 @@ namespace UI.Scroll.Pagination
 			Reference = reference;
 			Index = index;
 		}
+		public bool Equals(UIScrollPageArgs<TArgs> other)
+			=> selected == other.selected && Index == other.Index && Reference.Equals(other.Reference);
+
+		public override bool Equals(object obj) => obj is UIScrollPageArgs<TArgs> other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(selected, Index, Reference);
 	}
 
 	public interface IScrollPagination<TItemArgs> : IWidget<UIScrollLayout>, IDisposable
