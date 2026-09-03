@@ -76,6 +76,10 @@ namespace ZenoTween
 		protected object _target;
 		protected float _inheritedSpeed = 1f;
 
+		// Варнинг о скорости один раз на инстанс: иначе он летит на каждый твин и на каждое пересоздание лупа
+		[NonSerialized]
+		private bool _speedWarned;
+
 		public override void Participate(ref Sequence sequence, object target = null)
 		{
 			var tweenSpeed = sequence?.timeScale ?? speed;
@@ -226,17 +230,7 @@ namespace ZenoTween
 
 		protected void ApplyTweenSettings(in Tween tween, bool useDelay = true)
 		{
-			var totalSpeed = speed;
-			totalSpeed *= _inheritedSpeed;
-			if (totalSpeed <= 0f)
-			{
-				totalSpeed = 1f;
-				Debug.LogWarning("Speed must be greater than 0!"
-#if UNITY_EDITOR
-					, _ownerEditor
-#endif
-				);
-			}
+			var totalSpeed = GetTotalSpeed();
 
 			// not calling Participate here, to ensure valid order and
 			// correct loop behaviour (loops on nested tweens are not allowed in DoTween).
@@ -257,13 +251,15 @@ namespace ZenoTween
 			}
 		}
 
-		protected float GetDuration(float duration)
+		private float GetTotalSpeed()
 		{
-			var totalSpeed = speed;
-			totalSpeed *= _inheritedSpeed;
-			if (totalSpeed <= 0f)
+			var totalSpeed = speed * _inheritedSpeed;
+			if (totalSpeed > 0f)
+				return totalSpeed;
+
+			if (!_speedWarned)
 			{
-				totalSpeed = 1f;
+				_speedWarned = true;
 				Debug.LogWarning("Speed must be greater than 0!"
 #if UNITY_EDITOR
 					, _ownerEditor
@@ -271,7 +267,12 @@ namespace ZenoTween
 				);
 			}
 
-			return duration / totalSpeed;
+			return 1f;
+		}
+
+		protected float GetDuration(float duration)
+		{
+			return duration / GetTotalSpeed();
 		}
 
 		protected Tween Create(float inheritedSpeed)
