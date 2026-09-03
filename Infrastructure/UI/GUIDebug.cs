@@ -52,6 +52,11 @@ namespace UI
 			{
 				public static bool rebuilt;
 			}
+
+			public static class StateSwitcher
+			{
+				public static bool inactiveTween;
+			}
 		}
 	}
 }

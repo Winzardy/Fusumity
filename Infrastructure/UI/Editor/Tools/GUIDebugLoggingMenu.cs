@@ -9,6 +9,7 @@ namespace UI.Editor
 	public static class GUIDebugLoggingMenu
 	{
 		private const string PATH_RECT_TRANSFORM_REBUILT = GUIMenuConstants.LOG_MENU + "Rect Transform/Rebuilt";
+		private const string PATH_STATE_SWITCHER_INACTIVE_TWEEN = GUIMenuConstants.LOG_MENU + "State Switcher/Inactive Tween";
 
 		private static readonly Dictionary<string, bool> _cache = new(2);
 		private static readonly Dictionary<string, Action<bool>> _actions = new(2);
@@ -16,10 +17,16 @@ namespace UI.Editor
 		static GUIDebugLoggingMenu()
 		{
 			Register(PATH_RECT_TRANSFORM_REBUILT, enable => GUIDebug.Logging.RectTransform.rebuilt = enable, false);
+			Register(PATH_STATE_SWITCHER_INACTIVE_TWEEN,
+				enable => GUIDebug.Logging.StateSwitcher.inactiveTween = enable, false);
 
 			EditorApplication.delayCall += HandleDelayCall;
 
-			void HandleDelayCall() => PerformAction(PATH_RECT_TRANSFORM_REBUILT);
+			void HandleDelayCall()
+			{
+				PerformAction(PATH_RECT_TRANSFORM_REBUILT);
+				PerformAction(PATH_STATE_SWITCHER_INACTIVE_TWEEN);
+			}
 		}
 
 		private static void Register(string key, Action<bool> action, bool defaultValue = true)
@@ -43,6 +50,10 @@ namespace UI.Editor
 
 		[MenuItem(PATH_RECT_TRANSFORM_REBUILT)]
 		private static void ToggleActionRectTransformRebuilt() => ToggleAction(PATH_RECT_TRANSFORM_REBUILT);
+
+		[MenuItem(PATH_STATE_SWITCHER_INACTIVE_TWEEN)]
+		private static void ToggleActionStateSwitcherInactiveTween()
+			=> ToggleAction(PATH_STATE_SWITCHER_INACTIVE_TWEEN);
 
 		#endregion
 	}

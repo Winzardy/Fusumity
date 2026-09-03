@@ -10,7 +10,7 @@ namespace UI
 
 		public UISimpleAnimatedView(UIAnimationSequenceLayout layout) : base(layout)
 		{
-			AddDisposable(_animation = new AnimationSequencePlayer(layout.animationSequence));
+			AddDisposable(_animation = new AnimationSequencePlayer(layout.animationSequence, owner: _layout));
 		}
 
 		protected override void OnUpdate(Vector2 screenPos)
