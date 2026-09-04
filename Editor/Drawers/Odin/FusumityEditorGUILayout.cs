@@ -418,14 +418,25 @@ namespace Fusumity.Editor
 			)
 		};
 
-		public static void BeginCardBox(Color? color = null, bool verticalOrHorizontal = true)
+		/// <param name="indent">При <c>false</c> карточка не вдвигается по текущему indent level, а идёт вровень с родителем</param>
+		public static void BeginCardBox(Color? color = null, bool verticalOrHorizontal = true, bool indent = true)
 		{
 			if (color.HasValue)
 				GUIHelper.PushColor(color.Value);
 			if (verticalOrHorizontal)
-				SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+			{
+				if (indent)
+					SirenixEditorGUI.BeginIndentedVertical(CardStyle);
+				else
+					EditorGUILayout.BeginVertical(CardStyle);
+			}
 			else
-				SirenixEditorGUI.BeginIndentedHorizontal(CardStyle);
+			{
+				if (indent)
+					SirenixEditorGUI.BeginIndentedHorizontal(CardStyle);
+				else
+					EditorGUILayout.BeginHorizontal(CardStyle);
+			}
 			{
 				GUIHelper.PushHierarchyMode(false);
 				if (color.HasValue)
@@ -433,13 +444,24 @@ namespace Fusumity.Editor
 			}
 		}
 
-		public static void EndCardBox(bool verticalOrHorizontal = true)
+		/// <param name="indent">Должен совпадать с тем, что передали в <see cref="BeginCardBox"/></param>
+		public static void EndCardBox(bool verticalOrHorizontal = true, bool indent = true)
 		{
 			GUIHelper.PopHierarchyMode();
 			if (verticalOrHorizontal)
-				SirenixEditorGUI.EndIndentedVertical();
+			{
+				if (indent)
+					SirenixEditorGUI.EndIndentedVertical();
+				else
+					EditorGUILayout.EndVertical();
+			}
 			else
-				SirenixEditorGUI.EndIndentedHorizontal();
+			{
+				if (indent)
+					SirenixEditorGUI.EndIndentedHorizontal();
+				else
+					EditorGUILayout.EndHorizontal();
+			}
 		}
 
 		#endregion

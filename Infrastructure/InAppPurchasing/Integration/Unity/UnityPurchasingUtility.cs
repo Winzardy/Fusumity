@@ -144,7 +144,9 @@ namespace InAppPurchasing.Unity
 			(
 				product.definition.id,
 				product.definition.type.ToProductType(),
-				price
+				price,
+				product.metadata.localizedPrice,
+				product.metadata.isoCurrencyCode
 			);
 		}
 	}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Content;
 using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using JetBrains.Annotations;
@@ -22,7 +23,7 @@ namespace Analytics
 
 		private List<AnalyticsAggregator> _registeredAggregators;
 
-		private List<IAnalyticsIntegration> _integrations;
+		private List<IntegrationHandle> _integrations;
 
 		private DeferredQueue<AnalyticsEventPayload> _deferred;
 
@@ -48,8 +49,8 @@ namespace Analytics
 			{
 				_integrations = new();
 				using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
-				foreach (var integration in _settings.integrations)
-					tasks.Add(InitializeIntegrationAsync(integration, linkedCts.Token));
+				foreach (var config in _settings.integrations)
+					tasks.Add(InitializeIntegrationAsync(config, linkedCts.Token));
 
 				await UniTask.WhenAll(tasks);
 			}
@@ -64,8 +65,8 @@ namespace Analytics
 			if (_integrations.IsNullOrEmpty())
 				return;
 
-			foreach (var integration in _integrations)
-				integration.Dispose();
+			foreach (var handle in _integrations)
+				handle.integration.Dispose();
 
 			_integrations = null;
 		}
@@ -126,31 +127,46 @@ namespace Analytics
 
 		private void SendInternal(in AnalyticsEventPayload payload)
 		{
-			foreach (var integration in _integrations)
+			foreach (var handle in _integrations)
 			{
-				if (_isValidationEnabled && !integration.IsValid(in payload, out var error))
+				if (!AnalyticsEventRouter.TryRoute(in handle.config, in payload, out var routed))
+					continue;
+
+				if (_isValidationEnabled && !handle.integration.IsValid(in routed, out var error))
 				{
 					// даже если была ошибка при валидации, то все равно отправляем событие, вдруг мы просто неправильно написали правила валидации
-					AnalyticsDebug.LogError($"{GetDebugNameIntegration(integration)} validation failed: {error}\n{payload.ToJson()}");
+					AnalyticsDebug.LogError($"{GetDebugNameIntegration(handle)} validation failed: {error}\n{routed.ToJson()}");
 				}
 
-				integration.SendEvent(in payload);
+				handle.integration.SendEvent(in routed);
 			}
 		}
 
-		private async UniTask InitializeIntegrationAsync(IAnalyticsIntegration integration, CancellationToken cancellationToken)
+		private async UniTask InitializeIntegrationAsync(ContentReference<AnalyticsIntegrationConfig> config,
+			CancellationToken cancellationToken)
 		{
+			// Читаем конфиг под try: битая ссылка должна ронять одну интеграцию, а не всю инициализацию
+			var handle = default(IntegrationHandle);
+
 			try
 			{
-				await integration.InitializeAsync(cancellationToken);
-				_integrations.Add(integration);
+				handle = new IntegrationHandle(in config, config.Read().integration);
 
-				AnalyticsDebug.Log($"[ {GetDebugNameIntegration(integration)} ] integration initialized");
+				if (handle.integration == null)
+				{
+					AnalyticsDebug.LogError($"Integration is empty in config [ {config.ToId()} ]");
+					return;
+				}
+
+				await handle.integration.InitializeAsync(cancellationToken);
+				_integrations.Add(handle);
+
+				AnalyticsDebug.Log($"[ {GetDebugNameIntegration(handle)} ] integration initialized");
 				_cachedIntegrationsDebugMessage = $"Integrations:{_integrations.GetCompositeString(getter: GetDebugNameIntegration)}";
 			}
 			catch (OperationCanceledException o)
 			{
-				AnalyticsDebug.LogWarning($"[ {GetDebugNameIntegration(integration)} ] integration initialization canceled");
+				AnalyticsDebug.LogWarning($"[ {GetDebugNameIntegration(handle)} ] integration initialization canceled");
 			}
 			catch (Exception e)
 			{
@@ -159,7 +175,22 @@ namespace Analytics
 		}
 
 		[MustUseReturnValue]
-		private string GetDebugNameIntegration(IAnalyticsIntegration integration) =>
-			integration.GetType().Name.Replace("AnalyticsIntegration", string.Empty);
+		private string GetDebugNameIntegration(IntegrationHandle handle) =>
+			handle.integration?.GetType().Name.Replace("AnalyticsIntegration", string.Empty) ?? "Unknown";
+
+		/// <summary>
+		/// Интеграция вместе со своим конфигом: маршрут спрашивают у конфига, а не у самой интеграции
+		/// </summary>
+		private readonly struct IntegrationHandle
+		{
+			public readonly ContentReference<AnalyticsIntegrationConfig> config;
+			public readonly IAnalyticsIntegration integration;
+
+			public IntegrationHandle(in ContentReference<AnalyticsIntegrationConfig> config, IAnalyticsIntegration integration)
+			{
+				this.config = config;
+				this.integration = integration;
+			}
+		}
 	}
 }
