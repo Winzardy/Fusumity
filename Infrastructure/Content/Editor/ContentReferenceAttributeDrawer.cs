@@ -63,8 +63,12 @@ namespace Content.Editor
 
 		private const float MISSING_SOURCE_LABEL_RIGHT_OFFSET = 4f;
 
+		private const float RAW_ID_CARET_WIDTH = 9f;
+		private const float RAW_ID_CARET_RIGHT_OFFSET = 5f;
+
 		private bool _guidRawMode;
 		private bool _creating;
+		private bool _rawIdEdited;
 		protected abstract ContentDrawerMode TargetMode { get; }
 
 		private const string CONTROL_ID = "ContentReference";
@@ -242,9 +246,13 @@ namespace Content.Editor
 					targetLabel.tooltip += ContentReferenceConstants.TOOLTIP_SPACE;
 				targetLabel.tooltip += invalidLabel;
 			}
-			var invalid = GUI.enabled && ((source == null && !isEmpty) || disabled);
+			// Опциональной ссылке конфиг не обязателен: нерезолвнутый id рисуется как есть, ошибкой не считается
+			var unresolved = GUI.enabled && source == null && !isEmpty;
+			var invalid = (unresolved && !Attribute.Optional) || (GUI.enabled && disabled);
 
 			var originalIndent = EditorGUI.indentLevel;
+
+			_rawIdEdited = false;
 
 			EditorGUI.BeginChangeCheck();
 
@@ -368,7 +376,7 @@ namespace Content.Editor
 					GUI.color = errorColor;
 				}
 
-				source = DrawSourceSelector(targetLabel, source, useDropdown, invalid, invalidLabel);
+				source = DrawSourceSelector(targetLabel, source, useDropdown, invalid, unresolved, invalidLabel);
 
 				if (!useDropdown && source is INestedContentEntrySource)
 					forceDisableInlineEditor = true;
@@ -431,8 +439,10 @@ namespace Content.Editor
 									var originalDrawEnabledToggle = FusumityEditorGUIHelper.drawEnabledToggle;
 									var originalDrawInlineEditor = FusumityEditorGUIHelper.drawInlineEditor;
 									var originalAllowInlineEditorIdEditing = FusumityEditorGUIHelper.allowInlineEditorIdEditing;
-									FusumityEditorGUIHelper.drawAssetReference = useDropdown;
-									FusumityEditorGUIHelper.drawEnabledToggle = !useDropdown;
+									// В сыром режиме, как и в дропдауне, само поле ассет не показывает — строку рисует inline-редактор
+									var drawAssetReference = useDropdown || IsRawIdMode;
+									FusumityEditorGUIHelper.drawAssetReference = drawAssetReference;
+									FusumityEditorGUIHelper.drawEnabledToggle = !drawAssetReference;
 									FusumityEditorGUIHelper.drawInlineEditor = true;
 									FusumityEditorGUIHelper.allowInlineEditorIdEditing = false;
 
@@ -570,7 +580,10 @@ namespace Content.Editor
 
 			if (EditorGUI.EndChangeCheck())
 			{
-				if (source is IUniqueContentEntrySource uniqueSource && uniqueSource.Id.IsNullOrEmpty())
+				// Введённый вручную id уже записан в поле, ApplySource затёр бы его прошлым источником
+				if (_rawIdEdited)
+					_rawIdEdited = false;
+				else if (source is IUniqueContentEntrySource uniqueSource && uniqueSource.Id.IsNullOrEmpty())
 					ContentDebug.LogError("Failed to assign source - new source is empty.");
 				else
 					UpdateValue();
@@ -601,7 +614,7 @@ namespace Content.Editor
 		}
 
 		private IContentEntrySource DrawSourceSelector(GUIContent label, IContentEntrySource source, bool asDropdown,
-			bool invalid, string invalidLabel)
+			bool invalid, bool unresolved, string invalidLabel)
 		{
 			TryCreateSelector(source);
 
@@ -616,12 +629,20 @@ namespace Content.Editor
 
 			var rect = EditorGUILayout.GetControlRect();
 
+			// Опциональной ссылке конфиг не обязателен: id вводится руками, каретка рядом открывает тот же попап —
+			// выбрать существующий конфиг или завести новый
+			if (IsRawIdMode)
+			{
+				DrawRawIdField(rect, label);
+				return source;
+			}
+
 			if (asDropdown)
 			{
 				var fieldRect = label.text.IsNullOrEmpty() ? rect : EditorGUI.PrefixLabel(rect, label);
 
 				var id = source is {ContentEntry: IIdentifiable identifiable} ? identifiable.Id : null;
-				_dropdownContent.text = id.IsNullOrEmpty() ? GetMissingSourceLabel(invalid, invalidLabel) : id;
+				_dropdownContent.text = id.IsNullOrEmpty() ? GetMissingSourceLabel(invalid || unresolved, invalidLabel) : id;
 				_dropdownContent.tooltip = invalid ? invalidLabel : null;
 
 				if (_selector != null && EditorGUI.DropdownButton(fieldRect, _dropdownContent, FocusType.Keyboard))
@@ -662,7 +683,7 @@ namespace Content.Editor
 				}
 
 				var objectFieldEventType = e.type;
-				var suppressObjectFieldMouseEvent = source == null && invalid && e.isMouse && valueRect.Contains(e.mousePosition);
+				var suppressObjectFieldMouseEvent = source == null && (invalid || unresolved) && e.isMouse && valueRect.Contains(e.mousePosition);
 				if (suppressObjectFieldMouseEvent)
 					e.type = EventType.Ignore;
 
@@ -682,7 +703,7 @@ namespace Content.Editor
 					objectFieldStyle.focused.textColor = focusedTextColor;
 				}
 
-				DrawMissingSourceLabel(valueRect, source, invalid, invalidLabel);
+				DrawMissingSourceLabel(valueRect, source, invalid || unresolved, invalidLabel);
 				DrawSourceIconOverlay(rect, label, source);
 
 				// ObjectField меняет значение только через drag&drop — кружок-пикер выше перехвачен под кастомный селектор
@@ -700,23 +721,86 @@ namespace Content.Editor
 			return source;
 		}
 
-		private string GetMissingSourceLabel(bool invalid, string invalidLabel) => invalid ? invalidLabel : _noneSourceLabel;
+		private bool IsRawIdMode => _mode == ContentDrawerMode.String && Attribute.Optional;
 
-		private void DrawMissingSourceLabel(Rect rect, IContentEntrySource source, bool invalid, string invalidLabel)
+		private void DrawRawIdField(Rect rect, GUIContent label)
+		{
+			var caretRect = rect;
+			caretRect.x = rect.xMax - RAW_ID_CARET_WIDTH - RAW_ID_CARET_RIGHT_OFFSET;
+			caretRect.width = RAW_ID_CARET_WIDTH;
+
+			var id = Property.ValueEntry.WeakSmartValue as string;
+
+			HandleRawIdDragAndDrop(rect);
+
+			EditorGUIUtility.AddCursorRect(caretRect, MouseCursor.Arrow);
+
+			// Кнопка идёт до поля: иначе клик по каретке уходит в текстовое поле и попап не открывается
+			if (GUI.Button(caretRect, GUIContent.none, GUIStyle.none))
+				OpenSelector(rect);
+
+			EditorGUI.BeginChangeCheck();
+			var edited = SirenixEditorFields.TextField(rect, label, id);
+			if (EditorGUI.EndChangeCheck())
+			{
+				Property.ValueEntry.WeakSmartValue = edited;
+				Property.MarkSerializationRootDirty();
+				_rawIdEdited = true;
+			}
+
+			var opened = _selector != null && _selector.show;
+			SdfIcons.DrawIcon(caretRect, opened ? SdfIconType.CaretUpFill : SdfIconType.CaretDownFill);
+		}
+
+		// Ассет кидают на поле мышью — как в обычном object field, только id берётся из конфига
+		private void HandleRawIdDragAndDrop(Rect rect)
+		{
+			var e = Event.current;
+			if (e.type != EventType.DragUpdated && e.type != EventType.DragPerform)
+				return;
+
+			if (!rect.Contains(e.mousePosition))
+				return;
+
+			var dragged = DragAndDrop.objectReferences;
+			if (dragged == null || dragged.Length != 1 ||
+				dragged[0] is not ScriptableObject asset ||
+				!TryGetCreatedSource(asset, out var draggedSource))
+			{
+				return;
+			}
+
+			DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+
+			if (e.type != EventType.DragPerform)
+				return;
+
+			DragAndDrop.AcceptDrag();
+
+			// Через отложенный источник, как и выбор в попапе: применяем при следующей отрисовке владельца
+			_pendingSelectorSource = draggedSource;
+			_hasPendingSelectorSource = true;
+			GUIHelper.RequestRepaint();
+			e.Use();
+		}
+
+		private string GetMissingSourceLabel(bool raw, string rawLabel) => raw ? rawLabel : _noneSourceLabel;
+
+		private void DrawMissingSourceLabel(Rect rect, IContentEntrySource source, bool raw, string rawLabel)
 		{
 			if (source != null)
 				return;
 
-			if (invalid)
+			if (raw)
 			{
-				EditorGUI.SelectableLabel(rect, invalidLabel, GetObjectFieldTextStyle());
+				EditorGUI.SelectableLabel(rect, rawLabel, GetObjectFieldTextStyle());
 				return;
 			}
 
 			if (Event.current.type != EventType.Repaint)
 				return;
 
-			_missingSourceContent.text = GetMissingSourceLabel(invalid, invalidLabel);
+			_missingSourceContent.text = GetMissingSourceLabel(raw, rawLabel);
 			_missingSourceContent.tooltip = null;
 			GUI.Label(rect, _missingSourceContent, GetObjectFieldTextStyle());
 		}
@@ -932,7 +1016,7 @@ namespace Content.Editor
 			if (folder.IsNullOrEmpty())
 				return;
 
-			var defaultAssetName = GetDefaultAssetName(configType);
+			var defaultAssetName = GetCreateAssetName(configType, currentSource);
 			ContentReferenceCreateConfigNameWindow.Open($"New {GetConfigDisplayName(configType)}", defaultAssetName, folder,
 				SanitizeAssetName, NormalizeCreateFolderPath,
 				(assetName, assetFolder) => CreateContentEntry(configType, assetFolder, assetName));
@@ -1232,6 +1316,20 @@ namespace Content.Editor
 				return NormalizeAssetPath(path);
 
 			return NormalizeAssetPath(Path.GetDirectoryName(path));
+		}
+
+		// Конфиг под ещё не заведённый id: имя ассета = сам id, из имени собирается Id конфига
+		private string GetCreateAssetName(Type configType, IContentEntrySource currentSource)
+		{
+			if (currentSource == null && _mode == ContentDrawerMode.String &&
+				Property.ValueEntry.WeakSmartValue is string rawId && !rawId.IsNullOrEmpty())
+			{
+				var assetName = SanitizeAssetName(rawId);
+				if (!assetName.IsNullOrEmpty())
+					return assetName;
+			}
+
+			return GetDefaultAssetName(configType);
 		}
 
 		private static string GetDefaultAssetName(Type type)

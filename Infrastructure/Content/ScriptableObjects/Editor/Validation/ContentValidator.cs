@@ -548,6 +548,9 @@ namespace Content.Editor
 						logMessageFormatter,
 						errorMessageBuilder);
 
+				if (attribute.Optional)
+					return 0;
+
 				return AddInvalidContentReferenceError(path,
 					valueTypeForReference,
 					$"id [ {id} ]",
@@ -566,6 +569,9 @@ namespace Content.Editor
 						logContext,
 						logMessageFormatter,
 						errorMessageBuilder);
+
+				if (attribute.Optional)
+					return 0;
 
 				return AddInvalidContentReferenceError(path,
 					valueTypeForReference,
