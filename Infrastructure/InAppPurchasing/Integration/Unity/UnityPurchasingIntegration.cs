@@ -289,10 +289,15 @@ namespace InAppPurchasing.Unity
 
 			if (_settings.storeToScheme.TryGetValue(_distributionPlatform, out var scheme))
 			{
-				var country = UserLocator.UNDEFINED;
 				try
 				{
-					country = await UserLocator.GetCountryAsync(cancellationToken);
+					string country = await UserLocator.GetCountryAsync(cancellationToken);
+
+					if (country != UserLocator.UNDEFINED && scheme.countryToBilling.TryGetValue(country, out var billing))
+					{
+						_billing = billing;
+						autoSetDefaultBilling = false;
+					}
 				}
 				catch (Exception e)
 				{
@@ -301,12 +306,7 @@ namespace InAppPurchasing.Unity
 
 				cancellationToken.ThrowIfCancellationRequested();
 
-				if (country != UserLocator.UNDEFINED && scheme.countryToBilling.TryGetValue(country, out var billing))
-				{
-					_billing              = billing;
-					autoSetDefaultBilling = false;
-				}
-				else if (scheme.overrideBilling)
+				if (autoSetDefaultBilling && scheme.overrideBilling)
 				{
 					_billing = scheme.overrideBilling;
 				}
