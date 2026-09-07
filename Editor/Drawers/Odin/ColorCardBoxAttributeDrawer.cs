@@ -25,7 +25,8 @@ namespace Fusumity.Editor.Drawers
 			if (Attribute.Space > 0)
 				GUILayout.Space(Attribute.Space);
 
-			FusumityEditorGUILayout.BeginCardBox(new Color(Attribute.R, Attribute.G, Attribute.B, Attribute.A));
+			FusumityEditorGUILayout.BeginCardBox(new Color(Attribute.R, Attribute.G, Attribute.B, Attribute.A),
+				indent: Attribute.Indent);
 
 			if (!Attribute.Label.IsNullOrEmpty())
 			{
@@ -40,7 +41,7 @@ namespace Fusumity.Editor.Drawers
 				child.Draw(child.Label);
 			}
 
-			FusumityEditorGUILayout.EndCardBox();
+			FusumityEditorGUILayout.EndCardBox(indent: Attribute.Indent);
 		}
 	}
 }
