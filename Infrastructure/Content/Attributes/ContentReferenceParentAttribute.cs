@@ -13,6 +13,9 @@ namespace Content
 
 		public bool Dropdown { get; }
 
+		/// <inheritdoc cref="ContentReferenceAttribute.Optional"/>
+		public bool Optional { get; set; }
+
 		public ContentReferenceParentAttribute(Type type, bool inlineEditor = true, bool dropdown = false)
 		{
 			Type = type;
@@ -31,6 +34,7 @@ namespace Content
 			=> new ContentReferenceAttribute(Type, InlineEditor, Dropdown)
 			{
 				TypeName = TypeName,
+				Optional = Optional,
 			};
 	}
 
