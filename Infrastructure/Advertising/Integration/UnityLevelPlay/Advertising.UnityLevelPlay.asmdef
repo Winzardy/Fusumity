@@ -2,6 +2,7 @@
     "name": "Advertising.UnityLevelPlay",
     "rootNamespace": "",
     "references": [
+        "UniTask",
         "Advertising",
         "Fusumity",
         "Sapientia",
