@@ -51,11 +51,6 @@ namespace UI.Screens
 				}
 			}
 
-			if (_default.screen == null)
-			{
-				GUIDebug.LogWarning($"No default screen");
-			}
-
 			InitializeAssetsPreloader();
 		}
 
@@ -76,6 +71,19 @@ namespace UI.Screens
 			if (!TryGetOrCreate<T>(out var screen))
 				throw new Exception($"Error on getting screen by type [ {typeof(T)} ]");
 
+			return screen;
+		}
+
+		/// <summary>
+		/// Задать дефолтный экран — тот, на который система возвращается, когда очередь пуста
+		/// </summary>
+		internal T SetDefault<T>(bool autoShow)
+			where T : UIWidget, IScreen
+		{
+			if (!TryGet<T>(out var screen))
+				screen = Create<T>();
+
+			SetDefault(screen, autoShow);
 			return screen;
 		}
 

@@ -100,6 +100,14 @@ namespace UI.Screens
 			=> _manager.IsDefault<T>();
 
 		/// <summary>
+		/// Задать дефолтный экран — тот, на который система возвращается, когда очередь пуста
+		/// </summary>
+		/// <param name="autoShow">Показать сразу же (например на старте приложения)</param>
+		public T SetDefault<T>(bool autoShow = true)
+			where T : UIWidget, IScreen
+			=> _manager.SetDefault<T>(autoShow);
+
+		/// <summary>
 		/// Показать экран по типу (убирает в очередь текущее)
 		/// </summary>
 		public T Show<T>(object args = null)
