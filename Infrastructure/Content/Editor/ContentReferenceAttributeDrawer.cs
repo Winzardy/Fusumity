@@ -735,9 +735,13 @@ namespace Content.Editor
 
 			EditorGUIUtility.AddCursorRect(caretRect, MouseCursor.Arrow);
 
-			// Кнопка идёт до поля: иначе клик по каретке уходит в текстовое поле и попап не открывается
+			// Кнопка идёт до поля: иначе клик по каретке уходит в текстовое поле и попап не открывается.
+			// Флаг изменения сохраняем и возвращаем: GUI.Button поднимает его на клике, а внешняя проверка
+			// приняла бы это за правку поля и затёрла набранный id пустым источником
+			var changed = GUI.changed;
 			if (GUI.Button(caretRect, GUIContent.none, GUIStyle.none))
 				OpenSelector(rect);
+			GUI.changed = changed;
 
 			EditorGUI.BeginChangeCheck();
 			var edited = SirenixEditorFields.TextField(rect, label, id);
