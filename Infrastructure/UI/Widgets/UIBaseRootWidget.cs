@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia.Extensions;
 using Sapientia.Utility;
 
 namespace UI
@@ -8,9 +9,10 @@ namespace UI
 	/// Прослойка-класс в основном от которого наследуются все корневые виджеты (Window, Popup)
 	/// </summary>
 	public abstract class UIClosableRootWidget<TLayout> : UIBaseRootWidget<TLayout>
-		where TLayout : UIBaseLayout
+		where TLayout : UIBaseCanvasGroupLayout
 	{
 		private CancellationTokenSource _closableCts;
+		private UIHoldButtonView _closeAllHold;
 
 		protected CancellationToken ClosableCancellationToken => ClosableCancellationTokenSource.Token;
 		protected CancellationTokenSource ClosableCancellationTokenSource => _closableCts ??= new CancellationTokenSource();
@@ -21,7 +23,31 @@ namespace UI
 			base.OnBeganClosingInternal();
 		}
 
+		protected internal override void OnLayoutInstalledInternal()
+		{
+			if (_layout.closeAllHold)
+			{
+				_closeAllHold = new UIHoldButtonView(_layout.closeAllHold);
+				_closeAllHold.Completed += OnCloseAllHeld;
+			}
+
+			base.OnLayoutInstalledInternal();
+		}
+
+		protected internal override void OnLayoutClearedInternal()
+		{
+			if (_closeAllHold != null)
+			{
+				_closeAllHold.Completed -= OnCloseAllHeld;
+				DisposeUtility.DisposeAndSetNull(ref _closeAllHold);
+			}
+
+			base.OnLayoutClearedInternal();
+		}
+
 		public abstract void RequestClose();
+
+		protected virtual void OnCloseAllHeld() => UIDispatcher.HideAll();
 
 		protected async UniTask RequestCloseAsync(int delayMs = 500)
 		{

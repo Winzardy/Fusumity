@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia.Pooling;
 using Sapientia.Utility;
 using UnityEngine;
 
@@ -138,6 +139,24 @@ namespace UI.Popups
 
 			foreach (var (popup, _) in _standalones)
 				yield return popup as UIWidget;
+		}
+
+		internal void TryHideAll()
+		{
+			using (ListPool<IPopup>.Get(out var popups))
+			{
+				foreach (var (standalone, _) in _standalones)
+					popups.Add(standalone);
+
+				foreach (var (queued, _) in _queue)
+					popups.Add(queued);
+
+				if (_current != null)
+					popups.Add(_current);
+
+				foreach (var popup in popups)
+					TryHide(popup);
+			}
 		}
 
 		internal void TryHide(IPopup popup)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Sapientia.Pooling;
 using UnityEngine;
 
 namespace UI.Windows
@@ -305,17 +306,30 @@ namespace UI.Windows
 
 		public void TryHideAll(bool immediate = false)
 		{
-			foreach (var (window, _) in _queue)
-				Hidden?.Invoke(window, true);
-			_queue.Clear();
+			var current = _current.window;
 
-			if (_current.window != null)
+			using (ListPool<IWindow>.Get(out var queued))
 			{
-				_current.window.Hide(true, immediate);
-				Hidden?.Invoke(_current.window, false);
+				foreach (var (window, _) in _queue)
+					queued.Add(window);
+
+				_queue.Clear();
+				SetCurrent(null, null);
+
+				if (current != null)
+					HideAndReset(current);
+
+				for (var i = queued.Count - 1; i >= 0; i--)
+					HideAndReset(queued[i]);
 			}
 
-			SetCurrent(null, null);
+			void HideAndReset(IWindow window)
+			{
+				TryReleasePreloadedLayout(window);
+
+				window.Hide(true, immediate);
+				Hidden?.Invoke(window, false);
+			}
 		}
 
 		private bool TryAddToQueueAndHide(ref WindowQueueContext context)

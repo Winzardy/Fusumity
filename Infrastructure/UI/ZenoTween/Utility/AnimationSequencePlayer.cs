@@ -15,6 +15,7 @@ namespace ZenoTween.Utility
 		private GameObject _link;
 
 		private Tween _tween;
+		private TweenCallback _onComplete;
 
 		public bool IsPlaying { get => _tween.IsActive() && _tween.active && _tween.IsPlaying() && !_tween.IsComplete(); }
 
@@ -37,6 +38,7 @@ namespace ZenoTween.Utility
 		{
 			_tween.KillSafe();
 			_tween = null;
+			_onComplete = null;
 		}
 
 		public void Play(TweenCallback onComplete = null)
@@ -50,11 +52,23 @@ namespace ZenoTween.Utility
 		{
 			if (_cached)
 			{
-				_tween ??= CreateTween()
-					?.SetAutoKill(false);
-
 				if (_tween == null)
-					return;
+				{
+					_tween = CreateTween()
+						?.SetAutoKill(false);
+
+					if (_tween == null)
+						return;
+
+					var previous = _tween.onComplete;
+					_tween.OnComplete(() =>
+					{
+						previous?.Invoke();
+						_onComplete?.Invoke();
+					});
+				}
+
+				_onComplete = args.onComplete;
 
 				if (_tween.playedOnce)
 				{
@@ -126,6 +140,9 @@ namespace ZenoTween.Utility
 			}
 			else
 			{
+				if (rewind && _tween.IsActive())
+					_tween.Rewind();
+
 				_tween.KillSafe();
 			}
 		}

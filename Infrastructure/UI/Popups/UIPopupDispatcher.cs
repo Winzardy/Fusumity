@@ -6,7 +6,7 @@ using UI.Popups;
 
 namespace UI
 {
-	public class UIPopupDispatcher : IWidgetDispatcher, IDisposable
+	public class UIPopupDispatcher : IWidgetDispatcher, IHideAllDispatcher, IDisposable
 	{
 		private UIPopupManager _manager;
 
@@ -117,6 +117,8 @@ namespace UI
 
 		public void TryHide(IPopup popup)
 			=> _manager.TryHide(popup);
+
+		public void TryHideAll() => _manager.TryHideAll();
 
 		/// <summary>
 		/// Попробовать закрыть текущий попап
