@@ -19,8 +19,6 @@ namespace UI
 
 		private Dictionary<string, UILayerLayout> _layers = new();
 
-		private readonly List<IWidgetDispatcher> _dispatchers = new();
-
 		public UILayerLayout this[string id] => _layers.TryGetValue(id, out var layer) ? layer : Create(id);
 
 		public bool TryGet(string id, out UILayerLayout layer) => _layers.TryGetValue(id, out layer);
@@ -30,27 +28,11 @@ namespace UI
 
 		public void Register<T>(T dispatcher)
 			where T : class, IWidgetDispatcher
-		{
-			var previous = UIDispatcherLocator<T>.instance;
-			if (previous != null)
-				_dispatchers.Remove(previous);
-
-			UIDispatcherLocator<T>.instance = dispatcher;
-			_dispatchers.Add(dispatcher);
-		}
+			=> UIDispatcherLocator<T>.instance = dispatcher;
 
 		public void Unregister<T>()
 			where T : class, IWidgetDispatcher
-		{
-			_dispatchers.Remove(UIDispatcherLocator<T>.instance);
-			UIDispatcherLocator<T>.instance = null;
-		}
-
-		public void HideAll()
-		{
-			for (var i = _dispatchers.Count - 1; i >= 0; i--)
-				_dispatchers[i].TryHideAll();
-		}
+			=> UIDispatcherLocator<T>.instance = null;
 
 		private UILayerLayout Create(string id)
 		{
@@ -72,7 +54,6 @@ namespace UI
 				layout.Destroy();
 
 			_layers.Clear();
-			_dispatchers.Clear();
 		}
 
 		public IEnumerator<UILayerLayout> GetEnumerator() => _layers.Values.GetEnumerator();

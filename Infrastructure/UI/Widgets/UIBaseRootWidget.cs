@@ -13,7 +13,7 @@ namespace UI
 		where TLayout : UIBaseLayout
 	{
 		private CancellationTokenSource _closableCts;
-		private UIHoldButtonView _closeHold;
+		private UIButtonHold _closeHold;
 
 		protected CancellationToken ClosableCancellationToken => ClosableCancellationTokenSource.Token;
 		protected CancellationTokenSource ClosableCancellationTokenSource => _closableCts ??= new CancellationTokenSource();
@@ -30,23 +30,11 @@ namespace UI
 
 		protected void SetupCloseHold(Button close)
 		{
-			if (!CloseHoldEnabled || close is not CustomButton button)
-				return;
-
-			_closeHold = new UIHoldButtonView(button);
-			_closeHold.Completed += OnCloseHeld;
+			if (CloseHoldEnabled && close is CustomButton button)
+				_closeHold = new UIButtonHold(button);
 		}
 
-		protected void ClearCloseHold()
-		{
-			if (_closeHold == null)
-				return;
-
-			_closeHold.Completed -= OnCloseHeld;
-			DisposeUtility.DisposeAndSetNull(ref _closeHold);
-		}
-
-		protected virtual void OnCloseHeld() => UIDispatcher.HideAll();
+		protected void ClearCloseHold() => DisposeUtility.DisposeAndSetNull(ref _closeHold);
 
 		protected async UniTask RequestCloseAsync(int delayMs = 500)
 		{

@@ -10,7 +10,6 @@ namespace UI
 	public class UIToggleBarView : UIView<IToggleBarViewModel, UIToggleBarLayout>
 	{
 		private UIToggleButtonsCollection _collection;
-		private UIHoldButtonView _backHold;
 
 		public UIToggleBarView(UIToggleBarLayout layout, Func<IUIAnimator<UIToggleButtonLayout>> animatorFactory = null) : base(layout)
 		{
@@ -21,17 +20,8 @@ namespace UI
 				Subscribe(layout.back, HandleBackClicked, _layout.backButtonUniqueId, _layout.backButtonGroupId);
 
 				if (layout.back is CustomButton back)
-				{
-					AddDisposable(_backHold = new UIHoldButtonView(back));
-					_backHold.Completed += HandleBackHeld;
-				}
+					AddDisposable(new UIButtonHold(back));
 			}
-		}
-
-		protected override void OnDispose()
-		{
-			if (_backHold != null)
-				_backHold.Completed -= HandleBackHeld;
 		}
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)
@@ -60,11 +50,6 @@ namespace UI
 		private void HandleBackClicked()
 		{
 			ViewModel?.ClickBack();
-		}
-
-		private void HandleBackHeld()
-		{
-			UIDispatcher.HideAll();
 		}
 	}
 

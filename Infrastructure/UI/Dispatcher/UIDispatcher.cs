@@ -31,12 +31,6 @@ namespace UI
 			return dispatcher != null;
 		}
 
-		public static void HideAll()
-		{
-			if (IsInitialized)
-				management.HideAll();
-		}
-
 		/// <summary>
 		/// Возвращает слой по айди (если его нет создаст)
 		/// </summary>

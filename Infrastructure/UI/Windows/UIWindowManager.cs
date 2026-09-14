@@ -304,31 +304,18 @@ namespace UI.Windows
 			Show(window, in context, true);
 		}
 
-		public void TryHideAll(bool immediate = false)
+		public void TryHideAll()
 		{
-			var current = _current.window;
-
-			using (ListPool<IWindow>.Get(out var queued))
+			using (ListPool<IWindow>.Get(out var windows))
 			{
 				foreach (var (window, _) in _queue)
-					queued.Add(window);
+					windows.Add(window);
 
-				_queue.Clear();
-				SetCurrent(null, null);
+				if (_current.window != null)
+					windows.Add(_current.window);
 
-				if (current != null)
-					HideAndReset(current);
-
-				for (var i = queued.Count - 1; i >= 0; i--)
-					HideAndReset(queued[i]);
-			}
-
-			void HideAndReset(IWindow window)
-			{
-				TryReleasePreloadedLayout(window);
-
-				window.Hide(true, immediate);
-				Hidden?.Invoke(window, false);
+				foreach (var window in windows)
+					TryHide(window);
 			}
 		}
 
