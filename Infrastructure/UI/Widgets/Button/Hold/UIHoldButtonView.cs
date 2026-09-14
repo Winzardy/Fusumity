@@ -1,25 +1,33 @@
 using System;
+using Fusumity.Reactive;
+using Sapientia.ServiceManagement;
+using UnityEngine;
 using UnityEngine.UI;
-using ZenoTween.Utility;
 
 namespace UI
 {
 	public class UIHoldButtonView : IDisposable
 	{
-		private readonly HoldPointerTrigger _trigger;
-		private readonly AnimationSequencePlayer _player;
+		private const float INDICATOR_DELAY = 0.2f;
+		private const float HOLD_DURATION = 1.2f;
 
-		public bool IsHolding => _trigger != null && _trigger.IsPressed;
+		private readonly HoldPointerTrigger _trigger;
+		private readonly RectTransform _rectTransform;
+
+		private IHoldIndicator _indicator;
+		private bool _indicatorShown;
+
+		private float _holdTime;
+		private bool _holding;
 
 		public event Action Completed;
 
-		public UIHoldButtonView(UIHoldButtonLayout layout)
+		public UIHoldButtonView(Button button)
 		{
-			_player = new AnimationSequencePlayer(layout.sequence, cached: true, owner: layout);
-			_trigger = ResolveTrigger(layout);
+			if (!button.TryGetComponent(out _trigger))
+				_trigger = button.gameObject.AddComponent<HoldPointerTrigger>();
 
-			if (_trigger == null)
-				return;
+			_rectTransform = button.transform as RectTransform;
 
 			_trigger.Pressed += HandlePressed;
 			_trigger.Released += HandleReleased;
@@ -27,37 +35,73 @@ namespace UI
 
 		public void Dispose()
 		{
-			if (_trigger != null)
-			{
-				_trigger.Pressed -= HandlePressed;
-				_trigger.Released -= HandleReleased;
-			}
+			StopHold();
 
-			_player.Dispose();
+			_trigger.Pressed -= HandlePressed;
+			_trigger.Released -= HandleReleased;
 		}
 
-		private static HoldPointerTrigger ResolveTrigger(UIHoldButtonLayout layout)
+		private void StartHold()
 		{
-			var selectable = layout.GetComponentInParent<Selectable>(true);
+			_holdTime = 0;
+			_holding = true;
 
-			if (selectable == null)
-			{
-				GUIDebug.LogError($"Hold button [ {layout.name} ] must be placed under a Selectable", layout);
-				return null;
-			}
-
-			if (!selectable.TryGetComponent(out HoldPointerTrigger trigger))
-				trigger = selectable.gameObject.AddComponent<HoldPointerTrigger>();
-
-			return trigger;
+			UnityLifecycle.UpdateEvent.Subscribe(HandleUpdated);
 		}
 
-		private void HandlePressed() => _player.Play(HandleCompleted);
-
-		private void HandleReleased() => _player.Stop(rewind: true);
-
-		private void HandleCompleted()
+		private void StopHold()
 		{
+			if (!_holding)
+				return;
+
+			_holding = false;
+			_holdTime = 0;
+
+			UnityLifecycle.UpdateEvent.UnSubscribe(HandleUpdated);
+			HideIndicator();
+		}
+
+		private void UpdateIndicator()
+		{
+			if (_holdTime < INDICATOR_DELAY)
+				return;
+
+			if (!_indicatorShown)
+			{
+				if (!ServiceLocator.TryGet(out _indicator))
+					return;
+
+				_indicator.Show(_rectTransform);
+				_indicatorShown = true;
+			}
+
+			_indicator.SetProgress((_holdTime - INDICATOR_DELAY) / (HOLD_DURATION - INDICATOR_DELAY));
+		}
+
+		private void HideIndicator()
+		{
+			if (!_indicatorShown)
+				return;
+
+			_indicatorShown = false;
+			_indicator.Hide();
+		}
+
+		private void HandlePressed() => StartHold();
+
+		private void HandleReleased() => StopHold();
+
+		private void HandleUpdated()
+		{
+			_holdTime += Time.unscaledDeltaTime;
+
+			UpdateIndicator();
+
+			if (_holdTime < HOLD_DURATION)
+				return;
+
+			StopHold();
+
 			_trigger.SuppressClick();
 			Completed?.Invoke();
 		}

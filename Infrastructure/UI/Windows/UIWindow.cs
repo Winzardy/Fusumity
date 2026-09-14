@@ -254,7 +254,10 @@ namespace UI.Windows
 		protected sealed override void OnLayoutInstalledInternal()
 		{
 			if (_layout.close)
+			{
 				_layout.close.Subscribe(OnCloseClicked, _layout.uId, _layout.groupId);
+				SetupCloseHold(_layout.close);
+			}
 
 			base.OnLayoutInstalledInternal();
 		}
@@ -262,7 +265,10 @@ namespace UI.Windows
 		protected sealed override void OnLayoutClearedInternal()
 		{
 			if (_layout.close)
+			{
 				_layout.close.Unsubscribe(OnCloseClicked);
+				ClearCloseHold();
+			}
 
 			base.OnLayoutClearedInternal();
 		}

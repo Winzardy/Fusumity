@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using Sapientia.Extensions;
 using Sapientia.Utility;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -9,10 +10,10 @@ namespace UI
 	/// Прослойка-класс в основном от которого наследуются все корневые виджеты (Window, Popup)
 	/// </summary>
 	public abstract class UIClosableRootWidget<TLayout> : UIBaseRootWidget<TLayout>
-		where TLayout : UIBaseCanvasGroupLayout
+		where TLayout : UIBaseLayout
 	{
 		private CancellationTokenSource _closableCts;
-		private UIHoldButtonView _closeAllHold;
+		private UIHoldButtonView _closeHold;
 
 		protected CancellationToken ClosableCancellationToken => ClosableCancellationTokenSource.Token;
 		protected CancellationTokenSource ClosableCancellationTokenSource => _closableCts ??= new CancellationTokenSource();
@@ -23,31 +24,29 @@ namespace UI
 			base.OnBeganClosingInternal();
 		}
 
-		protected internal override void OnLayoutInstalledInternal()
-		{
-			if (_layout.closeAllHold)
-			{
-				_closeAllHold = new UIHoldButtonView(_layout.closeAllHold);
-				_closeAllHold.Completed += OnCloseAllHeld;
-			}
-
-			base.OnLayoutInstalledInternal();
-		}
-
-		protected internal override void OnLayoutClearedInternal()
-		{
-			if (_closeAllHold != null)
-			{
-				_closeAllHold.Completed -= OnCloseAllHeld;
-				DisposeUtility.DisposeAndSetNull(ref _closeAllHold);
-			}
-
-			base.OnLayoutClearedInternal();
-		}
-
 		public abstract void RequestClose();
 
-		protected virtual void OnCloseAllHeld() => UIDispatcher.HideAll();
+		protected virtual bool CloseHoldEnabled => true;
+
+		protected void SetupCloseHold(Button close)
+		{
+			if (!CloseHoldEnabled)
+				return;
+
+			_closeHold = new UIHoldButtonView(close);
+			_closeHold.Completed += OnCloseHeld;
+		}
+
+		protected void ClearCloseHold()
+		{
+			if (_closeHold == null)
+				return;
+
+			_closeHold.Completed -= OnCloseHeld;
+			DisposeUtility.DisposeAndSetNull(ref _closeHold);
+		}
+
+		protected virtual void OnCloseHeld() => UIDispatcher.HideAll();
 
 		protected async UniTask RequestCloseAsync(int delayMs = 500)
 		{
