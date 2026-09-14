@@ -20,8 +20,11 @@ namespace UI
 			{
 				Subscribe(layout.back, HandleBackClicked, _layout.backButtonUniqueId, _layout.backButtonGroupId);
 
-				AddDisposable(_backHold = new UIHoldButtonView(layout.back));
-				_backHold.Completed += HandleBackHeld;
+				if (layout.back is CustomButton back)
+				{
+					AddDisposable(_backHold = new UIHoldButtonView(back));
+					_backHold.Completed += HandleBackHeld;
+				}
 			}
 		}
 

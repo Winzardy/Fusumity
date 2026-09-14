@@ -4,7 +4,7 @@ using Sapientia.Collections;
 
 namespace UI.Windows
 {
-	public class UIWindowDispatcher : IWidgetDispatcher, IHideAllDispatcher, IDisposable
+	public class UIWindowDispatcher : IWidgetDispatcher, IDisposable
 	{
 		private UIWindowManager _manager;
 

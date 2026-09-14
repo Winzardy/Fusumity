@@ -49,10 +49,7 @@ namespace UI
 		public void HideAll()
 		{
 			for (var i = _dispatchers.Count - 1; i >= 0; i--)
-			{
-				if (_dispatchers[i] is IHideAllDispatcher dispatcher)
-					dispatcher.TryHideAll();
-			}
+				_dispatchers[i].TryHideAll();
 		}
 
 		private UILayerLayout Create(string id)

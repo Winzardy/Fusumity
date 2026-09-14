@@ -6,7 +6,7 @@ using UI.Popups;
 
 namespace UI
 {
-	public class UIPopupDispatcher : IWidgetDispatcher, IHideAllDispatcher, IDisposable
+	public class UIPopupDispatcher : IWidgetDispatcher, IDisposable
 	{
 		private UIPopupManager _manager;
 

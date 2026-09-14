@@ -6,5 +6,9 @@ namespace UI
 	{
 		IEnumerable<UIWidget> GetAllActive();
 		void ClearAll();
+
+		void TryHideAll()
+		{
+		}
 	}
 }

@@ -30,10 +30,10 @@ namespace UI
 
 		protected void SetupCloseHold(Button close)
 		{
-			if (!CloseHoldEnabled)
+			if (!CloseHoldEnabled || close is not CustomButton button)
 				return;
 
-			_closeHold = new UIHoldButtonView(close);
+			_closeHold = new UIHoldButtonView(button);
 			_closeHold.Completed += OnCloseHeld;
 		}
 

@@ -2,7 +2,6 @@ using System;
 using Fusumity.Reactive;
 using Sapientia.ServiceManagement;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UI
 {
@@ -11,7 +10,7 @@ namespace UI
 		private const float INDICATOR_DELAY = 0.2f;
 		private const float HOLD_DURATION = 1.2f;
 
-		private readonly HoldPointerTrigger _trigger;
+		private readonly CustomButton _button;
 		private readonly RectTransform _rectTransform;
 
 		private IHoldIndicator _indicator;
@@ -22,23 +21,21 @@ namespace UI
 
 		public event Action Completed;
 
-		public UIHoldButtonView(Button button)
+		public UIHoldButtonView(CustomButton button)
 		{
-			if (!button.TryGetComponent(out _trigger))
-				_trigger = button.gameObject.AddComponent<HoldPointerTrigger>();
-
+			_button = button;
 			_rectTransform = button.transform as RectTransform;
 
-			_trigger.Pressed += HandlePressed;
-			_trigger.Released += HandleReleased;
+			_button.Pressed += HandlePressed;
+			_button.Released += HandleReleased;
 		}
 
 		public void Dispose()
 		{
 			StopHold();
 
-			_trigger.Pressed -= HandlePressed;
-			_trigger.Released -= HandleReleased;
+			_button.Pressed -= HandlePressed;
+			_button.Released -= HandleReleased;
 		}
 
 		private void StartHold()
@@ -102,7 +99,7 @@ namespace UI
 
 			StopHold();
 
-			_trigger.SuppressClick();
+			_button.SuppressClick();
 			Completed?.Invoke();
 		}
 	}
