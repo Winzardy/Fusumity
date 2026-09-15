@@ -23,6 +23,13 @@ namespace Advertising.Fake
 
 		public bool UseOverlay => _useOverlay;
 
+		// Заглушка не приносит реального дохода
+		public event AdRevenuePaid AdRevenuePaid
+		{
+			add { }
+			remove { }
+		}
+
 		public event RewardedClicked RewardedClicked;
 		public event RewardedClosed RewardedClosed;
 		public event RewardedDisplayed RewardedDisplayed;

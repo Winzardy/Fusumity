@@ -278,7 +278,7 @@ namespace AssetManagement.Editor
 							var prefab = selection.FirstOrDefault();
 							if (!prefab)
 								return;
-							Property.ValueEntry.WeakSmartValue = prefab;
+							Property.ValueEntry.WeakSmartValue = GetPropertyValue(prefab, Property.ValueEntry.TypeOfValue);
 						};
 						var rect = Property.LastDrawnValueRect;
 						rect.width -= EditorGUIUtility.labelWidth;
@@ -295,6 +295,14 @@ namespace AssetManagement.Editor
 		private static Object GetSelectionAsset(Object asset)
 		{
 			return asset is Component component ? component.gameObject : asset;
+		}
+
+		private static Object GetPropertyValue(Object asset, Type valueType)
+		{
+			if (asset is GameObject gameObject && valueType != null && typeof(Component).IsAssignableFrom(valueType))
+				return gameObject.GetComponent(valueType);
+
+			return asset;
 		}
 	}
 }

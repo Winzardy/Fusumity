@@ -1,5 +1,6 @@
 using System;
 using Content;
+using Cysharp.Threading.Tasks;
 using Fusumity.Reactive;
 using ProjectInformation;
 using Sapientia.Collections;
@@ -33,6 +34,8 @@ namespace Advertising.UnityLevelPlay
 		private AdPlacementEntry _cacheInterstitialPlacement;
 
 		public string Name => "UnityLevelPlay";
+
+		public event AdRevenuePaid AdRevenuePaid;
 
 		public UnityLevelPlayAdIntegration(UnityLevelPlaySettings settings, in PlatformEntry platform)
 		{
@@ -108,7 +111,7 @@ namespace Advertising.UnityLevelPlay
 
 			AdsDebug.Log($"Unity LevelPlay successfully initialized: IsAdQualityEnabled [ {configuration.IsAdQualityEnabled} ]");
 
-			IronSourceEvents.onImpressionDataReadyEvent += OnImpressionDataReadyEvent;
+			LevelPlay.OnImpressionDataReady += OnImpressionDataReadyEvent;
 
 			if (!_entry.rewardAdUnitId.IsNullOrEmpty())
 			{
@@ -170,7 +173,8 @@ namespace Advertising.UnityLevelPlay
 			if (!_initialized)
 				return;
 
-			IronSourceEvents.onImpressionDataReadyEvent -= OnImpressionDataReadyEvent;
+			_initialized = false;
+			LevelPlay.OnImpressionDataReady -= OnImpressionDataReadyEvent;
 			if (_rewarded.ad != null)
 			{
 				_rewarded.ad.OnAdClicked -= OnRewardedAdClicked;
@@ -205,8 +209,39 @@ namespace Advertising.UnityLevelPlay
 		private void OnInitializeFailed(LevelPlayInitError error)
 			=> AdsDebug.LogError($"Failed to initialize: {error.ErrorCode}, {error.ErrorMessage}");
 
-		private void OnImpressionDataReadyEvent(IronSourceImpressionData data)
-			=> AdsDebug.Log("Unity LevelPlay Impression Data Ready data: " + data.allData);
+		private void OnImpressionDataReadyEvent(LevelPlayImpressionData data)
+			// Фоновый callback SDK переводим в главный поток до отправки в общий слой Advertising
+			=> UniTask.Post(() => OnAdRevenueReady(data));
+
+		private void OnAdRevenueReady(LevelPlayImpressionData data)
+		{
+			// Callback мог попасть в очередь до уничтожения интеграции
+			if (!_initialized)
+				return;
+
+			if (data?.Revenue is not double revenue)
+			{
+				AdsDebug.LogWarning("Unity LevelPlay impression has no revenue");
+				return;
+			}
+
+			AdsDebug.Log("Unity LevelPlay Impression Data Ready data: " + data.AllData);
+
+			var payload = new AdRevenueData
+			{
+				network = data.AdNetwork,
+				mediation = AdMediation.UnityLevelPlay,
+				revenue = revenue,
+				// LevelPlay возвращает доход за один показ в USD
+				currency = "USD",
+				country = data.Country,
+				adUnitId = data.MediationAdUnitId,
+				adFormat = data.AdFormat,
+				placement = data.Placement
+			};
+
+			AdRevenuePaid?.Invoke(in payload);
+		}
 
 		#region Rewarded
 

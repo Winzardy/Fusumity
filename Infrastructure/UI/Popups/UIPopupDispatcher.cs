@@ -118,6 +118,8 @@ namespace UI
 		public void TryHide(IPopup popup)
 			=> _manager.TryHide(popup);
 
+		public void RequestCloseAll() => _manager.RequestCloseAll();
+
 		/// <summary>
 		/// Попробовать закрыть текущий попап
 		/// </summary>

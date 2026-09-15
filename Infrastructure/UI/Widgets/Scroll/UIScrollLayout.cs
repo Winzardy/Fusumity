@@ -318,7 +318,7 @@ namespace UI.Scroll
 			set
 			{
 				_delegate = value;
-				_reloadDataRequest = true;
+				ReloadData(0);
 			}
 		}
 
@@ -761,7 +761,7 @@ namespace UI.Scroll
 			_forceUpdatePaddingRequest = false;
 
 			_layoutGroup.padding = padding;
-			_reloadDataRequest = true;
+			ReloadData(0);
 		}
 
 		public void Resize(bool keepPosition = true)
@@ -824,6 +824,18 @@ namespace UI.Scroll
 		/// </summary>
 		/// <param name="scrollPositionFactor">The percentage of the Scroll to start at between 0 and 1, 0 being the start of the Scroll</param>
 		public void ReloadData(float scrollPositionFactor)
+		{
+			_reloadDataPositionFactor = scrollPositionFactor;
+			_reloadDataRequest = true;
+		}
+
+		private void FlushReloadRequest()
+		{
+			if (_reloadDataRequest)
+				ReloadDataInternal(_reloadDataPositionFactor);
+		}
+
+		private void ReloadDataInternal(float scrollPositionFactor)
 		{
 			_reloadDataRequest = false;
 
@@ -980,6 +992,8 @@ namespace UI.Scroll
 			bool useSpacing = true,
 			LoopJumpDirectionEnum loopJumpDirection = LoopJumpDirectionEnum.Closest)
 		{
+			FlushReloadRequest();
+
 			var cellOffsetPosition = 0f;
 
 			if (cellOffset != 0)
@@ -1317,6 +1331,8 @@ namespace UI.Scroll
 		/// <returns></returns>
 		public float GetScrollPositionForCellIndex(int cellIndex, CellPositionEnum insertPosition, bool clamp = false)
 		{
+			FlushReloadRequest();
+
 			if (NumberOfItems == 0) return 0;
 			if (cellIndex < 0) cellIndex = 0;
 
@@ -1375,9 +1391,13 @@ namespace UI.Scroll
 		/// </summary>
 		/// <param name="position">The pixel offset from the start of the Scroll</param>
 		/// <returns></returns>
-		public int GetCellIndexAtPosition(float position) =>
+		public int GetCellIndexAtPosition(float position)
+		{
+			FlushReloadRequest();
+
 			// call the overrloaded method on the entire range of the list
-			_GetCellIndexAtPosition(position, 0, _cellOffsetArray.Count - 1);
+			return _GetCellIndexAtPosition(position, 0, _cellOffsetArray.Count - 1);
+		}
 
 		/// <summary>
 		/// Get a cell for a particular data index. If the cell is not currently
@@ -1451,6 +1471,8 @@ namespace UI.Scroll
 		/// Flag to tell the Scroll to reload the data
 		/// </summary>
 		private bool _reloadDataRequest;
+
+		private float _reloadDataPositionFactor;
 
 		/// <summary>
 		/// Flag to tell the Scroll to refresh the active list of cells
@@ -2001,6 +2023,9 @@ namespace UI.Scroll
 		{
 			//_refreshActive = false;
 
+			if (_reloadDataRequest)
+				return;
+
 			int startIndex;
 			int endIndex;
 			var velocity = Vector2.zero;
@@ -2154,13 +2179,12 @@ namespace UI.Scroll
 			if (_updateSpacing)
 			{
 				UpdateSpacing(spacing);
-				_reloadDataRequest = false;
 			}
 
 			if (_reloadDataRequest)
 			{
 				// if the reload flag is true, then reload the data
-				ReloadData();
+				ReloadDataInternal(_reloadDataPositionFactor);
 			}
 
 			// if the scroll rect size has changed and looping is on,

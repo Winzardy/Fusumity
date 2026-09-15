@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UI
@@ -45,12 +46,73 @@ namespace UI
 		[OptionalSuffixWideLabel]
 		public StateSwitcher<bool> interactableSwitcher;
 
+		private bool _pressed;
+		private bool _clickSuppressed;
+
+		public event Action Pressed;
+		public event Action Released;
+
 		protected override void Awake()
 		{
 			base.Awake();
 
 			if (refreshOnAwake)
 				Refresh();
+		}
+
+		protected override void OnDisable()
+		{
+			base.OnDisable();
+
+			Release();
+		}
+
+		public override void OnPointerDown(PointerEventData eventData)
+		{
+			base.OnPointerDown(eventData);
+
+			if (_pressed || eventData.button != PointerEventData.InputButton.Left || !IsInteractable())
+				return;
+
+			_pressed = true;
+			Pressed?.Invoke();
+		}
+
+		public override void OnPointerUp(PointerEventData eventData)
+		{
+			base.OnPointerUp(eventData);
+
+			if (eventData.button != PointerEventData.InputButton.Left)
+				return;
+
+			if (_clickSuppressed)
+				eventData.eligibleForClick = false;
+
+			Release();
+		}
+
+		public override void OnPointerExit(PointerEventData eventData)
+		{
+			base.OnPointerExit(eventData);
+
+			Release();
+		}
+
+		public void SuppressClick()
+		{
+			if (_pressed)
+				_clickSuppressed = true;
+		}
+
+		private void Release()
+		{
+			if (!_pressed)
+				return;
+
+			_pressed = false;
+			_clickSuppressed = false;
+
+			Released?.Invoke();
 		}
 
 		protected override void DoStateTransition(SelectionState state, bool instant)

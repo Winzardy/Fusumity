@@ -5,11 +5,9 @@
         "Advertising",
         "Content.ScriptableObjects",
         "Content.ScriptableObjects.Editor",
-        "Distribution",
         "Fusumity",
         "Content",
         "Sapientia",
-        "Targeting",
         "ProjectInfo"
     ],
     "includePlatforms": [],
