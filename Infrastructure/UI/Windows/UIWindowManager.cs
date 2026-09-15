@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Sapientia;
 using Sapientia.Pooling;
 using UnityEngine;
 
@@ -56,6 +57,14 @@ namespace UI.Windows
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
+
+		/// <summary>
+		/// Все окна разом закрыты или выброшены из очереди
+		/// </summary>
+		internal event Action ClosedAll;
+
+		//Массовое закрытие: пока оно идёт, очередь не должна подниматься на освободившееся место
+		private bool _closingAll;
 
 		public UIWindowManager()
 		{
@@ -297,7 +306,7 @@ namespace UI.Windows
 
 		private void TryShowNext()
 		{
-			if (_queue.IsEmpty())
+			if (_closingAll || _queue.IsEmpty())
 				return;
 
 			var (window, context) = _queue.Dequeue();
@@ -306,29 +315,55 @@ namespace UI.Windows
 
 		public void TryHideAll()
 		{
-			using (ListPool<IWindow>.Get(out var windows))
-			{
-				CollectAll(windows);
+			_closingAll = true;
 
-				foreach (var window in windows)
-					TryHide(window);
+			try
+			{
+				using (ListPool<IWindow>.Get(out var windows))
+				{
+					CollectAll(windows);
+
+					foreach (var window in windows)
+						TryHide(window);
+				}
 			}
+			finally
+			{
+				_closingAll = false;
+			}
+
+			ClosedAll?.Invoke();
 		}
 
 		internal void RequestCloseAll()
 		{
-			using (ListPool<IWindow>.Get(out var windows))
-			{
-				CollectAll(windows);
+			_closingAll = true;
 
-				foreach (var window in windows)
+			try
+			{
+				using (ListPool<IWindow>.Get(out var windows))
 				{
-					if (window.Active)
-						window.RequestClose();
-					else
-						TryHide(window);
+					CollectAll(windows);
+
+					foreach (var window in windows)
+					{
+						//Окно, которому запретили закрытие, остаётся открытым и в очереди
+						if (window.GetArgs() is ICloseAvailability {CloseAvailable: false})
+							continue;
+
+						if (window.Active)
+							window.RequestClose();
+						else
+							TryHide(window);
+					}
 				}
 			}
+			finally
+			{
+				_closingAll = false;
+			}
+
+			ClosedAll?.Invoke();
 		}
 
 		private void CollectAll(List<IWindow> windows)

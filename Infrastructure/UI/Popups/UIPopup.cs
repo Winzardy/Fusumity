@@ -284,10 +284,9 @@ namespace UI.Popups
 		protected sealed override void OnLayoutClearedInternal()
 		{
 			if (_layout.close)
-			{
 				_layout.close.Unsubscribe(OnCloseClicked);
-				ClearCloseHold();
-			}
+
+			ClearCloseHold();
 
 			base.OnLayoutClearedInternal();
 		}

@@ -15,6 +15,7 @@ namespace UI
 		private ICloseHoldHandler _handler;
 		private float _time;
 		private bool _holding;
+		private bool _rejected;
 
 		public UIButtonHold(CustomButton button)
 		{
@@ -34,10 +35,17 @@ namespace UI
 
 		private bool TryBegin()
 		{
-			if (!ServiceLocator.TryGet(out _handler))
+			if (!ServiceLocator.TryGet(out ICloseHoldHandler handler))
 				return false;
 
-			_handler.Begin(_button.transform as RectTransform);
+			if (!handler.Begin(_button.transform as RectTransform))
+			{
+				//Удержание уже ведёт другая кнопка, до следующего нажатия не пробуем
+				_rejected = true;
+				return false;
+			}
+
+			_handler = handler;
 			return true;
 		}
 
@@ -64,6 +72,7 @@ namespace UI
 				return;
 
 			_holding = false;
+			_rejected = false;
 			_handler = null;
 
 			UnityLifecycle.UpdateEvent.UnSubscribe(HandleUpdated);
@@ -73,6 +82,7 @@ namespace UI
 		{
 			_time = 0;
 			_holding = true;
+			_rejected = false;
 
 			UnityLifecycle.UpdateEvent.Subscribe(HandleUpdated);
 		}
@@ -86,7 +96,7 @@ namespace UI
 			if (_time < BEGIN_DELAY)
 				return;
 
-			if (_handler == null && !TryBegin())
+			if (_handler == null && (_rejected || !TryBegin()))
 				return;
 
 			if (_time < DURATION)

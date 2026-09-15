@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia;
 using Sapientia.Pooling;
 using Sapientia.Utility;
 using UnityEngine;
@@ -39,6 +40,9 @@ namespace UI.Popups
 		private Dictionary<IPopup, object> _standalones;
 
 		private readonly CancellationTokenSource _cts = new();
+
+		//Массовое закрытие: пока оно идёт, очередь не должна подниматься на освободившееся место
+		private bool _closingAll;
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
@@ -143,25 +147,39 @@ namespace UI.Popups
 
 		internal void RequestCloseAll()
 		{
-			using (ListPool<IPopup>.Get(out var popups))
+			_closingAll = true;
+
+			try
 			{
-				foreach (var (standalone, _) in _standalones)
-					popups.Add(standalone);
-
-				foreach (var (queued, _) in _queue)
-					popups.Add(queued);
-
-				if (_current != null)
-					popups.Add(_current);
-
-				foreach (var popup in popups)
+				using (ListPool<IPopup>.Get(out var popups))
 				{
-					if (popup.Active)
-						popup.RequestClose();
-					else
-						TryHide(popup);
+					foreach (var (standalone, args) in _standalones)
+						if (CloseAvailable(args))
+							popups.Add(standalone);
+
+					foreach (var (queued, args) in _queue)
+						if (CloseAvailable(args))
+							popups.Add(queued);
+
+					if (_current != null && CloseAvailable(_current.GetArgs()))
+						popups.Add(_current);
+
+					foreach (var popup in popups)
+					{
+						if (popup.Active)
+							popup.RequestClose();
+						else
+							TryHide(popup);
+					}
 				}
 			}
+			finally
+			{
+				_closingAll = false;
+			}
+
+			//Попап, которому запретили закрытие, не должен выпасть из очереди вместе с остальными
+			static bool CloseAvailable(object args) => args is not ICloseAvailability {CloseAvailable: false};
 		}
 
 		internal void TryHide(IPopup popup)
@@ -274,7 +292,7 @@ namespace UI.Popups
 
 		private void TryShowNext()
 		{
-			if (_queue.IsEmpty())
+			if (_closingAll || _queue.IsEmpty())
 				return;
 
 			var (popup, args) = _queue.Dequeue();

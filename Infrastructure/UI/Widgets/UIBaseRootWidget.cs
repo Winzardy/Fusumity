@@ -30,6 +30,8 @@ namespace UI
 
 		protected void SetupCloseHold(Button close)
 		{
+			ClearCloseHold();
+
 			if (CloseHoldEnabled && close is CustomButton button)
 				_closeHold = new UIButtonHold(button);
 		}
