@@ -1,9 +1,12 @@
 using Sapientia;
+using Sapientia.Extensions;
 
 namespace Advertising
 {
 	internal class AdvertisingIntegrationRelay : Relay<IAdvertisingIntegration>, IAdEvents
 	{
+		public event AdRevenuePaid AdRevenuePaid;
+
 		public event RewardedClicked RewardedClicked;
 		public event RewardedClosed RewardedClosed;
 		public event RewardedDisplayed RewardedDisplayed;
@@ -24,6 +27,8 @@ namespace Advertising
 
 		protected override void OnBind(IAdvertisingIntegration integration)
 		{
+			integration.AdRevenuePaid += OnAdRevenuePaid;
+
 			integration.RewardedClicked += OnRewardedClicked;
 			integration.RewardedClosed += OnRewardedClosed;
 			integration.RewardedDisplayed += OnRewardedDisplayed;
@@ -42,6 +47,8 @@ namespace Advertising
 
 		protected override void OnClear(IAdvertisingIntegration integration)
 		{
+			integration.AdRevenuePaid -= OnAdRevenuePaid;
+
 			integration.RewardedClicked -= OnRewardedClicked;
 			integration.RewardedClosed -= OnRewardedClosed;
 			integration.RewardedDisplayed -= OnRewardedDisplayed;
@@ -56,6 +63,18 @@ namespace Advertising
 			integration.InterstitialDisplayFailed -= OnInterstitialDisplayFailed;
 			integration.InterstitialLoaded -= OnInterstitialLoaded;
 			integration.InterstitialLoadFailed -= OnInterstitialLoadFailed;
+		}
+
+		private void OnAdRevenuePaid(in AdRevenueData data)
+		{
+			if (double.IsNaN(data.revenue) || double.IsInfinity(data.revenue) || data.revenue < 0 ||
+				data.network.IsNullOrEmpty() || data.currency.IsNullOrEmpty())
+			{
+				AdsDebug.LogWarning("Ad revenue skipped: missing network, currency or invalid impression revenue");
+				return;
+			}
+
+			AdRevenuePaid?.Invoke(in data);
 		}
 
 		private void OnRewardedClicked(AdPlacementEntry placement, object rawData)
