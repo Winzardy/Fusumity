@@ -273,7 +273,10 @@ namespace UI.Popups
 		protected sealed override void OnLayoutInstalledInternal()
 		{
 			if (_layout.close)
+			{
 				_layout.close.Subscribe(OnCloseClicked);
+				SetupCloseHold(_layout.close);
+			}
 
 			base.OnLayoutInstalledInternal();
 		}
@@ -282,6 +285,8 @@ namespace UI.Popups
 		{
 			if (_layout.close)
 				_layout.close.Unsubscribe(OnCloseClicked);
+
+			ClearCloseHold();
 
 			base.OnLayoutClearedInternal();
 		}

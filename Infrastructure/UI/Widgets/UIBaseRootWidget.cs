@@ -1,6 +1,8 @@
 ﻿using System.Threading;
 using Cysharp.Threading.Tasks;
+using Sapientia.Extensions;
 using Sapientia.Utility;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -11,6 +13,7 @@ namespace UI
 		where TLayout : UIBaseLayout
 	{
 		private CancellationTokenSource _closableCts;
+		private UIButtonHold _closeHold;
 
 		protected CancellationToken ClosableCancellationToken => ClosableCancellationTokenSource.Token;
 		protected CancellationTokenSource ClosableCancellationTokenSource => _closableCts ??= new CancellationTokenSource();
@@ -22,6 +25,18 @@ namespace UI
 		}
 
 		public abstract void RequestClose();
+
+		protected virtual bool CloseHoldEnabled => true;
+
+		protected void SetupCloseHold(Button close)
+		{
+			ClearCloseHold();
+
+			if (CloseHoldEnabled && close is CustomButton button)
+				_closeHold = new UIButtonHold(button);
+		}
+
+		protected void ClearCloseHold() => DisposeUtility.DisposeAndSetNull(ref _closeHold);
 
 		protected async UniTask RequestCloseAsync(int delayMs = 500)
 		{

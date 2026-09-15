@@ -30,6 +30,11 @@ namespace UI.Windows
 		/// </summary>
 		public event Action<IWindow> Hidden;
 
+		/// <summary>
+		/// Все окна разом закрыты через <see cref="RequestCloseAll"/> или <see cref="TryHideAll"/>
+		/// </summary>
+		public event Action ClosedAll;
+
 		public ref readonly WindowQueueContext Current { get => ref _manager.Current; }
 		public bool HasActiveWindows { get => Current.window != null; }
 
@@ -39,14 +44,16 @@ namespace UI.Windows
 		{
 			_manager = manager;
 
-			_manager.Shown  += OnShown;
-			_manager.Hidden += OnHidden;
+			_manager.Shown     += OnShown;
+			_manager.Hidden    += OnHidden;
+			_manager.ClosedAll += OnClosedAll;
 		}
 
 		public void Dispose()
 		{
-			_manager.Shown  -= OnShown;
-			_manager.Hidden -= OnHidden;
+			_manager.Shown     -= OnShown;
+			_manager.Hidden    -= OnHidden;
+			_manager.ClosedAll -= OnClosedAll;
 
 			_manager = null;
 		}
@@ -66,6 +73,8 @@ namespace UI.Windows
 			if (!fromQueue)
 				Deactivated?.Invoke(window);
 		}
+
+		private void OnClosedAll() => ClosedAll?.Invoke();
 
 		/// <summary>
 		/// Проверяет находится окно в очереди или текущее окно такого типа
@@ -94,6 +103,8 @@ namespace UI.Windows
 			=> _manager.TryHide(window);
 
 		public void TryHideAll() => _manager.TryHideAll();
+
+		public void RequestCloseAll() => _manager.RequestCloseAll();
 
 		/// <summary>
 		/// Попробовать закрыть текущее окно

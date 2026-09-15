@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Sapientia;
+using Sapientia.Pooling;
 using UnityEngine;
 
 namespace UI.Windows
@@ -55,6 +57,14 @@ namespace UI.Windows
 
 		internal event ShownDelegate Shown;
 		internal event HiddenDelegate Hidden;
+
+		/// <summary>
+		/// Все окна разом закрыты или выброшены из очереди
+		/// </summary>
+		internal event Action ClosedAll;
+
+		//Массовое закрытие: пока оно идёт, очередь не должна подниматься на освободившееся место
+		private bool _closingAll;
 
 		public UIWindowManager()
 		{
@@ -296,26 +306,76 @@ namespace UI.Windows
 
 		private void TryShowNext()
 		{
-			if (_queue.IsEmpty())
+			if (_closingAll || _queue.IsEmpty())
 				return;
 
 			var (window, context) = _queue.Dequeue();
 			Show(window, in context, true);
 		}
 
-		public void TryHideAll(bool immediate = false)
+		public void TryHideAll()
 		{
-			foreach (var (window, _) in _queue)
-				Hidden?.Invoke(window, true);
-			_queue.Clear();
+			_closingAll = true;
 
-			if (_current.window != null)
+			try
 			{
-				_current.window.Hide(true, immediate);
-				Hidden?.Invoke(_current.window, false);
+				using (ListPool<IWindow>.Get(out var windows))
+				{
+					CollectAll(windows);
+
+					foreach (var window in windows)
+						TryHide(window);
+				}
+			}
+			finally
+			{
+				_closingAll = false;
 			}
 
-			SetCurrent(null, null);
+			ClosedAll?.Invoke();
+		}
+
+		internal void RequestCloseAll()
+		{
+			_closingAll = true;
+
+			try
+			{
+				using (ListPool<IWindow>.Get(out var windows))
+				{
+					CollectAll(windows);
+
+					foreach (var window in windows)
+					{
+						//Окно, которому запретили закрытие, остаётся открытым и в очереди
+						if (window.GetArgs() is ICloseAvailability {CloseAvailable: false})
+							continue;
+
+						if (window.Active)
+							window.RequestClose();
+						else
+							TryHide(window);
+					}
+				}
+			}
+			finally
+			{
+				_closingAll = false;
+			}
+
+			ClosedAll?.Invoke();
+
+			if (_current.window == null)
+				TryShowNext();
+		}
+
+		private void CollectAll(List<IWindow> windows)
+		{
+			foreach (var (window, _) in _queue)
+				windows.Add(window);
+
+			if (_current.window != null)
+				windows.Add(_current.window);
 		}
 
 		private bool TryAddToQueueAndHide(ref WindowQueueContext context)
