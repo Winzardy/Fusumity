@@ -16,12 +16,7 @@ namespace UI
 			AddDisposable(_collection = new UIToggleButtonsCollection(layout, animatorFactory));
 
 			if (layout.back != null)
-			{
 				Subscribe(layout.back, HandleBackClicked, _layout.backButtonUniqueId, _layout.backButtonGroupId);
-
-				if (layout.back is CustomButton back)
-					AddDisposable(new UIButtonHold(back));
-			}
 		}
 
 		protected override void OnUpdate(IToggleBarViewModel viewModel)

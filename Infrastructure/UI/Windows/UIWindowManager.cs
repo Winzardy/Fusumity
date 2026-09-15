@@ -308,15 +308,36 @@ namespace UI.Windows
 		{
 			using (ListPool<IWindow>.Get(out var windows))
 			{
-				foreach (var (window, _) in _queue)
-					windows.Add(window);
-
-				if (_current.window != null)
-					windows.Add(_current.window);
+				CollectAll(windows);
 
 				foreach (var window in windows)
 					TryHide(window);
 			}
+		}
+
+		internal void RequestCloseAll()
+		{
+			using (ListPool<IWindow>.Get(out var windows))
+			{
+				CollectAll(windows);
+
+				foreach (var window in windows)
+				{
+					if (window.Active)
+						window.RequestClose();
+					else
+						TryHide(window);
+				}
+			}
+		}
+
+		private void CollectAll(List<IWindow> windows)
+		{
+			foreach (var (window, _) in _queue)
+				windows.Add(window);
+
+			if (_current.window != null)
+				windows.Add(_current.window);
 		}
 
 		private bool TryAddToQueueAndHide(ref WindowQueueContext context)

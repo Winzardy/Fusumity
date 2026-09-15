@@ -95,6 +95,8 @@ namespace UI.Windows
 
 		public void TryHideAll() => _manager.TryHideAll();
 
+		public void RequestCloseAll() => _manager.RequestCloseAll();
+
 		/// <summary>
 		/// Попробовать закрыть текущее окно
 		/// </summary>

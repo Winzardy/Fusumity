@@ -141,7 +141,7 @@ namespace UI.Popups
 				yield return popup as UIWidget;
 		}
 
-		internal void TryHideAll()
+		internal void RequestCloseAll()
 		{
 			using (ListPool<IPopup>.Get(out var popups))
 			{
@@ -155,7 +155,12 @@ namespace UI.Popups
 					popups.Add(_current);
 
 				foreach (var popup in popups)
-					TryHide(popup);
+				{
+					if (popup.Active)
+						popup.RequestClose();
+					else
+						TryHide(popup);
+				}
 			}
 		}
 
