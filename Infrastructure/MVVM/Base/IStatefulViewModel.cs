@@ -103,10 +103,10 @@ namespace Fusumity.MVVM
 
 		public void Dispose()
 		{
+			OnDispose();
+
 			if (!Children.IsNullOrEmpty())
 			{
-				OnDispose();
-
 				for (int i = 0; i < Children.Count; i++)
 				{
 					var child = Children[i];
