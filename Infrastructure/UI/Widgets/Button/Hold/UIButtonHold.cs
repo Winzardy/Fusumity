@@ -11,23 +11,32 @@ namespace UI
 		private const float DURATION = 1.2f;
 
 		private readonly CustomButton _button;
+		private readonly RectTransform _rectTransform;
 
+		private ICloseHoldHandler _attached;
 		private ICloseHoldHandler _handler;
 		private float _time;
 		private bool _holding;
 		private bool _rejected;
 
-		public UIButtonHold(CustomButton button)
+		public UIButtonHold(CustomButton button, UIWidget host)
 		{
 			_button = button;
+			_rectTransform = button.transform as RectTransform;
 
 			_button.Pressed += HandlePressed;
 			_button.Released += HandleReleased;
+
+			if (ServiceLocator.TryGet(out _attached))
+				_attached.Attach(host, _rectTransform);
 		}
 
 		public void Dispose()
 		{
 			Cancel();
+
+			_attached?.Detach(_rectTransform);
+			_attached = null;
 
 			_button.Pressed -= HandlePressed;
 			_button.Released -= HandleReleased;
@@ -38,7 +47,7 @@ namespace UI
 			if (!ServiceLocator.TryGet(out ICloseHoldHandler handler))
 				return false;
 
-			if (!handler.Begin(_button.transform as RectTransform))
+			if (!handler.Begin(_rectTransform))
 			{
 				//Удержание уже ведёт другая кнопка, до следующего нажатия не пробуем
 				_rejected = true;
