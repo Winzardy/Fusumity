@@ -364,6 +364,9 @@ namespace UI.Windows
 			}
 
 			ClosedAll?.Invoke();
+
+			if (_current.window == null)
+				TryShowNext();
 		}
 
 		private void CollectAll(List<IWindow> windows)

@@ -178,6 +178,9 @@ namespace UI.Popups
 				_closingAll = false;
 			}
 
+			if (_current == null)
+				TryShowNext();
+
 			//Попап, которому запретили закрытие, не должен выпасть из очереди вместе с остальными
 			static bool CloseAvailable(object args) => args is not ICloseAvailability {CloseAvailable: false};
 		}
