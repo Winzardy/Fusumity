@@ -2,13 +2,12 @@
     "name": "Advertising.UnityLevelPlay",
     "rootNamespace": "",
     "references": [
+        "UniTask",
         "Advertising",
         "Fusumity",
         "Sapientia",
         "Content",
         "Unity.LevelPlay",
-        "Distribution",
-        "Targeting",
         "ProjectInfo"
     ],
     "includePlatforms": [],

@@ -28,27 +28,27 @@ namespace Advertising
 
 		#region Rewarded
 
-		public bool CanShowRewarded(AdPlacementEntry placement, out AdShowError? error);
+		bool CanShowRewarded(AdPlacementEntry placement, out AdShowError? error);
 
 		/// <returns>Успешность запроса</returns>
-		public bool ShowRewarded(in ShowRewardedArgs args);
+		bool ShowRewarded(in ShowRewardedArgs args);
 
-		public bool LoadRewarded(AdPlacementEntry placement);
+		bool LoadRewarded(AdPlacementEntry placement);
 
-		public AdLoadingStatus GetRewardedLoadingStatus(AdPlacementEntry placement);
+		AdLoadingStatus GetRewardedLoadingStatus(AdPlacementEntry placement);
 
 		#endregion
 
 		#region Interstitial
 
-		public bool CanShowInterstitial(AdPlacementEntry placement, out AdShowError? error);
+		bool CanShowInterstitial(AdPlacementEntry placement, out AdShowError? error);
 
 		/// <returns>Успешность запроса</returns>
-		public bool ShowInterstitial(in ShowInterstitialArgs args);
+		bool ShowInterstitial(in ShowInterstitialArgs args);
 
-		public bool LoadInterstitial(AdPlacementEntry placement);
+		bool LoadInterstitial(AdPlacementEntry placement);
 
-		public AdLoadingStatus GetInterstitialLoadingStatus(AdPlacementEntry placement);
+		AdLoadingStatus GetInterstitialLoadingStatus(AdPlacementEntry placement);
 
 		#endregion
 	}
@@ -62,37 +62,76 @@ namespace Advertising
 
 	public interface IAdIntegrationEvents
 	{
+		/// <summary>
+		/// Доход за отдельный показ, событие вызывается в главном потоке
+		/// </summary>
+		event AdRevenuePaid AdRevenuePaid;
+
 		#region Rewarded
 
-		public event RewardedClicked RewardedClicked;
+		event RewardedClicked RewardedClicked;
 
-		public event RewardedClosed RewardedClosed;
-		public event RewardedDisplayed RewardedDisplayed;
-		public event RewardedDisplayFailed RewardedDisplayFailed;
-		public event RewardedLoaded RewardedLoaded;
-		public event RewardedLoadFailed RewardedLoadFailed;
-		public event RewardedCompleted RewardedCompleted;
+		event RewardedClosed RewardedClosed;
+		event RewardedDisplayed RewardedDisplayed;
+		event RewardedDisplayFailed RewardedDisplayFailed;
+		event RewardedLoaded RewardedLoaded;
+		event RewardedLoadFailed RewardedLoadFailed;
+		event RewardedCompleted RewardedCompleted;
 
 		#endregion
 
 		#region Interstitial
 
-		public event InterstitialClicked InterstitialClicked;
+		event InterstitialClicked InterstitialClicked;
 
-		public event InterstitialClosed InterstitialClosed;
-		public event InterstitialDisplayed InterstitialDisplayed;
-		public event InterstitialDisplayFailed InterstitialDisplayFailed;
-		public event InterstitialLoaded InterstitialLoaded;
-		public event InterstitialLoadFailed InterstitialLoadFailed;
+		event InterstitialClosed InterstitialClosed;
+		event InterstitialDisplayed InterstitialDisplayed;
+		event InterstitialDisplayFailed InterstitialDisplayFailed;
+		event InterstitialLoaded InterstitialLoaded;
+		event InterstitialLoadFailed InterstitialLoadFailed;
 
 		#endregion
 	}
 
 	public interface IAdEvents : IAdIntegrationEvents
 	{
-		public event AdDisplayStarted AdDisplayStarted;
-		public event AdDisplayFinished AdDisplayFinished;
+		event AdDisplayStarted AdDisplayStarted;
+		event AdDisplayFinished AdDisplayFinished;
 	}
+
+	/// <summary>
+	/// Доход за один показ без типов рекламного SDK или системы аналитики
+	/// </summary>
+	public struct AdRevenueData
+	{
+		/// <summary>
+		/// Сеть, показавшая рекламу, может отличаться от используемого медиатора
+		/// </summary>
+		public string network;
+		public AdMediation mediation;
+		public double revenue;
+
+		/// <summary>
+		/// Код валюты по ISO 4217
+		/// </summary>
+		public string currency;
+
+		public string country;
+		public string adUnitId;
+		public string adFormat;
+		public string placement;
+	}
+
+	public enum AdMediation
+	{
+		Custom,
+		UnityLevelPlay,
+		GoogleAdMob,
+		AppLovinMax,
+		Direct
+	}
+
+	public delegate void AdRevenuePaid(in AdRevenueData data);
 
 	#region Rewarded Delegates
 
