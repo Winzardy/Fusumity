@@ -4,9 +4,10 @@ namespace UI
 {
 	public interface ICloseHoldHandler
 	{
-		/// <summary>
-		/// Заявка на удержание, отказ означает что удержание уже ведёт другая кнопка
-		/// </summary>
+		void Attach(UIWidget host, RectTransform button);
+
+		void Detach(RectTransform button);
+
 		bool Begin(RectTransform button);
 
 		void Progress(float value);

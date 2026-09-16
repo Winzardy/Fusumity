@@ -33,7 +33,7 @@ namespace UI
 			ClearCloseHold();
 
 			if (CloseHoldEnabled && close is CustomButton button)
-				_closeHold = new UIButtonHold(button);
+				_closeHold = new UIButtonHold(button, this);
 		}
 
 		protected void ClearCloseHold() => DisposeUtility.DisposeAndSetNull(ref _closeHold);
