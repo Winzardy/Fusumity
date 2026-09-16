@@ -25,6 +25,24 @@ namespace Fusumity.MVVM.UI
 			viewModel.Release();
 		}
 
+		public static void Bind(this TMPTextGroup group, ILabelViewModel viewModel)
+		{
+			try
+			{
+				viewModel.Bind(group.SetText);
+			}
+			catch (Exception e)
+			{
+				GUIDebug.LogException(e, group);
+				throw;
+			}
+		}
+
+		public static void Unbind([CanBeNull] this TMPTextGroup _, ILabelViewModel viewModel)
+		{
+			viewModel.Release();
+		}
+
 		public static void Bind(this UILabelLayout layout, ILabelViewModel viewModel)
 		{
 			viewModel.Bind(layout.SetLabel);
