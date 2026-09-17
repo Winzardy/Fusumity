@@ -32,17 +32,5 @@ namespace SharedLogic
 		{
 			return SharedLogicManager.runner.Execute(in command);
 		}
-
-		/// <inheritdoc cref="ICommandRunner.HasPending{T}(in T)"/>
-		public static bool HasPendingCommand<T>(this ISharedRoot root) where T : struct, ICommand
-		{
-			return HasPendingCommand(root, new T());
-		}
-
-		/// <inheritdoc cref="ICommandRunner.HasPending{T}(in T)"/>
-		public static bool HasPendingCommand<T>(this ISharedRoot _, in T command) where T : struct, ICommand
-		{
-			return SharedLogicManager.runner.HasPending(in command);
-		}
 	}
 }

@@ -61,15 +61,23 @@ namespace SharedLogic
 		/// <summary>
 		/// Есть ли в очереди такая же команда
 		/// </summary>
-		public bool Contains<T>(in T command)
+		/// <param name="skipFirst">Не считать первую: она исполняется прямо сейчас</param>
+		public bool Contains<T>(in T command, bool skipFirst = false)
 			where T : struct, ICommand
 		{
 			var type = typeof(T);
 			if (!_typeToBuffer.TryGetValue(type, out var buffer))
 				return false;
 
+			var skip = skipFirst;
 			foreach (var entry in _queue)
 			{
+				if (skip)
+				{
+					skip = false;
+					continue;
+				}
+
 				if (entry.type == type && buffer.Matches(in command, entry.index))
 					return true;
 			}
