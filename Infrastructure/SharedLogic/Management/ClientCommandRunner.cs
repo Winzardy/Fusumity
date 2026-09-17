@@ -13,6 +13,9 @@ namespace SharedLogic
 
 		public bool IsEmpty { get => _buffer.IsEmpty; }
 
+		/// <inheritdoc/>
+		public bool HasPending<T>(in T command) where T : struct, ICommand => _buffer.Contains(in command);
+
 		public ClientCommandRunner(ISharedRoot root, ICommandCenter center)
 		{
 			_center = center;
