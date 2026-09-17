@@ -18,6 +18,9 @@ namespace SharedLogic
 
 		public override bool IsEmpty { get => _buffer.IsEmpty && base.IsEmpty; }
 
+		/// <inheritdoc/>
+		public override bool HasPending<T>(in T command) => _buffer.Contains(in command) || base.HasPending(in command);
+
 		/// <inheritdoc cref="DeferredGate"/>
 		public DeferredGate Gate { get => _gate; }
 

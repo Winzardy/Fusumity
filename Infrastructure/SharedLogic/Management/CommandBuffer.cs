@@ -58,6 +58,25 @@ namespace SharedLogic
 			return _queue.Dequeue();
 		}
 
+		/// <summary>
+		/// Есть ли в очереди такая же команда
+		/// </summary>
+		public bool Contains<T>(in T command)
+			where T : struct, ICommand
+		{
+			var type = typeof(T);
+			if (!_typeToBuffer.TryGetValue(type, out var buffer))
+				return false;
+
+			foreach (var entry in _queue)
+			{
+				if (entry.type == type && buffer.Matches(in command, entry.index))
+					return true;
+			}
+
+			return false;
+		}
+
 		public ICommand Peak()
 		{
 			var entry = _queue.Peek();
@@ -155,6 +174,18 @@ namespace SharedLogic
 
 		public void Clear() => _buffer.Clear();
 
+		public bool Matches<T1>(in T1 command, int index)
+			where T1 : struct, ICommand
+		{
+#if UNITY_5_3_OR_NEWER
+			var r = command;
+#else
+			ref var r = ref UnsafeExt.AsRef(in command);
+#endif
+			ref var c = ref UnsafeExt.As<T1, T>(ref r);
+			return EqualityComparer<T>.Default.Equals(_buffer[index], c);
+		}
+
 		public void Execute(ISharedRoot root, int index)
 		{
 			_buffer[index].Execute(root);
@@ -199,6 +230,9 @@ namespace SharedLogic
 			where T : struct, ICommand;
 
 		public void Clear();
+
+		public bool Matches<T>(in T command, int index)
+			where T : struct, ICommand;
 
 		public void Execute(ISharedRoot root, int index);
 		public void OnExecute(ISharedRoot root, int index);
