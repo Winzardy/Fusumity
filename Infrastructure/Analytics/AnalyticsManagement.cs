@@ -47,7 +47,6 @@ namespace Analytics
 
 			using (ListPool<UniTask>.Get(out var tasks))
 			{
-				_integrations = new();
 				using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
 				foreach (var config in _settings.integrations)
 					tasks.Add(InitializeIntegrationAsync(config, linkedCts.Token));
@@ -74,10 +73,15 @@ namespace Analytics
 		internal bool Register<T>(T aggregator)
 			where T : AnalyticsAggregator
 		{
-			var type = typeof(T);
+			// Регистрируют себя из конструктора базового класса, поэтому тип берём у экземпляра:
+			// в T там всегда сам AnalyticsAggregator, и список отключённых не сработал бы ни разу
+			var type = aggregator.GetType();
 
 			if (_settings.disableAggregators.Contains(type.FullName))
+			{
+				AnalyticsDebug.Log($"Aggregator [ {type.Name} ] is disabled by settings");
 				return false;
+			}
 
 			_registeredAggregators ??= new();
 			_registeredAggregators.Add(aggregator);
@@ -86,7 +90,13 @@ namespace Analytics
 		}
 
 		internal bool Unregister<T>(T aggregator) where T : AnalyticsAggregator
-			=> _registeredAggregators.Remove(aggregator);
+		{
+			if (_registeredAggregators != null && _registeredAggregators.Remove(aggregator))
+				return true;
+
+			AnalyticsDebug.LogWarning($"Unregister skipped for aggregator [ {aggregator.GetType().Name} ], it was not registered");
+			return false;
+		}
 
 		internal void Send(ref AnalyticsEventPayload payload)
 		{

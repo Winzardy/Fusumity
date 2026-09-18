@@ -24,12 +24,17 @@ namespace Analytics
 
 		protected override void OnDisposeInternal()
 		{
-			if (!AnalyticsCenter.Unregister(this))
+			// Цепочка ведёт к отпискам наследника, поэтому обрываем её только на неподнявшемся агрегаторе.
+			// Раньше её обрывал отказ Unregister: агрегатор оставался и в рассылке, и на событиях своих
+			// сервисов, а рядом с ним поднимался следующий — событие уходило столько раз, сколько их накопилось
+			if (!_active)
 				return;
 
 			_active = false;
 
+			AnalyticsCenter.Unregister(this);
 			AnalyticsCenter.BeforeSend -= OnBeforeSend;
+
 			base.OnDisposeInternal();
 		}
 
@@ -38,11 +43,7 @@ namespace Analytics
 		}
 
 		// TODO: можно добавить маску интеграций (например отправлять только в фейсбук)
-		protected void Send(string id)
-		{
-			var payload = new AnalyticsEventPayload(id);
-			Send(ref payload);
-		}
+		protected void Send(string id) => Send(id, (Dictionary<string, object>) null);
 
 		protected void Send(string id, params (string, object)[] parameters)
 		{
