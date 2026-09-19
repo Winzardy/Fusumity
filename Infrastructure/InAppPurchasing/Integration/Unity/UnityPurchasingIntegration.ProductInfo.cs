@@ -20,7 +20,7 @@ namespace InAppPurchasing.Unity
 		/// <remarks>
 		/// От частых запросов к платформе, возвращает кэшированную информацию,
 		/// можно зафорсировать обновление кеша.
-		/// Кеш хранится <c>10 секунд</c> (<see cref="DELAY_MS"/>)
+		/// Кеш хранится <c>10 секунд</c> (<see cref="DELAY_UPDATING_PRODUCT_CACHE_MS"/>)
 		/// </remarks>
 		public ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false)
 			=> ref GetProductCache(entry, out _, forceUpdateCache).info;

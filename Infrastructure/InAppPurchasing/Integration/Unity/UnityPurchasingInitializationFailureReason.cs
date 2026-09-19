@@ -8,9 +8,15 @@ namespace InAppPurchasing.Unity
 
 		UnityServices,
 
+		/// <summary>
+		/// Не удалось подключиться к магазину
+		/// </summary>
 		PurchasingUnavailable,
+
+		/// <summary>
+		/// Не удалось получить продукты из магазина
+		/// </summary>
 		NoProductsAvailable,
-		AppNotKnown,
 		UnknownBilling,
 		UnknownCountry,
 

@@ -19,7 +19,6 @@ using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using UnityEngine.Purchasing;
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Security;
 
 #if !XSOLLA_SDK_DISABLED
@@ -49,6 +48,10 @@ namespace InAppPurchasing.Unity
 		/// <summary>
 		/// Включает или выключает проверку чеков Apple во время обработки покупок
 		/// </summary>
+		/// <remarks>
+		/// Ни на что не влияет начиная с Unity IAP 5: локальной проверки чеков Apple больше нет,
+		/// почему так — в <see cref="UnityPurchasingIntegration.TryInitializeLocalValidator"/>
+		/// </remarks>
 		public bool appleDisableValidationRecipe;
 
 		/// <summary>
@@ -91,7 +94,7 @@ namespace InAppPurchasing.Unity
 		public Dictionary<CountryEntry, IAPBillingEntry> countryToBilling;
 	}
 
-	public partial class UnityPurchasingIntegration : IInAppPurchasingIntegration, IDetailedStoreListener, IDisposable
+	public partial class UnityPurchasingIntegration : IInAppPurchasingIntegration, IDisposable
 	{
 		public string Name => "UnityPurchasing";
 
@@ -101,25 +104,13 @@ namespace InAppPurchasing.Unity
 		private readonly DistributionEntry _distributionPlatform;
 		private IAPBillingEntry _billing;
 
-		private IStoreController _storeController;
-		private IExtensionProvider _extensions;
+		private StoreController _storeController;
 
 		[CanBeNull]
-		private IGooglePlayStoreExtensions _googlePlayExtension;
+		private IAppleStoreExtendedService _appleService;
 
 		[CanBeNull]
-		private IGooglePlayConfiguration _googlePlayConfiguration;
-
-		//TODO: переключение магазина на Android при билде через TeamCity
-		/// <summary>
-		/// Пока не поддерживается, требует переключения магазина при билде
-		/// <code>UnityPurchasingEditor.TargetAndroidStore(AndroidStore.AmazonAppStore)</code>
-		/// </summary>
-		[CanBeNull]
-		private IAmazonExtensions _amazonExtension;
-
-		[CanBeNull]
-		private IAppleExtensions _appleExtension;
+		private IAppleStoreExtendedPurchaseService _applePurchaseService;
 
 #if !XSOLLA_SDK_DISABLED
 		[CanBeNull]
@@ -127,16 +118,17 @@ namespace InAppPurchasing.Unity
 #endif
 
 		/// <summary>
-		/// Валидатор чеков, работает только для Google Play и App Store
+		/// Валидатор чеков, начиная с Unity IAP 5 работает только для Google Play
 		/// </summary>
 		[CanBeNull]
 		private CrossPlatformValidator _localValidator;
 
-		private UniTaskCompletionSource<UnityPurchasingInitializationFailureReason> _initializationCompletionSource;
+		private UniTaskCompletionSource<UnityPurchasingInitializationFailureReason> _productsCompletionSource;
+
+		private bool _initialized;
 
 		#region Apple Configuration
 
-		private string _appleAppReceipt;
 		private bool _appleCanMakePayments;
 
 		#endregion
@@ -147,9 +139,25 @@ namespace InAppPurchasing.Unity
 		private HashSet<string> _processing;
 
 		/// <summary>
+		/// Продукты, покупка которых отложена (Billing Product ID)
+		/// </summary>
+		private HashSet<string> _deferred;
+
+		/// <summary>
 		/// Магазинный ID продукта - Запись продукта. Важно понимать что ID для разных платформ может отличаться!
 		/// </summary>
 		private BidirectionalMap<string, IAPProductEntry> _billingProductIdToEntry;
+
+		/// <summary>
+		/// Магазинный ID продукта - последний известный заказ, из него берётся информация о подписке
+		/// </summary>
+		private Dictionary<string, Order> _billingProductIdToOrder;
+
+		/// <summary>
+		/// Продукты, которыми игрок владеет, заменяет <c>Product.hasReceipt</c> из Unity IAP 4.
+		/// Наполняется из заказов: <c>FetchPurchases</c> отдаёт всё, что игрок уже купил
+		/// </summary>
+		private HashSet<string> _purchased;
 
 		/// <summary>
 		/// Нужен чтобы контролировать из вне когда "продолжить" покупки из промо (пока только для app store)
@@ -187,13 +195,33 @@ namespace InAppPurchasing.Unity
 
 		public void Dispose()
 		{
-			UnityPurchasingUtility.appleExtensions = null;
+			if (_storeController == null)
+				return;
+
+			_storeController.OnStoreConnected       -= OnStoreConnected;
+			_storeController.OnStoreDisconnected    -= OnStoreDisconnected;
+			_storeController.OnProductsFetched      -= OnProductsFetched;
+			_storeController.OnProductsFetchFailed  -= OnProductsFetchFailed;
+			_storeController.OnPurchasesFetched     -= OnPurchasesFetched;
+			_storeController.OnPurchasesFetchFailed -= OnPurchasesFetchFailed;
+			_storeController.OnPurchasePending      -= OnPurchasePending;
+			_storeController.OnPurchaseConfirmed    -= OnPurchaseConfirmed;
+			_storeController.OnPurchaseFailed       -= OnPurchaseFailed;
+			_storeController.OnPurchaseDeferred     -= OnPurchaseDeferred;
+
+			if (_applePurchaseService != null)
+				_applePurchaseService.OnPromotionalPurchaseIntercepted -= OnApplePromotionalPurchaseInterceptor;
+
+			_initialized     = false;
+			_storeController = null;
 		}
 
 		public async UniTask<UnityPurchasingInitializationFailureReason> InitializeAsync(CancellationToken cancellationToken = default)
 		{
 			try
 			{
+				_initialized = false;
+
 				var success = await UnityServices.UnityServiceInitializationAsync(cancellationToken);
 				cancellationToken.ThrowIfCancellationRequested();
 
@@ -210,69 +238,45 @@ namespace InAppPurchasing.Unity
 					return UnityPurchasingInitializationFailureReason.UnknownBilling;
 #endif
 
-				AbstractPurchasingModule module = null;
-#if !XSOLLA_SDK_DISABLED
-				if (_billing == IAPBillingType.XSOLLA)
-				{
-					var settings = XsollaClientSettingsAsset.Instance().settings;
-
-#if UNITY_IOS
-					settings = XsollaClientSettings.Builder.Update(settings)
-						.SetWebViewType(XsollaClientSettings.WebViewType.External) // or .Auto for EU
-						.Build();
-#endif
-
-					var configuration = XsollaStoreClientConfiguration.Builder.Create()
-						.SetSettings(settings)
-						.SetUserId(ProjectInfo.UserId)
-#if DEV
-						.SetSandbox(true)
-						.SetLogLevel(XsollaLogLevel.Debug)
-#endif
-						.Build();
-					module = XsollaPurchasingModule.Builder.Create()
-						.SetConfiguration(configuration)
-						.Build();
-				}
-#endif
-				module ??= StandardPurchasingModule.Instance();
-				var builder = ConfigurationBuilder.Instance(module);
+				if (_storeController == null)
+					CreateStoreController();
 
 				_billingProductIdToEntry = new BidirectionalMap<string, IAPProductEntry>(4);
 
-				AddProductsToBuilder<IAPConsumableProductEntry>(builder);
-				AddProductsToBuilder<IAPNonConsumableProductEntry>(builder);
-				AddProductsToBuilder<IAPSubscriptionProductEntry>(builder);
+				var products = new List<ProductDefinition>(4);
+				AddProducts<IAPConsumableProductEntry>(products);
+				AddProducts<IAPNonConsumableProductEntry>(products);
+				AddProducts<IAPSubscriptionProductEntry>(products);
 
-				if (_billing == IAPBillingType.GOOGLE_PLAY)
-				{
-					_googlePlayConfiguration = builder.Configure<IGooglePlayConfiguration>();
-					_googlePlayConfiguration?.SetDeferredPurchaseListener(OnDeferredPurchase);
-				}
+				var productsStr = products.GetCompositeString(definition => definition.storeSpecificId, true);
+				IAPDebug.Log($"UnityPurchasing connecting, billing: {_billing}, products:{productsStr}");
 
-				if (_billing == IAPBillingType.APP_STORE)
-				{
-					var configuration = builder.Configure<IAppleConfiguration>();
-					_appleCanMakePayments = configuration.canMakePayments;
-					_appleAppReceipt      = configuration.appReceipt;
-					configuration.SetApplePromotionalPurchaseInterceptorCallback(OnApplePromotionalPurchaseInterceptor);
-
-					// Данный метод может обрабатывать отозванный продукты (family share)
-					// configuration.SetEntitlementsRevokedListener(EntitlementsRevokeListener);
-				}
-
-				_initializationCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
-
-				var productsStr = builder.products
-					.GetCompositeString(definition => definition.storeSpecificId, true);
-				IAPDebug.Log($"UnityPurchasing initializing, billing: {_billing}, products:{productsStr}");
-
-				UnityPurchasing.Initialize(this, builder);
-				failureReason = await _initializationCompletionSource.Task;
+				await _storeController.Connect();
 				cancellationToken.ThrowIfCancellationRequested();
-				return failureReason;
+
+				if (_storeController.GetConnectionState() != ConnectionState.Connected)
+					return UnityPurchasingInitializationFailureReason.PurchasingUnavailable;
+
+				SetupExtendedServices();
+
+				_productsCompletionSource = new UniTaskCompletionSource<UnityPurchasingInitializationFailureReason>();
+				_storeController.FetchProducts(products);
+				failureReason = await _productsCompletionSource.Task.AttachExternalCancellation(cancellationToken);
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if (failureReason != UnityPurchasingInitializationFailureReason.None)
+					return failureReason;
+
+				TryInitializeLocalValidator();
+
+				_initialized = true;
+
+				// Незавершённые и восстановленные покупки приезжают обратно через OnPurchasePending
+				_storeController.FetchPurchases();
+
+				return UnityPurchasingInitializationFailureReason.None;
 			}
-			catch (OperationCanceledException _)
+			catch (OperationCanceledException)
 			{
 				return UnityPurchasingInitializationFailureReason.Canceled;
 			}
@@ -280,6 +284,84 @@ namespace InAppPurchasing.Unity
 			{
 				IAPDebug.LogException(ex);
 				return UnityPurchasingInitializationFailureReason.Exception;
+			}
+		}
+
+		private void CreateStoreController()
+		{
+			string storeName = null;
+
+#if !XSOLLA_SDK_DISABLED
+			if (_billing == IAPBillingType.XSOLLA)
+			{
+				var settings = XsollaClientSettingsAsset.Instance().settings;
+
+#if UNITY_IOS
+				settings = XsollaClientSettings.Builder.Update(settings)
+					.SetWebViewType(XsollaClientSettings.WebViewType.External) // or .Auto for EU
+					.Build();
+#endif
+
+				var configuration = XsollaStoreClientConfiguration.Builder.Create()
+					.SetSettings(settings)
+					.SetUserId(ProjectInfo.UserId)
+#if DEV
+					.SetSandbox(true)
+					.SetLogLevel(XsollaLogLevel.Debug)
+#endif
+					.Build();
+				var module = XsollaPurchasingModule.Builder.Create()
+					.SetConfiguration(configuration)
+					.Build();
+
+				UnityIAPServices.AddNewCustomStore(module);
+
+				_xsollaExtension = module.Extension;
+				storeName        = XsollaPurchasingModule.StoreName;
+			}
+#endif
+
+			_storeController = UnityIAPServices.StoreController(storeName);
+
+			// Магазин может отдать незавершённую покупку сразу после подключения, состояние нужно раньше подписки
+			_processing              = new HashSet<string>(2);
+			_deferred                = new HashSet<string>(2);
+			_billingProductIdToOrder = new Dictionary<string, Order>(2);
+			_purchased               = new HashSet<string>(2);
+
+			// Подписка до Connect обязательна: незавершённые покупки прилетают сразу после подключения
+			_storeController.OnStoreConnected       += OnStoreConnected;
+			_storeController.OnStoreDisconnected    += OnStoreDisconnected;
+			_storeController.OnProductsFetched      += OnProductsFetched;
+			_storeController.OnProductsFetchFailed  += OnProductsFetchFailed;
+			_storeController.OnPurchasesFetched     += OnPurchasesFetched;
+			_storeController.OnPurchasesFetchFailed += OnPurchasesFetchFailed;
+			_storeController.OnPurchasePending      += OnPurchasePending;
+			_storeController.OnPurchaseConfirmed    += OnPurchaseConfirmed;
+			_storeController.OnPurchaseFailed       += OnPurchaseFailed;
+			_storeController.OnPurchaseDeferred     += OnPurchaseDeferred;
+		}
+
+		/// <summary>
+		/// Расширения магазинов доступны только после <c>Connect</c>
+		/// </summary>
+		private void SetupExtendedServices()
+		{
+			switch (_billing)
+			{
+				case IAPBillingType.APP_STORE:
+					_appleService         = _storeController.AppleStoreExtendedService;
+					_applePurchaseService = _storeController.AppleStoreExtendedPurchaseService;
+
+					_appleCanMakePayments = _appleService?.canMakePayments ?? false;
+
+					if (_applePurchaseService != null)
+					{
+						_applePurchaseService.OnPromotionalPurchaseIntercepted -= OnApplePromotionalPurchaseInterceptor;
+						_applePurchaseService.OnPromotionalPurchaseIntercepted += OnApplePromotionalPurchaseInterceptor;
+					}
+
+					break;
 			}
 		}
 
@@ -318,53 +400,7 @@ namespace InAppPurchasing.Unity
 			return UnityPurchasingInitializationFailureReason.None;
 		}
 
-		void IStoreListener.OnInitialized(IStoreController controller, IExtensionProvider extensions)
-		{
-			var productsStr = controller.products
-				.set
-				.GetCompositeString(product => product.definition.storeSpecificId, true);
-			IAPDebug.Log($"UnityPurchasing successfully initialized, billing: {_billing}, products:{productsStr}");
-
-			_processing = new(2);
-
-			_initializationCompletionSource.TrySetResult(UnityPurchasingInitializationFailureReason.None);
-
-			_storeController = controller;
-			_extensions      = extensions;
-
-			switch (_billing)
-			{
-				case IAPBillingType.GOOGLE_PLAY:
-					_googlePlayExtension = extensions.GetExtension<IGooglePlayStoreExtensions>();
-					break;
-
-				case IAPBillingType.APP_STORE:
-					_appleExtension = _extensions.GetExtension<IAppleExtensions>();
-
-					UnityPurchasingUtility.appleExtensions = _appleExtension;
-
-					_appleExtension?.RegisterPurchaseDeferredListener(OnDeferredPurchase);
-
-					break;
-
-				case IAPBillingType.AMAZON:
-					_amazonExtension = _extensions.GetExtension<IAmazonExtensions>();
-					break;
-
-#if !XSOLLA_SDK_DISABLED
-				case IAPBillingType.XSOLLA:
-					_xsollaExtension = _extensions.GetExtension<IXsollaPurchasingStoreExtension>();
-					break;
-#endif
-			}
-
-			TryInitializeLocalValidator();
-
-			//Аддитивно добавлять продукты после инициализации, если вдруг это будет нужно
-			//_controller.FetchAdditionalProducts();
-		}
-
-		public bool IsInitialized() => _storeController != null && _processing != null;
+		public bool IsInitialized() => _storeController != null && _initialized;
 
 		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status)
 		{
@@ -411,13 +447,13 @@ namespace InAppPurchasing.Unity
 				return true;
 			}
 
-			if (unityProduct.IsPurchased())
+			if (IsPurchased(billingProductId, entry))
 			{
 				status = ProductStatus.Purchased;
 				return true;
 			}
 
-			if (IsDeferred(unityProduct))
+			if (_deferred.Contains(billingProductId))
 			{
 				status = ProductStatus.Deferred;
 				return true;
@@ -426,24 +462,24 @@ namespace InAppPurchasing.Unity
 			return false;
 		}
 
-		public bool SimulateAskToBuy => _appleExtension?.simulateAskToBuy ?? false;
+		public bool SimulateAskToBuy => _applePurchaseService?.simulateAskToBuy ?? false;
 
 		public void SetSimulateAskToBuy(bool value)
 		{
-			if (_appleExtension != null)
-				_appleExtension.simulateAskToBuy = value;
+			if (_applePurchaseService != null)
+				_applePurchaseService.simulateAskToBuy = value;
 		}
 
 		#region Restore
 
-		public bool IsRestoreTransactionsSupported => _appleExtension != null;
+		public bool IsRestoreTransactionsSupported => _applePurchaseService != null;
 
 		public void RestoreTransactions()
 		{
-			if (_appleExtension == null)
+			if (_applePurchaseService == null)
 				return;
 
-			_appleExtension.RestoreTransactions(OnRestoredTransactions);
+			_storeController.RestoreTransactions(OnRestoredTransactions);
 
 			void OnRestoredTransactions(bool success, string error)
 			{
@@ -482,7 +518,7 @@ namespace InAppPurchasing.Unity
 				return false;
 			}
 
-			if (unityProduct.IsPurchased())
+			if (IsPurchased(entry.GetBillingId(in _billing), entry))
 			{
 				error = IAPPurchaseErrorCode.Purchased;
 				return false;
@@ -507,7 +543,7 @@ namespace InAppPurchasing.Unity
 
 		private bool TryGetUnityProduct(string billingProductId, out UnityProduct product)
 		{
-			product = _storeController?.products.WithID(billingProductId);
+			product = _storeController?.GetProductById(billingProductId);
 			return product != null;
 		}
 
@@ -535,81 +571,113 @@ namespace InAppPurchasing.Unity
 		{
 			var billingProductId = product.GetBillingId(in _billing);
 
+			if (!TryGetUnityProduct(billingProductId, out var unityProduct))
+				return false;
+
 			if (!_processing.Add(billingProductId))
 				return false;
 
 			var entry = _billingProductIdToEntry[billingProductId];
 			PurchaseRequested?.Invoke(entry);
 
-			_storeController.InitiatePurchase(billingProductId);
+			_storeController.PurchaseProduct(unityProduct);
 			return true;
 		}
 
 		#region Store Listener
 
-		void IStoreListener.OnInitializeFailed(InitializationFailureReason error)
+		private void OnStoreConnected()
 		{
-			_initializationCompletionSource.TrySetResult(error.Convert());
-
-			IAPDebug.LogError($"Failed to initialize: {error}");
+			IAPDebug.Log($"UnityPurchasing successfully connected, billing: {_billing}");
 		}
 
-		void IStoreListener.OnInitializeFailed(InitializationFailureReason error, string message)
+		private void OnStoreDisconnected(StoreConnectionFailureDescription failureDescription)
 		{
-			_initializationCompletionSource.TrySetResult(error.Convert());
-
-			IAPDebug.LogError($"Failed to initialize: {error} {message}");
+			IAPDebug.LogError($"Failed to connect: {failureDescription.Message}");
 		}
 
-		PurchaseProcessingResult IStoreListener.ProcessPurchase(PurchaseEventArgs args)
+		private void OnProductsFetched(List<UnityProduct> products)
 		{
-			var product = args.purchasedProduct;
+			var productsStr = products.GetCompositeString(product => product.definition.storeSpecificId, true);
+			IAPDebug.Log($"UnityPurchasing fetched products, billing: {_billing}, products:{productsStr}");
 
-			var billingProductId = product.definition.id;
-			var isDeferred = false;
-			if (IsDeferred(product))
+			_productsCompletionSource?.TrySetResult(UnityPurchasingInitializationFailureReason.None);
+		}
+
+		private void OnProductsFetchFailed(ProductFetchFailed failure)
+		{
+			var productsStr = failure.FailedFetchProducts.GetCompositeString(definition => definition.storeSpecificId, true);
+			IAPDebug.LogError($"Failed to fetch products: {failure.FailureReason}, products:{productsStr}");
+
+			_productsCompletionSource?.TrySetResult(UnityPurchasingInitializationFailureReason.NoProductsAvailable);
+		}
+
+		private void OnPurchasesFetched(Orders orders)
+		{
+			IAPDebug.Log($"UnityPurchasing fetched purchases, confirmed: {orders.ConfirmedOrders.Count}, " +
+				$"pending: {orders.PendingOrders.Count}, deferred: {orders.DeferredOrders.Count}");
+
+			// Pending приезжают отдельно через OnPurchasePending, здесь только уже завершённые
+			foreach (var order in orders.ConfirmedOrders)
+				RegisterOrder(order);
+
+			foreach (var order in orders.DeferredOrders)
 			{
-				_processing.Remove(billingProductId);
-				isDeferred = true;
+				if (TryGetBillingProductId(order, out var billingProductId))
+					_deferred.Add(billingProductId);
 			}
+		}
+
+		private void OnPurchasesFetchFailed(PurchasesFetchFailureDescription failureDescription)
+		{
+			IAPDebug.LogError($"Failed to fetch purchases: {failureDescription.FailureReason} {failureDescription.Message}");
+		}
+
+		private void OnPurchasePending(PendingOrder order)
+		{
+			if (!TryGetBillingProductId(order, out var billingProductId))
+			{
+				IAPDebug.LogError("Failed to purchase: order without a product");
+				_storeController.ConfirmPurchase(order);
+				return;
+			}
+
+			RegisterOrder(billingProductId, order);
+			_deferred.Remove(billingProductId);
 
 			if (!_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
 			{
-				_processing.Remove(product.definition.id);
-				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: Not found product by product id [ {billingProductId} ]");
-				return PurchaseProcessingResult.Pending;
+				_processing.Remove(billingProductId);
+				IAPDebug.LogError($"Failed to purchase: Not found product by product id [ {billingProductId} ]");
+				return;
 			}
 
-			if (isDeferred)
-			{
-				PurchaseDeferred?.Invoke(entry);
-				return PurchaseProcessingResult.Pending;
-			}
-
-			var transactionId = product.transactionID;
+			var transactionId = order.Info.TransactionID;
 			if (transactionId.IsNullOrEmpty())
 			{
-				_processing.Remove(product.definition.id);
+				_processing.Remove(billingProductId);
 				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: empty transaction id " +
 					$"for product id [ {billingProductId} ] (billing: {_billing})");
-				return PurchaseProcessingResult.Complete;
+				_storeController.ConfirmPurchase(order);
+				return;
 			}
 
 			if (IAPManager.ContainsReceipt(transactionId))
 			{
-				_processing.Remove(product.definition.id);
+				_processing.Remove(billingProductId);
 				IAPDebug.LogError($"[{entry.Type}] Failed to purchase: Transaction by id [ {transactionId} ] has already been completed " +
 					$"for product id [ {billingProductId} ] (billing: {_billing})");
-				return PurchaseProcessingResult.Complete;
+				_storeController.ConfirmPurchase(order);
+				return;
 			}
 
-			if (!LocalValidateReceipt(product))
+			if (!LocalValidateReceipt(entry, billingProductId, order))
 			{
-				OnPurchaseFailedInternal(entry, "Invalid receipt", args);
-				return PurchaseProcessingResult.Complete;
+				OnPurchaseFailedInternal(entry, "Invalid receipt", order);
+				_storeController.ConfirmPurchase(order);
+				return;
 			}
 
-			var unityProduct = args.purchasedProduct;
 			try
 			{
 				var receipt = new PurchaseReceipt
@@ -620,16 +688,15 @@ namespace InAppPurchasing.Unity
 					billing = _billing,
 
 					transactionId = transactionId,
-					receipt       = product.receipt
+					receipt       = order.Info.Receipt
 				};
 
 				if (_processing.Remove(billingProductId))
 				{
-					if (PendingValidateReceipt(product, CompleteProcessingAfterValidation))
-						return PurchaseProcessingResult.Pending;
+					if (!PendingValidateReceipt(order, CompleteProcessingAfterValidation))
+						CompleteProcessingAfterValidation(true, null);
 
-					CompleteProcessingAfterValidation(true, null);
-					return PurchaseProcessingResult.Complete;
+					return;
 
 					void CompleteProcessingAfterValidation(bool success, string error)
 					{
@@ -640,15 +707,14 @@ namespace InAppPurchasing.Unity
 							return;
 						}
 
-						OnPurchaseFailedInternal(entry, error, args);
+						OnPurchaseFailedInternal(entry, error, order);
 					}
 				}
 
-				if (PendingValidateReceipt(product, CompleteGrantAfterValidation))
-					return PurchaseProcessingResult.Pending;
+				if (!PendingValidateReceipt(order, CompleteGrantAfterValidation))
+					CompleteGrantAfterValidation(true, null);
 
-				CompleteGrantAfterValidation(true, null);
-				return PurchaseProcessingResult.Pending;
+				return;
 
 				void CompleteGrantAfterValidation(bool success, string error)
 				{
@@ -659,44 +725,98 @@ namespace InAppPurchasing.Unity
 						return;
 					}
 
-					OnPurchaseFailedInternal(entry, error, args);
+					OnPurchaseFailedInternal(entry, error, order);
 				}
 			}
 			catch (Exception e)
 			{
-				OnPurchaseFailedInternal(entry, e.Message, args);
-				return PurchaseProcessingResult.Pending;
+				OnPurchaseFailedInternal(entry, e.Message, order);
+				return;
 			}
 
 			void OnComplete(in PurchaseReceipt receipt) =>
-				Complete(in receipt, false);
+				Complete(receipt, false);
 
 			void Complete(in PurchaseReceipt receipt, bool live)
 			{
-				_storeController.ConfirmPendingPurchase(unityProduct);
+				_storeController.ConfirmPurchase(order);
 				if (live)
 					IAPManager.RegisterReceipt(in receipt);
-				PurchaseCompleted?.Invoke(in receipt, live, args);
+				PurchaseCompleted?.Invoke(in receipt, live, order);
 			}
 		}
 
-		/// <returns><c>true</c> Если покупка отложена (работает пока только в Google Play),
-		/// <c>false</c> - на данный момент неизвестно отложенная покупка или нет</returns>
-		private bool IsDeferred(UnityProduct product)
+		private void OnPurchaseConfirmed(Order order)
 		{
-			if (_googlePlayExtension != null && _googlePlayExtension.IsPurchasedProductDeferred(product))
-				return true;
+			if (!TryGetBillingProductId(order, out var billingProductId))
+				return;
 
-			return false;
+			switch (order)
+			{
+				case ConfirmedOrder:
+					RegisterOrder(billingProductId, order);
+					break;
+
+				case FailedOrder failedOrder:
+					IAPDebug.LogError($"Failed to confirm purchase by product id [ {billingProductId} ]: " +
+						$"{failedOrder.FailureReason} {failedOrder.Details}");
+					break;
+			}
 		}
 
-		private bool PendingValidateReceipt(UnityProduct product, Action<bool, string> onComplete)
+		private void OnPurchaseFailed(FailedOrder failedOrder)
+		{
+			if (!TryGetBillingProductId(failedOrder, out var billingProductId))
+			{
+				IAPDebug.LogError($"Failed to purchase product (not found!): {failedOrder.FailureReason} {failedOrder.Details}");
+				return;
+			}
+
+			_deferred.Remove(billingProductId);
+
+			if (!_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
+			{
+				IAPDebug.LogError(
+					$"Failed to purchase product (not found!) by store product id [ {billingProductId} ]: {failedOrder.Details}");
+				return;
+			}
+
+			switch (failedOrder.FailureReason)
+			{
+				case PurchaseFailureReason.UserCancelled:
+					OnPurchaseCanceledInternal(entry, failedOrder);
+					break;
+
+				default:
+					OnPurchaseFailedInternal(entry, $"{failedOrder.FailureReason} {failedOrder.Details}", failedOrder);
+					break;
+			}
+		}
+
+		private void OnPurchaseDeferred(DeferredOrder order)
+		{
+			if (!TryGetBillingProductId(order, out var billingProductId))
+			{
+				IAPDebug.LogError("Failed to deferred product (not found!): order without a product");
+				return;
+			}
+
+			_processing.Remove(billingProductId);
+			_deferred.Add(billingProductId);
+
+			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
+				PurchaseDeferred?.Invoke(entry, order);
+			else
+				IAPDebug.LogError($"Failed to deferred product (not found!) by store product id [ {billingProductId} ]");
+		}
+
+		private bool PendingValidateReceipt(Order order, Action<bool, string> onComplete)
 		{
 #if !XSOLLA_SDK_DISABLED
 			if (_billing == IAPBillingType.XSOLLA && !_settings.xsollaDisableValidationRecipe)
 			{
 				var xsollaValidator = _xsollaExtension.GetValidator();
-				xsollaValidator.Validate(product.receipt, onComplete);
+				xsollaValidator.Validate(order.Info.Receipt, onComplete);
 				return true;
 			}
 #endif
@@ -704,7 +824,7 @@ namespace InAppPurchasing.Unity
 			return false;
 		}
 
-		private bool LocalValidateReceipt(UnityProduct product)
+		private bool LocalValidateReceipt(IAPProductEntry entry, string billingProductId, Order order)
 		{
 			const string PREFIX = "[ Validation ]";
 			const int TOLERANCE_MINUTES = 5;
@@ -714,29 +834,29 @@ namespace InAppPurchasing.Unity
 
 			try
 			{
-				var receipts = _localValidator.Validate(product.receipt);
+				var receipts = _localValidator.Validate(order.Info.Receipt);
 
 				if (receipts.IsNullOrEmpty())
 				{
-					IAPDebug.LogError($"{PREFIX} Receipt is null or empty for product id [ {product.definition.id} ]");
+					IAPDebug.LogError($"{PREFIX} Receipt is null or empty for product id [ {billingProductId} ]");
 					return false;
 				}
 
 				foreach (var receipt in receipts)
 				{
-					if (receipt.productID != product.definition.id)
+					if (receipt.productID != billingProductId)
 					{
 						IAPDebug.LogError(
-							$"{PREFIX} Product ID mismatch: receipt = {receipt.productID}, expected = {product.definition.id}");
+							$"{PREFIX} Product ID mismatch: receipt = {receipt.productID}, expected = {billingProductId}");
 						return false;
 					}
 
-					if (product.definition.type != ProductType.Consumable)
+					if (entry.Type != IAPProductType.Consumable)
 					{
 						if (receipt.purchaseDate == DateTime.MinValue)
 						{
 							IAPDebug.LogError(
-								$"{PREFIX} Missing purchase date for non-consumable product [ {product.definition.id} ]");
+								$"{PREFIX} Missing purchase date for non-consumable product [ {billingProductId} ]");
 							return false;
 						}
 
@@ -754,77 +874,20 @@ namespace InAppPurchasing.Unity
 			catch (Exception e)
 			{
 				IAPDebug.LogError(
-					$"{PREFIX} Failed to validate: Exception for product by store product id [ {product.definition.id} ] " +
-					$"(type: {product.definition.type}): {e.Message}");
+					$"{PREFIX} Failed to validate: Exception for product by store product id [ {billingProductId} ] " +
+					$"(type: {entry.Type}): {e.Message}");
 				return false;
 			}
 		}
 
-		void IStoreListener.OnPurchaseFailed(UnityProduct product, PurchaseFailureReason reason)
-		{
-			switch (reason)
-			{
-				case PurchaseFailureReason.UserCancelled:
-					OnPurchaseCanceledInternal(product, reason);
-					break;
-
-				default:
-					OnPurchaseFailedInternal(product, reason.ToString(), reason);
-					break;
-			}
-		}
-
-		void IDetailedStoreListener.OnPurchaseFailed(UnityProduct product, PurchaseFailureDescription failureDescription)
-		{
-			switch (failureDescription.reason)
-			{
-				case PurchaseFailureReason.UserCancelled:
-					OnPurchaseCanceledInternal(product, failureDescription);
-					break;
-
-				default:
-					OnPurchaseFailedInternal(product, failureDescription.message, failureDescription);
-					break;
-			}
-		}
-
-		private void OnPurchaseFailedInternal(UnityProduct product, string error, object rawData = null)
-		{
-			var billingProductId = product.definition.id;
-			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
-				OnPurchaseFailedInternal(entry, error, rawData);
-			else
-				IAPDebug.LogError(
-					$"[{product.definition.type}] Failed to purchase product (not found!) by store product id [ {billingProductId} ]: {error}");
-		}
-
-		private void OnPurchaseCanceledInternal(UnityProduct product, object rawData = null)
-		{
-			var billingProductId = product.definition.id;
-			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
-				OnPurchaseCanceledInternal(entry, rawData);
-			else
-				IAPDebug.LogError(
-					$"[{product.definition.type}] Failed to canceled product (not found!) by store product id [ {billingProductId} ]");
-		}
-
-		private void OnDeferredPurchase(UnityProduct product)
-		{
-			var billingProductId = product.definition.id;
-			_processing.Remove(billingProductId);
-			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
-				PurchaseDeferred?.Invoke(entry, product);
-			else
-				IAPDebug.LogError(
-					$"[{product.definition.type}] Failed to deferred product (not found!) by store product id [ {billingProductId} ]");
-		}
-
 		private void OnApplePromotionalPurchaseInterceptor(UnityProduct product)
 		{
-			if (!_billingProductIdToEntry.TryGetValue(product.definition.id, out var entry))
+			var billingProductId = product.definition.storeSpecificId;
+
+			if (!_billingProductIdToEntry.TryGetValue(billingProductId, out var entry))
 			{
 				IAPDebug.LogError($"[{product.definition.type}] Failed to apple promotional purchase: Not found product by id [ " +
-					product.definition.id + " ]");
+					billingProductId + " ]");
 				return;
 			}
 
@@ -840,7 +903,59 @@ namespace InAppPurchasing.Unity
 				await _storePromotionalCompletionSource.Task;
 
 			await UniTask.Delay(_settings.applePromotionalContinueDelayMs);
-			_appleExtension!.ContinuePromotionalPurchases();
+			_applePurchaseService!.ContinuePromotionalPurchases();
+		}
+
+		#endregion
+
+		#region Orders
+
+		private void RegisterOrder(Order order)
+		{
+			if (TryGetBillingProductId(order, out var billingProductId))
+				RegisterOrder(billingProductId, order);
+		}
+
+		private void RegisterOrder(string billingProductId, Order order)
+		{
+			_billingProductIdToOrder[billingProductId] = order;
+
+			if (_billingProductIdToEntry.TryGetValue(billingProductId, out var entry) && entry.Type != IAPProductType.Consumable)
+				_purchased.Add(billingProductId);
+		}
+
+		private bool TryGetOrder(string billingProductId, out Order order)
+			=> _billingProductIdToOrder.TryGetValue(billingProductId, out order);
+
+		private static bool TryGetBillingProductId(Order order, out string billingProductId)
+		{
+			billingProductId = null;
+
+			var items = order?.CartOrdered?.Items();
+			if (items == null || items.Count == 0)
+				return false;
+
+			var item = items[0];
+			billingProductId = item.Product.catalogListings.TryGetValue(item.CatalogListingId, out var listing) && listing.definition != null
+				? listing.definition.storeSpecificId
+				: item.Product.definition?.storeSpecificId;
+
+			return !billingProductId.IsNullOrEmpty();
+		}
+
+		/// <summary>
+		/// Заменяет <c>Product.hasReceipt</c> из Unity IAP 4: владение определяется по заказам,
+		/// которые магазин отдаёт на <c>FetchPurchases</c>
+		/// </summary>
+		private bool IsPurchased(string billingProductId, IAPProductEntry entry)
+		{
+			if (entry.Type == IAPProductType.Consumable)
+				return false;
+
+			if (entry.Type == IAPProductType.Subscription)
+				return TryGetUnitySubscriptionInfo(billingProductId, out var subscriptionInfo) && subscriptionInfo.IsActive();
+
+			return _purchased.Contains(billingProductId);
 		}
 
 		#endregion
@@ -861,7 +976,7 @@ namespace InAppPurchasing.Unity
 			PurchaseCanceled?.Invoke(entry, rawData);
 		}
 
-		private void AddProductsToBuilder<TProduct>(ConfigurationBuilder builder)
+		private void AddProducts<TProduct>(List<ProductDefinition> products)
 			where TProduct : IAPProductEntry
 		{
 			foreach (var entry in ContentManager.GetAllEntries<TProduct>())
@@ -869,17 +984,36 @@ namespace InAppPurchasing.Unity
 				ref readonly var product = ref entry.Value;
 				var id = product.GetBillingId(in _billing);
 				_billingProductIdToEntry[id] = product;
-				builder.AddProduct(id, product.ToUnityProductType());
+				products.Add(new ProductDefinition(id, product.ToUnityProductType()));
 			}
 		}
 
+		/// <summary>
+		/// Собирает локальный валидатор чеков, начиная с Unity IAP 5 он имеет смысл только для Google Play
+		/// </summary>
+		/// <remarks>
+		/// App Store остался без локальной проверки, и это вынужденно, а не по желанию.
+		/// На iOS 15+ (у нас это минимальная версия) Unity IAP работает через StoreKit 2, а
+		/// <see cref="CrossPlatformValidator"/> в этом режиме для App Store не проверяет ничего и
+		/// возвращает пустой массив — старый путь через <c>AppleValidator</c> и <c>AppleTangle</c>
+		/// живёт только под StoreKit 1 (<c>StoreKitSelector</c>: StoreKit 1 берётся при major версии iOS меньше 15).
+		/// Пустой результат <see cref="LocalValidateReceipt"/> считает невалидным чеком, так что оставь мы
+		/// Apple подключённым к валидатору — падала бы каждая покупка на iOS.
+		/// <para>
+		/// Чем это компенсируется: StoreKit 2 отдаёт приложению только проверенные транзакции, криптографию
+		/// (PKCS7 и корневой сертификат Apple), которую раньше крутил <c>AppleValidator</c>, теперь делает сама ОС.
+		/// Для серверной проверки у заказа есть подписанный JWS — <c>order.Info.Apple.jwsRepresentation</c>,
+		/// он уходит в App Store Server API v2. У Unity есть и свой сервис проверки транзакций
+		/// (сборка <c>Unity.Purchasing.TransactionVerifier</c> под дефайном <c>IAP_TX_VERIFIER_ENABLED</c>), он не включён.
+		/// </para>
+		/// Поэтому <see cref="UnityPurchasingSettings.appleDisableValidationRecipe"/> ни на что не влияет
+		/// </remarks>
 		private void TryInitializeLocalValidator()
 		{
 			if (_settings.disableValidationRecipe)
 				return;
 
 			byte[] googlePlayData = null;
-			byte[] appleData = null;
 
 #if APP_GOOGLE_PLAY
 			if (_billing == IAPBillingType.GOOGLE_PLAY)
@@ -890,20 +1024,11 @@ namespace InAppPurchasing.Unity
 				googlePlayData = GooglePlayTangle.Data();
 			}
 #endif
-
-#if APP_STORE
-			if (_billing == IAPBillingType.APP_STORE)
-			{
-				if (_settings.appleDisableValidationRecipe)
-					return;
-
-				appleData = AppleTangle.Data();
-			}
-#endif
-			if (googlePlayData == null && appleData == null)
+			// Без ключей Google Play валидировать нечего: App Store сюда не попадает (см. remarks)
+			if (googlePlayData == null)
 				return;
 
-			_localValidator = new CrossPlatformValidator(googlePlayData, appleData, _appIdentifier);
+			_localValidator = new CrossPlatformValidator(googlePlayData, _appIdentifier);
 		}
 
 		private IAPBillingEntry GetDefaultBilling(in DistributionEntry platform)
@@ -920,21 +1045,6 @@ namespace InAppPurchasing.Unity
 		}
 
 #if UNITY_EDITOR
-		[MenuItem("Services/In-App Purchasing/Create IAP Button", true)]
-		public static bool DisableCreateIAPButton() => false;
-
-		[MenuItem("Services/In-App Purchasing/Create IAP Button (Legacy)", true)]
-		public static bool DisableCreateIAPButtonLegacy() => false;
-
-		[MenuItem("Services/In-App Purchasing/Create IAP Listener", true)]
-		public static bool DisableCreateIAPListener() => false;
-
-		[MenuItem("Services/In-App Purchasing/IAP Catalog...", true)]
-		public static bool DisableCreateIAPCatalog() => false;
-
-		[MenuItem("GameObject/In-App Purchasing/IAP Button (Legacy)", true)]
-		public static bool GameObjectDisableCreateIAPButtonLegacy() => false;
-
 		[MenuItem("GameObject/In-App Purchasing/IAP Listener", true)]
 		public static bool GameObjectDisableCreateIAPListener() => false;
 

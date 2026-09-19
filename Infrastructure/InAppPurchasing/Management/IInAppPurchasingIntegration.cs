@@ -98,7 +98,7 @@ namespace InAppPurchasing
 		public event PurchaseDeferred PurchaseDeferred;
 
 		/// <summary>
-		/// Перехватить Promotional покупку (такое пока только в <see href="https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/api/UnityEngine.Purchasing.IAppleConfiguration.html" langword="external">Apple</see>)
+		/// Перехватить Promotional покупку (такое пока только в <see href="https://docs.unity3d.com/Packages/com.unity.purchasing@5.4/api/UnityEngine.Purchasing.IAppleStoreExtendedPurchaseService.html" langword="external">Apple</see>)
 		/// </summary>
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 	}

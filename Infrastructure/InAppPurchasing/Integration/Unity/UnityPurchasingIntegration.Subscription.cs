@@ -63,7 +63,7 @@ namespace InAppPurchasing.Unity
 		/// <remarks>
 		/// От частых запросов к платформе, возвращает кэшированную информацию,
 		/// можно зафорсировать обновление кеша.
-		/// Кеш хранится <c>10 секунд</c> (<see cref="DELAY_MS"/>)
+		/// Кеш хранится <c>10 секунд</c> (<see cref="DELAY_UPDATING_SUBSCRIPTION_CACHE_MS"/>)
 		/// </remarks>
 		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false)
 			=> ref GetSubscriptionCache(subscription, out _, forceUpdateCache).info;
@@ -97,13 +97,15 @@ namespace InAppPurchasing.Unity
 		{
 			reason = SubscriptionUpdateFailureReason.None;
 
-			if (!TryGetUnityProduct(product, out var unityProduct))
+			var billingProductId = product.GetBillingId(in _billing);
+
+			if (!TryGetUnityProduct(billingProductId, out _))
 			{
 				reason = SubscriptionUpdateFailureReason.UnityProductNotFound;
 				return false;
 			}
 
-			if (!unityProduct.TryGetUnitySubscriptionInfo(out var unityInfo, true))
+			if (!TryGetUnitySubscriptionInfo(billingProductId, out var unityInfo))
 			{
 				reason = SubscriptionUpdateFailureReason.CannotRetrieveUnitySubscriptionInfo;
 				return false;
@@ -115,6 +117,32 @@ namespace InAppPurchasing.Unity
 			cache.rawInfo = unityInfo;
 
 			return true;
+		}
+
+		/// <summary>
+		/// Начиная с Unity IAP 5 информация о подписке лежит в заказе, а не собирается из чека продукта
+		/// </summary>
+		private bool TryGetUnitySubscriptionInfo(string billingProductId, out UnitySubscriptionInfo info)
+		{
+			info = null;
+
+			if (!TryGetOrder(billingProductId, out var order))
+				return false;
+
+			var purchasedProducts = order.Info?.PurchasedProductInfo;
+			if (purchasedProducts == null)
+				return false;
+
+			foreach (var purchased in purchasedProducts)
+			{
+				if (purchased.productId != billingProductId)
+					continue;
+
+				info = purchased.subscriptionInfo;
+				return info != null;
+			}
+
+			return false;
 		}
 
 		#endregion
