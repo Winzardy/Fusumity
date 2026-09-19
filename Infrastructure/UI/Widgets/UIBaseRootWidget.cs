@@ -26,7 +26,7 @@ namespace UI
 
 		public abstract void RequestClose();
 
-		protected virtual bool CloseHoldEnabled => true;
+		protected virtual bool CloseHoldEnabled => false;
 
 		protected void SetupCloseHold(Button close)
 		{
